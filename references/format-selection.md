@@ -1,32 +1,47 @@
 # Format selection
 
-> Core rule: **use the simplest format that fully solves the task.** Do not
-> migrate everything to Rich Messages. Match the *project's* existing standard
-> unless there is a concrete reason to change it.
+> Core rule: **default to the richest fit — a table for any structured data —
+> and drop to a simpler format only when structure genuinely adds nothing.**
+> Tables and rich documents are the first thing to reach for; plain / regular
+> HTML / MarkdownV2 / entities are the *escape hatch*. Still match the project's
+> existing conventions and utilities when you build the rich or the simple path.
 
 ## Decision order
 
 Ask these in order and stop at the first "yes":
 
-1. **Does the message need any styling at all?** No → **plain text**. Plain text
-   still needs correct handling of user data (no accidental entity injection when
-   later wrapped) and correct splitting for length.
-2. **Is it a short/interactive/notification message with light styling, and the
-   project already uses HTML?** → **Regular HTML**.
-3. **Does the project already standardize on MarkdownV2, or is MarkdownV2 clearly
-   the best fit?** → **MarkdownV2** (accept the strict escaping cost).
-4. **Do you need exact byte/offset control or to avoid a parse_mode entirely
-   (e.g. programmatic styling, mixing user text with styling safely)?** →
-   **MessageEntity**.
-5. **Is the content a naturally-authored document** (AI answer, article, report,
-   docs) with headings/tables/lists/math? → **Rich Markdown** (if authored as
+1. **Is the content rows/columns or label→value data** (comparison, schedule,
+   prices, scores, order summary, config, key/value facts)? → build a **table**
+   (`tables.md`). This is the default for anything structured — do not render it
+   as a monospace `pre` grid or a bulleted list.
+2. **Is it a structured document** (AI answer, article, report, docs) with
+   headings/lists/quotes/code/math/media? → **Rich Markdown** (if authored as
    Markdown) or **Rich HTML** (if server-templated with precise tag control).
-6. **Is the content generated programmatically / from a CMS / an AST, or must be
-   unambiguous and typed?** → **explicit `InputRichBlock` blocks**.
-7. **Would the UX be better as standalone media** (single photo, album, document,
+3. **Is that document generated programmatically / from a CMS / an AST, or must
+   it be unambiguous and typed?** → **explicit `InputRichBlock` blocks** (use
+   `InputRichBlockTable` for the table case above).
+4. **Would the UX be better as standalone media** (single photo, album, document,
    caption)? → **separate media methods** (`sendPhoto`, `sendMediaGroup`, …).
+5. **Escape hatch — is it a genuinely trivial one-liner** (a status, an "OK", a
+   short prompt/notification) with light styling, and the project already uses
+   HTML? → **Regular HTML**.
+6. **Escape hatch — does the project standardize on MarkdownV2**, or is it clearly
+   the best fit? → **MarkdownV2** (accept the strict escaping cost).
+7. **Escape hatch — do you need exact byte/offset control or to avoid a
+   parse_mode entirely** (programmatic styling, mixing user text with styling
+   safely)? → **MessageEntity**.
+8. **Escape hatch — does the message need no styling at all?** → **plain text**.
+   Plain text still needs correct handling of user data (no accidental entity
+   injection when later wrapped) and correct splitting for length.
 
 ## Per-format guidance
+
+### Tables (start here)
+The default for any rows/columns or label→value data. Build with a Rich Markdown
+pipe table, a Rich HTML `<table>`, or explicit `InputRichBlockTable` blocks —
+pick by how the data arrives (authored text vs. server template vs. programmatic
+rows). Full guidance, code for all three paths, header/alignment/split rules, and
+the monospace fallback: **`tables.md`**.
 
 ### Plain text
 Zero markup. Cheapest and safest. Prefer for logs, one-line statuses, and any
@@ -70,16 +85,20 @@ duplication without a product reason). See `rich-media.md`.
 
 ## Anti-patterns
 
-- Auto-replacing all `sendMessage` calls with `sendRichMessage`.
-- Using Rich Messages for every short notification.
+- **Rendering structured data as a monospace `pre` grid or a bulleted list**
+  instead of a real table — the top miss now that tables exist for bots.
+- Inflating a genuinely trivial one-liner (status, "OK", short prompt) into a
+  table or rich document — that's what the escape hatch is for.
+- Blanket-replacing *every* `sendMessage` with `sendRichMessage` without checking
+  each message class (trivial ones keep the escape hatch).
 - Treating Rich Markdown as MarkdownV2 (different syntax, different mechanism).
 - Introducing a second formatter when one already exists in the project.
-- Choosing a richer format than the content needs "to be future-proof".
 
 ## Migration stance
 
-Migrate a message class to a richer format only when the audit shows a concrete
-defect or unmet need (e.g. tables rendered as broken monospace, AI answers losing
-structure). Keep the old formatter until the new path is fully covered and
-tested; then remove it in a dedicated step. See `errors-and-fallbacks.md` for the
-degradation ladder.
+**Prioritize migrating structured content to real tables / rich documents.**
+Monospace or bulleted data, broken pseudo-tables, and AI answers that lose their
+structure are exactly the defects to fix first. Leave genuinely trivial
+one-liners on their existing simple format. Keep the old formatter until the new
+path is fully covered and tested; then remove it in a dedicated step. See
+`errors-and-fallbacks.md` for the degradation ladder.
