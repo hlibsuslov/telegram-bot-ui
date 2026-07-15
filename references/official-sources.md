@@ -23,7 +23,8 @@ the task is version-sensitive:
 | Bot API formatting options | https://core.telegram.org/bots/api#formatting-options | HTML / MarkdownV2 / entity escaping rules | 2026-07-15 |
 | Styled text with entities | https://core.telegram.org/api/entities | Entity types, nesting rules | 2026-07-15 |
 | Rich Messages section | https://core.telegram.org/bots/api#rich-messages | Rich objects/methods | 2026-07-15 |
-| Official blog: Rich Text for Bots | https://telegram.org/blog/watch-apps-and-more | Feature announcement, 32,768-char limit | 2026-07-15 |
+| Rich message formatting options | https://core.telegram.org/bots/api#rich-message-formatting-options | Rich Markdown / Rich HTML / block syntax spec (linked from official blog) | 2026-07-15 |
+| Official blog: Rich Text for Bots | https://telegram.org/blog/watch-apps-and-more#obscenely-rich-text-formatting-for-bots | Feature announcement, 32,768-char limit | 2026-07-15 |
 
 ## Facts verified on 2026-07-15
 
@@ -41,6 +42,12 @@ Confirmed against official changelog / blog:
 - Rich messages support up to **32,768 UTF-8 characters**, with content beyond
   ~8,000 collapsed behind "Show More" (official blog).
 - Bot API 10.0 (2026-05-08) had **no** Rich Messages features.
+- The official blog section "Obscenely Rich Text Formatting for Bots" calls the
+  feature **"rich text formatting"** and **never uses the term "RTF"**. Features
+  it lists: formatting and tables, nested blockquotes, headings and anchors,
+  collapsible sections and footnotes, math/formulas, superscript/subscript,
+  checklists, and inline media/carousels/collages. It points developers to the
+  Rich message formatting options page (anchor above).
 - Regular formatting (unchanged, re-confirmed): HTML and MarkdownV2 both support
   bold, italic, underline, strikethrough, spoiler, links, user mentions, custom
   emoji (`tg-emoji` / `![](tg://emoji?id=)`), inline code, code blocks with
