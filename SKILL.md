@@ -156,6 +156,10 @@ usually stay regular messages.
 - Don't duplicate formatter utilities, scatter magic limits, or upgrade an SDK
   without reviewing breaking changes.
 - Don't claim a feature works until it is **tested**.
+- Apply rich-content styling conventions by default: **bold table headers**
+  (`is_header` / `<th>` / markdown header row, repeated when a table splits),
+  language-tagged code blocks, heading blocks for titles, descriptive link text,
+  captions on media (see `references/telegram-capabilities.md`).
 
 ## Definition of done
 

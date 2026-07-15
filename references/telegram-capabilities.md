@@ -79,7 +79,7 @@ Always confirm the **latest** version in the changelog before starting.
 | Lists (ordered/unordered) | ➖ | ✅ | ✅ | ✅ | `InputRichBlockList` + `ListItem` |
 | Task lists `- [ ]` / `- [x]` | ➖ | ✅ | ✅ | ✅ | |
 | Divider / horizontal rule | ➖ | ✅ | ✅ | ✅ | `---` in Rich Markdown |
-| Tables | ➖ | ✅ | ✅ | ✅ | `InputRichBlockTable`; column cap *(secondary: 20)* |
+| Tables | ➖ | ✅ | ✅ | ✅ | `InputRichBlockTable`; header cells via `is_header` (render bold); `align`/colspan/rowspan; column cap *(secondary: 20)* |
 | Details (collapsible) | ➖ | ✅ | ✅ | ✅ | |
 | Anchors / references / footnotes | ➖ | ✅ | ✅ | ✅ | |
 | Math (LaTeX inline `\(…\)` / block `\[…\]`) | ➖ | ✅ | ✅ | ✅ | `MathematicalExpression` |
@@ -106,6 +106,45 @@ Always confirm the **latest** version in the changelog before starting.
   Types include bold, italic, underline, strikethrough, spoiler, blockquote,
   expandable_blockquote, code, pre, text_link, text_mention, custom_emoji,
   mention, hashtag, cashtag, bot_command, url, email, phone_number.
+
+## Authoring conventions (styling defaults)
+
+Apply these by default when generating rich content, so output looks intentional
+and consistent. Verify exact field names against the official object for the
+project's Bot API version.
+
+### Tables
+
+- **Header row bold:** mark header cells with **`is_header: true`** (clients
+  render header cells bold) — in Rich HTML use **`<th>`** for header cells and
+  `<td>` for body; in Rich Markdown the first row (above the `---|---` separator)
+  is the header. Don't fake a header with manual bold on plain `<td>`/cells —
+  use the header semantics so it renders and exports correctly.
+- **Alignment:** set cell `align` (`left`/`center`/`right`) and vertical
+  alignment (`top`/`middle`/`bottom`); align numeric columns right, text left.
+- **Spanning:** use colspan/rowspan (cell field > 1) for merged cells rather than
+  padding with empty cells.
+- **Splitting:** never split a table mid-row; if a table must span messages,
+  **repeat the header row** in each part and keep it with its body
+  (`limits-and-splitting.md`). Stay within the column cap.
+
+### Everything else (defaults)
+
+- **Section titles → heading blocks** (`SectionHeading` / `#…` / `<h1–h6>`), not
+  a bold paragraph.
+- **Code blocks → always set the language** for syntax highlighting
+  (`pre><code class="language-…">` / ```` ```lang ````).
+- **Links → descriptive anchor text**, not a bare URL; control the preview with
+  `link_preview_options` (`regular-formatting.md`).
+- **Quotes → blockquote**; make long quotes expandable.
+- **Emphasis → sparing and consistent** (don't bold whole paragraphs); use
+  bold for labels/headers, italic for asides.
+- **Lists → real list blocks**; use task lists (`- [ ]`/`- [x]`) for actionable
+  items.
+- **Media → captions** (and `credit`/spoiler where relevant); place media blocks
+  in reading order (`rich-media.md`).
+- **RTL → mark direction by content**, keep LTR islands intact
+  (`localization-and-rtl.md`).
 
 ## Do / don't
 
