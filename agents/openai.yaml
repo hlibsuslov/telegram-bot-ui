@@ -5,9 +5,10 @@
 interface:
   display_name: "Telegram Rich Messages"
   short_description: >-
-    Audit, design, implement, migrate, debug, and test Telegram bot message
-    formatting: HTML, MarkdownV2, entities, Rich Markdown/HTML, Rich Messages,
-    blocks, media, splitting, streaming drafts, editing, localization, RTL.
+    Produce Telegram's editor-style rich formatting — above all TABLES — for bot,
+    channel, and broadcast messages (Rich Markdown/HTML, InputRichBlockTable,
+    sendRichMessage); then audit, migrate, debug, and test all other formatting:
+    HTML, MarkdownV2, entities, media, splitting, streaming drafts, editing, RTL.
 
 policy:
   # Allow the model to select this skill automatically when a prompt matches the

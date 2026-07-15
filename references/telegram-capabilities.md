@@ -115,6 +115,10 @@ project's Bot API version.
 
 ### Tables
 
+> **Tables are this skill's first-priority output. For the full build guide
+> (Rich Markdown / Rich HTML / `InputRichBlockTable` code, split rules, escaping,
+> and the monospace fallback), read `tables.md`.** The essentials:
+
 - **Header row bold:** mark header cells with **`is_header: true`** (clients
   render header cells bold) — in Rich HTML use **`<th>`** for header cells and
   `<td>` for body; in Rich Markdown the first row (above the `---|---` separator)

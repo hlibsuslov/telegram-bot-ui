@@ -4,6 +4,10 @@ Use these to check that the skill triggers on the right requests and stays out o
 the wrong ones. The `description` in `SKILL.md` is what drives selection — if a
 positive case doesn't trigger or a negative case does, refine the description.
 
+**Priority note:** tables and editor-style rich formatting are the skill's
+first-priority job (P4, P13–P15). These must activate reliably and should route
+to `references/tables.md`.
+
 ## Positive (should activate)
 
 | # | Request | Why it matches |
@@ -11,7 +15,7 @@ positive case doesn't trigger or a negative case does, refine the description.
 | P1 | "Fix Telegram `can't parse entities`." | escaping/entity defect |
 | P2 | "Migrate the bot's messages from MarkdownV2 to HTML." | format migration |
 | P3 | "Add Rich Messages for AI answers." | Rich Messages implementation |
-| P4 | "Render a table inside a Telegram message." | rich structured content |
+| P4 | "Render a table inside a Telegram message." | table (flagship) |
 | P5 | "Add streaming via `sendRichMessageDraft`." | streaming drafts |
 | P6 | "Fix RTL formatting in Telegram messages." | RTL presentation |
 | P7 | "Audit our Telegram formatter utility." | formatter audit |
@@ -20,6 +24,9 @@ positive case doesn't trigger or a negative case does, refine the description.
 | P10 | "Fix long-message splitting in Telegram." | limits & splitting |
 | P11 | "HTML is showing as literal text in the bot's messages." | wrong parse_mode |
 | P12 | "Our localized templates break MarkdownV2." | localization + escaping |
+| P13 | "Send this price list / standings as a Telegram table." | table (flagship) |
+| P14 | "Turn this JSON/CSV into a formatted Telegram table." | data → table |
+| P15 | "This bot posts data as a monospace block — make it a real table." | pseudo-table defect |
 
 ## Negative (should NOT activate)
 
