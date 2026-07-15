@@ -1,0 +1,15 @@
+# Optional Codex (OpenAI) skill metadata.
+# The core SKILL.md works across Claude Code, Codex, and other Agent Skills
+# hosts unchanged; this file only adds Codex-specific presentation/policy and is
+# ignored by hosts that don't use it. Schema per Codex "Build skills" docs.
+interface:
+  display_name: "Telegram Rich Messages"
+  short_description: >-
+    Audit, design, implement, migrate, debug, and test Telegram bot message
+    formatting: HTML, MarkdownV2, entities, Rich Markdown/HTML, Rich Messages,
+    blocks, media, splitting, streaming drafts, editing, localization, RTL.
+
+policy:
+  # Allow the model to select this skill automatically when a prompt matches the
+  # description (same intent as Claude Code auto-activation).
+  allow_implicit_invocation: true
