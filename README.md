@@ -9,21 +9,28 @@ broadcasts.
 [![Verified: Bot API 10.2](https://img.shields.io/badge/Telegram%20Bot%20API-10.2%20verified-26A5E4.svg)](https://core.telegram.org/bots/api-changelog)
 
 It teaches an AI coding agent (Claude Code, Codex, and other Agent Skills hosts)
-to **audit a project first, then apply the minimum sufficient format** — never to
-copy a fixed architecture into every codebase. Works with any language and any
-Telegram library, and it is safe for legacy projects.
+to **audit a project first, then reach for the richest fit — tables above all** —
+falling back to simpler formats only when structure genuinely adds nothing. Works
+with any language and any Telegram library, and it is safe for legacy projects.
 
 > This repository **is** the skill. It doesn't modify any bot — you install it,
 > and your agent uses it when a Telegram formatting task comes up.
 
 ## What it covers
 
-- **Every regular format:** plain text, Telegram **HTML**, **MarkdownV2**, and
-  **MessageEntity** — all entity types, nesting rules, custom emoji, captions.
-- **Rich Messages** (Bot API 10.1/10.2): **Rich Markdown**, **Rich HTML**, and
-  explicit **`InputRichBlock`** blocks — headings, lists, task lists, tables,
-  quotes/pull-quotes, code, math (LaTeX), details, anchors, footnotes, thinking
-  blocks, and inline media (`sendRichMessage`, `InputRichMessage`).
+- **Tables first — the flagship.** Real Telegram tables for bots, channels, and
+  broadcasts: Rich Markdown pipe tables, Rich HTML `<table>`, or explicit
+  **`InputRichBlockTable`** blocks — with semantic headers, column alignment,
+  cell spanning, safe cross-message splitting, and a monospace fallback. Anything
+  with rows/columns or label→value structure becomes a table, not a `pre` grid.
+- **The rest of Telegram's editor-style rich formatting** (Bot API 10.1/10.2):
+  **Rich Markdown**, **Rich HTML**, and explicit **`InputRichBlock`** blocks —
+  headings, lists, task lists, quotes/pull-quotes, code, math (LaTeX), details,
+  anchors, footnotes, thinking blocks, and inline media (`sendRichMessage`,
+  `InputRichMessage`) — the same elements as Telegram's Rich Text Editor.
+- **Every regular format** (the escape hatch for trivial one-liners): plain text,
+  Telegram **HTML**, **MarkdownV2**, and **MessageEntity** — all entity types,
+  nesting rules, custom emoji, captions.
 - **Streaming AI replies** as live drafts (`sendRichMessageDraft`) and **editing**
   (`editMessageText` + `rich_message`).
 - **Channels & broadcasting:** channel posts, notifications, and automatic /
@@ -47,8 +54,9 @@ telegram-rich-messages/
 ├── SKILL.md                     # compact operational guide (loaded on activation)
 ├── README.md · LICENSE
 ├── references/                  # progressive-disclosure detail (read on demand)
-│   ├── regular-formatting.md        # all HTML/MarkdownV2/entity features
+│   ├── tables.md                    # FLAGSHIP: build tables (MD/HTML/blocks)
 │   ├── telegram-capabilities.md     # Rich Messages + capability matrix
+│   ├── regular-formatting.md        # all HTML/MarkdownV2/entity features
 │   ├── channels-and-broadcasting.md # channels, notifications, mailings
 │   ├── format-selection.md
 │   ├── project-adaptation.md
@@ -91,8 +99,9 @@ On Windows the Claude Code user path is
 ## Use
 
 - **Automatically:** the `description` in `SKILL.md` lets the host select the
-  skill when a request matches — e.g. *"fix Telegram can't parse entities"*,
-  *"add Rich Messages for AI answers"*, *"format this channel broadcast safely"*.
+  skill when a request matches — e.g. *"send this price list as a Telegram
+  table"*, *"fix Telegram can't parse entities"*, *"add Rich Messages for AI
+  answers"*, *"format this channel broadcast safely"*.
 - **Explicitly:** ask for it by name — *"use the telegram-rich-messages skill to
   audit our formatter"* (Codex: `$telegram-rich-messages`).
 
@@ -112,7 +121,8 @@ behaviour.
 1. Read project instructions; detect language, framework, **SDK, and versions**.
 2. Determine the supported **Bot API version**.
 3. Map every place messages are generated / formatted / sent / edited.
-4. Identify **real** defects; pick the **minimum** format that solves them.
+4. Identify **real** defects; reach for the **richest fit — a table for any
+   structured data**; simpler formats only as the escape hatch.
 5. Implement in the project's own style, add a fallback and tests, run its checks.
 
 Source-of-truth order: current **official Telegram docs** → Bot API changelog →

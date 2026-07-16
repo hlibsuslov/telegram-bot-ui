@@ -1,19 +1,19 @@
 ---
 name: telegram-rich-messages
 description: >-
-  Audit, design, implement, migrate, debug, and test Telegram message formatting
-  for bots, channels, and automated/semi-automated broadcasts. Covers plain text,
-  Telegram HTML, MarkdownV2, MessageEntity (all types, nesting, custom emoji),
-  captions, link-preview/silent/protected options, and Bot API Rich Messages
-  (Rich Markdown, Rich HTML, InputRichMessage, InputRichBlock, sendRichMessage,
-  sendRichMessageDraft, editMessageText rich_message), plus tables, formulas,
-  lists, code, inline/rich media, long-message splitting, streaming AI drafts,
-  editing, channel posts, mass mailings, localization, and RTL. Use for tasks
-  that render or format Telegram message/post content, "can't parse entities"
-  errors, unsafe or double escaping, broken/oversized messages, broadcast
-  formatting, or migrating formatter utilities to current Bot API. Do NOT use for
-  bot logic unrelated to presentation (webhooks, commands, payments, auth, group
-  admin, Mini Apps without text) or Microsoft .rtf files.
+  FIRST PRIORITY — produce Telegram's editor-style rich formatting, above all
+  TABLES, then headings, lists, quotes, code, and inline media, for bot, channel,
+  and broadcast messages via Bot API Rich Messages (Rich Markdown/HTML,
+  InputRichMessage, InputRichBlockTable and other blocks, sendRichMessage,
+  sendRichMessageDraft, editMessageText rich_message). Then everything else:
+  audit, migrate, debug, and test all other Telegram formatting — plain text,
+  HTML, MarkdownV2, MessageEntity (types, nesting, custom emoji), captions,
+  link-preview/silent/protected options, long-message splitting, streaming AI
+  drafts, editing, channels, localization, and RTL. Use for any task that renders
+  or formats Telegram message/post content — especially tables — "can't parse
+  entities" errors, unsafe/double escaping, or broken/oversized messages. Do NOT
+  use for bot logic unrelated to presentation (webhooks, commands, payments,
+  auth, group admin, Mini Apps without text) or Microsoft .rtf files.
 ---
 
 # Telegram Rich Messages
@@ -21,8 +21,31 @@ description: >-
 Portable, SDK-agnostic skill for the full life cycle of **Telegram message
 presentation**: audit → format selection → design → implementation → fixing →
 migration → testing → documentation. It teaches you to **investigate the target
-project first**, then pick the *minimum* format that solves the task — never to
-copy a fixed architecture into every project.
+project first**, then make content **as richly structured as it deserves —
+tables first** — falling back to simpler formats only when structure adds
+nothing.
+
+## Top priority: tables and rich formatting
+
+**This is the skill's headline job.** Telegram now supports true editor-style
+rich messages for bots (Bot API 10.1+): the same **tables, headings, lists,
+quotes, code blocks, and inline media** described in Telegram's blog *"Text
+Editor, Communities & Ephemeral Messages"*. Bots, channels, and broadcasts can
+all produce them via Rich Messages (`sendRichMessage` + `InputRichMessage`).
+
+Default reach order for any task:
+
+1. **Is the content rows/columns or label→value data?** → build a **table**
+   (`references/tables.md`). This is the first thing to try.
+2. **Is it a structured document** (report, AI answer, comparison, schedule)? →
+   rich formatting — headings, lists, quotes, code, media.
+3. **Escape hatch — is it a genuinely trivial one-liner** (a status, an "OK", a
+   short prompt/notification)? → plain or regular formatting.
+
+Tables come **first**; everything else is chosen only when a table or rich
+document genuinely doesn't fit. Do not wrap a one-line confirmation in a table —
+but do prefer a real table for anything with structure, instead of monospace
+`pre` blocks or bulleted key/values.
 
 ## Purpose
 
@@ -93,7 +116,8 @@ is **not frozen** at Bot API 10.2 — if Telegram shipped a newer version, use i
 4. Find every point that **generates, formats, sends, and edits** messages.
 5. Classify each message (notification / interactive / document / AI answer / media).
 6. Identify the **real defects** (don't invent work).
-7. Choose the **minimum sufficient format** (see matrix below).
+7. Choose the format **richest-fit-first — a table for any structured data**
+   (see matrix below); simpler formats only as the escape hatch.
 8. Design a solution compatible with the current SDK and Bot API version.
 9. Implement it in the project's existing style and utilities (don't duplicate).
 10. Add a **fallback** path (see `errors-and-fallbacks.md`).
@@ -106,28 +130,33 @@ Do **not** write implementation code before the audit (steps 1–6) is complete.
 
 ## Format selection (quick matrix)
 
-Pick the simplest format that fully solves the task. Full matrix + rules:
-`references/format-selection.md`.
+Try the richest fit first; drop to a simpler format only when structure adds
+nothing. Full matrix + rules: `references/format-selection.md`.
 
 | Need | Use |
 |---|---|
-| No formatting | **Plain text** |
-| Compact, predictable styling; HTML is project standard | **Regular HTML** |
-| Project already uses it / genuinely best | **MarkdownV2** (strict escaping) |
-| Exact offset/length control, no parse_mode | **MessageEntity** |
-| AI answers, articles, tables, task lists, math, docs | **Rich Markdown** |
+| **Rows/columns or label→value data** | **Table** — `references/tables.md` (`InputRichBlockTable` / Rich MD pipe table / Rich HTML `<table>`) |
+| Structured doc: AI answer, article, report, task list, math | **Rich Markdown** |
 | Server-templated complex content, precise supported-tag control | **Rich HTML** |
-| Typed generation, CMS, AST, precise structure, ambiguity-free | **Explicit `InputRichBlock`** |
+| Typed generation from data / CMS / AST, ambiguity-free | **Explicit `InputRichBlock` blocks** |
 | Photo/video/doc/album/caption fits UX better | **Separate media methods** |
+| *Escape hatch:* trivial one-liner, HTML is project standard | **Regular HTML** |
+| *Escape hatch:* project standardizes on it | **MarkdownV2** (strict escaping) |
+| *Escape hatch:* exact offset/length control, no parse_mode | **MessageEntity** |
+| *Escape hatch:* genuinely no styling needed | **Plain text** |
 
-Rule: **do not auto-migrate every message to Rich Messages.** Short notifications
-usually stay regular messages.
+Rule: **default to a table (or rich document) for anything with structure; use
+the simpler formats only as the escape hatch for genuinely trivial one-liners.**
+Don't inflate a one-line confirmation into a table — but don't render structured
+data as monospace or bullet soup either.
 
 ## Which reference to read (task-routed — don't read them all)
 
+- **Tables (the flagship — read first for any structured data)** →
+  `references/tables.md`
+- Rich Messages / blocks / capability matrix → `references/telegram-capabilities.md`
 - Every regular format (HTML/MarkdownV2/entities, custom emoji, captions,
   link-preview/silent/protected controls) → `references/regular-formatting.md`
-- Rich Messages / blocks / capability matrix → `references/telegram-capabilities.md`
 - Channel posts, notifications, automated/semi-automated broadcasts →
   `references/channels-and-broadcasting.md`
 - Choosing a format → `references/format-selection.md`
@@ -144,6 +173,10 @@ usually stay regular messages.
 
 ## Non-negotiable rules
 
+- **Tables first.** For any structured / rows-columns / label→value data, build a
+  real Telegram table (`references/tables.md`) — not a monospace `pre` grid or a
+  bulleted list. Simpler formats are the escape hatch for trivial one-liners, not
+  the default.
 - Investigate the project **before** changing it.
 - **One escaping function per format** — never a single universal escaper.
 - Never pass **arbitrary or AI-generated HTML** straight to Telegram; whitelist
@@ -156,15 +189,18 @@ usually stay regular messages.
 - Don't duplicate formatter utilities, scatter magic limits, or upgrade an SDK
   without reviewing breaking changes.
 - Don't claim a feature works until it is **tested**.
-- Apply rich-content styling conventions by default: **bold table headers**
-  (`is_header` / `<th>` / markdown header row, repeated when a table splits),
-  language-tagged code blocks, heading blocks for titles, descriptive link text,
-  captions on media (see `references/telegram-capabilities.md`).
+- Apply rich-content styling conventions by default: **semantic table headers**
+  (`is_header` / `<th>` / markdown header row, repeated when a table splits;
+  never faked with bold body cells), aligned numeric columns, language-tagged
+  code blocks, heading blocks for titles, descriptive link text, captions on
+  media (see `references/tables.md` and `references/telegram-capabilities.md`).
 
 ## Definition of done
 
-Audit complete and defects identified · minimum sufficient format chosen ·
-implemented in project style · backward compatible (keyboards, callbacks, topics,
+Audit complete and defects identified · richest-fit format chosen (**table** for
+structured data; simpler formats only as the escape hatch) · tables use semantic
+headers + aligned columns · implemented in project style · backward compatible
+(keyboards, callbacks, topics,
 reply context, localizations intact) · safe context-aware escaping · fallback +
 tests added · project checks green · limits sourced from official docs · no
 unverified claims · "last verified" date recorded. Report per step 14.
