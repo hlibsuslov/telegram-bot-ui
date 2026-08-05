@@ -1,8 +1,8 @@
 # telegram-bot-ui
 
-**A portable, SDK-agnostic Agent Skill for designing and improving the user
-interface of Telegram bots** — texts, buttons, keyboards, navigation, colors,
-custom emoji, streaming feedback, and message rendering.
+**A portable, SDK-agnostic Agent Skill for designing, auditing, and improving the
+user interface of Telegram bots** — texts, buttons, keyboards, navigation,
+colors, custom emoji, streaming feedback, and message rendering.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Agent Skill](https://img.shields.io/badge/format-Agent%20Skills-8A2BE2.svg)](https://github.com/anthropics/skills)
@@ -21,6 +21,13 @@ business logic.
 >
 > *Formerly `telegram-rich-messages`.* All of the message-formatting capability
 > is still here — it is now one layer of a larger UI skill.
+>
+> **Re-verified against core.telegram.org on 2026-08-05** (Bot API 10.2 is still
+> the newest release). That pass corrected the `InputRichBlockTable` /
+> `RichBlockTableCell` field names, which had previously been inferred rather
+> than read from the object pages, promoted the Rich Message limits from
+> "third-party, unverified" to documented fact, and added the Ephemeral Messages
+> surface. Details: [`references/official-sources.md`](references/official-sources.md).
 
 ## Purpose
 
@@ -37,8 +44,40 @@ Make a bot's interface clear, consistent, and safe to change:
 across any language and any Telegram SDK, **without breaking existing handlers,
 `callback_data`, deep links, or translations**.
 
+## Two modes: build and audit
+
+| You give it | Mode | What happens |
+|---|---|---|
+| A goal — "add a settings menu", "write the onboarding" | **Build** | Screen map → text → structure → layout → emphasis → tests |
+| An existing bot — a repo, a handler file, or a pasted snippet | **Audit** | Scope → text inventory → per-string diagnosis → ranked findings → grouped proposals → agreed rewrite |
+
+Audit mode is the common one. "Analyze this bot", "проанализируй бота", "rework
+all the texts", "переработай тексты", or a pasted handler with "anything you'd
+improve?" all land here — the agent is expected to *find* the work rather than
+wait for a named fix. Pipeline: `references/auditing-existing-bots.md`.
+
+## It volunteers, it doesn't wait
+
+Bot text is never "just text": it is a table, a list, a checklist, a heading
+tree, or genuinely a one-liner. On every task the skill runs
+**content-shape detection** (`references/content-shape-detection.md`) over the
+strings it touches and then:
+
+- **acts** when it is already authoring that text (no permission needed to use a
+  heading);
+- **offers** when the better rendering is text it wasn't asked to change —
+  naming the message, the shape, the reader's gain, and what stays untouched;
+- **asks** only when the answer changes *what the message says*.
+
+The `Label: value` run that is secretly a 2-column table is the single most
+common miss in real bots. The guard against the opposite failure is explicit:
+a one-line "Saved ✅" stays a one-line "Saved ✅" — over-formatting is also a
+defect.
+
 ## When to use it
 
+- "Analyze this bot", "rework all the texts", "review my bot's error messages" —
+  auditing an existing bot, with or without a stated goal.
 - "Improve the bot's UX/UI", "redesign this menu", "this keyboard is overloaded",
   "users don't understand this screen", "add a back button".
 - Button labels, ordering, grouping, colors, custom emoji icons; inline vs reply
@@ -296,6 +335,9 @@ telegram-bot-ui/
 ├── SKILL.md                     # compact operational guide (loaded on activation)
 ├── README.md · LICENSE
 ├── references/                  # progressive-disclosure detail (read on demand)
+│   ├── content-shape-detection.md       # ★ spot what text should become; act/offer/ask
+│   ├── auditing-existing-bots.md        # ★ inventory → diagnose → propose → rework
+│   ├── ephemeral-messages.md            # ★ per-user group messages (Bot API 10.2)
 │   ├── microcopy-and-labels.md          # texts, titles, captions, labels, emoji
 │   ├── buttons-and-styles.md            # style colors, emphasis, layout
 │   ├── inline-keyboards.md              # callbacks, pagination, editing

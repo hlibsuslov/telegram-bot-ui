@@ -6,6 +6,10 @@
 > HTML / MarkdownV2 / entities are the *escape hatch*. Still match the project's
 > existing conventions and utilities when you build the rich or the simple path.
 
+**Before this file, run the detector.** `content-shape-detection.md` decides
+*whether* the content has a shape at all and whether to act, offer, or ask. This
+file decides *which mechanism* to build once that's settled.
+
 ## Decision order
 
 Ask these in order and stop at the first "yes":

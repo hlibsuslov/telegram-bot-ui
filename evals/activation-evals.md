@@ -42,6 +42,33 @@ the same surface, not a separate skill.
 | P23 | "Our localized templates break MarkdownV2." | i18n + escaping | `localization-and-rtl.md` |
 | P24 | "Update the bot to the latest Bot API UI features." | capability migration | `ui-changelog.md` |
 
+## Positive — audit of an existing bot (should activate)
+
+| # | Request | Why it matches | Routes to |
+|---|---|---|---|
+| P25 | "Analyze this bot and tell me what's wrong." | audit mode | `auditing-existing-bots.md` |
+| P26 | "Проанализируй бота." | audit mode (RU) | `auditing-existing-bots.md` |
+| P27 | "Переработай все тексты бота." | full rework pipeline | `auditing-existing-bots.md` |
+| P28 | "Rework every message in this repo." | inventory → voice → rewrite | `auditing-existing-bots.md` |
+| P29 | *(pastes a handler file)* "Anything you'd improve here?" | snippet audit | `auditing-existing-bots.md` |
+| P30 | "Review my bot's error messages." | text diagnosis | `auditing-existing-bots.md` |
+| P31 | "Why does my bot feel unprofessional?" | consistency + microcopy audit | `auditing-existing-bots.md` |
+
+## Positive — proactive detection (should activate *and* volunteer)
+
+These are the cases the skill must not merely answer, but **improve unasked**.
+
+| # | Request | Expected proactive behaviour |
+|---|---|---|
+| P32 | "Send the user their order summary." | Detect 4+ `Label: value` lines → build a 2-column table without asking |
+| P33 | "Add a /stats command." | Detect records × attributes → build a real table, not a `<pre>` grid |
+| P34 | "Make this message show the three plans." | Detect parallel records → propose a comparison table |
+| P35 | "Just fix the typo in this handler." | Fix the typo; **offer** (don't silently apply) the table hiding in the same message |
+| P36 | "Send 'Saved ✅' after the form." | Detect nothing — escape hatch. Must **not** propose a table |
+
+P36 is the anti-over-formatting guard: a skill that proposes structure here is
+miscalibrated, and that is as much a failure as missing P32.
+
 ## Negative (should NOT activate)
 
 | # | Request | Why it's out of scope |
@@ -70,6 +97,11 @@ the same surface, not a separate skill.
   hard negative and a terminology trap).
 - A pure "rewrite this text" request is **positive** (P7) — text is layer 1 of
   the interface.
+- P25–P31 arrive **without a stated goal** — the user hands over code and expects
+  the agent to find the work. If the skill only activates when a specific fix is
+  named, it misses its most common real use.
+- P32–P36 test *calibration*, not activation: the skill must volunteer structure
+  where structure exists and stay quiet where it doesn't.
 
 ## How to run the check
 

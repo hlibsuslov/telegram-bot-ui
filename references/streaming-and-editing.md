@@ -27,8 +27,16 @@ Requirements and discipline:
 - **Throttle updates.** Do not send a draft per token. Coalesce into meaningful
   increments (e.g. per block, per N characters, or every ~1s) to respect rate
   limits.
-- Respect **rate limits** and **file-upload limits**; media in a draft still
-  counts against media/upload constraints.
+- **Private chats only.** `sendRichMessageDraft.chat_id` is documented as *"the
+  target private chat"* (Integer). There is no group/channel streaming — use
+  throttled `editMessageText` there instead.
+- **No direct file upload:** *"Direct upload of new files isn't supported."*
+  Media in a draft must already exist (a `file_id` or an HTTP/HTTPS URL bound via
+  `InputRichMessage.media`). Upload before the stream starts, not during it.
+- The draft is a **~30-second temporary preview** — if generation runs longer,
+  keep refreshing the same `draft_id`, and never treat the draft as persisted.
+- `InputRichBlockThinking` / `<tg-thinking>` is valid **only** here, never in a
+  final `sendRichMessage`.
 - **Finalize** the stream by sending a real persistent Rich Message
   (`sendRichMessage`) — the draft is a live preview, not the final record. Follow
   the project's convention for whether the draft becomes the message or is

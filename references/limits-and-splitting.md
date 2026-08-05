@@ -4,20 +4,28 @@
 > Limits change between Bot API versions. The values below are a starting point;
 > confirm them for the project's Bot API version. See `official-sources.md`.
 
-## Reference limits (verify before relying on them)
+## Reference limits
 
 | Limit | Value | Source status |
 |---|---|---|
 | Regular message text | 4096 chars | stable, historical |
 | Media caption | 1024 chars | stable, historical |
-| Rich message text | 32,768 UTF-8 chars | official blog (2026-06-11) |
+| Rich message text | 32,768 UTF-8 chars | **official** (Bot API, *Rich Message Limits*), incl. custom-emoji alt text and formula source |
 | Rich "Show More" cutoff | ~8,000 chars shown, rest collapsed | official blog |
-| Blocks per rich message | 500 | **secondary — verify** |
-| Nesting depth | 16 levels | **secondary — verify** |
-| Media attachments per rich message | 50 | **secondary — verify** |
-| Table columns | 20 | **secondary — verify** |
+| Blocks per rich message | 500 | **official** — counts nested blocks, list items, **table rows**, quotations, details |
+| Nesting depth | 16 levels | **official** |
+| Media attachments per rich message | 50 | **official** |
+| Table columns | 20 | **official** |
 | Media group size | 10 items | stable, historical |
-| Message rate (per chat) | ~1/sec sustained; bursts limited | verify; drives streaming |
+| Message rate (per chat) | ~1/sec sustained; bursts limited | Bots FAQ; drives streaming |
+| Broadcast rate | 30 msg/s free; up to 1000 msg/s with Paid Broadcasts (0.1 Stars each, needs ≥10,000 Stars) | **official** |
+
+The five Rich Message limits were confirmed on core.telegram.org on 2026-08-05
+under *Rich Message Formatting Options → Rich Message Limits*; earlier revisions
+of this skill carried four of them as unverified third-party claims.
+
+**The 500-block limit is the one that surprises people:** table rows count, so a
+long table exhausts the budget far sooner than the character count suggests.
 
 Keep these constants in **one place** in the project; never scatter magic
 numbers across call sites.

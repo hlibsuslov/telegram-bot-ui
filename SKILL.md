@@ -1,20 +1,21 @@
 ---
 name: telegram-bot-ui
 description: >-
-  Design, audit, and improve the interface of Telegram bots: message texts,
-  microcopy, titles, captions, button labels, inline and reply keyboards, action
-  grouping, visual hierarchy, colored buttons (style: primary/success/danger),
-  custom emoji on buttons (icon_custom_emoji_id), menu button, commands,
-  navigation, back and pagination, confirmations, empty and error states,
-  consistency between screens and states, streaming AI replies
-  (sendMessageDraft, sendRichMessageDraft, tg-thinking), progress and typing
-  feedback, personalization, links and deep links, localization, and message
-  formatting (HTML, MarkdownV2, entities, Rich Messages, tables). Use for any
-  request about a bot's UI, UX, menu, keyboards, buttons, navigation, wording,
-  or how a message looks — "rewrite this bot's text", "improve this menu", "add
-  colored buttons", "the bot feels frozen", "can't parse entities".
-  Do NOT use for bot logic that never reaches the interface (webhooks, payment
-  processing, auth, databases, group admin) or Microsoft .rtf files.
+  Design, audit, and improve Telegram bot interfaces: message text, microcopy,
+  button labels, inline and reply keyboards, colored buttons (style), button
+  custom emoji, menu button, commands, navigation, error and empty
+  states, streaming AI replies (sendMessageDraft,
+  sendRichMessageDraft, tg-thinking), progress feedback, ephemeral per-user
+  group messages, localization, and formatting (HTML, MarkdownV2, entities,
+  Rich Messages, tables). Also AUDITS AN EXISTING BOT — repo, handler file, or
+  pasted snippet: inventories every user-visible string, diagnoses it, proposes
+  fixes. Triggers: "improve this menu", "rewrite this bot's text", "analyze
+  this bot", "проанализируй бота", "rework the texts", "переработай тексты",
+  "the bot feels frozen", "can't parse entities". Whenever bot text is written
+  or reviewed, detect its real shape (table, list, checklist, headings) and
+  proactively offer the better rendering. Do not use for logic that never
+  reaches the interface (webhooks, payments, auth, databases) or Microsoft
+  .rtf files.
 ---
 
 # Telegram Bot UI
@@ -37,8 +38,40 @@ screen consistent with the rest of the bot; keep localization intact; and
 render message bodies with the richest format that fits — across any language
 and any Telegram SDK, **without breaking existing handlers or business logic**.
 
+## Be proactive — this is not an on-request-only skill
+
+Bot text is never "just text": it is a table, a list, a checklist, a heading
+tree, or genuinely a one-liner. On **every** task, run
+`references/content-shape-detection.md` over the strings you touch, then:
+
+- **Act** when you're already authoring that text — build it right, don't ask
+  permission to use a heading.
+- **Offer** when the better rendering is text you weren't asked to change —
+  name the message, the shape, the reader's gain, and what stays untouched.
+  Batch many findings into a few ranked decisions, not a stream of questions.
+- **Ask** only when the answer changes *what the message says*, or when you
+  can't see the data behind the proposed columns.
+
+Shipping a wall of `Label: value` lines without noticing it is a table is a
+failure. So is over-formatting: a one-line status stays a one-line status.
+
+## Two entry modes
+
+| The user gives you | Mode | Start at |
+|---|---|---|
+| A goal ("add a settings menu", "write onboarding") | **Build** | Core workflow below |
+| An existing bot — repo, file, or snippet ("analyze this", "rework the texts") | **Audit** | `references/auditing-existing-bots.md` |
+
+Audit mode is the common one: scope → text inventory → per-string diagnosis →
+ranked findings → grouped proposals → agreed rewrite. **Never rewrite message #1
+before the inventory is complete** — that's how the anti-inconsistency pass
+creates inconsistency.
+
 ## When to use
 
+- **Auditing an existing bot:** "analyze this bot", "review my bot's messages",
+  "rework all the texts", "why is this bot confusing", or a pasted handler to
+  critique → `references/auditing-existing-bots.md`.
 - **Interface work:** "improve the bot's UX/UI", "redesign this menu", "the
   keyboard is overloaded", "users don't understand this screen", "add a back
   button", "group these actions", "make the main action stand out".
@@ -121,6 +154,9 @@ version, use it. UI-relevant version gates: `references/ui-changelog.md`.
 6. Identify the **real UX defects** (don't invent work): ambiguous labels,
    overloaded keyboards, dead ends with no way back, inconsistent naming,
    destructive actions one tap away, unlocalized strings, unreadable bodies.
+   Run **content-shape detection** over every user-visible string while you are
+   here (`references/content-shape-detection.md`) — this is where most of the
+   value is found.
 7. Design the fix: text first, then structure, then layout, then color/emoji —
    **in that order**. Color is the last layer, never the fix for a bad label.
 8. Check SDK support for every field you plan to use
@@ -146,7 +182,7 @@ Do **not** write implementation code before steps 1–6 are complete.
 | 1 | **Words** | Does the user understand what this is and what happens next? | `references/microcopy-and-labels.md` |
 | 2 | **Structure** | Which actions exist, how are they grouped and ordered? | `references/inline-keyboards.md`, `references/reply-keyboards.md` |
 | 3 | **Navigation** | How do I get here, back, and out? Which state am I in? | `references/navigation-and-flows.md` |
-| 4 | **Body rendering** | Is the content readable — table, list, headings, plain? | `references/format-selection.md`, `references/tables.md` |
+| 4 | **Body rendering** | Is the content readable — table, list, headings, plain? | `references/content-shape-detection.md`, `references/format-selection.md`, `references/tables.md` |
 | 5 | **Emphasis** | What is *the* action here? What is dangerous? | `references/buttons-and-styles.md`, `references/custom-emoji.md` |
 
 A screen that fails layer 1 cannot be rescued by layers 4–5. Never start with
@@ -198,6 +234,10 @@ Rule: **structured data becomes a real table, never a monospace grid** — but a
 menu screen is a short prompt plus buttons, not an essay. Full matrix:
 `references/format-selection.md`.
 
+**Which row are you in?** The two-axis test: can you name the rows *and* the
+columns, with most intersections filled? Three yeses → table; one axis → list.
+Full signals and the escape hatch: `references/content-shape-detection.md`.
+
 ## Feedback while the bot is working
 
 Waiting with no signal is the most common UX failure in bots. Choose by the
@@ -243,6 +283,8 @@ sentence, or a real stage change — and honour `retry_after`. One `draft_id` /
 - Worked before/after scenarios → `references/examples-before-after.md`
 
 **Content rendering**
+- **What the text should become (run by default)** →
+  `references/content-shape-detection.md`
 - Tables → `references/tables.md`
 - Rich Messages / blocks / capability matrix →
   `references/telegram-capabilities.md`
@@ -256,7 +298,11 @@ sentence, or a real stage change — and honour `retry_after`. One `draft_id` /
   `references/channels-and-broadcasting.md`
 
 **Engineering**
+- **Auditing / reworking an existing bot's text and UI** →
+  `references/auditing-existing-bots.md`
 - Investigating an unknown project → `references/project-adaptation.md`
+- Ephemeral per-user messages in groups (Bot API 10.2) →
+  `references/ephemeral-messages.md`
 - Escaping / injection / user or AI content →
   `references/security-and-escaping.md`
 - Localization, RTL, button-label length →
@@ -277,6 +323,10 @@ Trigger scenarios: `evals/activation-evals.md`.
   If a `callback_data` change is unavoidable, say so and update every
   handler/route in the same change.
 - **Words before pixels.** Fix the label before adding a color or an emoji.
+- **Detect, then say something.** Never silently ship the flat version, and never
+  silently restructure text you weren't asked to change — offer it instead.
+- **Inventory before rewriting.** On "rework the texts", finish the inventory and
+  agree the voice on 2–3 samples first.
 - **No decorative color.** Assign `style` by the *meaning* of the action. Do not
   color every button; an all-colored keyboard has no hierarchy.
 - **`style` accepts only** `primary`, `success`, `danger`. No HEX/RGB/CSS.
@@ -320,6 +370,13 @@ when optional user fields are missing · existing
 `callback_data`/URLs/deep links/handlers preserved · localization keys intact
 and layout tolerant of long translations · SDK support verified or a documented
 fallback path used · body rendered with the richest fit (tables for structured
-data) · safe escaping · fallback + tests added · project checks green · limits
-sourced from official docs · "last verified" date recorded. Report per step 14
-and run `references/consistency-and-review.md`.
+data) · **content-shape detection run over every touched string, and anything
+better left unbuilt was explicitly offered, not silently dropped** · safe
+escaping · fallback + tests added · project checks green · limits sourced from
+official docs · "last verified" date recorded. Report per step 14 and run
+`references/consistency-and-review.md`.
+
+In **audit mode**, add: scope and Bot API ceiling stated · text inventory
+produced · findings tiered (bugs → high-value UX → polish), each with
+`file:line` and a one-line fix · proposals grouped into a few ranked decisions
+with a recommendation · voice agreed on samples before any bulk rewrite.

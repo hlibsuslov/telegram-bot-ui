@@ -54,6 +54,28 @@ sent as plain text needs no escaping; only length/splitting matters.
   supports. Whitelist the exact supported tag/attribute set from official docs.
 - Validate every `href`/media URL scheme. Strip disallowed tags rather than
   forwarding them.
+- **The named-entity set is wider than regular HTML's.** Regular HTML supports
+  only `&lt; &gt; &amp; &quot;`; Rich HTML additionally supports
+  `&apos; &nbsp; &hellip; &mdash; &ndash; &lsquo; &rsquo; &ldquo; &rdquo;`.
+  All numeric entities work in both. Don't emit a named entity into *regular*
+  HTML just because it worked in a rich message — it will render literally.
+
+## Automatic entity detection (rich messages)
+
+In a Rich Message, Telegram **automatically detects** plain URLs, e-mail
+addresses, @mentions, #hashtags, $cashtags, /commands, phone numbers, and bank
+card numbers — **on by default**, with no markup from you.
+
+This is a real injection surface: user-supplied or AI-generated text that merely
+*contains* `@admin`, `/start`, or a phone-shaped string becomes a live,
+tappable entity in your bot's message.
+
+- Set **`InputRichMessage.skip_entity_detection = True`** whenever the body
+  carries untrusted or machine-generated text and those detections aren't wanted.
+- It is all-or-nothing for the message — if you need *some* real links, emit them
+  as explicit markup and keep detection off.
+- Telegram shows an "Open this link?" confirmation with the full URL before
+  opening an inline link, which mitigates but does not remove the risk.
 
 ### MessageEntity
 - No character escaping (there is no parse_mode), but **offsets/lengths must be
