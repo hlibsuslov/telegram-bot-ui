@@ -75,6 +75,12 @@ Consequences to state out loud when you propose custom emoji:
 > eligibility from them is how this test session initially misread its own
 > results. Only the round-trip below settles it.
 
+The same bot was re-tested after Telegram Premium was activated on the owner's
+account: with no code change, the entity came back intact through all three
+paths, including inside a rich-message table cell. That is the confirmation
+that the failure was entitlement and nothing else — and it is why the check
+below is worth wiring in permanently rather than run once.
+
 When a bot may not use custom emoji, Telegram **does not return an error**. It
 accepts the request with `ok: true` and **strips the custom emoji entities**,
 leaving the alternative characters behind. The send looks perfectly successful;
