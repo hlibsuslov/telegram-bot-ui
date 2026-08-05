@@ -38,10 +38,16 @@ Consequences to state out loud when you propose custom emoji:
 
 ## Ineligible bots fail **silently** — verify, don't assume
 
-> **Verified against the live Bot API on 2026-08-05** with a bot whose owner
-> has an active Premium subscription (Premium-only profile fields present on
-> the owner's account) sending to that owner's private chat — i.e. squarely
-> inside eligibility route 2 as the docs describe it.
+> **Verified against the live Bot API on 2026-08-05**, on a bot that qualified
+> for neither route — no Fragment username, and the owner's Telegram Premium
+> was not active. That is the *expected* ineligible case; what is not obvious,
+> and what this section exists for, is how it fails.
+>
+> A caution about diagnosing this: Premium-only *profile* fields on the owner's
+> account (`emoji_status_custom_emoji_id`, `background_custom_emoji_id`) are
+> **not** proof of an active subscription — they survive expiry. Inferring
+> eligibility from them is how this test session initially misread its own
+> results. Only the round-trip below settles it.
 
 When a bot may not use custom emoji, Telegram **does not return an error**. It
 accepts the request with `ok: true` and **strips the custom emoji entities**,
@@ -77,8 +83,9 @@ Consequences for how you build this:
   is evidence.
 - **Cache the verdict with a TTL and re-probe.** Eligibility changes when the
   owner's Premium lapses or renews, so a permanent "off" flag goes stale.
-- Do not assume the docs' route 2 is enough for a given bot: confirm it on the
-  bot you are actually shipping, by round-trip, and state the result.
+- **Do not infer eligibility from anything but the round-trip** — not from the
+  owner's profile fields, not from a successful send, not from an echoed button
+  field. Confirm it on the bot you are actually shipping, and state the result.
 
 ### Content rule the server enforces silently, too
 
