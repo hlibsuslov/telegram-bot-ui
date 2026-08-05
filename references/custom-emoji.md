@@ -36,6 +36,89 @@ Consequences to state out loud when you propose custom emoji:
 - Before recommending this feature, **ask which route the project qualifies
   for.** If neither, use Unicode emoji and say why.
 
+## Ineligible bots fail **silently** — verify, don't assume
+
+> **Verified against the live Bot API on 2026-08-05** with a bot whose owner
+> has an active Premium subscription (Premium-only profile fields present on
+> the owner's account) sending to that owner's private chat — i.e. squarely
+> inside eligibility route 2 as the docs describe it.
+
+When a bot may not use custom emoji, Telegram **does not return an error**. It
+accepts the request with `ok: true` and **strips the custom emoji entities**,
+leaving the alternative characters behind. The send looks perfectly successful;
+the reader just sees plain emoji. This was reproduced identically through all
+three input paths:
+
+| How the emoji were sent | What came back |
+|---|---|
+| `parse_mode=HTML` with `<tg-emoji emoji-id="…">😀</tg-emoji>` | `entities: []` |
+| Explicit `MessageEntity` (`custom_emoji`, correct UTF-16 offset) | `entities: []` |
+| `sendRichMessage` with `RichTextCustomEmoji` in a table cell and a paragraph | cell returned as the plain string `"😀"` |
+
+Consequences for how you build this:
+
+- **A `try/except` around the send proves nothing.** There is no exception to
+  catch, so a fallback ladder keyed on errors never fires and the bot ships a
+  silently degraded message.
+- **The only reliable check is to read the message back.** Every send method
+  returns the resulting `Message`; inspect it and compare with what you sent:
+
+  ```python
+  sent = await bot.send_message(chat_id, text, parse_mode="HTML")
+  used_custom_emoji = any(e.type == "custom_emoji" for e in (sent.entities or []))
+  # Rich messages: walk sent.rich_message.blocks for RichTextCustomEmoji instead.
+  if not used_custom_emoji:
+      ...  # degrade explicitly, tell the user why, and log it
+  ```
+
+- **`icon_custom_emoji_id` cannot be used to probe eligibility.** Telegram
+  echoes `reply_markup` back verbatim — the field is present in the returned
+  `Message` whether or not the icon will render. Only the *entity* round-trip
+  is evidence.
+- **Cache the verdict with a TTL and re-probe.** Eligibility changes when the
+  owner's Premium lapses or renews, so a permanent "off" flag goes stale.
+- Do not assume the docs' route 2 is enough for a given bot: confirm it on the
+  bot you are actually shipping, by round-trip, and state the result.
+
+### Content rule the server enforces silently, too
+
+Per the MTProto documentation, a custom emoji entity **must wrap exactly one
+regular emoji — the one in the sticker's own `alt`** (the `emoji` field in the
+Bot API), *"otherwise the server will ignore it"*. Same failure mode: no error,
+just a missing entity. Always take the alternative text from
+`getCustomEmojiStickers`/`getStickerSet` rather than picking a similar-looking
+character, and count its length in UTF-16 code units.
+
+### When the bot is not eligible, show a picture instead
+
+The Unicode fallback is often not good enough: in a real 80-emoji pack measured
+here, the 80 distinct custom emoji had only **52 distinct fallback characters**,
+so five different emoji all displayed as `☺️` and no reader could tell which ID
+was which.
+
+`sendSticker` is not the way out — a custom-emoji sticker is rejected with
+`Bad Request: can't send emoji stickers in messages`. What does work: a custom
+emoji is a sticker, so its file downloads and re-uploads as an ordinary image.
+
+1. `getCustomEmojiStickers` / `getStickerSet` → `Sticker`.
+2. Take `sticker.thumbnail.file_id` when present (animated `.tgs` and video
+   `.webm` emoji are not still images), else `sticker.file_id`.
+3. `getFile` + download, then send as a photo — optionally composited into one
+   numbered sheet whose numbers match a `#` column in your table.
+
+### Other routes worth knowing
+
+- **A supergroup's own emoji set.** `ChatFullInfo.custom_emoji_sticker_set_name`
+  — per the Bot API, custom emoji from a group's assigned set *"can be used by
+  all users and bots in the group"*. Inside that one group, that one pack works
+  without Fragment or Premium.
+- **Polls.** `sendPoll`'s `question_entities` and each option's `text_entities`
+  accept **only** custom emoji entities — a rare surface where nothing else is
+  allowed.
+- **Reactions.** `setMessageReaction` documents bots as non-premium users: one
+  reaction per message, and a custom emoji reaction only if it is already on the
+  message or explicitly allowed by chat admins.
+
 ## Getting a real `custom_emoji_id` — never invent one
 
 The value is the ID of one specific custom emoji sticker. It is **not** a
@@ -95,8 +178,10 @@ Rules:
   same keyboard — pick one convention per bot and record it.
 - **Keep icons out of destructive confirmation buttons** unless the icon is
   unmistakably a warning; a friendly icon undercuts a `danger` action.
-- If the field is set but the bot is not eligible, expect Telegram to reject the
-  request — handle it as a validation error and fall back to a plain button
+- If the field is set but the bot is not eligible, **do not expect an error**:
+  Telegram accepts the request and the icon simply never renders, and the field
+  is echoed back in the returned `Message` either way. Establish eligibility
+  from a text-entity round-trip (above) and drop the icon when it fails
   (`errors-and-fallbacks.md`).
 
 ## In message text
@@ -142,4 +227,9 @@ not paragraph markers. `microcopy-and-labels.md` has the per-screen limits.
       `emoji` field.
 - [ ] Buttons remain understandable with the icon missing.
 - [ ] IDs live in config with a comment, not inline magic strings.
-- [ ] Behaviour when the bot loses eligibility is defined and logged.
+- [ ] Eligibility **proven by a round-trip**, not assumed: a sent message was
+      read back and the custom emoji entity was still there.
+- [ ] The silent-strip path is handled — no reliance on an exception that
+      Telegram never raises.
+- [ ] Behaviour when the bot loses eligibility is defined and logged, and the
+      verdict is cached with a TTL rather than latched forever.

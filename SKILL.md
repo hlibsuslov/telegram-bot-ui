@@ -281,6 +281,9 @@ Trigger scenarios: `evals/activation-evals.md`.
   color every button; an all-colored keyboard has no hierarchy.
 - **`style` accepts only** `primary`, `success`, `danger`. No HEX/RGB/CSS.
 - **Never invent a `custom_emoji_id`.** Fetch it or ask for it. Never guess.
+- **Prove custom emoji actually shipped.** An ineligible bot gets no error —
+  Telegram accepts the send and strips the entities. Read the sent message back
+  before claiming it worked (`references/custom-emoji.md`).
 - **Never rely on color or emoji alone.** The interface must stay usable in
   plain text, in a client that ignores the new fields, and for a user who cannot
   distinguish the colors.
