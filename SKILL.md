@@ -174,10 +174,12 @@ per screen. `danger` only for genuinely destructive actions, paired with a
 confirmation step.** Secondary actions such as "Back" normally stay unstyled.
 
 **`icon_custom_emoji_id` (Bot API 9.4)** — shows a custom emoji before the
-button text. Usable only by bots that **purchased additional usernames on
-Fragment**, or in messages sent **directly by the bot to private, group, and
-supergroup chats when the bot's owner has Telegram Premium**. **Never invent an
-ID** — obtain it (`references/custom-emoji.md`) or ask the user for it.
+button text. **Entitlement first:** a bot may use custom emoji anywhere only if
+the account that created it has an **active Telegram Premium subscription**, or
+the bot **owns a Fragment username**. Neither one, no custom emoji — and
+Telegram says nothing, it just strips them. If they are not appearing, check
+that before the markup, and tell the user. **Never invent an ID** — obtain it
+(`references/custom-emoji.md`) or ask the user for it.
 
 Both fields are **decoration on top of a working button**: the label must still
 make sense with no color and no icon.
@@ -281,6 +283,9 @@ Trigger scenarios: `evals/activation-evals.md`.
   color every button; an all-colored keyboard has no hierarchy.
 - **`style` accepts only** `primary`, `success`, `danger`. No HEX/RGB/CSS.
 - **Never invent a `custom_emoji_id`.** Fetch it or ask for it. Never guess.
+- **Custom emoji need entitlement, and it is not optional.** The bot's owner
+  account must have active Telegram Premium, or the bot must own a Fragment
+  username. When emoji don't appear, say that first instead of debugging markup.
 - **Prove custom emoji actually shipped.** An ineligible bot gets no error —
   Telegram accepts the send and strips the entities. Read the sent message back
   before claiming it worked (`references/custom-emoji.md`).

@@ -1,5 +1,27 @@
 # Custom emoji — on buttons and in text
 
+> ## Read this before anything else
+>
+> **A bot cannot send custom emoji unless it is entitled to. There is no code
+> that gets around this.** If your custom emoji are not appearing, the cause is
+> almost certainly entitlement, not your markup — Telegram accepts the message,
+> strips the emoji, and returns no error at all.
+>
+> The bot must satisfy **one** of these:
+>
+> 1. **The account that created the bot has an active Telegram Premium
+>    subscription** — the common route, and the one to check first. It is the
+>    *owner's* subscription, not the reader's, and not the bot's. Covers
+>    messages the bot sends directly to private, group and supergroup chats.
+> 2. The bot **owns a username purchased on Fragment** — the older route, which
+>    also covers channels.
+>
+> **If neither holds, stop.** Do not debug the markup, do not add retries, do
+> not write a workaround. Tell the user plainly that the owner's account needs
+> Telegram Premium (or a Fragment username), ship the Unicode fallback in the
+> meantime, and say so in your report. Confirm the fix with the round-trip
+> check below — nothing else proves it.
+
 Two different mechanisms, one eligibility rule:
 
 | Where | Mechanism | Since |
@@ -25,6 +47,10 @@ So a bot may use custom emoji when **either**:
 
 Consequences to state out loud when you propose custom emoji:
 
+- **This is the single most common reason custom emoji "don't work".** Before
+  investigating anything else, ask the user outright: *does the account that
+  created this bot have Telegram Premium, active right now?* An expired
+  subscription behaves exactly like never having had one.
 - **Channel posts are not covered by the Premium route.** Route 2 lists private,
   group, and supergroup chats only. For channels, the Fragment route applies.
 - **It depends on the *bot owner's* Premium, not the viewer's.** If the owner
