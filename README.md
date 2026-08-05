@@ -337,7 +337,7 @@ telegram-bot-ui/
 **Claude Code — user level (all projects):**
 
 ```bash
-git clone https://github.com/hlibsuslov/telegram-rich-messages.git \
+git clone https://github.com/hlibsuslov/telegram-bot-ui.git \
   ~/.claude/skills/telegram-bot-ui
 ```
 
@@ -350,8 +350,11 @@ git clone https://github.com/hlibsuslov/telegram-rich-messages.git \
 On Windows the Claude Code user path is
 `%USERPROFILE%\.claude\skills\telegram-bot-ui`.
 
-The skill directory name should match the `name` in `SKILL.md`
-(`telegram-bot-ui`), regardless of the remote repository's name.
+The skill directory name must match the `name` in `SKILL.md`
+(`telegram-bot-ui`). The repository was renamed from `telegram-rich-messages`
+on 2026-08-05; GitHub redirects the old URL, so existing clones keep working —
+run `git remote set-url origin https://github.com/hlibsuslov/telegram-bot-ui.git`
+to update one.
 
 ## Use
 
