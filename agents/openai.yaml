@@ -3,12 +3,15 @@
 # hosts unchanged; this file only adds Codex-specific presentation/policy and is
 # ignored by hosts that don't use it. Schema per Codex "Build skills" docs.
 interface:
-  display_name: "Telegram Rich Messages"
+  display_name: "Telegram Bot UI"
   short_description: >-
-    Produce Telegram's editor-style rich formatting — above all TABLES — for bot,
-    channel, and broadcast messages (Rich Markdown/HTML, InputRichBlockTable,
-    sendRichMessage); then audit, migrate, debug, and test all other formatting:
-    HTML, MarkdownV2, entities, media, splitting, streaming drafts, editing, RTL.
+    Design and improve a Telegram bot's interface: message texts and microcopy,
+    button labels, inline and reply keyboards, action grouping and hierarchy,
+    colored buttons (style: primary/success/danger), custom emoji on buttons
+    (icon_custom_emoji_id), menus, commands, navigation, streaming and progress
+    feedback, cross-screen consistency, localization — plus message rendering
+    (HTML, MarkdownV2, entities, Rich Messages, tables). Preserves callback_data,
+    deep links, handlers, and translations.
 
 policy:
   # Allow the model to select this skill automatically when a prompt matches the

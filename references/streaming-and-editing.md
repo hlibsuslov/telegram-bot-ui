@@ -1,10 +1,17 @@
-# Streaming and editing
+# Streaming and editing (rich content mechanics)
 
 Covers streaming AI replies with `sendRichMessageDraft` and editing rich content
 with `editMessageText` + `rich_message`.
 
 > Requires Bot API 10.1+ (`sendRichMessageDraft`, `editMessageText rich_message`).
 > Verify the project's version and SDK support first (`sdk-compatibility.md`).
+
+**For the UX decision** — which feedback mechanism a given operation deserves
+(`answerCallbackQuery` · `sendChatAction` · `sendMessageDraft` ·
+`sendRichMessageDraft` · throttled edits · Mini App progress), the throttling
+thresholds, the `<tg-thinking>` block, and the fallback ladder — read
+`dynamic-feedback-and-streaming.md` first. This file is the rich-content
+implementation detail underneath it.
 
 ## Streaming with `sendRichMessageDraft`
 

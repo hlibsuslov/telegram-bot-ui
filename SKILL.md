@@ -1,100 +1,99 @@
 ---
-name: telegram-rich-messages
+name: telegram-bot-ui
 description: >-
-  FIRST PRIORITY — produce Telegram's editor-style rich formatting, above all
-  TABLES, then headings, lists, quotes, code, and inline media, for bot, channel,
-  and broadcast messages via Bot API Rich Messages (Rich Markdown/HTML,
-  InputRichMessage, InputRichBlockTable and other blocks, sendRichMessage,
-  sendRichMessageDraft, editMessageText rich_message). Then everything else:
-  audit, migrate, debug, and test all other Telegram formatting — plain text,
-  HTML, MarkdownV2, MessageEntity (types, nesting, custom emoji), captions,
-  link-preview/silent/protected options, long-message splitting, streaming AI
-  drafts, editing, channels, localization, and RTL. Use for any task that renders
-  or formats Telegram message/post content — especially tables — "can't parse
-  entities" errors, unsafe/double escaping, or broken/oversized messages. Do NOT
-  use for bot logic unrelated to presentation (webhooks, commands, payments,
-  auth, group admin, Mini Apps without text) or Microsoft .rtf files.
+  Design, audit, and improve the interface of Telegram bots: message texts,
+  microcopy, titles, captions, button labels, inline and reply keyboards, action
+  grouping, visual hierarchy, colored buttons (style: primary/success/danger),
+  custom emoji on buttons (icon_custom_emoji_id), menu button, commands,
+  navigation, back and pagination, confirmations, empty and error states,
+  consistency between screens and states, streaming AI replies
+  (sendMessageDraft, sendRichMessageDraft, tg-thinking), progress and typing
+  feedback, personalization, links and deep links, localization, and message
+  formatting (HTML, MarkdownV2, entities, Rich Messages, tables). Use for any
+  request about a bot's UI, UX, menu, keyboards, buttons, navigation, wording,
+  or how a message looks — "rewrite this bot's text", "improve this menu", "add
+  colored buttons", "the bot feels frozen", "can't parse entities".
+  Do NOT use for bot logic that never reaches the interface (webhooks, payment
+  processing, auth, databases, group admin) or Microsoft .rtf files.
 ---
 
-# Telegram Rich Messages
+# Telegram Bot UI
 
-Portable, SDK-agnostic skill for the full life cycle of **Telegram message
-presentation**: audit → format selection → design → implementation → fixing →
-migration → testing → documentation. It teaches you to **investigate the target
-project first**, then make content **as richly structured as it deserves —
-tables first** — falling back to simpler formats only when structure adds
-nothing.
+Portable, SDK-agnostic skill for the full life cycle of a **Telegram bot's user
+interface**: audit → screen/state map → text, buttons and navigation design →
+implementation → migration → testing → documentation.
 
-## Top priority: tables and rich formatting
-
-**This is the skill's headline job.** Telegram now supports true editor-style
-rich messages for bots (Bot API 10.1+): the same **tables, headings, lists,
-quotes, code blocks, and inline media** described in Telegram's blog *"Text
-Editor, Communities & Ephemeral Messages"*. Bots, channels, and broadcasts can
-all produce them via Rich Messages (`sendRichMessage` + `InputRichMessage`).
-
-Default reach order for any task:
-
-1. **Is the content rows/columns or label→value data?** → build a **table**
-   (`references/tables.md`). This is the first thing to try.
-2. **Is it a structured document** (report, AI answer, comparison, schedule)? →
-   rich formatting — headings, lists, quotes, code, media.
-3. **Escape hatch — is it a genuinely trivial one-liner** (a status, an "OK", a
-   short prompt/notification)? → plain or regular formatting.
-
-Tables come **first**; everything else is chosen only when a table or rich
-document genuinely doesn't fit. Do not wrap a one-line confirmation in a table —
-but do prefer a real table for anything with structure, instead of monospace
-`pre` blocks or bulleted key/values.
+A Telegram bot has no CSS and no layout engine. Its entire interface is made of
+five things: **message text, formatting, keyboards, the chat-level chrome
+(commands, menu button, deep links), and the transitions between states.** This
+skill treats all five as one design surface.
 
 ## Purpose
 
-Help safely work with everything about how Telegram message *content* looks and
-is delivered — in bots, channels, and automated/semi-automated broadcasts:
-choosing a format, writing safe escaping, building structured/rich content,
-controlling previews/notifications, splitting long messages, streaming AI
-answers, editing, posting to channels, mailing to many recipients, localizing,
-handling RTL, adding fallbacks, and testing — across any language and any
-Telegram SDK.
+Help an agent make a bot's interface **clear, consistent, and safe to change**:
+choose what a screen says and how it says it; label, group, order, color, and
+lay out buttons; design navigation between screens and states; keep every
+screen consistent with the rest of the bot; keep localization intact; and
+render message bodies with the richest format that fits — across any language
+and any Telegram SDK, **without breaking existing handlers or business logic**.
 
 ## When to use
 
-Message/post-presentation tasks: Telegram HTML / MarkdownV2 / MessageEntity (all
-entity types, nesting, custom emoji); captions; link-preview, silent, and
-protected-content options; Rich Markdown, Rich HTML, Rich Messages;
-`sendRichMessage`, `sendRichMessageDraft`, `InputRichMessage`, `InputRichBlock`;
-tables, formulas, lists, task lists, quotes, code blocks, inline/rich media;
-long messages; AI streaming drafts; channel posts; automatic/semi-automatic
-broadcasts and newsletters; `can't parse entities`; wrong/double escaping; broken
-or oversized formatting; localized message templates; RTL; Telegram CMS /
-publishing editors; migrating old Telegram formatter utilities.
+- **Interface work:** "improve the bot's UX/UI", "redesign this menu", "the
+  keyboard is overloaded", "users don't understand this screen", "add a back
+  button", "group these actions", "make the main action stand out".
+- **Buttons and keyboards:** inline keyboards, reply keyboards, button labels,
+  button order and layout, `style` colors, `icon_custom_emoji_id` custom emoji,
+  Web App / URL / copy-text / switch-inline buttons, `ForceReply`, keyboard
+  removal, pagination and back navigation.
+- **Text and microcopy:** rewriting bot messages, titles, captions, prompts,
+  confirmations, error and empty states, tone and length, emoji use.
+- **Chat chrome:** `/commands` list and scopes, menu button, `/start` and deep
+  links, first-run experience.
+- **Dynamic feedback:** streaming AI answers (`sendMessageDraft`,
+  `sendRichMessageDraft`, `<tg-thinking>`), progress bars, "typing" statuses,
+  button loaders, "the bot feels frozen while it works".
+- **Personalization and links:** greeting users by name safely, locale hints,
+  URL buttons vs inline links, link previews, deep links, mentions.
+- **Consistency:** the same action named three different ways, back buttons that
+  exist on some screens only, mismatched states after an edit.
+- **Message rendering:** HTML / MarkdownV2 / `MessageEntity`, custom emoji in
+  text, captions, tables and Rich Messages, link-preview / silent / protected
+  options, long-message splitting, streaming drafts, editing, channel posts,
+  localization and RTL, `can't parse entities`, broken or oversized messages.
 
 ## When NOT to use
 
-Do not activate for: general bot setup; webhook infrastructure; commands
-unrelated to formatting; payments / Stars; authorization; Mini Apps with no text
-content; group administration; parsing *incoming* messages unrelated to rich
-content; Telegram marketing strategy; Microsoft `.rtf` files.
+Bot logic that does not surface in the interface: webhook infrastructure,
+payment *processing*, authorization, databases and migrations, group
+administration and moderation logic, scraping, analytics pipelines, Mini App
+*internals* (its own HTML/CSS UI is ordinary web front-end work — this skill
+covers only the Telegram-side surface: the button or menu that opens it).
+Also not for Microsoft `.rtf` files.
 
 ## Terminology — do not confuse these
 
+- **Inline keyboard ≠ reply keyboard.** `InlineKeyboardMarkup` is attached to a
+  specific message and sends `callback_query` / opens URLs. `ReplyKeyboardMarkup`
+  replaces the user's letter keyboard and **sends text as a normal message**.
+  Different button classes, different UX.
+- **`style` is not a color value.** It is one of exactly `primary`, `success`,
+  `danger`. Telegram has no HEX/RGB/CSS button colors.
+- **`icon_custom_emoji_id` is not a `file_id`,** not an emoji-pack name, not a
+  link, and not a Unicode emoji. It is the ID of one specific custom emoji.
 - **Telegram Rich Text is NOT Microsoft RTF.** Never call Rich Messages "RTF".
-  `.rtf` files are unrelated. Only use "RTF" for actual `.rtf` documents.
 - **Rich Markdown ≠ MarkdownV2.** MarkdownV2 is a `parse_mode` for *regular*
-  messages with strict char escaping. Rich Markdown is a document syntax for
-  *Rich Messages* (headings, tables, task lists, math, details, media).
-- **Rich HTML ≠ arbitrary browser HTML.** Only a specific Telegram-supported tag
-  set is allowed; never pass raw/AI HTML through.
-- **Bot API Rich Messages ≠ Telegram's user-facing Rich Text Editor.** Related,
-  different interfaces. Don't cite the editor UI as the Bot API contract.
-- **Regular Messages and Rich Messages are different mechanisms.** New Rich
-  capabilities do **not** mean every existing message must be migrated.
+  messages with strict escaping. Rich Markdown is the document syntax for
+  *Rich Messages*.
+- **Rich HTML ≠ arbitrary browser HTML.** Only Telegram's supported tag set.
+- **Editing a keyboard ≠ resending a screen.** `editMessageReplyMarkup` and
+  `editMessageText` update in place; sending a new message stacks screens.
 
 ## Source-of-truth policy
 
 Trust in this order:
-1. Current **official Telegram documentation** (Bot API, Bot Features, formatting
-   pages, official blog).
+1. Current **official Telegram documentation** (Bot API, Bot Features,
+   formatting pages, official blog).
 2. Official **Bot API changelog**.
 3. Docs of the **SDK actually installed** in the project.
 4. **SDK source code**.
@@ -104,103 +103,223 @@ Trust in this order:
 **Re-verify official docs before acting** when: the task touches new APIs; today
 is later than the "last verified" date in `references/official-sources.md`; the
 project's Bot API version is unknown; SDK docs contradict the Bot API; you meet
-an unfamiliar type/param; or the user asks for "the latest capabilities".
-For anything version-dependent, check the **Bot API changelog first**. This skill
-is **not frozen** at Bot API 10.2 — if Telegram shipped a newer version, use it.
+an unfamiliar type/field; or the user asks for "the latest capabilities".
+This skill is **not frozen** at Bot API 10.2 — if Telegram shipped a newer
+version, use it. UI-relevant version gates: `references/ui-changelog.md`.
 
-## Core workflow (audit before you code)
+## Core workflow (audit before you redesign)
 
-1. Read the project's instructions (`AGENTS.md` / `CLAUDE.md` / README / contrib docs).
+1. Read the project's instructions (`AGENTS.md` / `CLAUDE.md` / README / docs).
 2. Detect language, framework, **Telegram SDK, and exact versions**.
-3. Determine the **Bot API version** the SDK/project actually supports.
-4. Find every point that **generates, formats, sends, and edits** messages.
-5. Classify each message (notification / interactive / document / AI answer / media).
-6. Identify the **real defects** (don't invent work).
-7. Choose the format **richest-fit-first — a table for any structured data**
-   (see matrix below); simpler formats only as the escape hatch.
-8. Design a solution compatible with the current SDK and Bot API version.
-9. Implement it in the project's existing style and utilities (don't duplicate).
-10. Add a **fallback** path (see `errors-and-fallbacks.md`).
-11. Add **tests** using the project's existing test infrastructure.
-12. Run the project's lint / typecheck / tests / applicable smoke checks.
-13. Re-check that no unsafe legacy patterns remain.
-14. Report: current message-flow map, changes, limits, and verification evidence.
+3. Determine the **Bot API version** the SDK actually supports — this decides
+   whether `style` and `icon_custom_emoji_id` are reachable at all.
+4. Build a **screen/state map**: every message the user can see, every keyboard,
+   every `callback_data`, every command, every transition
+   (`references/navigation-and-flows.md`).
+5. Classify each screen: entry / menu / form step / confirmation / result /
+   error / empty / notification.
+6. Identify the **real UX defects** (don't invent work): ambiguous labels,
+   overloaded keyboards, dead ends with no way back, inconsistent naming,
+   destructive actions one tap away, unlocalized strings, unreadable bodies.
+7. Design the fix: text first, then structure, then layout, then color/emoji —
+   **in that order**. Color is the last layer, never the fix for a bad label.
+8. Check SDK support for every field you plan to use
+   (`references/sdk-compatibility.md`).
+9. Implement in the project's existing style and utilities (don't duplicate its
+   keyboard builders).
+10. **Preserve** `callback_data`, URLs, deep links, handler routing, and
+    localization keys unless the user explicitly asked to change them.
+11. Add a **fallback** path and keep old clients usable
+    (`references/errors-and-fallbacks.md`).
+12. Add **tests** with the project's existing test infrastructure
+    (`references/testing-playbook.md`).
+13. Run the project's lint / typecheck / tests / applicable smoke checks.
+14. Report: screen map, what changed and why, what was deliberately left alone,
+    limits, and verification evidence.
 
-Do **not** write implementation code before the audit (steps 1–6) is complete.
+Do **not** write implementation code before steps 1–6 are complete.
 
-## Format selection (quick matrix)
+## The five UI layers (design in this order)
 
-Try the richest fit first; drop to a simpler format only when structure adds
-nothing. Full matrix + rules: `references/format-selection.md`.
+| # | Layer | Question it answers | Reference |
+|---|---|---|---|
+| 1 | **Words** | Does the user understand what this is and what happens next? | `references/microcopy-and-labels.md` |
+| 2 | **Structure** | Which actions exist, how are they grouped and ordered? | `references/inline-keyboards.md`, `references/reply-keyboards.md` |
+| 3 | **Navigation** | How do I get here, back, and out? Which state am I in? | `references/navigation-and-flows.md` |
+| 4 | **Body rendering** | Is the content readable — table, list, headings, plain? | `references/format-selection.md`, `references/tables.md` |
+| 5 | **Emphasis** | What is *the* action here? What is dangerous? | `references/buttons-and-styles.md`, `references/custom-emoji.md` |
+
+A screen that fails layer 1 cannot be rescued by layers 4–5. Never start with
+color.
+
+## Button essentials (full rules in `references/buttons-and-styles.md`)
+
+**Exactly one action per inline button.** Per the Bot API,
+`InlineKeyboardButton` requires *exactly one* of the fields other than `text`,
+`icon_custom_emoji_id`, and `style` (`url`, `callback_data`, `web_app`,
+`login_url`, `switch_inline_query*`, `copy_text`, `callback_game`, `pay`).
+`KeyboardButton` allows *at most one* of its non-`text`/`icon`/`style` fields.
+
+**`style` (Bot API 9.4)** — optional, exactly one of:
+
+| `style` | Color | Meaning | Typical labels |
+|---|---|---|---|
+| `primary` | blue | *The* main forward action of the screen | Continue, Start, Open, Next, Choose |
+| `success` | green | Commit / confirm / complete positively | Save, Confirm, Publish, Submit, Finish |
+| `danger` | red | Destructive or irreversible | Delete, Reset, Unsubscribe, Leave, Cancel plan |
+| *omitted* | app default | Everything else | Back, Settings, Help, secondary options |
+
+If `style` is omitted, an app-specific style is used. **At most one `primary`
+per screen. `danger` only for genuinely destructive actions, paired with a
+confirmation step.** Secondary actions such as "Back" normally stay unstyled.
+
+**`icon_custom_emoji_id` (Bot API 9.4)** — shows a custom emoji before the
+button text. Usable only by bots that **purchased additional usernames on
+Fragment**, or in messages sent **directly by the bot to private, group, and
+supergroup chats when the bot's owner has Telegram Premium**. **Never invent an
+ID** — obtain it (`references/custom-emoji.md`) or ask the user for it.
+
+Both fields are **decoration on top of a working button**: the label must still
+make sense with no color and no icon.
+
+## Message body: richest fit that helps
 
 | Need | Use |
 |---|---|
-| **Rows/columns or label→value data** | **Table** — `references/tables.md` (`InputRichBlockTable` / Rich MD pipe table / Rich HTML `<table>`) |
-| Structured doc: AI answer, article, report, task list, math | **Rich Markdown** |
-| Server-templated complex content, precise supported-tag control | **Rich HTML** |
-| Typed generation from data / CMS / AST, ambiguity-free | **Explicit `InputRichBlock` blocks** |
-| Photo/video/doc/album/caption fits UX better | **Separate media methods** |
-| *Escape hatch:* trivial one-liner, HTML is project standard | **Regular HTML** |
-| *Escape hatch:* project standardizes on it | **MarkdownV2** (strict escaping) |
-| *Escape hatch:* exact offset/length control, no parse_mode | **MessageEntity** |
-| *Escape hatch:* genuinely no styling needed | **Plain text** |
+| Rows/columns or label→value data | **Table** — `references/tables.md` |
+| Structured doc: report, AI answer, comparison, checklist | **Rich Markdown** |
+| Server-templated content, precise tag control | **Rich HTML** |
+| Typed generation from data / CMS / AST | **`InputRichBlock` blocks** |
+| A screen with a keyboard: short prompt + options | **Regular HTML**, short |
+| Exact offset control, no `parse_mode` | **`MessageEntity`** |
+| Genuinely no styling needed | **Plain text** |
 
-Rule: **default to a table (or rich document) for anything with structure; use
-the simpler formats only as the escape hatch for genuinely trivial one-liners.**
-Don't inflate a one-line confirmation into a table — but don't render structured
-data as monospace or bullet soup either.
+Rule: **structured data becomes a real table, never a monospace grid** — but a
+menu screen is a short prompt plus buttons, not an essay. Full matrix:
+`references/format-selection.md`.
+
+## Feedback while the bot is working
+
+Waiting with no signal is the most common UX failure in bots. Choose by the
+shape of the operation (full rules:
+`references/dynamic-feedback-and-streaming.md`):
+
+| Situation | Mechanism |
+|---|---|
+| Inline button tapped | `answerCallbackQuery` **first**, then do the work |
+| 2–5 s operation | `sendChatAction` (`typing`, `upload_photo`, …) — 5 s max |
+| AI text being generated (private chat) | `sendMessageDraft` — same `draft_id`, finalize with `sendMessage` |
+| AI answer with structure | `sendRichMessageDraft` + `<tg-thinking>` → `sendRichMessage` |
+| Real, nameable stages | `editMessageText`, throttled |
+| Progress not measurable | Named stages — **never a fake percentage** |
+| Interactive process | Mini App (`BottomButton.showProgress()`, `WebApp.ready()`) |
+
+Never edit per token: update on ~800–1500 ms, ~30–80 new characters, a finished
+sentence, or a real stage change — and honour `retry_after`. One `draft_id` /
+`message_id` / `operation_id` per operation, finalized exactly once.
 
 ## Which reference to read (task-routed — don't read them all)
 
-- **Tables (the flagship — read first for any structured data)** →
-  `references/tables.md`
-- Rich Messages / blocks / capability matrix → `references/telegram-capabilities.md`
-- Every regular format (HTML/MarkdownV2/entities, custom emoji, captions,
-  link-preview/silent/protected controls) → `references/regular-formatting.md`
-- Channel posts, notifications, automated/semi-automated broadcasts →
-  `references/channels-and-broadcasting.md`
+**UI / UX**
+- Button labels, message wording, tone, emoji in text →
+  `references/microcopy-and-labels.md`
+- `style` colors, emphasis, button layout and grouping →
+  `references/buttons-and-styles.md`
+- Inline keyboards, `callback_data`, pagination, editing in place →
+  `references/inline-keyboards.md`
+- Reply keyboards, `ForceReply`, keyboard removal, placeholders →
+  `references/reply-keyboards.md`
+- Screens, states, back/home, commands, menu button, deep links →
+  `references/navigation-and-flows.md`
+- Custom emoji on buttons and in text, obtaining IDs, eligibility →
+  `references/custom-emoji.md`
+- Streaming answers, thinking blocks, progress bars, loaders, chat actions →
+  `references/dynamic-feedback-and-streaming.md`
+- Personalizing with user data, links, previews, deep links →
+  `references/personalization-and-links.md`
+- Cross-screen consistency + the pre-finish checklist →
+  `references/consistency-and-review.md`
+- UI-relevant Bot API history and version gates → `references/ui-changelog.md`
+- Worked before/after scenarios → `references/examples-before-after.md`
+
+**Content rendering**
+- Tables → `references/tables.md`
+- Rich Messages / blocks / capability matrix →
+  `references/telegram-capabilities.md`
+- HTML / MarkdownV2 / entities / captions / previews →
+  `references/regular-formatting.md`
 - Choosing a format → `references/format-selection.md`
-- Investigating an unknown project → `references/project-adaptation.md`
-- Escaping / injection / safe user or AI content → `references/security-and-escaping.md`
-- Limits & splitting long messages → `references/limits-and-splitting.md`
-- Media (rich + separate methods) → `references/rich-media.md`
+- Media → `references/rich-media.md`
+- Limits & splitting → `references/limits-and-splitting.md`
 - Streaming drafts & editing → `references/streaming-and-editing.md`
-- Localization & RTL → `references/localization-and-rtl.md`
-- Telegram/API errors & fallback ladder → `references/errors-and-fallbacks.md`
-- SDK gaps / raw Bot API adapter → `references/sdk-compatibility.md`
+- Channels, notifications, broadcasts →
+  `references/channels-and-broadcasting.md`
+
+**Engineering**
+- Investigating an unknown project → `references/project-adaptation.md`
+- Escaping / injection / user or AI content →
+  `references/security-and-escaping.md`
+- Localization, RTL, button-label length →
+  `references/localization-and-rtl.md`
+- Errors, fallbacks, old clients → `references/errors-and-fallbacks.md`
+- SDK gaps / raw Bot API payloads → `references/sdk-compatibility.md`
 - Testing → `references/testing-playbook.md`
 - Sources & last-verified dates → `references/official-sources.md`
 
+Local validators: `scripts/validate_skill.py`, `scripts/validate_references.py`,
+`scripts/validate_keyboard.py` (keyboard JSON rules — offline, no token).
+Trigger scenarios: `evals/activation-evals.md`.
+
 ## Non-negotiable rules
 
-- **Tables first.** For any structured / rows-columns / label→value data, build a
-  real Telegram table (`references/tables.md`) — not a monospace `pre` grid or a
-  bulleted list. Simpler formats are the escape hatch for trivial one-liners, not
-  the default.
-- Investigate the project **before** changing it.
-- **One escaping function per format** — never a single universal escaper.
-- Never pass **arbitrary or AI-generated HTML** straight to Telegram; whitelist
-  tags, attributes, and URL schemes.
-- `InputRichMessage` carries **exactly one** of `markdown`, `html`, or `blocks`.
-- Compute offsets/lengths in **UTF-16 code units** (Telegram's unit).
+- **Preserve behaviour.** Keep existing `callback_data`, URLs, deep links,
+  payloads, and handler routing. A visual redesign must not rewrite handlers.
+  If a `callback_data` change is unavoidable, say so and update every
+  handler/route in the same change.
+- **Words before pixels.** Fix the label before adding a color or an emoji.
+- **No decorative color.** Assign `style` by the *meaning* of the action. Do not
+  color every button; an all-colored keyboard has no hierarchy.
+- **`style` accepts only** `primary`, `success`, `danger`. No HEX/RGB/CSS.
+- **Never invent a `custom_emoji_id`.** Fetch it or ask for it. Never guess.
+- **Never rely on color or emoji alone.** The interface must stay usable in
+  plain text, in a client that ignores the new fields, and for a user who cannot
+  distinguish the colors.
+- **Verify SDK support** for `style` / `icon_custom_emoji_id` before using them;
+  if absent, offer an SDK upgrade *or* a raw Bot API payload path
+  (`references/sdk-compatibility.md`) — never silently drop the field.
+- **Keep localization intact.** New strings go through the existing i18n
+  mechanism with the project's key conventions; never hardcode a translated
+  label over a catalog. Layout must survive the longest translation.
+- **Don't mix Unicode emoji and custom emoji** on the same control set without a
+  deliberate, stated reason.
+- **Every tap gets feedback**, and every long operation gets an honest progress
+  signal — no invented percentages, no per-token edits, no stalled spinners.
+  Finalize a streamed draft with a real message, including on failure.
+- **Treat user data as optional and untrusted:** `last_name`, `username`,
+  `language_code`, `photo_url` may be absent; names must be escaped or passed as
+  entities; Mini App personalization uses validated `initData`.
+- Investigate the project **before** changing it; don't duplicate its keyboard
+  builders or scatter magic limits.
+- **One escaping function per format** — never a single universal escaper; never
+  pass arbitrary or AI-generated HTML straight to Telegram.
 - Pull **current limits from official docs**; don't hardcode remembered numbers.
-- Fallback must be explicit and logged — no silent degradation, no infinite
-  retries, no swallowing errors, no logging bot tokens or full personal text.
-- Don't duplicate formatter utilities, scatter magic limits, or upgrade an SDK
-  without reviewing breaking changes.
-- Don't claim a feature works until it is **tested**.
-- Apply rich-content styling conventions by default: **semantic table headers**
-  (`is_header` / `<th>` / markdown header row, repeated when a table splits;
-  never faked with bold body cells), aligned numeric columns, language-tagged
-  code blocks, heading blocks for titles, descriptive link text, captions on
-  media (see `references/tables.md` and `references/telegram-capabilities.md`).
+- Fallbacks must be explicit and logged — no silent degradation, no infinite
+  retries, no logging bot tokens or full personal text.
+- Don't claim a screen works until it has been **tested**.
 
 ## Definition of done
 
-Audit complete and defects identified · richest-fit format chosen (**table** for
-structured data; simpler formats only as the escape hatch) · tables use semantic
-headers + aligned columns · implemented in project style · backward compatible
-(keyboards, callbacks, topics,
-reply context, localizations intact) · safe context-aware escaping · fallback +
-tests added · project checks green · limits sourced from official docs · no
-unverified claims · "last verified" date recorded. Report per step 14.
+Screen/state map produced · real UX defects identified (not invented) · text
+fixed before structure, structure before color · every inline button carries
+exactly one action field · `style` assigned by meaning, ≤1 `primary` per screen,
+`danger` only where destruction is real and confirmed · custom emoji IDs
+verified, never invented · labels readable with no color and no emoji · every
+tap acknowledged and every long operation given honest, throttled progress ·
+streamed drafts finalized with a real message · personalization degrades safely
+when optional user fields are missing · existing
+`callback_data`/URLs/deep links/handlers preserved · localization keys intact
+and layout tolerant of long translations · SDK support verified or a documented
+fallback path used · body rendered with the richest fit (tables for structured
+data) · safe escaping · fallback + tests added · project checks green · limits
+sourced from official docs · "last verified" date recorded. Report per step 14
+and run `references/consistency-and-review.md`.

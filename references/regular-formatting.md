@@ -6,6 +6,10 @@
 > renders (link previews, silent, protected, spoilers, effects).
 > **Last verified: 2026-07-15.** Confirm the tag/entity set for the project's Bot
 > API version against `#formatting-options`; see `official-sources.md`.
+>
+> Custom emoji have their own reference — eligibility (Fragment / owner
+> Premium), obtaining real IDs, Unicode fallbacks, and the button field
+> `icon_custom_emoji_id`: `custom-emoji.md`.
 
 There are three ways to style a **regular** message: `parse_mode="HTML"`,
 `parse_mode="MarkdownV2"`, or an explicit `entities` array. Pick **one** per

@@ -1,7 +1,32 @@
 # Localization and RTL
 
-Formatting must survive translation and mixed text direction. Localized strings
-are **untrusted input** for the target format — escape them at the boundary.
+The whole interface — message text, button labels, command descriptions — must
+survive translation and mixed text direction. Localized strings are **untrusted
+input** for the target format: escape them at the boundary.
+
+## The interface is localized, not just the text
+
+- **Button labels** go through the same catalog as message text. A hardcoded
+  label inside a keyboard builder is the most common localization leak.
+- **Command descriptions** are localized via `setMyCommands` with
+  `language_code` (and scoped with `BotCommandScope*`) — a separate call per
+  language, easy to forget when copy changes.
+- **Reply-keyboard routing must not depend on the displayed label** — resolve
+  incoming text through the catalog or a stable key, or the bot works in English
+  only (`reply-keyboards.md`).
+- **Layout must survive the longest translation.** German, Finnish, and Russian
+  labels routinely run 30–60% longer than English; a 3-button row that fits in
+  English truncates elsewhere. Design rows against the longest locale, not the
+  source one.
+- **Emoji and icons are localization-neutral, words are not** — never solve a
+  length problem by deleting the word and keeping the emoji.
+- **Formality is a per-language decision** (formal vs informal address). Pick one
+  per locale and hold it across every string, including buttons.
+- **Dates and times:** prefer the `date_time` entity so the client renders in the
+  reader's locale and timezone instead of a server-formatted string
+  (`navigation-and-flows.md`). Otherwise state the timezone explicitly.
+- **Names are user data,** not translatable strings — escape them, and expect
+  RTL or emoji-only names (`personalization-and-links.md`).
 
 ## What to check in localized templates
 
@@ -42,5 +67,6 @@ are **untrusted input** for the target format — escape them at the boundary.
 
 Cover at minimum: Latin, Cyrillic, Arabic/Persian/Hebrew, mixed-direction,
 emoji, and combining characters — for each format the project uses. Verify that
-placeholders, entities/offsets, and split boundaries stay correct per locale.
-See `testing-playbook.md`.
+placeholders, entities/offsets, and split boundaries stay correct per locale,
+that every button label exists in every locale, and that the longest label still
+fits its row. See `testing-playbook.md`.
