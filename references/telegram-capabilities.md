@@ -1,8 +1,9 @@
 # Telegram message capabilities
 
-> **Last verified against official docs: 2026-07-15** (Bot API 10.2, 14 Jul 2026).
-> Values marked *(secondary)* were not confirmed on core.telegram.org and MUST be
-> re-checked before you rely on them. See `official-sources.md`.
+> **Last verified against official docs: 2026-08-05** (Bot API 10.2, 14 Jul 2026 —
+> still the newest entry in the changelog on that date). Object field names and
+> limits below were read directly from core.telegram.org. See
+> `official-sources.md`.
 
 This is a compact map, not a copy of the docs. When the task depends on an exact
 field, open the official page for that object/method and confirm.
@@ -33,7 +34,14 @@ messages just because Rich exists.
   classes `InputRichBlock*` (Paragraph, SectionHeading, Preformatted, Footer,
   Divider, MathematicalExpression, Anchor, List, ListItem, BlockQuotation,
   PullQuotation, Collage, Slideshow, Table, Details, Map, Animation, Audio,
-  Photo, Video, VoiceNote, Thinking); `InputMediaVoiceNote`.
+  Photo, Video, VoiceNote, Thinking); `InputMediaVoiceNote`. **Also shipped
+  Ephemeral Messages** — a first-class UI surface, see
+  `ephemeral-messages.md`.
+
+**Version gate that matters:** Rich Messages arrived in **10.1**, but the
+`InputRichBlock*` **input** classes and the `blocks` field arrived in **10.2**.
+A project on exactly 10.1 can send `markdown`/`html` rich messages but **cannot**
+use the typed `blocks` path.
 
 Always confirm the **latest** version in the changelog before starting.
 
@@ -45,10 +53,21 @@ Always confirm the **latest** version in the changelog before starting.
 - **`InputRichMessage`** — what a bot sends. Carries **exactly one** of:
   - `markdown` — a Rich Markdown string;
   - `html` — a Rich HTML string;
-  - `blocks` — an array of explicit `InputRichBlock*` objects.
-  Plus `media` (array of `InputRichMessageMedia`) to bind media referenced from
-  markdown/html, and standard send fields (chat/business/reply/markup). Confirm
-  the exact optional-field list in the official object before use.
+  - `blocks` — an array of explicit `InputRichBlock*` objects (**10.2+**).
+
+  Plus these verified optional fields:
+  - `media` — array of `InputRichMessageMedia`, binding media referenced from
+    markdown/html via `tg://photo?id=`, `tg://video?id=`, `tg://audio?id=`;
+  - `is_rtl` — Boolean, render the whole message right-to-left;
+  - `skip_entity_detection` — Boolean, **suppress Telegram's automatic detection**
+    of URLs, e-mails, @mentions, #hashtags, $cashtags, /commands, phone and bank
+    card numbers. Set this whenever the body contains user-supplied or
+    machine-generated text that must not become live links
+    (`security-and-escaping.md`).
+
+  Note the send *parameters* (`chat_id`, `reply_markup`, `reply_parameters`,
+  `disable_notification`, `protect_content`, …) live on `sendRichMessage`, **not**
+  inside `InputRichMessage`.
 - **`InputRichMessageContent`** — an `InputMessageContent` variant for inline /
   guest / Web App query results.
 - **`InputRichMessageMedia`** — declares a media item (by file_id, `tg://…?id=`
@@ -60,6 +79,45 @@ Always confirm the **latest** version in the changelog before starting.
 - **`sendRichMessageDraft`** — stream a partial/updating rich message (see
   `streaming-and-editing.md`). Uses a stable non-zero `draft_id`.
 - **`editMessageText` + `rich_message`** — replace a message's rich content.
+
+## Official Rich Message limits (documented, not folklore)
+
+From the *Rich Message Formatting Options* section — quote these as real limits:
+
+- **32,768 UTF-8 characters** total (including custom-emoji alt text and formula
+  source); content past ~8,000 collapses behind "Show More".
+- **500 blocks**, counting nested blocks, list items, **table rows**, quotation
+  blocks and details blocks.
+- **16 levels** of nested formatting/blocks.
+- **50 media attachments** total.
+- **20 columns** in a table.
+
+## `InputRichBlock*` type discriminators (verified — several are non-obvious)
+
+The `type` string is **not** the class name lowercased. Verified values:
+
+| Class | `type` |
+|---|---|
+| `InputRichBlockParagraph` | `paragraph` |
+| `InputRichBlockSectionHeading` | **`heading`** (+ `size` 1–6, **1 = largest**) |
+| `InputRichBlockPreformatted` | **`pre`** |
+| `InputRichBlockBlockQuotation` | **`blockquote`** (+ optional `credit`) |
+| `InputRichBlockPullQuotation` | **`pullquote`** |
+| `InputRichBlockMathematicalExpression` | `mathematical_expression` |
+| `InputRichBlockVoiceNote` | `voice_note` |
+| `InputRichBlockList` | `list` (holds `items`: `InputRichBlockListItem[]`) |
+| `InputRichBlockTable` | `table` |
+| `InputRichBlockDetails` | `details` (+ `summary`, `blocks`, `is_open`) |
+| `InputRichBlockThinking` | `thinking` (**`sendRichMessageDraft` only**) |
+| Others | `footer`, `divider`, `anchor`, `collage`, `slideshow`, `map`, `animation`, `audio`, `photo`, `video` |
+
+`InputRichBlockListItem` is **not** a block with a `type` — it carries `blocks`,
+plus optional `has_checkbox`, `is_checked`, `value`, and `type`
+(`a`/`A`/`i`/`I`/`1`) for ordered-list labelling.
+
+**`RichText`** is *either* a plain **String**, an **Array of `RichText`**, or one
+of the 25 typed `RichText*` objects. A plain string is a valid `RichText` — use
+it for ordinary text instead of building wrapper objects.
 
 ## Capability matrix (feature × format)
 
@@ -79,7 +137,7 @@ Always confirm the **latest** version in the changelog before starting.
 | Lists (ordered/unordered) | ➖ | ✅ | ✅ | ✅ | `InputRichBlockList` + `ListItem` |
 | Task lists `- [ ]` / `- [x]` | ➖ | ✅ | ✅ | ✅ | |
 | Divider / horizontal rule | ➖ | ✅ | ✅ | ✅ | `---` in Rich Markdown |
-| Tables | ➖ | ✅ | ✅ | ✅ | `InputRichBlockTable`; header cells via `is_header` (render bold); `align`/colspan/rowspan; column cap *(secondary: 20)* |
+| Tables | ➖ | ✅ | ✅ | ✅ | `InputRichBlockTable.cells` = **array of arrays** of `RichBlockTableCell`; `is_header`, `align`, `valign`, `colspan`, `rowspan`; **max 20 columns**; cells hold **inline formatting only**. See `tables.md` |
 | Details (collapsible) | ➖ | ✅ | ✅ | ✅ | |
 | Anchors / references / footnotes | ➖ | ✅ | ✅ | ✅ | |
 | Math (LaTeX inline `\(…\)` / block `\[…\]`) | ➖ | ✅ | ✅ | ✅ | `MathematicalExpression` |
@@ -107,6 +165,58 @@ Always confirm the **latest** version in the changelog before starting.
   expandable_blockquote, code, pre, text_link, text_mention, custom_emoji,
   mention, hashtag, cashtag, bot_command, url, email, phone_number.
 
+## Rich Markdown / Rich HTML quick reference (verified)
+
+Rich Markdown is **GFM-compatible where possible and may contain arbitrary
+HTML** — it is *not* MarkdownV2 and needs no backslash-escaping of `.`/`-`/`!`.
+
+| Feature | Rich Markdown | Rich HTML |
+|---|---|---|
+| Bold / italic | `**b**` `__b__` / `*i*` `_i_` | `<b>` `<strong>` / `<i>` `<em>` |
+| Underline | *(no MD syntax — use HTML)* | `<u>` `<ins>` |
+| Strikethrough | `~~s~~` | `<s>` `<strike>` `<del>` |
+| Marked / highlight | `==marked==` | `<mark>` |
+| Spoiler | `\|\|spoiler\|\|` | `<tg-spoiler>` |
+| Sub / superscript | *(HTML only)* | `<sub>` / `<sup>` |
+| Headings | `#` … `######` | `<h1>`…`<h6>` |
+| Divider | `---` | `<hr/>` |
+| Lists | `-` `*` `+`, `1.` | `<ul>` `<ol start type reversed>` `<li value type>` |
+| Task list | `- [ ]` / `- [x]` | `<li><input type="checkbox" checked>` |
+| Quote | `>` per line | `<blockquote>…<cite>Author</cite></blockquote>` |
+| Pull quote | *(HTML only)* | `<aside>…<cite>…</cite></aside>` |
+| Code | `` `x` ``, ```` ```lang ```` | `<code>`, `<pre><code class="language-…">` |
+| Table | pipe table, `:--`/`:-:`/`--:` | `<table bordered striped><caption>…<tr><th>/<td>` |
+| Math | `$x^2$`, `$$E=mc^2$$`, ```` ```math ```` | `<tg-math>`, `<tg-math-block>` |
+| Footnote | `text[^id]` + `[^id]: definition` | `<tg-reference name="id">` + `<a href="#id">` |
+| Anchor | *(HTML only)* | `<a name="ch1"></a>` + `<a href="#ch1">` |
+| Collapsible | `<details open><summary>…</summary>…</details>` | same |
+| Media | `![](https://…/x.jpg "Caption")` | `<img>`, `<video>`, `<audio>`, `<figure>`+`<figcaption>`+`<cite>` |
+| Collage / slideshow | `<tg-collage>` / `<tg-slideshow>` | same |
+| Map | `<tg-map lat="41.9" long="12.5" zoom="14"/>` | same |
+| Date-time | `![22:45 tomorrow](tg://time?unix=…&format=wDT)` | `<tg-time unix="…" format="wDT">` |
+| Custom emoji | `![😀](tg://emoji?id=…)` | `<tg-emoji emoji-id="…">😀</tg-emoji>` |
+| Thinking (draft only) | `<tg-thinking>…</tg-thinking>` | same |
+| Footer | *(HTML only)* | `<footer>` |
+
+Verified gotchas:
+
+- **Media only as a separate block**, never inline in a paragraph; media blocks
+  accept **HTTP/HTTPS URLs only** (or `tg://photo\|video\|audio?id=` bound via
+  `InputRichMessage.media`). Type is inferred from MIME type and URL.
+- **Table cells accept inline formatting only** — no blocks inside a cell.
+- **Markdown is not parsed inside block-level HTML tags** except `<details>`,
+  `<tg-collage>` and `<tg-slideshow>`; elsewhere use HTML tags only.
+- Inside inline HTML tags, nested Markdown *is* parsed
+  (`<u>text with **bold**</u>` works).
+- **Named HTML entities differ by mode.** Regular HTML supports only
+  `&lt; &gt; &amp; &quot;`. **Rich HTML additionally** supports
+  `&apos; &nbsp; &hellip; &mdash; &ndash; &lsquo; &rsquo; &ldquo; &rdquo;`.
+  All numeric entities work in both.
+- Formula source is **raw LaTeX**.
+- Telegram shows an "Open this link?" confirmation before opening inline links.
+- Auto-detection of URLs/mentions/hashtags/commands/phones/cards is **on by
+  default** — disable with `skip_entity_detection`.
+
 ## Authoring conventions (styling defaults)
 
 Apply these by default when generating rich content, so output looks intentional
@@ -124,13 +234,18 @@ project's Bot API version.
   `<td>` for body; in Rich Markdown the first row (above the `---|---` separator)
   is the header. Don't fake a header with manual bold on plain `<td>`/cells —
   use the header semantics so it renders and exports correctly.
-- **Alignment:** set cell `align` (`left`/`center`/`right`) and vertical
-  alignment (`top`/`middle`/`bottom`); align numeric columns right, text left.
-- **Spanning:** use colspan/rowspan (cell field > 1) for merged cells rather than
-  padding with empty cells.
+- **Alignment:** set cell `align` (`left`/`center`/`right`) and `valign`
+  (`top`/`middle`/`bottom`); align numeric columns right, text left.
+- **Spanning:** use `colspan`/`rowspan` (> 1) for merged cells; leave the covered
+  position as a cell with **no `text`** (an omitted `text` renders invisible)
+  rather than padding with `""`.
+- **Rich HTML tables take `<tr>` directly** — `<thead>`/`<tbody>` are **not**
+  supported tags. `<table>` accepts bare `bordered` / `striped` attributes and a
+  `<caption>`.
 - **Splitting:** never split a table mid-row; if a table must span messages,
   **repeat the header row** in each part and keep it with its body
-  (`limits-and-splitting.md`). Stay within the column cap.
+  (`limits-and-splitting.md`). Max 20 columns, and **table rows count toward the
+  500-block limit**.
 
 ### Everything else (defaults)
 

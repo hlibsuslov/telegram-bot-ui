@@ -29,10 +29,14 @@ the task is version-sensitive:
 | Bots FAQ | https://core.telegram.org/bots/faq | Rate limits (per chat / group / broadcast) | 2026-08-05 |
 | Telegram Mini Apps | https://core.telegram.org/bots/webapps | `BottomButton` progress, `WebApp.ready()` | 2026-08-05 |
 | Telegram Bot Features | https://core.telegram.org/bots/features | Feature overview | 2026-07-15 |
-| Bot API formatting options | https://core.telegram.org/bots/api#formatting-options | HTML / MarkdownV2 / entity escaping rules | 2026-07-15 |
+| Bot API formatting options | https://core.telegram.org/bots/api#formatting-options | HTML / MarkdownV2 / entity escaping rules | 2026-08-05 |
 | Styled text with entities | https://core.telegram.org/api/entities | Entity types, nesting rules | 2026-07-15 |
-| Rich Messages section | https://core.telegram.org/bots/api#rich-messages | Rich objects/methods | 2026-07-15 |
-| Rich message formatting options | https://core.telegram.org/bots/api#rich-message-formatting-options | Rich Markdown / Rich HTML / block syntax spec (linked from official blog) | 2026-07-15 |
+| Rich Messages section | https://core.telegram.org/bots/api#rich-messages | Rich objects/methods | 2026-08-05 |
+| Rich message formatting options | https://core.telegram.org/bots/api#rich-message-formatting-options | Rich Markdown / Rich HTML / block syntax spec + **Rich Message Limits** | 2026-08-05 |
+| `InputRichBlockTable` | https://core.telegram.org/bots/api#inputrichblocktable | Verified table field names | 2026-08-05 |
+| `RichBlockTableCell` | https://core.telegram.org/bots/api#richblocktablecell | Verified cell field names | 2026-08-05 |
+| `InputRichMessage` | https://core.telegram.org/bots/api#inputrichmessage | `blocks`/`html`/`markdown`, `is_rtl`, `skip_entity_detection` | 2026-08-05 |
+| Ephemeral Messages and Commands | https://core.telegram.org/bots/api#ephemeral-messages-and-commands | 15-second window, delivery caveat, admin exception | 2026-08-05 |
 | Official blog: Rich Text for Bots | https://telegram.org/blog/watch-apps-and-more#obscenely-rich-text-formatting-for-bots | Feature announcement, 32,768-char limit | 2026-07-15 |
 
 ## Facts verified on 2026-08-05 (UI surface)
@@ -114,6 +118,55 @@ Read directly from the pages listed above on 2026-08-05.
 **Version context confirmed on 2026-08-05:** the changelog's newest entry is
 **Bot API 10.2 (2026-07-14)**; 9.4 (2026-02-09) is followed by 9.5
 (2026-03-01), 9.6 (2026-04-03), 10.0 (2026-05-08), 10.1 (2026-06-11), 10.2.
+No version newer than 10.2 exists as of this check.
+
+### Rich Message object fields read verbatim on 2026-08-05
+
+Earlier revisions of this skill marked these *(verify)* and guessed the shape.
+They were read directly off the object pages and **corrected**:
+
+- **`InputRichBlockTable`**: `type` (always `"table"`), **`cells` — "Array of
+  Array of RichBlockTableCell"**, `is_bordered` (True, optional), `is_striped`
+  (True, optional), `caption` (`RichText`, optional). There is **no** `rows`
+  field and **no** row object.
+- **`RichBlockTableCell`**: `text` (`RichText`, optional — *"If omitted, then the
+  cell is invisible"*), `is_header` (True), `colspan` (Integer), `rowspan`
+  (Integer), `align` (`left`/`center`/`right`), `valign`
+  (`top`/`middle`/`bottom`). There is **no** separate `InputRichBlockTableCell`
+  class — input tables reuse `RichBlockTableCell`.
+- **`RichText`** is *"either a String for plain text, an Array of RichText, or
+  any of the following types"* (25 `RichText*` classes). A bare string is valid.
+- **`InputRichMessage`**: exactly one of `blocks` / `html` / `markdown`, plus
+  `media`, **`is_rtl`**, **`skip_entity_detection`**.
+- **`InputRichBlockSectionHeading`**: `type` is **`"heading"`**; `size` is 1–6
+  where **1 is the largest**.
+- Type discriminators that are *not* the class name: `pre`, `blockquote`,
+  `pullquote`, `heading`, `mathematical_expression`, `voice_note`.
+- **Rich HTML tables** use `<tr>` directly inside `<table>`; `<thead>`/`<tbody>`
+  are **not** in the supported tag list. `<table>` takes bare `bordered` /
+  `striped` attributes plus `<caption>`.
+- **Rich HTML named entities** (superset of regular HTML's four):
+  `&lt; &gt; &amp; &quot; &apos; &nbsp; &hellip; &mdash; &ndash; &lsquo; &rsquo;
+  &ldquo; &rdquo;`.
+- *"Table cells can contain only inline formatting."*
+- *"Markdown isn't parsed inside block HTML tags other than `<details>`,
+  `<tg-collage>` and `<tg-slideshow>`."*
+- `sendRichMessageDraft`: private chat only, non-zero `draft_id`, *"acts as a
+  temporary 30-second preview"*, *"Direct upload of new files isn't supported"*.
+
+### Bot API 10.2 Ephemeral Messages (verified 2026-08-05)
+
+- *"Any bot can send an ephemeral message to a user within **15 seconds** of the
+  incoming eligible action"*, providing `callback_query_id` or
+  `reply_parameters.ephemeral_message_id`; chat administrators may send at any
+  time without either.
+- *"It is **not guaranteed** that the ephemeral message will be received,
+  especially if the user is offline."* Same caveat on the edit methods.
+- `BotCommand.is_ephemeral`; `Message.receiver_user`,
+  `Message.ephemeral_message_id`; `editEphemeralMessageText/Media/Caption/
+  ReplyMarkup`; `deleteEphemeralMessage`.
+- Paid Broadcasts re-confirmed: 30 msg/s free, up to 1000 msg/s at 0.1 Stars
+  each, requires ≥10,000 Stars on the bot's balance.
 
 ## Facts verified on 2026-07-15
 
@@ -145,15 +198,20 @@ Confirmed against official changelog / blog:
 - `link_preview_options` fields: `is_disabled`, `url`, `prefer_small_media`,
   `show_above_text`.
 
-## Facts NOT confirmed on official pages (treat as secondary — verify)
+## Previously-unconfirmed limits — now CONFIRMED official (2026-08-05)
 
-Reported by third-party coverage, not confirmed on core.telegram.org during this
-verification. Re-check before relying on them:
+These four were carried as "secondary / third-party" in earlier revisions of this
+skill. On 2026-08-05 they were located on core.telegram.org under
+**Rich Message Formatting Options → "Rich Message Limits"** and are now
+first-class facts. Quote them as real limits:
 
-- 500 blocks per rich message.
-- Nesting depth limit of 16.
-- 50 media attachments per rich message.
-- 20 columns per table.
+- **32,768 UTF-8 characters** per rich message, *including custom emoji
+  alternative text and formula source*.
+- **500 blocks**, including nested blocks, list items, ordered list items,
+  **table rows**, quotation blocks and details blocks.
+- **16 levels** of nested formatting and blocks.
+- **50 media attachments** in total (photos, videos, audio).
+- **20 columns** in a table.
 
 ## Stable historical facts (pre-2026, unchanged)
 

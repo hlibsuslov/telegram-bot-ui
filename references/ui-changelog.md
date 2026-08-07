@@ -71,7 +71,9 @@ first-class UI surface**:
 - `date_time` entities (9.5) let deadlines and ETAs render in the reader's own
   locale instead of a server-formatted string.
 - Ephemeral messages (10.2) make per-user progress inside a group possible
-  without spamming the chat.
+  without spamming the chat — but only within a **15-second** window after an
+  eligible action (or any time, if the bot is an admin), and delivery is
+  explicitly **not guaranteed**. Full rules: `ephemeral-messages.md`.
 
 Design rules for all of it: `dynamic-feedback-and-streaming.md`.
 
@@ -86,7 +88,7 @@ Design rules for all of it: `dynamic-feedback-and-streaming.md`.
 | Localized dates in text (`date_time`) | 9.5 | MarkdownV2/entities path (HTML cannot express it) |
 | Streaming a reply before it's final | 9.3 (all bots 9.5) | Private chats only; final `sendMessage` still required |
 | Streaming a *structured* reply / `<tg-thinking>` | 10.1 | Thinking block is draft-only; final send must stay rich |
-| Per-user menus inside a group (ephemeral) | 10.2 | Edit delivery is not guaranteed |
+| Per-user menus inside a group (ephemeral) | 10.2 | 15-second reply window; delivery **not guaranteed** — `ephemeral-messages.md` |
 | Tables / headings / collapsible blocks in the body | 10.1 (+10.2 blocks) | `tables.md`, `telegram-capabilities.md` |
 | Mini App triggering a `request_*` button | 9.6 | Private-chat-only constraints |
 
