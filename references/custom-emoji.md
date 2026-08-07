@@ -1,5 +1,27 @@
 # Custom emoji — on buttons and in text
 
+> ## Read this before anything else
+>
+> **A bot cannot send custom emoji unless it is entitled to. There is no code
+> that gets around this.** If your custom emoji are not appearing, the cause is
+> almost certainly entitlement, not your markup — Telegram accepts the message,
+> strips the emoji, and returns no error at all.
+>
+> The bot must satisfy **one** of these:
+>
+> 1. **The account that created the bot has an active Telegram Premium
+>    subscription** — the common route, and the one to check first. It is the
+>    *owner's* subscription, not the reader's, and not the bot's. Covers
+>    messages the bot sends directly to private, group and supergroup chats.
+> 2. The bot **owns a username purchased on Fragment** — the older route, which
+>    also covers channels.
+>
+> **If neither holds, stop.** Do not debug the markup, do not add retries, do
+> not write a workaround. Tell the user plainly that the owner's account needs
+> Telegram Premium (or a Fragment username), ship the Unicode fallback in the
+> meantime, and say so in your report. Confirm the fix with the round-trip
+> check below — nothing else proves it.
+
 Two different mechanisms, one eligibility rule:
 
 | Where | Mechanism | Since |
@@ -25,6 +47,10 @@ So a bot may use custom emoji when **either**:
 
 Consequences to state out loud when you propose custom emoji:
 
+- **This is the single most common reason custom emoji "don't work".** Before
+  investigating anything else, ask the user outright: *does the account that
+  created this bot have Telegram Premium, active right now?* An expired
+  subscription behaves exactly like never having had one.
 - **Channel posts are not covered by the Premium route.** Route 2 lists private,
   group, and supergroup chats only. For channels, the Fragment route applies.
 - **It depends on the *bot owner's* Premium, not the viewer's.** If the owner
@@ -35,6 +61,102 @@ Consequences to state out loud when you propose custom emoji:
   specific send path you use.
 - Before recommending this feature, **ask which route the project qualifies
   for.** If neither, use Unicode emoji and say why.
+
+## Ineligible bots fail **silently** — verify, don't assume
+
+> **Verified against the live Bot API on 2026-08-05**, on a bot that qualified
+> for neither route — no Fragment username, and the owner's Telegram Premium
+> was not active. That is the *expected* ineligible case; what is not obvious,
+> and what this section exists for, is how it fails.
+>
+> A caution about diagnosing this: Premium-only *profile* fields on the owner's
+> account (`emoji_status_custom_emoji_id`, `background_custom_emoji_id`) are
+> **not** proof of an active subscription — they survive expiry. Inferring
+> eligibility from them is how this test session initially misread its own
+> results. Only the round-trip below settles it.
+
+The same bot was re-tested after Telegram Premium was activated on the owner's
+account: with no code change, the entity came back intact through all three
+paths, including inside a rich-message table cell. That is the confirmation
+that the failure was entitlement and nothing else — and it is why the check
+below is worth wiring in permanently rather than run once.
+
+When a bot may not use custom emoji, Telegram **does not return an error**. It
+accepts the request with `ok: true` and **strips the custom emoji entities**,
+leaving the alternative characters behind. The send looks perfectly successful;
+the reader just sees plain emoji. This was reproduced identically through all
+three input paths:
+
+| How the emoji were sent | What came back |
+|---|---|
+| `parse_mode=HTML` with `<tg-emoji emoji-id="…">😀</tg-emoji>` | `entities: []` |
+| Explicit `MessageEntity` (`custom_emoji`, correct UTF-16 offset) | `entities: []` |
+| `sendRichMessage` with `RichTextCustomEmoji` in a table cell and a paragraph | cell returned as the plain string `"😀"` |
+
+Consequences for how you build this:
+
+- **A `try/except` around the send proves nothing.** There is no exception to
+  catch, so a fallback ladder keyed on errors never fires and the bot ships a
+  silently degraded message.
+- **The only reliable check is to read the message back.** Every send method
+  returns the resulting `Message`; inspect it and compare with what you sent:
+
+  ```python
+  sent = await bot.send_message(chat_id, text, parse_mode="HTML")
+  used_custom_emoji = any(e.type == "custom_emoji" for e in (sent.entities or []))
+  # Rich messages: walk sent.rich_message.blocks for RichTextCustomEmoji instead.
+  if not used_custom_emoji:
+      ...  # degrade explicitly, tell the user why, and log it
+  ```
+
+- **`icon_custom_emoji_id` cannot be used to probe eligibility.** Telegram
+  echoes `reply_markup` back verbatim — the field is present in the returned
+  `Message` whether or not the icon will render. Only the *entity* round-trip
+  is evidence.
+- **Cache the verdict with a TTL and re-probe.** Eligibility changes when the
+  owner's Premium lapses or renews, so a permanent "off" flag goes stale.
+- **Do not infer eligibility from anything but the round-trip** — not from the
+  owner's profile fields, not from a successful send, not from an echoed button
+  field. Confirm it on the bot you are actually shipping, and state the result.
+
+### Content rule the server enforces silently, too
+
+Per the MTProto documentation, a custom emoji entity **must wrap exactly one
+regular emoji — the one in the sticker's own `alt`** (the `emoji` field in the
+Bot API), *"otherwise the server will ignore it"*. Same failure mode: no error,
+just a missing entity. Always take the alternative text from
+`getCustomEmojiStickers`/`getStickerSet` rather than picking a similar-looking
+character, and count its length in UTF-16 code units.
+
+### When the bot is not eligible, show a picture instead
+
+The Unicode fallback is often not good enough: in a real 80-emoji pack measured
+here, the 80 distinct custom emoji had only **52 distinct fallback characters**,
+so five different emoji all displayed as `☺️` and no reader could tell which ID
+was which.
+
+`sendSticker` is not the way out — a custom-emoji sticker is rejected with
+`Bad Request: can't send emoji stickers in messages`. What does work: a custom
+emoji is a sticker, so its file downloads and re-uploads as an ordinary image.
+
+1. `getCustomEmojiStickers` / `getStickerSet` → `Sticker`.
+2. Take `sticker.thumbnail.file_id` when present (animated `.tgs` and video
+   `.webm` emoji are not still images), else `sticker.file_id`.
+3. `getFile` + download, then send as a photo — optionally composited into one
+   numbered sheet whose numbers match a `#` column in your table.
+
+### Other routes worth knowing
+
+- **A supergroup's own emoji set.** `ChatFullInfo.custom_emoji_sticker_set_name`
+  — per the Bot API, custom emoji from a group's assigned set *"can be used by
+  all users and bots in the group"*. Inside that one group, that one pack works
+  without Fragment or Premium.
+- **Polls.** `sendPoll`'s `question_entities` and each option's `text_entities`
+  accept **only** custom emoji entities — a rare surface where nothing else is
+  allowed.
+- **Reactions.** `setMessageReaction` documents bots as non-premium users: one
+  reaction per message, and a custom emoji reaction only if it is already on the
+  message or explicitly allowed by chat admins.
 
 ## Getting a real `custom_emoji_id` — never invent one
 
@@ -95,8 +217,10 @@ Rules:
   same keyboard — pick one convention per bot and record it.
 - **Keep icons out of destructive confirmation buttons** unless the icon is
   unmistakably a warning; a friendly icon undercuts a `danger` action.
-- If the field is set but the bot is not eligible, expect Telegram to reject the
-  request — handle it as a validation error and fall back to a plain button
+- If the field is set but the bot is not eligible, **do not expect an error**:
+  Telegram accepts the request and the icon simply never renders, and the field
+  is echoed back in the returned `Message` either way. Establish eligibility
+  from a text-entity round-trip (above) and drop the icon when it fails
   (`errors-and-fallbacks.md`).
 
 ## In message text
@@ -142,4 +266,9 @@ not paragraph markers. `microcopy-and-labels.md` has the per-screen limits.
       `emoji` field.
 - [ ] Buttons remain understandable with the icon missing.
 - [ ] IDs live in config with a comment, not inline magic strings.
-- [ ] Behaviour when the bot loses eligibility is defined and logged.
+- [ ] Eligibility **proven by a round-trip**, not assumed: a sent message was
+      read back and the custom emoji entity was still there.
+- [ ] The silent-strip path is handled — no reliance on an exception that
+      Telegram never raises.
+- [ ] Behaviour when the bot loses eligibility is defined and logged, and the
+      verdict is cached with a TTL rather than latched forever.
