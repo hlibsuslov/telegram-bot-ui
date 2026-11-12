@@ -1,8 +1,7 @@
 # Telegram message capabilities
 
-> **Last verified against official docs: 2026-07-15** (Bot API 10.2, 14 Jul 2026).
-> Values marked *(secondary)* were not confirmed on core.telegram.org and MUST be
-> re-checked before you rely on them. See `official-sources.md`.
+> **Last verified against official docs: 2026-11-12** (Bot API 10.4, 9 Nov 2026). All rich
+> limits are now official ("Rich Message Limits"). See `official-sources.md`.
 
 This is a compact map, not a copy of the docs. When the task depends on an exact
 field, open the official page for that object/method and confirm.
@@ -73,13 +72,13 @@ Always confirm the **latest** version in the changelog before starting.
 | Marked / highlight, sub/superscript | ➖ | ✅ | ✅ | ✅ | rich-only inline |
 | Inline code / code block | ✅ | ✅ | ✅ | ✅ | fenced blocks get lang highlight |
 | Links, `tg://` links | ✅ | ✅ | ✅ | ✅ | validate URL scheme |
-| Block quote / expandable quote | ✅ | ✅ | ✅ | ✅ | |
+| Block quote / expandable quote | ✅ | ✅ | ✅ | ✅ | rich expandable block: 10.3 |
 | Pull quote | ➖ | ✅ | ✅ | ✅ | rich-only |
 | Headings (H1–H6) | ➖ | ✅ | ✅ | ✅ | levels render differently |
 | Lists (ordered/unordered) | ➖ | ✅ | ✅ | ✅ | `InputRichBlockList` + `ListItem` |
 | Task lists `- [ ]` / `- [x]` | ➖ | ✅ | ✅ | ✅ | |
 | Divider / horizontal rule | ➖ | ✅ | ✅ | ✅ | `---` in Rich Markdown |
-| Tables | ➖ | ✅ | ✅ | ✅ | `InputRichBlockTable`; header cells via `is_header` (render bold); `align`/colspan/rowspan; column cap *(secondary: 20)* |
+| Tables | ➖ | ✅ | ✅ | ✅ | `InputRichBlockTable`; header cells via `is_header` (render bold); `align`/colspan/rowspan; column cap 20 (official) |
 | Details (collapsible) | ➖ | ✅ | ✅ | ✅ | |
 | Anchors / references / footnotes | ➖ | ✅ | ✅ | ✅ | |
 | Math (LaTeX inline `\(…\)` / block `\[…\]`) | ➖ | ✅ | ✅ | ✅ | `MathematicalExpression` |
@@ -87,7 +86,10 @@ Always confirm the **latest** version in the changelog before starting.
 | Photo / video / animation / audio / voice | caption only | ✅ | ✅ | ✅ | inline media blocks |
 | Collage / slideshow | ➖ | ✅ | ✅ | ✅ | grouped media |
 | Map | ➖ | ✅ | ✅ | ✅ | `InputRichBlockMap` |
-| Thinking block | ➖ | ✅ | ✅ | ✅ | for AI reasoning display |
+| Thinking block | ➖ | ✅ | ✅ | ✅ | drafts only; real stage labels, never model reasoning |
+| Buttons (row / inline in text) | ➖ | ➖ | ✅ | ✅ | 10.3 |
+| Document block, `tg://document` | ➖ | ✅ | ✅ | ✅ | 10.3 |
+| Compact table | ➖ | ➖ | ✅ | ✅ | 10.3 `is_compact` |
 | Custom emoji | ✅ | ✅ | ✅ | ✅ | premium/custom emoji id |
 | RTL awareness | limited | ✅ | ✅ | ✅ | see `localization-and-rtl.md` |
 | Precise offset control | via entities | ➖ | ➖ | ✅ | blocks are typed, not parsed |
@@ -105,7 +107,8 @@ Always confirm the **latest** version in the changelog before starting.
 - **MessageEntity:** `type` + `offset` + `length` in **UTF-16 code units**.
   Types include bold, italic, underline, strikethrough, spoiler, blockquote,
   expandable_blockquote, code, pre, text_link, text_mention, custom_emoji,
-  mention, hashtag, cashtag, bot_command, url, email, phone_number.
+  mention, hashtag, cashtag, bot_command, url, email, phone_number, date_time,
+  bank_card_number and ton_address (both 10.4).
 
 ## Authoring conventions (styling defaults)
 
@@ -158,3 +161,30 @@ project's Bot API version.
 - **Don't** assume the whole feature set below your project's Bot API version is
   available — verify the version first (`project-adaptation.md`,
   `sdk-compatibility.md`).
+
+## Bot API 10.3 / 10.4 rich additions
+
+Verified 2026-11-12. Output (`RichBlock*`) and input (`InputRichBlock*`) types mirror each other.
+
+| Feature | Rich HTML | Block JSON | Notes |
+|---|---|---|---|
+| Button row (10.3) | `<tg-button-row align="left"><tg-button type="callback_data" data="…" style="link">…</tg-button></tg-button-row>` | `{"type":"buttons","buttons":[RichMessageButton…],"align":"left"}` | 1–8 buttons; see `buttons-and-styles.md#three-button-models` |
+| Button in text (10.3) | `<tg-button …>` inside a paragraph | `{"type":"button","button":{…}}` (`RichTextButton`) | text: plain, custom emoji, date-time |
+| Disabled button | `<tg-button type="disabled">` | `"disabled": {}` | |
+| Compact table (10.3) | `<table compact>` | `"is_compact": true` | `tables.md#compact-tables` |
+| Expandable quote (10.3) | `<blockquote expandable>…<cite>…</cite></blockquote>` | `{"type":"expandable_blockquote","text","credit?"}` | |
+| Document (10.3) | `<tg-document src="…">` / Markdown `![](file "caption")` | `{"type":"document","document":InputMediaDocument,"caption?":{text,credit?}}` | |
+| `tg://document?id=X` (10.3) | in markdown/html, bound by `media: [{id:"X", media: InputMediaDocument}]` | — | ids 1–64 of `A-Za-z0-9_-` |
+| TON address (10.4) | — (received) | `{"type":"ton_address","text","address"}` (`RichTextTonAddress`) | read `address` |
+
+Rich drafts can't upload new files or fetch by URL. `scripts/validate_rich.py` checks limits,
+draft rules, media references and buttons.
+
+## Quotes from rich messages
+
+10.4: a reply quoting a rich message has `TextQuote.text == ""` (possibly) and the fragment in
+`TextQuote.rich_texts` — code that reads only `quote.text` loses it (`tgkit.rich.quote_text`).
+To quote back, `ReplyParameters.quote_rich_texts`: one element per quotable text in order (first
+and last may be partial), formatting and nesting as received, ≤ 32 texts and ≤ 1024 characters,
+buttons/anchors/dividers not quotable; when set, `quote`/`quote_parse_mode`/`quote_entities` are
+ignored. Builder: `tgkit.rich.quote_from_paragraph`.

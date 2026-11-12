@@ -1,0 +1,9 @@
+{
+  "type": "buttons",
+  "buttons": [
+    {
+      "text": "Pay",
+      "pay": true
+    }
+  ]
+}

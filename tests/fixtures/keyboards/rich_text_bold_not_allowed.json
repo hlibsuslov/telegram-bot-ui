@@ -1,0 +1,12 @@
+{
+  "type": "buttons",
+  "buttons": [
+    {
+      "text": {
+        "type": "bold",
+        "text": "Go"
+      },
+      "callback_data": "go"
+    }
+  ]
+}

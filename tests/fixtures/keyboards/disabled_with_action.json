@@ -1,0 +1,11 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "Pay",
+        "disabled": {},
+        "callback_data": "pay"
+      }
+    ]
+  ]
+}

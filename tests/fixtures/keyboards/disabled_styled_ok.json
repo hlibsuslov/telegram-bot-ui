@@ -1,0 +1,15 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "Sold out",
+        "disabled": {},
+        "style": "danger"
+      },
+      {
+        "text": "Back",
+        "callback_data": "back"
+      }
+    ]
+  ]
+}

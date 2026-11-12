@@ -1,0 +1,11 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "Answered",
+        "disabled": {}
+      }
+    ]
+  ],
+  "force_reply": true
+}

@@ -1,0 +1,28 @@
+<!-- Pay-with-wallet widget (private chat). chat_data = {"o":"42","amt":"1.25 TON","st":"new|awaiting|paid|mismatch|expired","r":N}
+     Flow: tap -> request("pay:42",{wallet:true}) -> bot answers a TON Connect transaction
+     -> wallet.sendTransaction(tx,"paid:42") -> bot verifies on chain and answers the state. -->
+<style>
+body{margin:0}.c{padding:10px 12px max(10px,env(safe-area-inset-bottom))}
+.a{font-size:1.4em;font-weight:700;margin:4px 0}.s{min-height:1.3em;color:var(--tg-theme-hint-color)}
+.e{color:var(--tg-theme-destructive-text-color)}button{width:100%;margin-top:8px}
+</style>
+<div class="c"><div id="t"></div><div class="a" id="a"></div><button id="b"></button><div class="s" id="s"></div></div>
+<script>
+var W=window.TelegramWidget,S=null,R=-1,busy=false;
+var TXT={new:"Pay with Wallet",awaiting:"Waiting for the network…",paid:"Paid ✓",mismatch:"Payment didn't match — contact support",expired:"Expired — ask the bot for a new invoice"};
+var ERR={REJECTED:"Payment cancelled in the wallet.",BAD_REQUEST:"The wallet refused this payment.",TIMEOUT:"No answer yet. Don't pay again — checking the order…",NOT_ALLOWED:"Open the bot to pay.",RATE_LIMITED:"Too fast — try again.",BUSY:"One moment…",FAILED:"Couldn't reach the bot."};
+function $(i){return document.getElementById(i)}
+function load(){try{var s=JSON.parse(W?W.chatData:null)}catch(e){s=null}if(s&&s.r>R){S=s;R=s.r}}
+function say(t,e){$("s").textContent=t||"";$("s").className="s"+(e?" e":"")}
+function draw(){if(!S)return;$("t").textContent="Order #"+S.o;$("a").textContent=S.amt;
+ var b=$("b"),can=S.st==="new"&&W&&W.wallet&&!busy;b.textContent=W&&!W.wallet&&S.st==="new"?"Wallet unavailable here":TXT[S.st]||S.st;b.disabled=!can;b.onclick=pay}
+function take(a){var r=null;try{r=JSON.parse(a.result)}catch(e){}if(r&&r.s&&r.r>R){S=r.s;R=r.r}return r}
+function pay(){busy=true;say("Preparing…");draw();
+ W.request("pay:"+S.o,{wallet:true}).then(function(a){var r=take(a);if(!r||!r.ok||!r.tx)throw{code:"FAILED"};
+  return W.wallet.sendTransaction(r.tx,"paid:"+S.o)})
+ .then(function(a){busy=false;take(a);say("");draw()},
+  function(e){busy=false;say(ERR[e.code]||ERR.FAILED,e.code!=="TIMEOUT");draw();
+   if(e.code==="TIMEOUT"&&W.chatType==="private")setTimeout(function(){W.request("sync").then(function(a){take(a);say("");draw()},function(){})},5000)})}
+if(W){W.onEvent("chatDataChanged",function(){load();draw()})}
+load();draw();if(W)W.ready();
+</script>

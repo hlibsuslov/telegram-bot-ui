@@ -1,0 +1,10 @@
+{
+  "type": "buttons",
+  "buttons": [
+    {
+      "text": "Go",
+      "url": "https://t.me",
+      "icon_custom_emoji_id": "5368324170671202286"
+    }
+  ]
+}

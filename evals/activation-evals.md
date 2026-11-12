@@ -42,6 +42,23 @@ the same surface, not a separate skill.
 | P23 | "Our localized templates break MarkdownV2." | i18n + escaping | `localization-and-rtl.md` |
 | P24 | "Update the bot to the latest Bot API UI features." | capability migration | `ui-changelog.md` |
 
+## Positive — Bot API 10.3/10.4 and their server side (should activate)
+
+| # | Request | Why it matches | Routes to |
+|---|---|---|---|
+| P25 | "Add a Stop button to the AI answers." | `can_stop` | `streaming-and-editing.md` |
+| P26 | "Our handler never sees users stopping generation." | `stopped_message_generation` delivery | `sdk-compatibility.md` |
+| P27 | "Show each group member their own result privately." | ephemeral | `ephemeral-and-personal.md` |
+| P28 | "Send an interactive widget to the user." | `sendWidget` | `widgets.md` |
+| P29 | "Widget taps time out on our webhook." | `widget_query` routing | `widgets.md`, `sdk-compatibility.md` |
+| P30 | "Let users pay with the Telegram wallet from the card." | widget wallet | `wallet-and-ton.md` |
+| P31 | "Grey out the Submit button until the form is complete." | `DisabledButton` | `buttons-and-styles.md` |
+| P32 | "Delete regular gifts from our business account." | `deleteBusinessAccountGift` | `specialized-updates.md` |
+| P33 | "Read the theme of the user's share screen." | share themes | `specialized-updates.md` |
+| P35 | "Pick matching premium icons for all our buttons." | custom emoji family | `visual-language.md` |
+| P36 | "What should a price-alert bot look like on the new API?" | archetype | `bot-archetypes.md` |
+| P34 | "Link to the other topic of the chat with the bot." | topic links | `topics-and-contexts.md` |
+
 ## Negative (should NOT activate)
 
 | # | Request | Why it's out of scope |
@@ -54,6 +71,8 @@ the same surface, not a separate skill.
 | N6 | "Build the React components inside our Mini App." | web front-end internals |
 | N7 | "Configure admin rights and anti-spam in a supergroup." | group administration |
 | N8 | "Set up the bot's CI pipeline." | devops |
+| N11 | "Move the bot's Docker container to another server." | devops |
+| N12 | "Add an index to the orders table." | database |
 | N9 | "Scrape messages from a channel into a dataset." | data collection |
 | N10 | "Add OAuth login to our backend." | auth infrastructure |
 
@@ -64,8 +83,12 @@ the same surface, not a separate skill.
 - N6 flips **positive** for the Telegram-side surface: the button or menu button
   that opens the Mini App, `BottomButton` progress, `WebApp.ready()`.
 - N7 flips **positive** if the task is about how the admin *bot's* screens look.
-- N1/N3/N8/N9/N10 stay negative even when the project is a Telegram bot — the
-  test is whether a user sees the result.
+- N1/N3/N8/N9/N10/N11/N12 stay negative even when the project is a Telegram bot.
+- Server-side work flips **positive** when it is about a 10.3/10.4 Telegram feature:
+  subscribing to and routing `widget_query` / `stopped_message_generation`, callback or widget
+  state checks, retries of sends, SDK adapters (P26, P29). A generic "set up a webhook" (N1)
+  stays negative.
+- Behaviour (not just activation) is graded in `behavioral-evals.md`.
 - "RTF" only means Microsoft `.rtf` here — never Telegram Rich Messages (N5 is a
   hard negative and a terminology trap).
 - A pure "rewrite this text" request is **positive** (P7) — text is layer 1 of

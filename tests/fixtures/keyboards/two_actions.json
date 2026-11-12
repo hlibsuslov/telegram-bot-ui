@@ -1,0 +1,11 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "X",
+        "url": "https://t.me",
+        "callback_data": "x"
+      }
+    ]
+  ]
+}

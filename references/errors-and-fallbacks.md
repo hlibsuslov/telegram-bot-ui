@@ -42,7 +42,7 @@ of degrading (e.g. a payment receipt must not silently become plain text).
 | Telegram 400 (other) | e.g. `message is not modified`, invalid media | Handle specifically (skip edit / fix media); don't blind-retry |
 | Telegram 403 | bot blocked / no rights | Stop for that chat; surface; do not retry in a loop |
 | Telegram 429 | rate limited, `retry_after` | Back off for `retry_after`, then retry once/limited |
-| Transient network | timeout, connection reset | Bounded retry with backoff |
+| Unknown outcome | timeout / reset **after** the request was sent | Edits/answers: bounded retry. Sends: **don't** repeat blindly — reconcile (below) |
 | Telegram 5xx | server error | Bounded retry with backoff |
 | Permissions | can't send type in chat/topic | Surface; adjust or skip |
 
@@ -98,3 +98,24 @@ Fix the payload; don't just retry. See `security-and-escaping.md` and
 - A degraded **button** keeps its label and its action — only `style` and the
   icon may be dropped. Never fall back by removing the button.
 - Decide per message class whether to **degrade** or **fail loudly**.
+
+## Unknown outcome after timeout
+
+A timeout does not prove the message wasn't delivered; a bounded retry of a send can still create
+a duplicate. Per message class: **AI answer / notification** — one logged retry is acceptable
+(a rare duplicate beats a lost answer); **order, payment, booking, anything counted** — never
+re-send; mark the operation "unknown", show the user the server-side state, and let an idempotent
+backend (keyed by operation id) decide. Edits and `answer*` calls are safe to retry
+(`message is not modified` = done). 429: wait `retry_after` (or back off ≥ 1 s), bounded attempts,
+never a tight loop. Code: `examples/python/tgkit/errors.py` (`call_with_policy`); tests:
+`tests/test_errors_and_delivery.py`.
+
+## Audience-preserving fallback
+
+A fallback keeps the **audience, available actions, context and meaning** of the original. A
+personal (ephemeral) answer never falls back to a public message; a widget falls back to its caption
+plus keyboard, not to a different chat; a rich final falls back once to plain text in the same
+chat/thread. A server `ok` doesn't prove the client displayed the feature — keep labels and captions
+self-sufficient. Log the fallback class, never tokens or personal text
+(`ephemeral-and-personal.md#the-fallback-invariant`).
+

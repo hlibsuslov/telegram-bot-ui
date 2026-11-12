@@ -1,20 +1,20 @@
 ---
 name: telegram-bot-ui
 description: >-
-  Design, audit, and improve the interface of Telegram bots: message texts,
-  microcopy, titles, captions, button labels, inline and reply keyboards, action
-  grouping, visual hierarchy, colored buttons (style: primary/success/danger),
-  custom emoji on buttons (icon_custom_emoji_id), menu button, commands,
-  navigation, back and pagination, confirmations, empty and error states,
-  consistency between screens and states, streaming AI replies
-  (sendMessageDraft, sendRichMessageDraft, tg-thinking), progress and typing
-  feedback, personalization, links and deep links, localization, and message
-  formatting (HTML, MarkdownV2, entities, Rich Messages, tables). Use for any
-  request about a bot's UI, UX, menu, keyboards, buttons, navigation, wording,
-  or how a message looks — "rewrite this bot's text", "improve this menu", "add
-  colored buttons", "the bot feels frozen", "can't parse entities".
-  Do NOT use for bot logic that never reaches the interface (webhooks, payment
-  processing, auth, databases, group admin) or Microsoft .rtf files.
+  Design, build and audit Telegram bot UIs and the Bot API features
+  behind them: texts, inline/reply keyboards, colored and disabled buttons,
+  premium icons from one consistent set, force_reply forms, navigation, streaming AI replies with Stop
+  (sendRichMessageDraft, can_stop, stopped_message_generation), ephemeral
+  personal replies in groups, Rich Messages (tables, quotes, documents,
+  embedded buttons), HTML widgets (sendWidget, widget_query, shared widgets,
+  TON wallet), topics, formatting (HTML, MarkdownV2, entities), localization,
+  plus the server side they need (allowed_updates, callback state,
+  cancellation, retries, SDK gaps) and 10.3/10.4 gift, community, theme,
+  managed-bot and verification updates. Use for "improve this bot's menu",
+  "add a Stop button", "private answer in a group", "send a widget", "the bot
+  feels frozen", "can't parse entities", "use the latest Bot API".
+  Do NOT use for webhook/DevOps setup, databases, payment processing or auth
+  unrelated to these features, or Microsoft .rtf files.
 ---
 
 # Telegram Bot UI
@@ -23,10 +23,13 @@ Portable, SDK-agnostic skill for the full life cycle of a **Telegram bot's user
 interface**: audit → screen/state map → text, buttons and navigation design →
 implementation → migration → testing → documentation.
 
-A Telegram bot has no CSS and no layout engine. Its entire interface is made of
-five things: **message text, formatting, keyboards, the chat-level chrome
-(commands, menu button, deep links), and the transitions between states.** This
-skill treats all five as one design surface.
+A regular Telegram message has no CSS and no layout engine. Its interface is made
+of **message text, formatting, keyboards, the chat-level chrome (commands, menu
+button, deep links), and the transitions between states** — this skill treats
+them as one design surface. Exceptions with their own layout: **HTML widgets**
+(Bot API 10.4, a sandboxed HTML/CSS/JS document inside one message —
+`references/widgets.md`) and Mini Apps (a hosted web page). Neither is a
+general-purpose web page inside a chat.
 
 ## Purpose
 
@@ -39,37 +42,30 @@ and any Telegram SDK, **without breaking existing handlers or business logic**.
 
 ## When to use
 
-- **Interface work:** "improve the bot's UX/UI", "redesign this menu", "the
-  keyboard is overloaded", "users don't understand this screen", "add a back
-  button", "group these actions", "make the main action stand out".
-- **Buttons and keyboards:** inline keyboards, reply keyboards, button labels,
-  button order and layout, `style` colors, `icon_custom_emoji_id` custom emoji,
-  Web App / URL / copy-text / switch-inline buttons, `ForceReply`, keyboard
-  removal, pagination and back navigation.
-- **Text and microcopy:** rewriting bot messages, titles, captions, prompts,
-  confirmations, error and empty states, tone and length, emoji use.
-- **Chat chrome:** `/commands` list and scopes, menu button, `/start` and deep
-  links, first-run experience.
-- **Dynamic feedback:** streaming AI answers (`sendMessageDraft`,
-  `sendRichMessageDraft`, `<tg-thinking>`), progress bars, "typing" statuses,
-  button loaders, "the bot feels frozen while it works".
-- **Personalization and links:** greeting users by name safely, locale hints,
-  URL buttons vs inline links, link previews, deep links, mentions.
-- **Consistency:** the same action named three different ways, back buttons that
-  exist on some screens only, mismatched states after an edit.
-- **Message rendering:** HTML / MarkdownV2 / `MessageEntity`, custom emoji in
-  text, captions, tables and Rich Messages, link-preview / silent / protected
-  options, long-message splitting, streaming drafts, editing, channel posts,
-  localization and RTL, `can't parse entities`, broken or oversized messages.
+- **Interface work:** menus, keyboards, labels, grouping, emphasis (`style`,
+  custom emoji), navigation, back/pagination, confirmations, empty/error states,
+  commands, menu button, deep links, first-run, consistency, localization/RTL.
+- **Feedback:** "the bot feels frozen", streaming AI answers, Stop, progress.
+- **Personal views in shared chats** (ephemeral), **forms** (`force_reply`,
+  disabled buttons), **live cards** (widgets), **wallet** pay/sign from a widget.
+- **Message rendering:** HTML / MarkdownV2 / entities, Rich Messages, tables,
+  splitting, `can't parse entities`.
+- **Bot API 10.3/10.4 adoption**, including the server-side handling of new
+  updates and the specialized modules.
 
 ## When NOT to use
 
-Bot logic that does not surface in the interface: webhook infrastructure,
-payment *processing*, authorization, databases and migrations, group
-administration and moderation logic, scraping, analytics pipelines, Mini App
-*internals* (its own HTML/CSS UI is ordinary web front-end work — this skill
-covers only the Telegram-side surface: the button or menu that opens it).
-Also not for Microsoft `.rtf` files.
+Bot work no user ever sees and that no 10.3/10.4 feature depends on: webhook /
+hosting / CI setup, databases and migrations, payment *processing* (Stars or
+fiat ledgers), auth, scraping, analytics pipelines, group moderation policy,
+Mini App front-end internals. Microsoft `.rtf` files.
+
+**In scope even though it is server-side:** routing and subscribing to new
+updates (`widget_query`, `shared_widget_query`, `stopped_message_generation`,
+`allowed_updates`), callback/widget state and authorization, cancellation,
+retries and unknown outcomes, SDK adapters for missing methods, TON wallet
+request/verification boundaries, and the specialized 10.3/10.4 modules
+(`references/specialized-updates.md`).
 
 ## Terminology — do not confuse these
 
@@ -104,8 +100,10 @@ Trust in this order:
 is later than the "last verified" date in `references/official-sources.md`; the
 project's Bot API version is unknown; SDK docs contradict the Bot API; you meet
 an unfamiliar type/field; or the user asks for "the latest capabilities".
-This skill is **not frozen** at Bot API 10.2 — if Telegram shipped a newer
-version, use it. UI-relevant version gates: `references/ui-changelog.md`.
+This skill is verified against **Bot API 10.4 (2026-11-09) on 2026-11-12** and is
+not frozen there — if Telegram shipped a newer version, use it and update
+`recipes/registry.json`. Version gates: `references/ui-changelog.md`; every
+10.3/10.4 item: `references/bot-api-10.3-10.4.md`.
 
 ## Core workflow (audit before you redesign)
 
@@ -139,6 +137,50 @@ version, use it. UI-relevant version gates: `references/ui-changelog.md`.
 
 Do **not** write implementation code before steps 1–6 are complete.
 
+## Mode: how much process the task needs
+
+* **Small local change** (a label, one button, one message): fix it, validate the
+  payload, test — no full audit, no unrelated redesign.
+* **Feature or screen** (a form, a Stop button, a personal panel, a widget): steps
+  1–6 for the affected screens, then build from the matching recipe.
+* **Migration / new bot / "latest Bot API"**: full workflow plus the initiative rule below.
+
+## Bot API 10.3 / 10.4 — use them on purpose
+
+**Initiative rule.** When building or seriously reworking a bot, check which
+10.3/10.4 capabilities improve the requested scenarios and implement the fitting
+ones within the agreed scope — don't wait for the user to name a method. Typical
+wins: Stop on long AI answers, disabled buttons + `force_reply` in forms,
+ephemeral personal views in groups, compact tables / embedded buttons / expandable
+quotes in documents, a widget for a live card in a private chat. Don't add them to
+a one-line fix, and don't turn every message into a widget.
+
+Find the recipe by task, symbol, version or context: `recipes/README.md`
+(index), `recipes/manifest.json` (machine-readable), `recipes/registry.json`
+(all 52 changelog rows). Code: `examples/python/tgkit/`, `examples/ts/tgkit.ts`;
+SDK adapters: `examples/python/sdk_aiogram/`, `examples/ts/sdk-grammy/`.
+
+Invariants that change decisions:
+- **Audience.** Personal content never falls back to a public message; one member
+  never sees another's data (`references/ephemeral-and-personal.md`).
+- **One logical finalization** per operation: Stop, completion, error and timeout
+  are different endings; late chunks and repeated Stops are no-ops
+  (`references/streaming-and-editing.md`). Not a network exactly-once promise.
+- **Disabled ≠ authorized.** `disabled: {}` is the button's only action; the
+  server still checks state and rights on every callback/widget query.
+- **Widgets:** production = private chats only (groups, inline, forwards: test
+  server); code immutable; state only via edits; answer every query once in 15 s;
+  no secrets in code or `public_data`; always a caption and a text/button path.
+- **Wallet:** `sent_transaction` is a notice, not proof of payment.
+- **Update delivery:** new update types must be in `allowed_updates` (sticky) and
+  routed by the SDK — verified gaps in aiogram 3.31 / grammY 1.46
+  (`references/sdk-compatibility.md`).
+- **Unknown outcome:** a timed-out send may have been delivered; never repeat
+  orders/payments blindly; honour `retry_after`.
+- **Context decides fields:** forum `message_thread_id` ≠ channel-DM
+  `direct_messages_topic_id`; drafts only in private chats
+  (`references/topics-and-contexts.md`).
+
 ## The five UI layers (design in this order)
 
 | # | Layer | Question it answers | Reference |
@@ -154,39 +196,27 @@ color.
 
 ## Button essentials (full rules in `references/buttons-and-styles.md`)
 
-**Exactly one action per inline button.** Per the Bot API,
-`InlineKeyboardButton` requires *exactly one* of the fields other than `text`,
-`icon_custom_emoji_id`, and `style` (`url`, `callback_data`, `web_app`,
-`login_url`, `switch_inline_query*`, `copy_text`, `callback_game`, `pay`).
-`KeyboardButton` allows *at most one* of its non-`text`/`icon`/`style` fields.
+- **Inline buttons: exactly one action field** besides `text`, `icon_custom_emoji_id`,
+  `style` (`url`, `callback_data`, `web_app`, `login_url`, `switch_inline_query*`,
+  `copy_text`, `callback_game`, `pay`, `disabled`); reply buttons at most one;
+  rich-message buttons are a third model (`style` may be `link`, no icon field).
+- **`style` (9.4)** is only `primary` (the one forward action), `success` (commit),
+  `danger` (destructive, behind a confirmation); omit it for everything else.
+- **`icon_custom_emoji_id` (9.4)** needs Fragment usernames or an owner with Premium
+  (messages sent directly to private/group/supergroup chats). **Never invent an id** —
+  resolve it (`references/custom-emoji.md`); keep one family (`references/visual-language.md`).
+- **`disabled: {}` (10.3)** shows an unavailable action; it is the only action field and
+  never replaces the server check. **`force_reply` on keyboards (10.3)** = buttons + reply
+  field; on inline keyboards it can't change in an edit.
+- Color and icon decorate a working button: the label must make sense without both.
 
-**`style` (Bot API 9.4)** — optional, exactly one of:
-
-| `style` | Color | Meaning | Typical labels |
-|---|---|---|---|
-| `primary` | blue | *The* main forward action of the screen | Continue, Start, Open, Next, Choose |
-| `success` | green | Commit / confirm / complete positively | Save, Confirm, Publish, Submit, Finish |
-| `danger` | red | Destructive or irreversible | Delete, Reset, Unsubscribe, Leave, Cancel plan |
-| *omitted* | app default | Everything else | Back, Settings, Help, secondary options |
-
-If `style` is omitted, an app-specific style is used. **At most one `primary`
-per screen. `danger` only for genuinely destructive actions, paired with a
-confirmation step.** Secondary actions such as "Back" normally stay unstyled.
-
-**`icon_custom_emoji_id` (Bot API 9.4)** — shows a custom emoji before the
-button text. Usable only by bots that **purchased additional usernames on
-Fragment**, or in messages sent **directly by the bot to private, group, and
-supergroup chats when the bot's owner has Telegram Premium**. **Never invent an
-ID** — obtain it (`references/custom-emoji.md`) or ask the user for it.
-
-Both fields are **decoration on top of a working button**: the label must still
-make sense with no color and no icon.
-
-## Message body: richest fit that helps
+## Message body: the fit the reader needs
 
 | Need | Use |
 |---|---|
-| Rows/columns or label→value data | **Table** — `references/tables.md` |
+| Data compared across columns | **Table** (compact on phones) — `references/tables.md` |
+| 2–5 facts read once | short lines / list — not a table |
+| Live card that changes in place (private chat) | **Widget** — `references/widgets.md` |
 | Structured doc: report, AI answer, comparison, checklist | **Rich Markdown** |
 | Server-templated content, precise tag control | **Rich HTML** |
 | Typed generation from data / CMS / AST | **`InputRichBlock` blocks** |
@@ -194,9 +224,10 @@ make sense with no color and no icon.
 | Exact offset control, no `parse_mode` | **`MessageEntity`** |
 | Genuinely no styling needed | **Plain text** |
 
-Rule: **structured data becomes a real table, never a monospace grid** — but a
-menu screen is a short prompt plus buttons, not an essay. Full matrix:
-`references/format-selection.md`.
+Rule: tabular data becomes a real table, never a monospace grid; a short set of
+facts stays short; a menu screen is a prompt plus buttons. Surface and format
+decision table (message / rich document / keyboard / rich buttons / ephemeral /
+widget / Mini App): `references/format-selection.md`.
 
 ## Feedback while the bot is working
 
@@ -208,15 +239,15 @@ shape of the operation (full rules:
 |---|---|
 | Inline button tapped | `answerCallbackQuery` **first**, then do the work |
 | 2–5 s operation | `sendChatAction` (`typing`, `upload_photo`, …) — 5 s max |
-| AI text being generated (private chat) | `sendMessageDraft` — same `draft_id`, finalize with `sendMessage` |
+| AI text being generated (private chat) | `sendMessageDraft` + `can_stop` — same `draft_id`, finalize with `sendMessage` |
 | AI answer with structure | `sendRichMessageDraft` + `<tg-thinking>` → `sendRichMessage` |
 | Real, nameable stages | `editMessageText`, throttled |
 | Progress not measurable | Named stages — **never a fake percentage** |
 | Interactive process | Mini App (`BottomButton.showProgress()`, `WebApp.ready()`) |
 
-Never edit per token: update on ~800–1500 ms, ~30–80 new characters, a finished
-sentence, or a real stage change — and honour `retry_after`. One `draft_id` /
-`message_id` / `operation_id` per operation, finalized exactly once.
+Never edit per token: at most ~1 update per second, coalescing sentences and
+stages, after any `retry_after`. One `draft_id` / `message_id` / `operation_id`
+per operation and one logical finalization (`references/streaming-and-editing.md`).
 
 ## Which reference to read (task-routed — don't read them all)
 
@@ -233,8 +264,22 @@ sentence, or a real stage change — and honour `retry_after`. One `draft_id` /
   `references/navigation-and-flows.md`
 - Custom emoji on buttons and in text, obtaining IDs, eligibility →
   `references/custom-emoji.md`
-- Streaming answers, thinking blocks, progress bars, loaders, chat actions →
+- One visual language: picking premium icons from one family, emoji discipline,
+  screen anatomy → `references/visual-language.md`
+- Which features fit which bot type (monitoring, AI, shop, group utility,
+  support, docs, wallet, games) → `references/bot-archetypes.md`
+- Worked audit + 10.4 upgrade of a real bot → `references/case-study-btc-tracker.md`
+- Which feedback mechanism (chat action, draft, edits, loaders) →
   `references/dynamic-feedback-and-streaming.md`
+- Draft state machine, Stop, throttling, races →
+  `references/streaming-and-editing.md`
+- Personal / ephemeral answers in groups → `references/ephemeral-and-personal.md`
+- HTML widgets (send, state, queries, shared, limits) → `references/widgets.md`
+- Wallet pay / sign / TON cards and transfers → `references/wallet-and-ton.md`
+- Topics, channel DMs, business, inline: which fields → `references/topics-and-contexts.md`
+- Gifts, communities, share themes, managed bots, verification, renames →
+  `references/specialized-updates.md`
+- Every 10.3/10.4 item with example and check → `references/bot-api-10.3-10.4.md`
 - Personalizing with user data, links, previews, deep links →
   `references/personalization-and-links.md`
 - Cross-screen consistency + the pre-finish checklist →
@@ -251,7 +296,6 @@ sentence, or a real stage change — and honour `retry_after`. One `draft_id` /
 - Choosing a format → `references/format-selection.md`
 - Media → `references/rich-media.md`
 - Limits & splitting → `references/limits-and-splitting.md`
-- Streaming drafts & editing → `references/streaming-and-editing.md`
 - Channels, notifications, broadcasts →
   `references/channels-and-broadcasting.md`
 
@@ -266,9 +310,15 @@ sentence, or a real stage change — and honour `retry_after`. One `draft_id` /
 - Testing → `references/testing-playbook.md`
 - Sources & last-verified dates → `references/official-sources.md`
 
-Local validators: `scripts/validate_skill.py`, `scripts/validate_references.py`,
-`scripts/validate_keyboard.py` (keyboard JSON rules — offline, no token).
-Trigger scenarios: `evals/activation-evals.md`.
+Local validators (offline, no token): `scripts/validate_keyboard.py` (inline /
+reply / rich buttons, `disabled`, `force_reply`, `--context`, `--previous`),
+`scripts/validate_rich.py` (Rich Message Limits, drafts, media refs),
+`scripts/validate_widget.py` (zlib-9 size, state bytes, production/test, runtime
+gaps), `scripts/audit_icons.py` (one icon family, static, no shared ids),
+`scripts/audit_copy.py` (i18n placeholders, symbols, label length, HTML),
+`scripts/validate_skill.py`, `scripts/validate_references.py`. Run all:
+`python scripts/run_checks.py`. Evals: `evals/activation-evals.md`,
+`evals/behavioral-evals.md`.
 
 ## Non-negotiable rules
 
@@ -290,8 +340,10 @@ Trigger scenarios: `evals/activation-evals.md`.
 - **Keep localization intact.** New strings go through the existing i18n
   mechanism with the project's key conventions; never hardcode a translated
   label over a catalog. Layout must survive the longest translation.
-- **Don't mix Unicode emoji and custom emoji** on the same control set without a
-  deliberate, stated reason.
+- **One icon family per bot:** don't mix Unicode emoji and custom emoji, or custom
+  emoji from different packs/styles (iOS vs Android vs Unigram, static vs
+  animated), on the same screens; titles and buttons use the same id
+  (`references/visual-language.md`, `scripts/audit_icons.py`).
 - **Every tap gets feedback**, and every long operation gets an honest progress
   signal — no invented percentages, no per-token edits, no stalled spinners.
   Finalize a streamed draft with a real message, including on failure.
@@ -305,7 +357,9 @@ Trigger scenarios: `evals/activation-evals.md`.
 - Pull **current limits from official docs**; don't hardcode remembered numbers.
 - Fallbacks must be explicit and logged — no silent degradation, no infinite
   retries, no logging bot tokens or full personal text.
-- Don't claim a screen works until it has been **tested**.
+- Don't claim a screen works until it has been **tested**, and name the level of
+  evidence: static check, offline contract test, real Bot API, real clients.
+  JSON or a browser preview never proves Android/iOS/Desktop/Web rendering.
 
 ## Definition of done
 
@@ -320,6 +374,8 @@ when optional user fields are missing · existing
 `callback_data`/URLs/deep links/handlers preserved · localization keys intact
 and layout tolerant of long translations · SDK support verified or a documented
 fallback path used · body rendered with the richest fit (tables for structured
-data) · safe escaping · fallback + tests added · project checks green · limits
+data) · safe escaping · audience-preserving fallback + tests added · new update types
+subscribed and routed · Stop/cancel/timeout endings distinct · widgets: production
+context, caption, size by zlib-9, server-side state · project checks green · limits
 sourced from official docs · "last verified" date recorded. Report per step 14
 and run `references/consistency-and-review.md`.

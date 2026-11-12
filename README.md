@@ -6,7 +6,7 @@ custom emoji, streaming feedback, and message rendering.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Agent Skill](https://img.shields.io/badge/format-Agent%20Skills-8A2BE2.svg)](https://github.com/anthropics/skills)
-[![Verified: Bot API 10.2](https://img.shields.io/badge/Telegram%20Bot%20API-10.2%20verified-26A5E4.svg)](https://core.telegram.org/bots/api-changelog)
+[![Verified: Bot API 10.4](https://img.shields.io/badge/Telegram%20Bot%20API-10.4%20verified-26A5E4.svg)](https://core.telegram.org/bots/api-changelog)
 
 A Telegram bot has no CSS and no layout engine. Its entire interface is
 **message text, formatting, keyboards, chat-level chrome (commands, menu button,
@@ -56,12 +56,32 @@ across any language and any Telegram SDK, **without breaking existing handlers,
 
 ## When NOT to use it
 
-Bot logic that never reaches the interface: webhook infrastructure, payment
-*processing*, authorization, databases and migrations, group administration and
-moderation logic, scraping, analytics pipelines. Mini App *internals* are
-ordinary web front-end work — only the Telegram-side surface (the button or menu
-that opens it, `BottomButton`, `WebApp.ready()`) is in scope. Not for Microsoft
-`.rtf` files.
+Work no user sees and no 10.3/10.4 feature depends on: webhook/hosting/CI setup,
+databases and migrations, payment *processing*, auth, scraping, analytics, group
+moderation policy, Mini App front-end internals. Not for Microsoft `.rtf` files.
+Server-side handling that the new Telegram features need **is** in scope:
+subscribing to and routing `widget_query` / `shared_widget_query` /
+`stopped_message_generation`, callback and widget state, cancellation, retries
+and unknown outcomes, SDK adapters, wallet verification boundaries.
+
+## Bot API 10.3 / 10.4 coverage
+
+Every bullet of both releases (52 rows) is mapped to a skill section, a concrete
+example and an automated check: [`references/bot-api-10.3-10.4.md`](references/bot-api-10.3-10.4.md)
+(generated from [`recipes/registry.json`](recipes/registry.json)). Eight end-to-end recipes
+(Python + TypeScript) and 14 mini-recipes: [`recipes/README.md`](recipes/README.md).
+
+| Area | What the agent can now build |
+|---|---|
+| Buttons & forms | disabled buttons, `force_reply` with keyboards, rich-message buttons |
+| AI answers | rich streaming with a native Stop, distinct stop/complete/error/timeout endings, race-safe finalization |
+| Groups | personal ephemeral panels over a shared card, audience-preserving fallbacks |
+| Documents | compact tables, expandable quotes, attached files, quoting a fragment back |
+| Widgets | private-chat interactive cards, shared widgets with revisions, TON wallet pay/sign (groups/inline/forwards: test server) |
+| Topics | per-topic isolation, private-chat topic links, channel-DM addressing |
+| Visual language | premium icons from one family (`audit_icons.py`, `build_icon_map.py`), emoji discipline, screen anatomy, i18n copy audit (`audit_copy.py`) |
+| Bot types | per-archetype feature guide; worked audit and 10.4 upgrade of a real tracker bot (recipe 09) |
+| Specialized | welcome right, community joins, gift notes, `getUniqueGift`, `deleteBusinessAccountGift` (dry-run), share themes, managed-bot usernames, verification descriptions, paid-messages-waived, entity masking, `AreaPosition` rename |
 
 ## Supported UI tasks
 
@@ -295,6 +315,9 @@ SDK without 9.4 support · when *not* to add color) live in
 telegram-bot-ui/
 ├── SKILL.md                     # compact operational guide (loaded on activation)
 ├── README.md · LICENSE
+├── recipes/                     # 10.3/10.4 recipes, registry.json, manifest.json
+├── examples/                    # fixtures, payloads, widgets, python/tgkit, ts/tgkit.ts, SDK adapters
+├── tests/                       # offline unittest suite + keyboard regression fixtures
 ├── references/                  # progressive-disclosure detail (read on demand)
 │   ├── microcopy-and-labels.md          # texts, titles, captions, labels, emoji
 │   ├── buttons-and-styles.md            # style colors, emphasis, layout
@@ -371,10 +394,18 @@ to update one.
 ```bash
 python scripts/validate_skill.py                  # front matter, sections, secrets
 python scripts/validate_references.py             # links, orphans, empty files, secrets
-python scripts/validate_keyboard.py keyboard.json # keyboard payload rules
+python scripts/validate_keyboard.py keyboard.json # inline/reply/rich buttons, disabled, force_reply
+python scripts/validate_rich.py payload.json      # Rich Message Limits, draft rules, media refs
+python scripts/validate_widget.py widget.html     # zlib-9 size, state bytes, production/test
+python scripts/run_checks.py                      # everything above + unit/contract tests
 ```
 
-All three are standard-library only, read local files only, and never use a bot
+Optional SDK contract tests: `cd examples/ts/sdk-grammy && npm ci` (grammY 1.46.0) and
+`pip install -r examples/python/sdk_aiogram/requirements.txt` (aiogram 3.31.0) in a venv.
+TypeScript recipes need Node ≥ 22.18 (built-in type stripping, no install).
+Live replay against a **test** bot only: `examples/python/live_send.py` (explicit opt-in).
+
+These are standard-library only, read local files only, and never use a bot
 token or the network. On Windows use `py -3` in place of `python`. Then walk
 [`evals/activation-evals.md`](evals/activation-evals.md) to confirm trigger
 behaviour.
@@ -433,7 +464,8 @@ Telegram's UI surface evolves. Before version-dependent work, re-check the
 [`references/ui-changelog.md`](references/ui-changelog.md) with any entry that
 changes the interface, and record the new date in
 [`references/official-sources.md`](references/official-sources.md). Content here
-was verified against **Bot API 10.2 (released 2026-07-14)** on **2026-08-05**.
+was verified against **Bot API 10.4 (released 2026-11-09)** on **2026-11-12**; update
+[`recipes/registry.json`](recipes/registry.json) and re-render with `scripts/render_registry.py`.
 
 ## Contributing
 

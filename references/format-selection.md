@@ -1,43 +1,53 @@
-# Format selection
+# Format and surface selection
 
-> Core rule: **default to the richest fit — a table for any structured data —
-> and drop to a simpler format only when structure genuinely adds nothing.**
-> Tables and rich documents are the first thing to reach for; plain / regular
-> HTML / MarkdownV2 / entities are the *escape hatch*. Still match the project's
-> existing conventions and utilities when you build the rich or the simple path.
+> Core rule: **pick the format by what the reader has to do with the content** — compare,
+> scan, act, read, keep — not by which format is richest. Real tables remain the first choice
+> for genuinely tabular data (compare across columns); a short list of facts stays a list.
+> Verified against Bot API 10.4 on 2026-11-12. Match the project's existing formatter.
 
-## Decision order
+## Choosing the surface
 
-Ask these in order and stop at the first "yes":
+Three different "HTML"s exist and never mix: regular-message `parse_mode=HTML`, **Rich HTML**
+(`InputRichMessage.html`), and **widget HTML** (a sandboxed document in `sendWidget`).
 
-1. **Is the content rows/columns or label→value data** (comparison, schedule,
-   prices, scores, order summary, config, key/value facts)? → build a **table**
-   (`tables.md`). This is the default for anything structured — do not render it
-   as a monospace `pre` grid or a bulleted list.
-2. **Is it a structured document** (AI answer, article, report, docs) with
-   headings/lists/quotes/code/math/media? → **Rich Markdown** (if authored as
-   Markdown) or **Rich HTML** (if server-templated with precise tag control).
-3. **Is that document generated programmatically / from a CMS / an AST, or must
-   it be unambiguous and typed?** → **explicit `InputRichBlock` blocks** (use
-   `InputRichBlockTable` for the table case above).
-4. **Would the UX be better as standalone media** (single photo, album, document,
-   caption)? → **separate media methods** (`sendPhoto`, `sendMediaGroup`, …).
-5. **Escape hatch — is it a genuinely trivial one-liner** (a status, an "OK", a
-   short prompt/notification) with light styling, and the project already uses
-   HTML? → **Regular HTML**.
-6. **Escape hatch — does the project standardize on MarkdownV2**, or is it clearly
-   the best fit? → **MarkdownV2** (accept the strict escaping cost).
-7. **Escape hatch — do you need exact byte/offset control or to avoid a
-   parse_mode entirely** (programmatic styling, mixing user text with styling
-   safely)? → **MessageEntity**.
-8. **Escape hatch — does the message need no styling at all?** → **plain text**.
-   Plain text still needs correct handling of user data (no accidental entity
-   injection when later wrapped) and correct splitting for length.
+| Surface | Choose when | Move to the alternative when |
+|---|---|---|
+| Regular message (+ HTML / entities) | prompts, statuses, short answers, anything in a menu flow | content gains structure (headings, tables) → rich |
+| Rich Message (document) | reports, AI answers, docs, tables, math, attached files | the user must act inside it repeatedly → embedded buttons / widget |
+| Inline keyboard | discrete choices, navigation, confirmations | choices need live visual state → widget |
+| Rich embedded buttons (`<tg-button-row>`, `RichTextButton`) | actions that belong to a specific section of a document | the action is screen-level navigation → inline keyboard under the message |
+| Ephemeral message | one member's private view in a shared chat | it must persist or be proven → private chat / storage |
+| Widget (10.4; production: private chats) | a compact card whose state changes in place, taps/drags on a custom layout | text input, network, > 600 px, groups in production → Mini App / keyboard |
+| Mini App | forms with typing, long flows, network data, full-screen UI | a single choice → keyboard |
+
+## Decision criteria (ask in order)
+
+1. **Task:** what must the reader do — decide, compare, follow steps, read, copy, act?
+2. **Shape:** ≥ 2 attributes per item that people compare across items → **table**;
+   ≤ ~5 label→value facts read once → a short list or bold labels; prose → paragraphs.
+3. **Volume:** fits one screen? Long → headings + expandable quote/details, or split.
+4. **Phone width:** > 4–5 columns or long cells → compact table, fewer columns, or one card per item.
+5. **Actions:** does it carry buttons? Screen-level → inline keyboard; section-level → rich buttons.
+6. **Accessibility & support:** every rich/widget surface needs a readable text fallback;
+   check the SDK and Bot API version (`sdk-compatibility.md`).
+7. **Cost:** a second formatter or surface must earn its maintenance; reuse the project's.
+
+Examples: price list of 12 items × (size, price, kcal) → compact table. "Order #1042: 2 items,
+$23.50, ready at 19:40" → three short lines, not a table. A 3-step how-to → numbered list.
+
+## Format by content (escape hatches stay valid)
+
+1. Tabular data → table (`tables.md`): Rich Markdown table, Rich HTML `<table>`, or `InputRichBlockTable`.
+2. Structured document → Rich Markdown (authored) / Rich HTML (templated) / blocks (generated).
+3. Standalone media → media methods (`rich-media.md`).
+4. Short prompt or status in an interactive flow → regular HTML (or MarkdownV2 if that is the project standard).
+5. Programmatic styling of untrusted text → `MessageEntity` (UTF-16 offsets).
+6. No styling → plain text.
 
 ## Per-format guidance
 
-### Tables (start here)
-The default for any rows/columns or label→value data. Build with a Rich Markdown
+### Tables
+The first choice for data people compare across columns. Build with a Rich Markdown
 pipe table, a Rich HTML `<table>`, or explicit `InputRichBlockTable` blocks —
 pick by how the data arrives (authored text vs. server template vs. programmatic
 rows). Full guidance, code for all three paths, header/alignment/split rules, and
@@ -85,20 +95,15 @@ duplication without a product reason). See `rich-media.md`.
 
 ## Anti-patterns
 
-- **Rendering structured data as a monospace `pre` grid or a bulleted list**
-  instead of a real table — the top miss now that tables exist for bots.
-- Inflating a genuinely trivial one-liner (status, "OK", short prompt) into a
-  table or rich document — that's what the escape hatch is for.
-- Blanket-replacing *every* `sendMessage` with `sendRichMessage` without checking
-  each message class (trivial ones keep the escape hatch).
-- Treating Rich Markdown as MarkdownV2 (different syntax, different mechanism).
+- Rendering genuinely tabular data as a monospace `pre` grid or bullets.
+- Forcing a table onto 2–3 facts read once — a short list is easier on a phone.
+- Blanket-replacing every `sendMessage` with `sendRichMessage`, or every keyboard with a widget.
+- Treating Rich Markdown as MarkdownV2, or Rich HTML / widget HTML as regular `parse_mode=HTML`.
+- Masking a payload defect by cycling through formats; fix the payload (`errors-and-fallbacks.md`).
 - Introducing a second formatter when one already exists in the project.
 
 ## Migration stance
 
-**Prioritize migrating structured content to real tables / rich documents.**
-Monospace or bulleted data, broken pseudo-tables, and AI answers that lose their
-structure are exactly the defects to fix first. Leave genuinely trivial
-one-liners on their existing simple format. Keep the old formatter until the new
-path is fully covered and tested; then remove it in a dedicated step. See
-`errors-and-fallbacks.md` for the degradation ladder.
+Migrate structured content that loses its structure today (broken pseudo-tables, AI answers
+flattened to text) first. Leave short messages on their simple format. Keep the old formatter
+until the new path is covered by tests, then remove it in its own step.

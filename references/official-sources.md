@@ -1,9 +1,10 @@
 # Official sources and verification log
 
-> **Last verification: 2026-08-05.** Verified against **Bot API 10.2 (released
-> 2026-07-14)**, the newest version listed in the official changelog on that
-> date. Before doing version-dependent work, re-check the changelog for a newer
-> version and update this file (with permission).
+> **Last verification: 2026-11-12.** Verified against **Bot API 10.4 (released
+> 2026-11-09)**, the newest version in the official changelog on that date (10.3 was
+> released 2026-08-24). Before version-dependent work, re-check the changelog for a newer
+> version and update this file. Updating these references is part of maintaining the skill —
+> no separate permission step is needed when the task is to update the skill.
 
 ## How to keep this current
 
@@ -11,7 +12,7 @@ When Telegram ships a newer Bot API version, or today is past the date above and
 the task is version-sensitive:
 1. Read the **Bot API changelog** first and diff against this skill's references.
 2. Apply current facts to the project.
-3. With permission, update the references and this log — **do not delete historic
+3. Update the references, `recipes/registry.json` and this log — **do not delete historic
    facts** needed for older-SDK compatibility; mark them as version-specific.
 
 ## Primary sources (source of truth)
@@ -145,15 +146,58 @@ Confirmed against official changelog / blog:
 - `link_preview_options` fields: `is_disabled`, `url`, `prefer_small_media`,
   `show_above_text`.
 
-## Facts NOT confirmed on official pages (treat as secondary — verify)
+## Facts verified on 2026-11-12 (Bot API 10.3 and 10.4)
 
-Reported by third-party coverage, not confirmed on core.telegram.org during this
-verification. Re-check before relying on them:
+Sources read on 2026-11-12 (machine-readable `.md` versions of the pages):
 
-- 500 blocks per rich message.
-- Nesting depth limit of 16.
-- 50 media attachments per rich message.
-- 20 columns per table.
+| Source | URL | Used for |
+|---|---|---|
+| Bot API changelog, 10.4 | https://core.telegram.org/bots/api-changelog#november-9-2026 | registry rows 10.4-* |
+| Bot API changelog, 10.3 | https://core.telegram.org/bots/api-changelog#august-24-2026 | registry rows 10.3-* |
+| Widgets guide | https://core.telegram.org/bots/widgets | `widgets.md`, `wallet-and-ton.md` |
+| Rich messages + Rich Message Limits | https://core.telegram.org/bots/api#rich-messages | limits, tags, `tg://document` |
+| EphemeralMessageParameters, Ephemeral Messages and Commands | https://core.telegram.org/bots/api#ephemeralmessageparameters | `ephemeral-and-personal.md` |
+| sendMessageDraft / sendRichMessageDraft / MessageGenerationStopped | https://core.telegram.org/bots/api#sendmessagedraft | `streaming-and-editing.md` |
+| InlineKeyboardButton / InlineKeyboardMarkup / ReplyKeyboardMarkup / RichMessageButton | https://core.telegram.org/bots/api#inlinekeyboardbutton | `buttons-and-styles.md`, validator |
+| Every type/method linked from the two releases (108 pages) | core.telegram.org/bots/api/{types,methods}/… | registry, fixtures |
+
+Status of the rules in this skill: **API** (requirement from a Bot API page), **Guide**
+(official recommendation, e.g. the Widgets guide), **Heuristic** (this skill's design advice),
+**Local test** (verified by the offline tests in `tests/` or the SDK contract tests),
+**Unverified** (marked inline, e.g. whether `can_stop` persists between draft calls, whether
+omitting `force_reply` in an edit counts as a change, the welcome-message delivery mechanism).
+
+Rich Message Limits are now official (previously secondary): 32768 UTF-8 characters, 500 blocks,
+16 nesting levels, 50 media, 20 table columns.
+
+Contradictions found and the chosen behaviour:
+- The Widgets guide says widgets live in groups, inline mode and forwards; `sendWidget` and the
+  guide's Availability table say production allows **only private chats**. This skill treats the
+  rest as **test-server only** and marks every such example.
+- The guide states Node's zlib may differ from the server's count by dozens of bytes; the size
+  check uses Python's zlib level 9 as the reference.
+
+Availability layers are kept separate everywhere: spec → production → Bot API server (local
+servers may lag) → installed SDK → client rendering. No API reports a user's client version or
+whether a client displayed a feature.
+
+Official Telegram open source / tooling for the newest API (checked 2026-11-12):
+- **tdlib/telegram-bot-api** (the Bot API server, self-hostable as a Local Bot API Server):
+  commit "Update version to 10.4." on 2026-11-09 — a local server can serve 10.4; check its
+  version before relying on new methods (a lagging local server is the "server" layer).
+- **Widgets guide "Writing widgets with an LLM"**: Telegram's own system prompt for models
+  that write widgets (see `widgets.md#writing-widgets-with-an-llm-telegrams-official-prompt`).
+- **AIActions** custom emoji set (t.me/addemoji/AIActions) is the set the Bot API docs
+  recommend for `<tg-thinking>`. No official "icon set for bot buttons" was found; packs such as
+  "Telegram iOS Icons" (tgiosicons), "TG iOS & macOS Icons" (tgmacicons), "Telegram Android
+  Icons" (TgAndroidIcons) and "Unigram" (UnigramIcons) are community packs imitating client
+  icon styles — treat each as its own family (`visual-language.md`).
+- No official open-source example bot for 10.3/10.4 was found; SDK support is tracked in
+  `sdk-compatibility.md`.
+
+SDK status verified 2026-11-12: aiogram 3.31.0 (Bot API 10.3), grammY 1.46.0 /
+@grammyjs/types 5.0.0 (10.3), python-telegram-bot 22.8 (10.0 per its README).
+`sdk-compatibility.md#verified-sdk-status-2026-11-12`.
 
 ## Stable historical facts (pre-2026, unchanged)
 

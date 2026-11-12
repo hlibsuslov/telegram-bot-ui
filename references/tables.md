@@ -138,8 +138,7 @@ across the top — instead of padding with empty cells. *(Verify the exact field
 names.)*
 
 ### Column cap
-There is a per-table **column limit** (*secondary: ~20 columns — verify before
-relying on it*). If data is wider, transpose it (attributes as rows) or split into
+There is a per-table **column limit** (official: 20 columns, Rich Message Limits, verified 2026-11-12). If data is wider, transpose it (attributes as rows) or split into
 two tables with a shared key column. Never silently drop columns — if you cap,
 say so.
 
@@ -201,3 +200,9 @@ fallback shipped a monospace block — report what actually went out.
 - Test render on **mobile and desktop** and after an **export** (see
   `testing-playbook.md`) — a table that looks fine on desktop can wrap badly on a
   narrow phone.
+
+## Compact tables
+
+10.3: `is_compact` (`<table compact>`) shrinks cell padding. Use it for dense numeric tables on
+phones (≥ 4 columns, short values); keep the normal padding for 2–3 column tables people read
+slowly. It changes spacing only — headers, alignment and the 20-column limit still apply.

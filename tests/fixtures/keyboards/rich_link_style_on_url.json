@@ -1,0 +1,10 @@
+{
+  "type": "buttons",
+  "buttons": [
+    {
+      "text": "Site",
+      "url": "https://t.me",
+      "style": "link"
+    }
+  ]
+}

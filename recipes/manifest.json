@@ -1,0 +1,405 @@
+{
+ "verified": "2026-11-12",
+ "bot_api": "10.4",
+ "recipes": [
+  {
+   "id": "R01",
+   "title": "AI assistant with a rich streamed answer and Stop",
+   "doc": "recipes/01-ai-assistant.md",
+   "registry": [
+    "10.3-G01",
+    "10.3-G02"
+   ],
+   "symbols": [
+    "MessageGenerationStopped",
+    "can_stop",
+    "keep_on_stop",
+    "sendMessageDraft",
+    "sendRichMessageDraft",
+    "stopped_message_generation"
+   ],
+   "versions": [
+    "10.3"
+   ],
+   "contexts": "Bot API ≥ 10.3 (drafts 9.3+, rich drafts 10.1+). Production. Private chats (with or without topics). `allowed_updates` must include `stopped_message_generation`. SDK must route it (aiogram 3.31 / grammY 1.46: yes).",
+   "payload": "examples/payloads/r01-ai-stop-keep-marked.json",
+   "fixture": "examples/fixtures/stopped_message_generation.json",
+   "python": "examples/python/recipes/r01_ai_assistant.py",
+   "typescript": "examples/ts/recipes.ts",
+   "tasks": [
+    "The bot thinks for 20 s and you can't stop it. Make it stream like ChatGPT and let me stop it."
+   ]
+  },
+  {
+   "id": "R02",
+   "title": "Interactive document: compact table, expandable quote, attached file, buttons, quoting",
+   "doc": "recipes/02-interactive-document.md",
+   "registry": [
+    "10.4-Q01",
+    "10.4-Q02",
+    "10.4-X02",
+    "10.3-R01",
+    "10.3-R02",
+    "10.3-R03",
+    "10.3-R04",
+    "10.3-R05",
+    "10.3-R06",
+    "10.3-R07"
+   ],
+   "symbols": [
+    "InputRichBlockButtons",
+    "InputRichBlockDocument",
+    "InputRichBlockExpandableBlockQuotation",
+    "InputRichBlockTable",
+    "ReplyParameters",
+    "RichBlockButtons",
+    "RichBlockDocument",
+    "RichBlockExpandableBlockQuotation",
+    "RichBlockTable",
+    "RichMessageButton",
+    "RichTextButton",
+    "RichTextTonAddress",
+    "TextQuote",
+    "expandable_blockquote",
+    "is_compact",
+    "quote_rich_texts",
+    "rich_texts",
+    "tg-button-row",
+    "tg-document",
+    "tg://document",
+    "ton_address"
+   ],
+   "versions": [
+    "10.3",
+    "10.4"
+   ],
+   "contexts": "Bot API ≥ 10.3 (quotes ≥ 10.4). Production, any chat where the bot may send rich messages (media rights for the document). Ephemeral/inline limits: see validator contexts.",
+   "payload": "examples/payloads/r02-interactive-document.json",
+   "fixture": "examples/fixtures/message_quote_rich.json",
+   "python": "examples/python/recipes/r02_interactive_document.py",
+   "typescript": "examples/ts/recipes.ts",
+   "tasks": [
+    "Send the policy as a proper document: a status table, the long auditor note folded, the PDF attached, an Approve button — and when someone quotes a line, answer that line."
+   ]
+  },
+  {
+   "id": "R03",
+   "title": "Multi-step form: keyboard plus reply field, disabled Submit, Back, no duplicates",
+   "doc": "recipes/03-multi-step-form.md",
+   "registry": [
+    "10.3-K01",
+    "10.3-K02"
+   ],
+   "symbols": [
+    "DisabledButton",
+    "InlineKeyboardMarkup",
+    "ReplyKeyboardMarkup",
+    "disabled",
+    "force_reply"
+   ],
+   "versions": [
+    "10.3"
+   ],
+   "contexts": "Bot API ≥ 10.3. Production. Private chats and groups (in groups privacy mode still delivers replies to the bot's messages). Not in channels.",
+   "payload": "examples/payloads/r03-multi-step-form.json",
+   "fixture": "tests/fixtures/keyboards/edit_changes_force_reply.json",
+   "python": "examples/python/recipes/r03_multi_step_form.py",
+   "typescript": "examples/ts/recipes.ts",
+   "tasks": [
+    "Our order form: pick a size or type it, then a phone, then a time. People double-tap Submit and we get two orders."
+   ]
+  },
+  {
+   "id": "R04",
+   "title": "Shared card and personal panels in a group",
+   "doc": "recipes/04-shared-card-personal-panel.md",
+   "registry": [
+    "10.4-E01",
+    "10.4-E02",
+    "10.3-E01",
+    "10.3-E03"
+   ],
+   "symbols": [
+    "EphemeralMessageParameters",
+    "callback_query_id",
+    "chat_id",
+    "ephemeral_message_parameters",
+    "receiver_user_id",
+    "replace_callback_query_message",
+    "sendLivePhoto",
+    "sendRichMessage"
+   ],
+   "versions": [
+    "10.3",
+    "10.4"
+   ],
+   "contexts": "Bot API ≥ 10.3 (10.4 short form). Production. Groups/supergroups (any chat except channel DM chats for the 10.4 form). Within 15 s of the tap. `answerCallbackQuery` still required.",
+   "payload": "examples/payloads/r04-shared-card-personal-panel.json",
+   "fixture": "examples/fixtures/callback_card_user_a.json",
+   "python": "examples/python/recipes/r04_shared_card_personal_panel.py",
+   "typescript": "examples/ts/recipes.ts",
+   "tasks": [
+    "In our team chat everyone taps ‘My order’ on the lunch card and the bot posts everyone's order publicly. Make it private per person."
+   ]
+  },
+  {
+   "id": "R05",
+   "title": "Interactive widget in a private chat (production)",
+   "doc": "recipes/05-private-widget.md",
+   "registry": [
+    "10.4-W01",
+    "10.4-W02",
+    "10.4-W04",
+    "10.4-W07",
+    "10.4-W08"
+   ],
+   "symbols": [
+    "ExternalReplyInfo",
+    "Widget",
+    "WidgetQuery",
+    "answerWidgetQuery",
+    "editMessageWidgetData",
+    "sendWidget",
+    "widget",
+    "widget_query"
+   ],
+   "versions": [
+    "10.4"
+   ],
+   "contexts": "Bot API ≥ 10.4. **Production: private chats only.** `allow_queries: true`. `allowed_updates` must include `widget_query`. SDKs on 2026-11-12 need an adapter (aiogram/grammY).",
+   "payload": "examples/payloads/r05-private-widget.json",
+   "fixture": "examples/fixtures/widget_query_ship.json",
+   "python": "examples/python/recipes/r05_private_widget.py",
+   "typescript": "examples/ts/recipes.ts",
+   "tasks": [
+    "Instead of re-sending the order every time someone changes delivery, show one card that updates."
+   ]
+  },
+  {
+   "id": "R06",
+   "title": "Shared widget: one poll in many chats, revisions, coalesced updates",
+   "doc": "recipes/06-shared-widget.md",
+   "registry": [
+    "10.4-W03",
+    "10.4-W05",
+    "10.4-W09",
+    "10.4-W10",
+    "10.4-W11"
+   ],
+   "symbols": [
+    "InputSharedWidgetMessageContent",
+    "InputWidgetMessageContent",
+    "SharedWidgetQuery",
+    "cache_time",
+    "copyMessage",
+    "copyMessages",
+    "editSharedWidgetData",
+    "sendSharedWidget",
+    "shared_widget_query"
+   ],
+   "versions": [
+    "10.4"
+   ],
+   "contexts": "Bot API ≥ 10.4. Production: private chats (create once with `is_shared`, re-send by `widget_id`). **Test server only:** forwards (`shared_widget_query`), inline (`InputWidgetMessageContent` / `InputSharedWidgetMessageContent`), groups (`can_send_other_messages`).",
+   "payload": "examples/payloads/r06-shared-widget.json",
+   "fixture": "examples/fixtures/shared_widget_query_vote.json",
+   "python": "examples/python/recipes/r06_shared_widget.py",
+   "typescript": "examples/ts/recipes.ts",
+   "tasks": [
+    "Run a lunch poll that everyone sees live, wherever it's shown."
+   ]
+  },
+  {
+   "id": "R07",
+   "title": "Wallet interaction from a widget (pay, sign, confirm)",
+   "doc": "recipes/07-wallet.md",
+   "registry": [
+    "10.4-W06",
+    "10.4-T01",
+    "10.4-T02",
+    "10.4-X03"
+   ],
+   "symbols": [
+    "ChatFullInfo",
+    "MessageEntity",
+    "TonNft",
+    "TonNftAttribute",
+    "TonWalletCard",
+    "TonWalletCardSticker",
+    "TonWalletTransfer",
+    "WidgetQueryType",
+    "WidgetQueryTypeData",
+    "WidgetQueryTypeSentTransaction",
+    "WidgetQueryTypeSignData",
+    "WidgetQueryWallet",
+    "msg_hash",
+    "sent_transaction",
+    "sign_data",
+    "ton_address",
+    "ton_wallet_card",
+    "ton_wallet_transfer",
+    "wallet_card"
+   ],
+   "versions": [
+    "10.4"
+   ],
+   "contexts": "Bot API ≥ 10.4. Production: private chats; the user must have the wallet in their app (otherwise `TelegramWidget.wallet` is null). Your own TON indexer/node for confirmation and an ed25519 verifier for signatures.",
+   "payload": "examples/payloads/r07-wallet.json",
+   "fixture": "examples/fixtures/widget_query_sent_transaction.json",
+   "python": "examples/python/recipes/r07_wallet.py",
+   "typescript": "examples/ts/recipes.ts",
+   "tasks": [
+    "Let users pay 1.25 TON for order 42 right in the chat and show when it's actually paid."
+   ]
+  },
+  {
+   "id": "R08",
+   "title": "Bot with several conversation topics",
+   "doc": "recipes/08-multi-topic-bot.md",
+   "registry": [
+    "10.4-X07"
+   ],
+   "symbols": [
+    "message_thread_id",
+    "t.me"
+   ],
+   "versions": [
+    "10.4"
+   ],
+   "contexts": "Bot API ≥ 10.4 for links (Stop: 10.3). Production. Private chats with the bot's topic mode; the link works only for that user.",
+   "payload": "examples/payloads/r08-multi-topic-bot.json",
+   "fixture": "examples/fixtures/stopped_message_generation_topic.json",
+   "python": "examples/python/recipes/r08_multi_topic_bot.py",
+   "typescript": "examples/ts/recipes.ts",
+   "tasks": [
+    "Users open several topics with our assistant. Answers mix up and Stop stops the wrong one."
+   ]
+  },
+  {
+   "id": "R09",
+   "title": "Monitoring bot upgraded to 10.3/10.4 (btc-tracker case study)",
+   "doc": "recipes/09-tracker-bot.md",
+   "registry": [],
+   "symbols": [
+    "sendWidget",
+    "editMessageWidgetData",
+    "editMessageCaption",
+    "sendSharedWidget",
+    "editSharedWidgetData",
+    "cache_time",
+    "is_compact",
+    "disabled",
+    "force_reply",
+    "icon_custom_emoji_id",
+    "tg-emoji",
+    "copy_text"
+   ],
+   "versions": [
+    "9.4",
+    "10.3",
+    "10.4"
+   ],
+   "contexts": "private chat (widgets: production); text fallback anywhere",
+   "payload": "examples/payloads/r09-tracker-bot.json",
+   "fixture": "examples/case-studies/btc-tracker/icon-map.json",
+   "python": "examples/python/recipes/r09_tracker_bot.py",
+   "typescript": null,
+   "tasks": [
+    "one updating card per transaction instead of many messages",
+    "live price ticker",
+    "consistent premium icons",
+    "upgrade an existing tracker bot to the latest Bot API"
+   ]
+  },
+  {
+   "id": "MINI",
+   "title": "Specialized modules",
+   "doc": "recipes/mini-recipes.md",
+   "registry": [
+    "10.4-W12",
+    "10.4-T03",
+    "10.4-S01",
+    "10.4-S02",
+    "10.4-S03",
+    "10.4-G01",
+    "10.4-G02",
+    "10.4-X01",
+    "10.4-X04",
+    "10.4-X05",
+    "10.4-X06",
+    "10.3-E02",
+    "10.3-E04",
+    "10.3-E05",
+    "10.3-E06",
+    "10.3-E07",
+    "10.3-E08",
+    "10.3-G03",
+    "10.3-G04"
+   ],
+   "symbols": [
+    "AreaPosition",
+    "ChatAdministratorRights",
+    "ChatMemberAdministrator",
+    "ChatMemberRestricted",
+    "ChatPermissions",
+    "ChatShareTheme",
+    "ChatShareThemeBackdrop",
+    "ChatShareThemeBackdrops",
+    "ChatShareThemeEmoji",
+    "ChatShareThemeUniqueGift",
+    "CommunityChatJoined",
+    "EmojiType",
+    "EmojiTypeCustomEmoji",
+    "EmojiTypeEmoji",
+    "KeyboardButtonRequestManagedBot",
+    "PaidMessagesWaived",
+    "StoryAreaPosition",
+    "UniqueGiftInfo",
+    "bank_card_number",
+    "can_convert_gifts_to_stars",
+    "can_send_other_messages",
+    "can_send_welcome_messages",
+    "community_chat_joined",
+    "custom_description_entities",
+    "custom_description_parse_mode",
+    "deleteBusinessAccountGift",
+    "editEphemeralMessageCaption",
+    "editEphemeralMessageMedia",
+    "editEphemeralMessageText",
+    "getChatShareThemeBackdrops",
+    "getUniqueGift",
+    "is_private",
+    "paid_messages_waived",
+    "promoteChatMember",
+    "rich_message",
+    "sendRichMessage",
+    "share_theme",
+    "show_caption_above_media",
+    "suggested_username",
+    "verifyChat",
+    "verifyUser"
+   ],
+   "versions": [
+    "10.3",
+    "10.4"
+   ],
+   "payload": "examples/payloads/mini-recipes.json",
+   "python": "examples/python/recipes/mini_recipes.py",
+   "typescript": null,
+   "tasks": [
+    "welcome newcomers privately",
+    "community join",
+    "gift note",
+    "look up a unique gift",
+    "delete business gifts",
+    "share theme",
+    "managed bot username",
+    "verification description",
+    "paid messages waived",
+    "mask card numbers",
+    "AreaPosition rename",
+    "ephemeral media edit"
+   ]
+  }
+ ]
+}
