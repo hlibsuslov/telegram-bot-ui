@@ -57,19 +57,43 @@ class ChainVerifier(Protocol):
 
 
 class SignatureVerifier(Protocol):
-    def verify(self, *, sign_data_json: str, public_key_hex: str, expected_domain: str) -> bool: ...
+    def verify(self, *, sign_data_json: str, public_key_hex: str, state_init_b64: str,
+               expected_address: str, expected_domain: str, expected_payload: dict[str, Any],
+               max_age_s: int) -> bool:
+        """True only if ALL hold: the ed25519 signature is valid for public_key; the
+        public key belongs to expected_address (derive the address from state_init and
+        compare); the signed domain is expected_domain; the signed payload equals the
+        server-issued challenge; the timestamp is within max_age_s."""
 
 
-def transaction_request(order: Order, *, now: int, ttl: int = 300) -> dict[str, Any]:
+@dataclass
+class SignChallenge:
+    """Server-issued, single-use challenge for wallet.signData (prevents replaying a
+    signature made for another account, wallet or moment)."""
+    user_id: int
+    nonce: str
+    issued_at: int
+    used: bool = False
+
+    def payload(self) -> dict[str, Any]:
+        return {"type": "text", "text": f"Link wallet to account {self.user_id} · {self.nonce}"}
+
+
+def transaction_request(order: Order, *, now: int, ttl: int = 300) -> dict[str, Any] | None:
     """TON Connect sendTransaction request the bot returns in answerWidgetQuery.
 
     Attach the order reference as a text-comment `payload` (base64 BOC) built
     with your TON library, e.g. @ton/core:
         beginCell().storeUint(0, 32).storeStringTail(order_id).endCell().toBoc()
     It is omitted here on purpose - this repo does not ship a BOC encoder.
+    Returns None when the order is already awaiting confirmation, paid or disputed:
+    answer with the order's state instead of a new transaction.
     """
-    order.valid_until = now + ttl
-    order.state = OrderState.INVOICED
+    if order.state in (OrderState.AWAITING_CONFIRMATION, OrderState.PAID, OrderState.MISMATCH):
+        return None                     # never re-invoice a paid / possibly paid order
+    if not (order.state == OrderState.INVOICED and order.valid_until > now):
+        order.valid_until = now + ttl   # a replayed "pay:" within validity gets the SAME request
+        order.state = OrderState.INVOICED
     return {"valid_until": order.valid_until,
             "messages": [{"address": order.merchant_address, "amount": str(order.amount_nano)}]}
 
@@ -87,13 +111,21 @@ def short_address(addr: str) -> str:
     return addr if len(addr) <= 12 else f"{addr[:4]}…{addr[-4:]}"
 
 
-def on_sent_transaction(order: Order, query: dict[str, Any], verifier: ChainVerifier) -> dict[str, Any]:
-    """Handle {"type": "sent_transaction"}; returns the answer for the widget."""
+def on_sent_transaction(order: Order, query: dict[str, Any], verifier: ChainVerifier,
+                        seen_hashes: dict[str, str] | None = None) -> dict[str, Any]:
+    """Handle {"type": "sent_transaction"}; returns the answer for the widget.
+    `seen_hashes` (msg_hash -> order_id, persistent) stops one transfer from being
+    claimed for two orders; the chain check must also match the order's comment."""
     if query["from"]["id"] != order.user_id:
         return {"ok": False, "err": "not_your_order"}
     t = query["type"]
-    if order.state == OrderState.PAID:
+    if order.state in (OrderState.PAID, OrderState.MISMATCH):
         return {"ok": True, "state": order.state.value}       # repeated notification
+    if order.state == OrderState.NEW:
+        return {"ok": False, "err": "no_invoice"}
+    seen = seen_hashes if seen_hashes is not None else {}
+    if seen.setdefault(t["msg_hash"], order.order_id) != order.order_id:
+        return {"ok": False, "err": "transfer_already_used"}
     order.msg_hashes.append(t["msg_hash"])
     order.state = OrderState.AWAITING_CONFIRMATION
     verdict = verifier.check(msg_hash=t["msg_hash"], sender=t["wallet"]["address"],
@@ -106,14 +138,26 @@ def on_sent_transaction(order: Order, query: dict[str, Any], verifier: ChainVeri
     return {"ok": True, "state": order.state.value}
 
 
-def on_sign_data(query: dict[str, Any], verifier: SignatureVerifier, *, bot_id: int) -> dict[str, Any]:
+def on_sign_data(query: dict[str, Any], verifier: SignatureVerifier, *, bot_id: int,
+                 challenge: "SignChallenge | None", now: int, max_age_s: int = 300) -> dict[str, Any]:
+    """Verify a signData result against a server-issued challenge. The address that
+    gets linked is the one the verifier proved owns the key - never just the claim."""
     t = query["type"]
     wallet = t["wallet"]
-    if not wallet.get("public_key"):
+    if challenge is None or challenge.used or challenge.user_id != query["from"]["id"]:
+        return {"ok": False, "err": "no_challenge"}
+    if now - challenge.issued_at > max_age_s:
+        return {"ok": False, "err": "challenge_expired"}
+    if not wallet.get("public_key") or not wallet.get("state_init"):
         return {"ok": False, "err": "unknown_public_key"}      # can't verify: say so
     good = verifier.verify(sign_data_json=t["sign_data"], public_key_hex=wallet["public_key"],
-                           expected_domain=f"bot{bot_id}")
-    return {"ok": good, "address": short_address(wallet["address"])} if good else {"ok": False, "err": "bad_signature"}
+                           state_init_b64=wallet["state_init"], expected_address=wallet["address"],
+                           expected_domain=f"bot{bot_id}", expected_payload=challenge.payload(),
+                           max_age_s=max_age_s)
+    if not good:
+        return {"ok": False, "err": "bad_signature"}
+    challenge.used = True                                      # single use
+    return {"ok": True, "address": short_address(wallet["address"])}
 
 
 def describe_transfer(service: dict[str, Any]) -> str:

@@ -172,6 +172,10 @@ def handle_widget_query(query: dict[str, Any], store: WidgetStore, transport: An
     Order: decide -> edit state -> commit only if the edit went through ->
     answer (the answer carries the new revision so the widget can drop older
     pushes). Returns the outcome for logs/tests.
+
+    This version is synchronous. In an async port, reserve the query id BEFORE the
+    first await and serialize per widget key (see handleWidgetQuery in
+    examples/ts/tgkit.ts), or concurrent updates duplicate edits and lose increments.
     """
     qid = query["id"]
     if qid in store.answered:                       # redelivered update

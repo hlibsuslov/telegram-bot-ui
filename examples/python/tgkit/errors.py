@@ -140,7 +140,9 @@ def call_with_policy(
                 return True
             if cat == "rate_limited" and attempt < policy.max_attempts:
                 wait = max(float(err.retry_after or 0), policy.base_backoff * attempt)
-                sleep(min(wait, policy.max_wait))
+                if wait > policy.max_wait:
+                    raise        # a long flood wait: let the caller reschedule, never retry early
+                sleep(wait)
                 continue
             if cat == "server" and is_idempotent(method) and attempt < policy.max_attempts:
                 sleep(min(policy.base_backoff * 2 ** (attempt - 1), policy.max_wait))

@@ -77,6 +77,22 @@ class Aiogram(unittest.TestCase):
                                                            "allow_queries": True})
         self.assertEqual(AnswerWidgetQuery(widget_query_id="q", data="{}").__api_method__, "answerWidgetQuery")
 
+    def test_update_middleware_still_gates_widget_queries(self):
+        from sdk_aiogram.adapter import WidgetAwareDispatcher
+        got = []
+
+        async def handler(kind, payload):
+            got.append(kind)
+
+        dp = WidgetAwareDispatcher(widget_handler=handler)
+
+        @dp.update.outer_middleware()
+        async def deny_all(handler_, event, data):   # e.g. an allowlist or rate limiter
+            return None
+
+        asyncio.run(dp.feed_update(self.bot, self.raw("widget_query_ship.json")))
+        self.assertEqual(got, [], "a denying update middleware must block widget queries too")
+
 
 if __name__ == "__main__":
     unittest.main()

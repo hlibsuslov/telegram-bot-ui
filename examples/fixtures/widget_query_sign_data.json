@@ -23,7 +23,7 @@
         "public_key": "a3f1c0ffee00000000000000000000000000000000000000000000000000beef",
         "state_init": "te6cckEBAQEAAgAAAEysuc0="
       },
-      "sign_data": "{\"signature\": \"c2lnbmF0dXJl\", \"address\": \"0:abcd\", \"timestamp\": 1762900100, \"domain\": \"bot999000111\", \"payload\": {\"type\": \"text\", \"text\": \"Link wallet to account 111111111\"}}"
+      "sign_data": "{\"signature\": \"c2lnbmF0dXJl\", \"address\": \"0:abcd\", \"timestamp\": 1762900100, \"domain\": \"bot999000111\", \"payload\": {\"type\": \"text\", \"text\": \"Link wallet to account 111111111 · n-7f3a\"}}"
     },
     "data": "link"
   }

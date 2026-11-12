@@ -231,16 +231,31 @@ export function checkWidget(html: string, o: { caption?: string; chatData?: stri
 }
 
 export type Rec = { state: Params; revision: number };
+// Per-widget serialization: read -> decide -> edit -> commit must not interleave across awaits,
+// or two concurrent increments both start from the same revision (lost update).
+const widgetLocks = new Map<string, Promise<unknown>>();
+
 export async function handleWidgetQuery(q: Params, store: Map<string, Rec>, answered: Set<string>, t: FakeTransport,
   decide: (q: Params, verb: string, arg: string, rec: Rec) => [Params | null, Params]): Promise<string> {
+  // Reserve the id synchronously, before the first await: a redelivered update that
+  // arrives while this one is in flight is a duplicate, not a second edit and answer.
   if (answered.has(q.id)) return "duplicate";
+  answered.add(q.id);
+  const key = q.inline_message_id ? `inline:${q.inline_message_id}` : q.chat ? `msg:${q.chat.id}:${q.message_id}` : `shared:${q.widget_id}`;
+  const prev = widgetLocks.get(key) ?? Promise.resolve();
+  const run = prev.then(() => processWidgetQuery(q, key, store, t, decide), () => processWidgetQuery(q, key, store, t, decide));
+  widgetLocks.set(key, run);
+  try { return await run; } finally { if (widgetLocks.get(key) === run) widgetLocks.delete(key); }
+}
+
+async function processWidgetQuery(q: Params, key: string, store: Map<string, Rec>, t: FakeTransport,
+  decide: (q: Params, verb: string, arg: string, rec: Rec) => [Params | null, Params]): Promise<string> {
   const answer = async (data: Params, outcome: string) => {
     await t.call("answerWidgetQuery", { widget_query_id: q.id, data: JSON.stringify(data) });
-    answered.add(q.id); return outcome;
+    return outcome;
   };
   const bytes = Buffer.byteLength(q.data ?? "", "utf8");
   if (bytes < 1 || bytes > 64) return answer({ ok: false, err: "bad_request" }, "invalid");
-  const key = q.inline_message_id ? `inline:${q.inline_message_id}` : q.chat ? `msg:${q.chat.id}:${q.message_id}` : `shared:${q.widget_id}`;
   let rec = store.get(key) ?? { state: {}, revision: 0 };
   const [verb, arg = ""] = String(q.data).split(":");
   let next: Params | null; let reply: Params;

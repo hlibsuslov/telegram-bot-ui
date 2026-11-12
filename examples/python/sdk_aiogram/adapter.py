@@ -33,12 +33,15 @@ class WidgetAwareDispatcher(Dispatcher):
         super().__init__(*args, **kwargs)
         self._widget_handler = widget_handler
 
-    async def feed_update(self, bot, update: Update, **kwargs: Any) -> Any:
+    async def _listen_update(self, update: Update, **kwargs: Any) -> Any:
+        # Called by feed_update AFTER the update-level outer/inner middlewares
+        # (allowlists, rate limits, logging), so widget queries pass the same gates
+        # as every other update. Overriding feed_update instead would bypass them.
         extra = update.model_extra or {}
         for kind in WIDGET_UPDATES:
             if kind in extra:
                 return await self._widget_handler(kind, extra[kind])   # raw dict, as on the wire
-        return await super().feed_update(bot, update, **kwargs)
+        return await super()._listen_update(update, **kwargs)
 
     def resolve_used_update_types(self, skip_events=None) -> list[str]:
         return sorted(set(super().resolve_used_update_types(skip_events)) | set(WIDGET_UPDATES))

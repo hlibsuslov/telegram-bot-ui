@@ -35,8 +35,13 @@ class FakeChain:
 
 
 class FakeSigner:
-    def verify(self, *, sign_data_json, public_key_hex, expected_domain):
-        return json.loads(sign_data_json).get("domain") == expected_domain   # + real ed25519 check
+    """Stand-in: checks domain and challenge text only. A real verifier also checks the
+    ed25519 signature and that public_key derives to expected_address via state_init."""
+    def verify(self, *, sign_data_json, public_key_hex, state_init_b64, expected_address,
+               expected_domain, expected_payload, max_age_s):
+        signed = json.loads(sign_data_json)
+        return (signed.get("domain") == expected_domain and signed.get("payload") == expected_payload
+                and bool(public_key_hex and state_init_b64 and expected_address))
 
 
 def run(verdicts=("pending", "confirmed"), transport: FakeTransport | None = None):
@@ -47,6 +52,12 @@ def run(verdicts=("pending", "confirmed"), transport: FakeTransport | None = Non
                                 "caption": "Order #42 · 1.25 TON", "allow_queries": True,
                                 "chat_data": encode_state({"o": "42", "amt": "1.25 TON", "st": "new", "r": 0})})
     rev = [0]
+    seen_hashes: dict[str, str] = {}
+    # Issued when the user opened "Link wallet"; the widget signs exactly this payload.
+    challenge = wallet.SignChallenge(user_id=CHAT, nonce="n-7f3a", issued_at=1762900050)
+
+    def state():
+        return {"o": "42", "amt": "1.25 TON", "st": order.state.value, "r": rev[0]}
 
     def push_state():
         rev[0] += 1
@@ -67,13 +78,17 @@ def run(verdicts=("pending", "confirmed"), transport: FakeTransport | None = Non
         if kind == "data" and q["data"] == f"pay:{order.order_id}":
             card = q["type"].get("wallet_card")           # profile card; the payer may differ
             tx = wallet.transaction_request(order, now=1762900000)
+            if tx is None:                                 # replayed tap on a (possibly) paid order
+                return answer(q, {"ok": False, "err": "already_" + order.state.value, "s": state()})
             return answer(q, {"ok": True, "tx": tx, "card": wallet.wallet_card_summary(card)})
+        if kind == "data" and q["data"] == "sync":        # the widget asks after a TIMEOUT
+            return answer(q, {"ok": True, "s": state()})
         if kind == "sent_transaction":
-            result = wallet.on_sent_transaction(order, q, chain)
+            result = wallet.on_sent_transaction(order, q, chain, seen_hashes)
             push_state()
-            return answer(q, {**result, "s": {"o": "42", "amt": "1.25 TON", "st": order.state.value, "r": rev[0]}})
+            return answer(q, {**result, "s": state()})
         if kind == "sign_data":
-            return answer(q, wallet.on_sign_data(q, FakeSigner(), bot_id=BOT_ID))
+            return answer(q, wallet.on_sign_data(q, FakeSigner(), bot_id=BOT_ID, challenge=challenge, now=1762900100))
         return answer(q, {"ok": False, "err": "unknown"})
 
     router.dispatch(c.fixture("widget_query_wallet_data.json"))
@@ -86,6 +101,8 @@ def run(verdicts=("pending", "confirmed"), transport: FakeTransport | None = Non
             order.state = wallet.OrderState.PAID
             push_state()
     router.dispatch(c.fixture("widget_query_sign_data.json"))
+    router.dispatch(c.fixture("widget_query_wallet_data.json"))      # replayed Pay tap after payment
+    router.dispatch(c.fixture("widget_query_sign_data.json"))        # replayed signature
     return t, order, chain
 
 
@@ -101,7 +118,12 @@ def main() -> None:
     states = [json.loads(p["chat_data"])["st"] for p in t.params_of("editMessageWidgetData")]
     c.check(states == ["awaiting", "paid"], "paid only after the chain check")
     third = json.loads(t.params_of("answerWidgetQuery")[2]["data"])
-    c.check(third["ok"] is True, "sign_data verified for domain bot<bot_id>")
+    c.check(third["ok"] is True, "sign_data verified for domain bot<bot_id> and the issued challenge")
+    replay_pay = json.loads(t.params_of("answerWidgetQuery")[3]["data"])
+    c.check(replay_pay["err"] == "already_paid" and "tx" not in replay_pay,
+            "a replayed Pay tap on a paid order gets the state, never a new transaction")
+    replay_sign = json.loads(t.params_of("answerWidgetQuery")[4]["data"])
+    c.check(replay_sign == {"ok": False, "err": "no_challenge"}, "a signature can't be replayed (single-use challenge)")
 
     t2, order2, _ = run(verdicts=("mismatch",))
     c.check(order2.state == wallet.OrderState.MISMATCH, "a mismatching transfer is never marked paid")

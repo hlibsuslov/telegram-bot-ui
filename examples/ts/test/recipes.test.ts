@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import * as R from "../recipes.ts";
-import { callWithPolicy, err, FakeTransport, OutcomeUnknown, ephemeralParams, guardAudience, AudienceViolation, checkWidget } from "../tgkit.ts";
+import { callWithPolicy, err, FakeTransport, OutcomeUnknown, ephemeralParams, guardAudience, AudienceViolation, checkWidget, handleWidgetQuery, type Rec } from "../tgkit.ts";
 
 const finals = (t: FakeTransport) => t.calls.filter((c) => c.method === "sendRichMessage");
 
@@ -80,4 +80,18 @@ test("429 is bounded and waits; unknown send outcome is not repeated", async () 
   const u = new FakeTransport().script("sendMessage", "TIMEOUT");
   await assert.rejects(callWithPolicy(u, "sendMessage", {}, { sleep: async () => {} }), OutcomeUnknown);
   assert.equal(u.calls.length, 1);
+});
+
+test("concurrent widget queries: no duplicate edits, no lost updates", async () => {
+  // A transport that yields between calls, like a real network.
+  const t = new FakeTransport().script("editMessageWidgetData", ...Array(10).fill(() => new Promise((r) => setTimeout(() => r(true), 5))));
+  const store = new Map<string, Rec>([["msg:1:10", { state: { n: 0 }, revision: 0 }]]);
+  const answered = new Set<string>();
+  const q = (id: string) => ({ id, from: { id: 1 }, chat: { id: 1, type: "private" }, message_id: 10, data: "inc", type: { type: "data" } });
+  const inc = (_q: unknown, _v: string, _a: string, rec: Rec): [Record<string, number>, Record<string, never>] => [{ n: rec.state.n + 1 }, {}];
+  const out = await Promise.all([handleWidgetQuery(q("a"), store, answered, t, inc), handleWidgetQuery(q("a"), store, answered, t, inc),
+    handleWidgetQuery(q("b"), store, answered, t, inc), handleWidgetQuery(q("c"), store, answered, t, inc)]);
+  assert.deepEqual(out.sort(), ["duplicate", "ok", "ok", "ok"]);
+  assert.equal(store.get("msg:1:10")!.state.n, 3); // set above, never removed
+  assert.equal(t.of("answerWidgetQuery").length, 3);
 });

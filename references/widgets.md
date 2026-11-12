@@ -86,6 +86,8 @@ widget     <-  promise resolves {result} / rejects NOT_ALLOWED|BUSY|RATE_LIMITED
   the change through `chatDataChanged` / `publicDataChanged` after an edit.
 * `from` and `widget_id` are set by Telegram and can't be forged (Guide); key per-user actions on
   `(widget_id, from.id)`.
+* Concurrency: reserve the query id before the first `await` and serialize read → decide →
+  edit → commit per widget key; otherwise two in-flight queries both start from the same revision.
 * Redelivered updates: remember answered query ids; a late answer fails with "query is too old"
   — the widget already showed `TIMEOUT`.
 * Limits: 5 requests / 5 s per user and bot; background requests only for the original in the

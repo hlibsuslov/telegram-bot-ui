@@ -67,6 +67,10 @@ def split_text(text: str, entities: list[dict[str, Any]] | None = None,
                     break
             if end is None:
                 end = _safe_cut(text, hard)
+            if end <= start:
+                # One combining/ZWJ sequence longer than the limit: a hard cut is the only
+                # way forward (otherwise the loop never advances).
+                end = max(hard, start + 1)
         chunk = text[start:end]
         base = utf16_offset(text, start)
         span = utf16_len(chunk)
@@ -82,7 +86,8 @@ def split_text(text: str, entities: list[dict[str, Any]] | None = None,
         if trim:
             local = [{**e, "length": min(e["length"], utf16_len(stripped) - e["offset"])}
                      for e in local if e["offset"] < utf16_len(stripped)]
-        parts.append((stripped, local))
+        if stripped:                      # never emit an empty (unsendable) part
+            parts.append((stripped, local))
         start = end
     return parts
 

@@ -22,25 +22,32 @@ Amounts are decimal strings in the smallest units (nanotons): never parse as flo
 1. Draw "Pay" only when `TelegramWidget.wallet` is not `null` (no wallet in this app/country,
    preview, or no requests allowed → offer another path).
 2. Tap → `request("pay:<order>", {wallet: true})` → bot gets `type: data` (+ `wallet_card`).
-3. Bot creates the order server-side (`INVOICED`) and answers a TON Connect `sendTransaction`
+3. Bot creates the order server-side (`INVOICED`; a replayed `pay:` within validity gets the
+   **same** request; an order that is awaiting/paid/disputed gets its state, **never** a new
+   transaction) and answers a TON Connect `sendTransaction`
    request: `{valid_until, messages:[{address, amount: "<nanotons>", payload?}]}` — **no `from`**
    (the device wallet pays; it may differ from the profile card). Put the order reference in a
    text-comment `payload` built with your TON library.
 4. The widget calls `wallet.sendTransaction(tx, "paid:<order>")` within 10 s of the answer.
-5. Bot gets `sent_transaction` → order becomes **AWAITING_CONFIRMATION**, not paid.
+5. Bot gets `sent_transaction` → order becomes **AWAITING_CONFIRMATION**, not paid. Remember
+   each `msg_hash` → order: one transfer can't be claimed for two orders.
 6. Your chain checker verifies sender, recipient, amount, comment and success → **PAID** (or
    MISMATCH) → `editMessageWidgetData` pushes the state; tell the user in plain words.
 7. Widget errors: `REJECTED` (user declined), `BAD_REQUEST` (wallet refused), `TIMEOUT` — the
-   payment **may** have gone out: show the order's server state, never offer to pay again blindly.
+   payment **may** have gone out: keep Pay **disabled** ("Checking the order…") until a `sync`
+   answer or a state push says otherwise; never offer to pay again blindly.
 
 Telegram ↔ your bot ↔ the chain are three trust boundaries; only the chain proves a payment.
 
 ## Signing
 
-`signData` payload: TON Connect `{type:'text'|'binary'|'cell', …}`. Bot checks: signature with
-`wallet.public_key` (absent → can't verify, say so), domain `bot<bot_id>`, fresh timestamp, and
-that the key belongs to `wallet.address` (via `state_init` / chain). Use it to link a wallet to an
-account; store the link, not the signature.
+`signData` payload: TON Connect `{type:'text'|'binary'|'cell', …}`. The bot first issues a
+**single-use challenge** (user id + nonce + time) and the widget signs exactly that text. Bot
+checks: signature with `wallet.public_key` (absent → can't verify, say so), the key belongs to
+`wallet.address` (derive the address from `state_init`), domain `bot<bot_id>`, payload = the
+challenge, fresh timestamp; then marks the challenge used. Without the challenge and the address
+binding, a signature for wallet B could be replayed as wallet A. Link the proven address; store
+the link, not the signature (`tgkit.wallet.SignChallenge`, `on_sign_data`).
 
 ## Wallet cards and transfers
 
