@@ -1,0 +1,41 @@
+{
+  "type": "buttons",
+  "buttons": [
+    {
+      "text": "B0",
+      "callback_data": "b0"
+    },
+    {
+      "text": "B1",
+      "callback_data": "b1"
+    },
+    {
+      "text": "B2",
+      "callback_data": "b2"
+    },
+    {
+      "text": "B3",
+      "callback_data": "b3"
+    },
+    {
+      "text": "B4",
+      "callback_data": "b4"
+    },
+    {
+      "text": "B5",
+      "callback_data": "b5"
+    },
+    {
+      "text": "B6",
+      "callback_data": "b6"
+    },
+    {
+      "text": "B7",
+      "callback_data": "b7"
+    },
+    {
+      "text": "B8",
+      "callback_data": "b8"
+    }
+  ]
+}

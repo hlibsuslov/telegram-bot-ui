@@ -1,0 +1,16 @@
+{
+  "type": "buttons",
+  "buttons": [
+    {
+      "text": [
+        {
+          "type": "custom_emoji",
+          "custom_emoji_id": "5368324170671202286",
+          "text": "👍"
+        },
+        " Like"
+      ],
+      "callback_data": "like"
+    }
+  ]
+}

@@ -25,7 +25,8 @@ import sys
 
 TOKEN_RE = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b")
 # Local relative references we care about (in backticks, prose, or md links).
-PATH_RE = re.compile(r"(?:references|evals|scripts|agents)/[A-Za-z0-9._/-]+")
+PATH_RE = re.compile(r"(?:references|evals|scripts|agents|recipes|examples|tests)/[A-Za-z0-9._/-]+")
+SKIP_DIRS = {"node_modules", ".git", "__pycache__", ".venv", "venv"}
 MD_LINK_RE = re.compile(r"\]\(([^)]+)\)")
 FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`]*`")
@@ -58,7 +59,7 @@ def collect_referenced_paths(root: str) -> set[str]:
     with open(skill_md, "r", encoding="utf-8") as fh:
         text = fh.read()
     for m in PATH_RE.findall(text):
-        refs.add(m.strip("`.,);"))
+        refs.add(m.strip("`.,);:"))
     for target in MD_LINK_RE.findall(strip_code(text)):
         target = target.split("#", 1)[0].strip()
         if is_local(target):
@@ -84,7 +85,8 @@ def main() -> int:
 
     # 2) bundled markdown files: non-empty, links resolve, no secrets
     linked_refs: set[str] = set()
-    for dirpath, _dirs, files in os.walk(root):
+    for dirpath, dirs, files in os.walk(root):
+        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
         for fname in files:
             fpath = os.path.join(dirpath, fname)
             rel = os.path.relpath(fpath, root).replace(os.sep, "/")

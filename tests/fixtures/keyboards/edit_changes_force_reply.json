@@ -1,0 +1,10 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "Answered",
+        "disabled": {}
+      }
+    ]
+  ]
+}

@@ -20,92 +20,32 @@ impressive.
 
 | Situation | Mechanism |
 |---|---|
-| AI generates a plain-text answer in a private chat | `sendMessageDraft` |
+| AI generates a plain-text answer in a private chat | `sendMessageDraft` (+ `can_stop`, 10.3) |
 | AI generates a structured answer (headings, tables, collapsibles) | `sendRichMessageDraft` → `sendRichMessage` |
 | Short operation, 2–5 s | `sendChatAction` |
 | User tapped an inline button | `answerCallbackQuery` **immediately**, then work |
 | Operation has real, nameable stages | `editMessageText` with a stage list / progress bar |
 | Progress cannot be measured | Named stages — **never** a fake percentage |
-| Operation runs in a group | One status message + rare edits (or an ephemeral message) |
+| Operation runs in a group | One status message + rare edits, or per-user ephemeral progress (`ephemeral-and-personal.md`) |
+| A card that updates in place in a private chat | HTML widget state edits (`widgets.md`) |
 | Genuinely interactive process | Mini App with its own progress UI |
 | SDK too old for the new methods | Raw Bot API payload, or fall back to edits |
 | Client support unknown | Feature flag + plain-text fallback |
 
-## 1. `sendMessageDraft` — native text streaming
+## 1–2. Draft streaming and Stop (UX summary)
 
-Introduced in **Bot API 9.3** (2025-12-31), opened to **all bots in 9.5**
-(2026-03-01). Official description: *"stream a partial message to a user while
-the message is being generated. Note that the streamed draft is ephemeral and
-acts as a temporary 30-second preview — once the output is finalized, you must
-call `sendMessage` with the complete message to persist it in the user's chat."*
+`sendMessageDraft` (plain) and `sendRichMessageDraft` (structured, with a `<tg-thinking>` stage
+block) show a ~30 s animated preview in **private chats** that must be finalized with a real send.
+Since **10.3** a draft can offer **Stop** (`can_stop`) and keep the partial preview briefly
+(`keep_on_stop`). UX rules:
 
-Parameters that matter: `chat_id` (**private chats only**), `draft_id`
-(non-zero; *"Changes to drafts with the same identifier are animated"*), `text`
-(**0–4096 chars**; *"Pass an empty text to show a 'Thinking…' placeholder"*),
-plus `parse_mode` / `entities` and `message_thread_id`.
+* Offer Stop on any answer that can take more than a few seconds; decide up front what Stop means
+  (discard / keep marked as incomplete / offer Continue) and say it in the final message.
+* The thinking block shows **real stages** from a fixed list, never the model's reasoning.
+* Keep the final format equal to the draft's (rich stays rich).
+* Fallback ladder: rich draft → plain draft → throttled `editMessageText` → chat action + one send.
 
-```json
-{ "chat_id": 123456789, "draft_id": 48127, "text": "" }
-```
-```json
-{ "chat_id": 123456789, "draft_id": 48127, "text": "Analyzing the sources…" }
-```
-```json
-{ "chat_id": 123456789, "draft_id": 48127,
-  "text": "Analyzing the sources…\n\nFirst finding: …" }
-```
-
-Then **finalize with `sendMessage`** — the draft is a preview, not a message.
-
-**Use it for:** AI answers, report generation, translation, file analysis,
-search, any long text produced incrementally.
-
-**Don't use it for:** group flows (private chats only), operations whose result
-isn't progressively-built text, anything that must persist every intermediate
-state, or an SDK that doesn't support the method yet.
-
-**Invariants:** one `draft_id` per operation, held for the whole run; finalize
-exactly once; if generation fails, still send a real message saying so — never
-leave the user with an expired preview and nothing else.
-
-## 2. `sendRichMessageDraft` and the Thinking block
-
-**Bot API 10.1** (2026-06-11) added Rich Messages and their streaming form.
-For streaming specifically there is a dedicated block —
-`InputRichBlockThinking` / `RichBlockThinking`, HTML tag `<tg-thinking>`:
-
-> *"A block with a 'Thinking…' placeholder, corresponding to the custom HTML tag
-> `<tg-thinking>`. The block may be used **only in `sendRichMessageDraft`**,
-> therefore it can't be received in messages."*
-
-The docs also point to `https://t.me/addemoji/AIActions` as a recommended custom
-emoji set for use inside the block (subject to the usual custom-emoji
-eligibility rules — `custom-emoji.md`).
-
-```html
-<tg-thinking>Looking through the official docs…</tg-thinking>
-```
-```html
-<tg-thinking>Comparing sources…</tg-thinking>
-<h2>Preliminary result</h2>
-<p>Found 4 relevant updates.</p>
-```
-
-Final send via `sendRichMessage` — **without** the thinking block.
-
-**Match the final message to the draft.** A rich draft that resolves into a
-plain Markdown message is a visible regression: the content reflows, tables
-collapse, and the user sees the answer "downgrade" at the last second. Decide
-the final format *before* streaming, and keep the draft's structure.
-
-**Fallback ladder** (each step must be reachable at runtime, not just in theory):
-
-```
-sendRichMessageDraft
-  → sendMessageDraft
-    → editMessageText (throttled)
-      → sendChatAction + a single final sendMessage
-```
+State machine, throttling, Stop handling, races and addressing: **`streaming-and-editing.md`**.
 
 ## 3. Edit-based streaming and progress bars
 
@@ -128,13 +68,8 @@ named stages instead:
 ⏳ Building the result
 ```
 
-**Throttling rules** — do not edit per token. Update when at least one holds:
-
-- 800–1500 ms have passed since the last edit;
-- 30–80 new characters/tokens have accumulated;
-- a sentence finished;
-- a real stage boundary was crossed;
-- the final result is ready.
+**Throttling** — never per token; one update per ~1 s at most, coalescing sentences and stages
+(full rule and the 429 handling: `streaming-and-editing.md#throttling`).
 
 Telegram's own FAQ states: *"In a single chat, avoid sending more than one
 message per second"*, *"In a group, bots are not be able to send more than 20

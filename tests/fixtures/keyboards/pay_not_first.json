@@ -1,0 +1,14 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "Back",
+        "callback_data": "b"
+      },
+      {
+        "text": "Pay ⭐",
+        "pay": true
+      }
+    ]
+  ]
+}

@@ -111,3 +111,29 @@ nor a raw path is acceptable, ship without the field and report it as deferred.
   you've seen the outgoing payload.
 - Don't gate a whole redesign on one unsupported presentation field — ship the
   structural improvements and report the gap.
+
+## Update delivery and new update types
+
+New features arrive as new **update types** too: `stopped_message_generation` (10.3),
+`widget_query` and `shared_widget_query` (10.4). Raw HTTP sends any method but does not add
+handlers for incoming types. Check all four layers:
+
+1. **Subscription:** pass `allowed_updates` explicitly on every `getUpdates`/`setWebhook` — when
+   omitted, Telegram keeps the *previous* list. SDK defaults computed from registered handlers omit
+   types the SDK doesn't know.
+2. **Parsing:** does the SDK's `Update` model keep unknown keys or drop them?
+3. **Routing:** can a handler be registered for the type, or does the dispatcher discard it?
+4. **Serialization:** does the outgoing request contain the new fields (inspect the captured payload)?
+
+## Verified SDK status (2026-11-12)
+
+| SDK (latest on the registry) | Bot API | 10.3 | 10.4 widgets | Evidence |
+|---|---|---|---|---|
+| aiogram 3.31.0 | 10.3 | `disabled`, `force_reply`, `stopped_message_generation` present | `widget_query` kept as model extra, then **dropped with a RuntimeWarning** by `Dispatcher.feed_update`; never requested by `resolve_used_update_types` | `tests/test_sdk_aiogram.py` (real package) |
+| grammY 1.46.0 / @grammyjs/types 5.0.0 | 10.3 | typed | not typed; `DEFAULT_UPDATE_TYPES` omits widget updates; raw middleware and the `api.raw` Proxy pass them | `examples/ts/sdk-grammy/adapter.test.ts` (real package) |
+| python-telegram-bot 22.8 | 10.0 (README) | not checked | not checked | PyPI metadata only |
+
+Adapters: `examples/python/sdk_aiogram/adapter.py`, `examples/ts/sdk-grammy/adapter.ts` — isolated,
+each with a REMOVE WHEN condition. SDK status changes quickly: re-run the checks before relying on
+this table.
+

@@ -5,13 +5,12 @@
 interface:
   display_name: "Telegram Bot UI"
   short_description: >-
-    Design and improve a Telegram bot's interface: message texts and microcopy,
-    button labels, inline and reply keyboards, action grouping and hierarchy,
-    colored buttons (style: primary/success/danger), custom emoji on buttons
-    (icon_custom_emoji_id), menus, commands, navigation, streaming and progress
-    feedback, cross-screen consistency, localization — plus message rendering
-    (HTML, MarkdownV2, entities, Rich Messages, tables). Preserves callback_data,
-    deep links, handlers, and translations.
+    Design and build Telegram bot interfaces and the Bot API 10.3/10.4
+    features behind them: texts, keyboards, disabled buttons and force_reply
+    forms, streaming AI answers with Stop, private ephemeral panels in groups,
+    Rich Messages, HTML widgets and TON wallet flows, topics, formatting and
+    localization - with the update routing, state, retries and SDK adapters
+    they need. Preserves callback_data, deep links, handlers, and translations.
 
 policy:
   # Allow the model to select this skill automatically when a prompt matches the

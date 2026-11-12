@@ -1,0 +1,31 @@
+{
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": [
+        "Ask ",
+        {
+          "type": "button",
+          "button": {
+            "text": "Owner",
+            "url": "https://t.me/x"
+          }
+        }
+      ]
+    },
+    {
+      "type": "buttons",
+      "buttons": [
+        {
+          "text": "Approve",
+          "callback_data": "ok",
+          "style": "success"
+        },
+        {
+          "text": "Done",
+          "disabled": {}
+        }
+      ]
+    }
+  ]
+}

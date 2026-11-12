@@ -1,0 +1,17 @@
+{
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": [
+        {
+          "type": "button",
+          "button": {
+            "text": "Owner",
+            "url": "https://t.me/x",
+            "callback_data": "y"
+          }
+        }
+      ]
+    }
+  ]
+}

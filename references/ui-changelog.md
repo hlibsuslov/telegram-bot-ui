@@ -3,7 +3,7 @@
 Only the entries that change what a bot's **interface** can do. Every line below
 was read from the official changelog
 (https://core.telegram.org/bots/api-changelog) and the object pages on
-2026-08-05. Verification dates and quotes: `official-sources.md`.
+2026-08-05 (≤ 10.2) and 2026-11-12 (10.3, 10.4). Verification dates and quotes: `official-sources.md`.
 
 **Before using anything here, confirm two things:** (1) Telegram hasn't shipped a
 newer version — re-read the changelog; (2) the project's SDK actually exposes
@@ -14,6 +14,8 @@ same as a feature you can call.
 
 | Version | Date | UI-relevant additions |
 |---|---|---|
+| **10.4** | 2026-11-09 | **HTML widgets** (`sendWidget`, `sendSharedWidget`, `widget_query`, `shared_widget_query`, `answerWidgetQuery`, `editMessageWidgetData`, `editSharedWidgetData`; production: private chats only) with TON wallet requests. Ephemeral callback replies without `receiver_user_id` in any chat except channel DMs; `chat_id` optional. Quotes from rich messages (`TextQuote.rich_texts`, `ReplyParameters.quote_rich_texts`). TON wallet cards/transfers, `ton_address` / `bank_card_number` entities, `RichTextTonAddress`. Chat share themes. Private-chat topic links `t.me/<bot>/<thread>`. `AreaPosition` rename. Full list: `bot-api-10.3-10.4.md`. |
+| **10.3** | 2026-08-24 | **Disabled inline buttons** (`disabled: {}`), **`force_reply` on inline and reply keyboards**, **Stop for drafts** (`can_stop`, `keep_on_stop`, `stopped_message_generation`). Rich buttons (`RichMessageButton`, `RichTextButton`, `<tg-button-row>`), compact tables, expandable quotations, document blocks, `tg://document`. `EphemeralMessageParameters` (replaces 10.2 top-level params), `replace_callback_query_message`, ephemeral media upload / rich edit, `can_send_welcome_messages`. Community join and gift-text service fields. |
 | **10.2** | 2026-07-14 | **Ephemeral messages** (group messages visible only to one user + the bot): `sendMessage`/media `receiver_user_id` & `callback_query_id`, `editEphemeralMessageText/Media/Caption/ReplyMarkup`, `deleteEphemeralMessage`, `ReplyParameters.ephemeral_message_id`, `BotCommand.is_ephemeral`, `Message.receiver_user`. **Rich message input blocks** (`InputRichBlock*`, incl. `InputRichBlockTable`), `InputRichMessage.blocks`, `InputRichMessageMedia`, `InputMediaVoiceNote`. Communities. |
 | **10.1** | 2026-06-11 | **Rich Messages**: `sendRichMessage`, `sendRichMessageDraft`, `InputRichMessage`, `RichBlock*`/`RichText*`, `editMessageText` `rich_message`, `InputRichMessageContent` usable as inline-result content. Join-request queries (`answerChatJoinRequestQuery`, `sendChatJoinRequestWebApp`). Poll media links. |
 | **10.0** | 2026-05-08 | Guest mode (`answerGuestQuery`, `Update.guest_message`). Reaction management (`deleteMessageReaction`, `deleteAllMessageReactions`, `can_react_to_messages`). Poll media (`sendPoll` `media`, option media), live photos. |
@@ -89,6 +91,10 @@ Design rules for all of it: `dynamic-feedback-and-streaming.md`.
 | Per-user menus inside a group (ephemeral) | 10.2 | Edit delivery is not guaranteed |
 | Tables / headings / collapsible blocks in the body | 10.1 (+10.2 blocks) | `tables.md`, `telegram-capabilities.md` |
 | Mini App triggering a `request_*` button | 9.6 | Private-chat-only constraints |
+| Disabled button / keyboard + reply field | 10.3 | `disabled` is the only action; inline `force_reply` immutable on edit |
+| Stop button on a streamed answer | 10.3 | subscribe to `stopped_message_generation`; SDK routes it |
+| Ephemeral reply without receiver / chat_id | 10.4 | not in channel DM chats; `answerCallbackQuery` still required |
+| Widget in a message | 10.4 | production: private chats only; SDK must deliver `widget_query` |
 
 ## Keeping this file honest
 

@@ -1,0 +1,225 @@
+[
+  {
+    "file": "disabled_ok.json",
+    "expect": "ok",
+    "note": "the exact payload the 10.2 validator rejected"
+  },
+  {
+    "file": "disabled_with_action.json",
+    "expect": "error",
+    "note": "disabled is the only action",
+    "field": "disabled"
+  },
+  {
+    "file": "disabled_true.json",
+    "expect": "error",
+    "note": "must be an object",
+    "field": "disabled"
+  },
+  {
+    "file": "disabled_false.json",
+    "expect": "error",
+    "note": "false is not 'not disabled'",
+    "field": "disabled"
+  },
+  {
+    "file": "disabled_null.json",
+    "expect": "error",
+    "note": "SDKs that serialize None",
+    "field": "null"
+  },
+  {
+    "file": "disabled_string.json",
+    "expect": "error",
+    "note": "",
+    "field": "disabled"
+  },
+  {
+    "file": "disabled_styled_ok.json",
+    "expect": "ok",
+    "note": ""
+  },
+  {
+    "file": "reply_with_callback.json",
+    "expect": "error",
+    "note": "",
+    "field": "callback_data"
+  },
+  {
+    "file": "reply_with_disabled.json",
+    "expect": "error",
+    "note": "",
+    "field": "disabled"
+  },
+  {
+    "file": "inline_with_request_contact.json",
+    "expect": "error",
+    "note": "",
+    "field": "request_contact"
+  },
+  {
+    "file": "rich_with_pay.json",
+    "expect": "error",
+    "note": "",
+    "field": "pay"
+  },
+  {
+    "file": "rich_with_icon.json",
+    "expect": "error",
+    "note": "",
+    "field": "icon_custom_emoji_id"
+  },
+  {
+    "file": "rich_link_style_ok.json",
+    "expect": "ok",
+    "note": ""
+  },
+  {
+    "file": "rich_link_style_on_url.json",
+    "expect": "error",
+    "note": "",
+    "field": "link"
+  },
+  {
+    "file": "inline_link_style.json",
+    "expect": "error",
+    "note": "'link' exists only for rich buttons",
+    "field": "style"
+  },
+  {
+    "file": "rich_row_too_long.json",
+    "expect": "error",
+    "note": "",
+    "field": "1-8"
+  },
+  {
+    "file": "rich_text_bold_not_allowed.json",
+    "expect": "error",
+    "note": "",
+    "field": "rich button text"
+  },
+  {
+    "file": "rich_text_custom_emoji_ok.json",
+    "expect": "ok",
+    "note": ""
+  },
+  {
+    "file": "callback_64_bytes_ok.json",
+    "expect": "ok",
+    "note": ""
+  },
+  {
+    "file": "callback_cyrillic_too_long.json",
+    "expect": "error",
+    "note": "33 Cyrillic letters = 66 bytes",
+    "field": "bytes"
+  },
+  {
+    "file": "rich_message_blocks.json",
+    "expect": "ok",
+    "note": ""
+  },
+  {
+    "file": "rich_message_bad_inline_button.json",
+    "expect": "error",
+    "note": "",
+    "field": "EXACTLY one"
+  },
+  {
+    "file": "inline_force_reply_ok.json",
+    "expect": "ok",
+    "note": ""
+  },
+  {
+    "file": "reply_force_reply_ok.json",
+    "expect": "ok",
+    "note": ""
+  },
+  {
+    "file": "force_reply_object_false.json",
+    "expect": "error",
+    "note": "",
+    "field": "force_reply"
+  },
+  {
+    "file": "inline_force_reply_string.json",
+    "expect": "error",
+    "note": "",
+    "field": "boolean"
+  },
+  {
+    "file": "edit_changes_force_reply.json",
+    "expect": "error",
+    "note": "edit drops force_reply",
+    "field": "can't be changed",
+    "previous": "edit_changes_force_reply.previous.json"
+  },
+  {
+    "file": "edit_keeps_force_reply.json",
+    "expect": "ok",
+    "note": "",
+    "previous": "edit_keeps_force_reply.previous.json"
+  },
+  {
+    "file": "placeholder_too_long.json",
+    "expect": "error",
+    "note": "",
+    "field": "placeholder"
+  },
+  {
+    "file": "ephemeral_web_app.json",
+    "expect": "error",
+    "note": "",
+    "field": "ephemeral",
+    "context": "ephemeral"
+  },
+  {
+    "file": "ephemeral_callback_ok.json",
+    "expect": "ok",
+    "note": "",
+    "context": "ephemeral"
+  },
+  {
+    "file": "channel_reply_keyboard.json",
+    "expect": "error",
+    "note": "",
+    "field": "channel",
+    "context": "channel"
+  },
+  {
+    "file": "business_switch_inline.json",
+    "expect": "error",
+    "note": "",
+    "field": "business",
+    "context": "business"
+  },
+  {
+    "file": "switch_inline_empty_ok.json",
+    "expect": "ok",
+    "note": "empty string is a valid value"
+  },
+  {
+    "file": "two_actions.json",
+    "expect": "error",
+    "note": "",
+    "field": "EXACTLY one"
+  },
+  {
+    "file": "pay_not_first.json",
+    "expect": "error",
+    "note": "",
+    "field": "first button"
+  },
+  {
+    "file": "bad_style.json",
+    "expect": "error",
+    "note": "",
+    "field": "style"
+  },
+  {
+    "file": "emoji_id_not_numeric.json",
+    "expect": "error",
+    "note": "",
+    "field": "icon_custom_emoji_id"
+  }
+]

@@ -1,0 +1,10 @@
+{
+  "keyboard": [
+    [
+      "Yes",
+      "No"
+    ]
+  ],
+  "force_reply": true,
+  "input_field_placeholder": "Or type a size"
+}

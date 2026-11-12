@@ -164,3 +164,50 @@ navigation predictable:
 
 `callback_data` values are untouched — only presentation changed. More worked
 cases: `examples-before-after.md`.
+
+## Three button models
+
+Verified 2026-11-12. Fields do **not** carry over between models — `scripts/validate_keyboard.py`
+rejects cross-model fields.
+
+| | `InlineKeyboardButton` | `KeyboardButton` (reply) | `RichMessageButton` (10.3, inside rich messages) |
+|---|---|---|---|
+| Action rule | exactly one action | at most one | exactly one |
+| Actions | url, callback_data, web_app, login_url, switch_inline_query*, copy_text, callback_game, pay, **disabled** | request_users/chat/managed_bot/contact/location/poll, web_app | url, callback_data, web_app, login_url, switch_inline_query*, copy_text, **disabled** |
+| Text | String | String | RichText: plain, custom emoji, date-time only |
+| `style` | primary/success/danger | primary/success/danger | + **`link`** (callback buttons only) |
+| `icon_custom_emoji_id` | yes | yes | no (put custom emoji in the text) |
+| Placement | under the message | replaces the user's keyboard | in a `<tg-button-row>` block (1–8) or inline in text (`RichTextButton`) |
+
+## Disabled buttons
+
+10.3: `InlineKeyboardButton.disabled = {}` (a `DisabledButton` object, currently empty) is the
+button's **only** action — `{"text": "Sold out", "disabled": {}}`; `disabled` + `callback_data`,
+`disabled: true`, `disabled: false` and `disabled: null` are all wrong. Rich buttons have the
+same field. Choose deliberately:
+
+| Situation | Do |
+|---|---|
+| Action temporarily unavailable, user should know it exists (Submit before the form is complete, sold-out size) | **disable** + say why in the text |
+| Action will never apply to this user/state | **remove** the button |
+| Action finished (Approved, Sent) | replace with a disabled status label, or remove the keyboard |
+| User can still act but needs an explanation | keep it enabled and explain on tap (`answerCallbackQuery`) |
+
+Disabled is presentation, not authorization: old messages, other clients and crafted callbacks
+still reach the bot — re-check state and rights on every callback. Old clients may render an
+unknown field differently; the label must make sense either way. After an error, restore a
+working control (re-enable or offer Retry) — never leave a screen with only disabled buttons.
+
+## force_reply on keyboards
+
+10.3 added `force_reply` to `InlineKeyboardMarkup` and `ReplyKeyboardMarkup`: keep the buttons
+**and** open the reply field, so the user can tap an option or type an answer. The old `ForceReply`
+object shows the reply field but then the message has no keyboard.
+
+* Inline `force_reply` "can't be changed when the inline keyboard is edited" — decide it when
+  sending; repeat the same value in every edit of that message; for a different value send a new
+  message (`--previous` check in the validator).
+* Use for form steps whose answer may be typed (name, phone, amount) with quick options;
+  don't use it on menus (it steals the keyboard) or in channels.
+* The bot still receives the reply as a normal message: validate it and check it replies to the
+  **current** step's message (`examples/python/tgkit/forms.py`).

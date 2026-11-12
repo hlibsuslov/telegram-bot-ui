@@ -1,0 +1,11 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "X",
+        "callback_data": "x",
+        "icon_custom_emoji_id": "CAACAgIAAxk"
+      }
+    ]
+  ]
+}

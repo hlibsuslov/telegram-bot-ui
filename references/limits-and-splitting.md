@@ -10,13 +10,17 @@
 |---|---|---|
 | Regular message text | 4096 chars | stable, historical |
 | Media caption | 1024 chars | stable, historical |
-| Rich message text | 32,768 UTF-8 chars | official blog (2026-06-11) |
+| Rich message text | 32,768 UTF-8 chars (incl. custom emoji alt text, formula source) | official: Rich Message Limits (2026-11-12) |
 | Rich "Show More" cutoff | ~8,000 chars shown, rest collapsed | official blog |
-| Blocks per rich message | 500 | **secondary — verify** |
-| Nesting depth | 16 levels | **secondary — verify** |
-| Media attachments per rich message | 50 | **secondary — verify** |
-| Table columns | 20 | **secondary — verify** |
+| Blocks per rich message | 500 | official: Bot API "Rich Message Limits" (2026-11-12) |
+| Nesting depth | 16 levels | official: Bot API "Rich Message Limits" (2026-11-12) |
+| Media attachments per rich message | 50 | official: Bot API "Rich Message Limits" (2026-11-12) |
+| Table columns | 20 | official: Bot API "Rich Message Limits" (2026-11-12) |
 | Media group size | 10 items | stable, historical |
+| Rich button row | 1–8 buttons | official: InputRichBlockButtons (10.3) |
+| Widget HTML | 32,768 bytes, ≤ 4096 after zlib-9 | official: sendWidget (10.4) |
+| Widget chat_data / public_data, answer data | 1024 UTF-8 bytes each | official (10.4) |
+| Quote of a rich message | ≤ 32 texts, ≤ 1024 chars | official: ReplyParameters (10.4) |
 | Message rate (per chat) | ~1/sec sustained; bursts limited | verify; drives streaming |
 
 Keep these constants in **one place** in the project; never scatter magic

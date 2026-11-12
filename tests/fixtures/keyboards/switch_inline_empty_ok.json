@@ -1,0 +1,10 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "Share",
+        "switch_inline_query": ""
+      }
+    ]
+  ]
+}

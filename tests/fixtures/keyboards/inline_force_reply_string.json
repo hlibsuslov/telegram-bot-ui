@@ -1,0 +1,11 @@
+{
+  "inline_keyboard": [
+    [
+      {
+        "text": "S",
+        "callback_data": "s"
+      }
+    ]
+  ],
+  "force_reply": "true"
+}
