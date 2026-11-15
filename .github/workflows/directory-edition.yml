@@ -1,0 +1,55 @@
+name: directory edition
+
+# Publishes the documentation-only build of the plugin (scripts/build_directory_edition.py)
+# to the `claude-directory` branch, which the Claude plugin directory tracks.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: directory-edition
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build and verify the edition
+        run: python scripts/build_directory_edition.py build "$RUNNER_TEMP/edition"
+
+      - name: Commit it to the claude-directory branch
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          git config user.name "hlibsuslov"
+          git config user.email "hlibsuslov@users.noreply.github.com"
+          branch_dir="$RUNNER_TEMP/branch"
+          if git ls-remote --exit-code --heads origin claude-directory >/dev/null; then
+            git fetch --depth 1 origin claude-directory
+            git worktree add "$branch_dir" FETCH_HEAD
+            git -C "$branch_dir" switch -c claude-directory
+          else
+            git worktree add --detach "$branch_dir"
+            git -C "$branch_dir" switch --orphan claude-directory
+          fi
+          find "$branch_dir" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+          cp -a "$RUNNER_TEMP/edition/." "$branch_dir/"
+          git -C "$branch_dir" add -A
+          if git -C "$branch_dir" diff --cached --quiet; then
+            echo "Edition unchanged."
+            exit 0
+          fi
+          git -C "$branch_dir" commit -q -m "Directory edition from ${SOURCE_SHA::7}"
+          git -C "$branch_dir" push origin claude-directory
