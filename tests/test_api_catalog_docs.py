@@ -48,6 +48,27 @@ class ReferenceExamples(unittest.TestCase):
                     checked += 1
         self.assertGreater(checked, 40)
 
+    def test_init_data_snippet_verifies_and_rejects(self):
+        import hashlib, hmac, time, urllib.parse
+        with open(os.path.join(_paths.ROOT, "references", "mini-apps-bridge.md"), encoding="utf-8") as fh:
+            code = re.search(r"```python
+(.*?)```", fh.read(), re.S).group(1)
+        ns = {}
+        exec(code, ns)
+        token = "123:TEST-ONLY"
+        fields = {"auth_date": str(int(time.time())), "query_id": "q1", "user": '{"id":1}', "signature": "sig"}
+        check = "
+".join(f"{k}={v}" for k, v in sorted(fields.items()))
+        secret = hmac.new(b"WebAppData", token.encode(), hashlib.sha256).digest()
+        fields["hash"] = hmac.new(secret, check.encode(), hashlib.sha256).hexdigest()
+        data = urllib.parse.urlencode(fields)
+        self.assertEqual(ns["verify_init_data"](data, token)["query_id"], "q1")
+        with self.assertRaises(ValueError):
+            ns["verify_init_data"](data, "123:OTHER")
+        fields["auth_date"] = "1"
+        with self.assertRaises(ValueError):
+            ns["verify_init_data"](urllib.parse.urlencode(fields), token)
+
     def test_update_table_covers_every_update_field(self):
         with open(os.path.join(_paths.ROOT, "references", "updates-and-delivery.md"), encoding="utf-8") as fh:
             text = fh.read()
