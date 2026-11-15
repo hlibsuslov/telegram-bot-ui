@@ -69,6 +69,38 @@ NOT_IN_CHANNEL_DM = {
 CONTEXTS = ("channel", "channel_dm", "group", "private")
 URL_SCHEMES = ("http://", "https://", "tg://")
 
+# ---- where HTML widgets can be sent (re-read 2026-11-15) -------------------
+# sendWidget / sendSharedWidget: "in the production environment, widgets can be
+# sent only to private chats"; chat_id names a chat or "the target supergroup",
+# never a channel. Widgets guide: groups = test server only; "Widgets cannot be
+# posted in channels, directly or via the bot" (users may forward a widget into a
+# channel - test server only). Channel DM chats: not documented -> unsupported.
+# Flip CHANNEL_WIDGETS only when the Bot API page lists channels for sendWidget.
+CHANNEL_WIDGETS = False
+_WIDGET_TARGETS = {("private", "production"), ("private", "test"), ("group", "test")}
+
+
+def widget_supported(context: str, environment: str = "production") -> bool:
+    if context == "channel":
+        return CHANNEL_WIDGETS
+    return (context, environment) in _WIDGET_TARGETS
+
+
+# A decorator receives (post copy, target context) and returns the decorated post,
+# e.g. the custom emoji stream's helper adding premium emoji where the bot is
+# eligible. Default: no decoration. It runs before validation, so its output is
+# checked like any other post.
+Decorator = Callable[["Post", str], "Post"]
+
+
+def decorate_post(post: "Post", context: str, decorate: Decorator | None) -> "Post":
+    if decorate is None:
+        return post
+    out = decorate(Post.from_dict(post.to_dict()), context)
+    if not isinstance(out, Post):
+        raise TypeError("a decorator must return a Post")
+    return out
+
 
 class PostInvalid(ValueError):
     def __init__(self, issues: list["Issue"]):
@@ -103,6 +135,9 @@ class Post:
     paid_payload: str | None = None
     followup_text: str = "Links:"   # short text that carries buttons after an album
     lang: str | None = None
+    # {"html", "public_data"?, "chat_data"?, "width"?, "height"?, "allow_queries"?}.
+    # Used only where widget_supported(); elsewhere the blocks are rendered instead.
+    widget: dict[str, Any] | None = None
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "Post":
@@ -121,9 +156,14 @@ class Post:
         return Post.from_dict(d)
 
 
-def resolve_kind(post: Post) -> str:
-    """Pick the delivery format. Rich when structure needs it (tables, documents,
-    checklists, several headings) or when the text would need splitting."""
+def resolve_kind(post: Post, context: str = "channel", environment: str = "production") -> str:
+    """Pick the delivery format. A widget only where the target supports it;
+    otherwise the same blocks as rich (tables, documents, checklists, several
+    headings, or text that would need splitting) or regular text."""
+    if post.widget and post.kind in ("auto", "widget") and widget_supported(context, environment):
+        return "widget"
+    if post.kind == "widget":
+        post = post.with_changes(kind="auto", widget=None)
     if post.kind != "auto":
         return post.kind
     if post.poll:
@@ -541,13 +581,21 @@ def _check_buttons(rows: list[list[dict[str, Any]]], context: str, *, custom_emo
 
 
 def validate(post: Post, *, context: str = "channel", custom_emoji_ok: bool = False,
-             live: bool = False) -> list[Issue]:
+             live: bool = False, environment: str = "production") -> list[Issue]:
     if context not in CONTEXTS:
         raise ValueError(f"context must be one of {CONTEXTS}")
     issues: list[Issue] = []
-    kind = resolve_kind(post)
+    kind = resolve_kind(post, context, environment)
     err = lambda code, msg: issues.append(Issue("error", code, msg))  # noqa: E731
     warn = lambda code, msg: issues.append(Issue("warn", code, msg))  # noqa: E731
+    if post.widget:
+        if not post.blocks:
+            err("widget_fallback", "a widget post needs blocks: they are the caption and the fallback rendering")
+        if kind == "widget":
+            issues += _validate_widget(post, context, environment, custom_emoji_ok)
+            return issues
+        warn("widget_fallback", f"widgets are not available for {context!r} ({environment}): "
+             "the blocks are sent as a regular / rich post instead")
     for b in post.blocks:
         for mark, val in _inline_parts(b.get("text")) if b.get("type") in ("heading", "paragraph", "footer", "quote") else ():
             if mark == "link":
@@ -619,6 +667,27 @@ def validate(post: Post, *, context: str = "channel", custom_emoji_ok: bool = Fa
     if kind == "poll":
         issues += _validate_poll(post.poll or {}, context)
     return issues
+
+
+def _validate_widget(post: Post, context: str, environment: str, custom_emoji_ok: bool) -> list[Issue]:
+    from .widgets import check_widget       # owned by the widget stream; imported, not changed
+    w = post.widget or {}
+    out: list[Issue] = []
+    caption, _, overflow = _caption_split(post)
+    rep = check_widget(w.get("html", ""), caption=caption, public_data=w.get("public_data"),
+                       chat_data=w.get("chat_data"), context="private" if context == "channel" else context,
+                       environment=environment)
+    out += [Issue("error", "widget", e) for e in rep.errors]
+    out += [Issue("warn", "widget", x) for x in rep.warnings]
+    if overflow:
+        out.append(Issue("warn", "widget_caption", "the caption keeps only the blocks that fit 1024 characters"))
+    if context == "channel":                 # broadcast audience: no per-user or per-chat state
+        if w.get("chat_data"):
+            out.append(Issue("error", "widget_channel", "channel widgets must not carry chat_data (one state for all)"))
+        if w.get("allow_queries"):
+            out.append(Issue("error", "widget_channel", "channel widgets must be read-only (no allow_queries)"))
+    out += _check_buttons(post.buttons, context, custom_emoji_ok=custom_emoji_ok, rich_rows=False)
+    return out
 
 
 def _validate_poll(p: dict[str, Any], context: str) -> list[Issue]:
@@ -706,11 +775,14 @@ def _caption_split(post: Post) -> tuple[str, list[dict[str, Any]], list[dict[str
     return parts[0][0], parts[0][1], post.blocks[1:]
 
 
-def plan(post: Post, chat_id: int | str, *, address: dict[str, Any] | None = None) -> list[tuple[str, dict[str, Any]]]:
+def plan(post: Post, chat_id: int | str, *, address: dict[str, Any] | None = None, context: str = "channel",
+         environment: str = "production", decorate: Decorator | None = None) -> list[tuple[str, dict[str, Any]]]:
     """Exact request sequence. `address` adds message_thread_id or
     direct_messages_topic_id. Buttons always ride on the LAST message the
-    reader reaches; later parts never ping again."""
-    kind = resolve_kind(post)
+    reader reaches; later parts never ping again. `decorate` (optional) runs
+    first; a widget is planned only where the context supports it."""
+    post = decorate_post(post, context, decorate)
+    kind = resolve_kind(post, context, environment)
     base = {"chat_id": chat_id, **(address or {})}
     common = _common(post)
     markup = inline_keyboard(post.buttons)
@@ -792,6 +864,24 @@ def plan(post: Post, chat_id: int | str, *, address: dict[str, Any] | None = Non
         if markup:
             p["reply_markup"] = markup
         reqs.append(("sendPaidMedia", p))
+    elif kind == "widget":
+        w = post.widget or {}
+        caption, ents, _ = _caption_split(post)     # the caption carries the meaning (notifications, search)
+        p = {**base, "html": w["html"], **common}
+        for k in ("width", "height", "public_data", "chat_data"):
+            if w.get(k) is not None:
+                p[k] = w[k]
+        if w.get("allow_queries"):
+            p["allow_queries"] = True
+        if caption:
+            p["caption"] = caption
+        if ents:
+            p["caption_entities"] = ents
+        if post.caption_above:
+            p["show_caption_above_media"] = True
+        if markup:
+            p["reply_markup"] = markup
+        reqs.append(("sendWidget", p))
     elif kind == "poll":
         q = dict(post.poll or {})
         p = {**base, "question": q.pop("question"), "options": [{"text": o} for o in q.pop("options")], **common}
@@ -859,12 +949,22 @@ class Publisher:
     def __init__(self, transport: Any, ledger: Ledger | None = None, *, policy: RetryPolicy | None = None,
                  sleep: Callable[[float], None] = time.sleep, clock: Callable[[], float] = time.time,
                  log: Callable[[dict[str, Any]], None] | None = None, context: str = "channel",
-                 custom_emoji_ok: bool = False):
+                 custom_emoji_ok: bool = False, environment: str = "production",
+                 decorate: Decorator | None = None):
         self.t = transport
         self.ledger = ledger or Ledger()
         self.policy = policy or RetryPolicy()
         self.sleep, self.clock, self.log = sleep, clock, log
         self.context, self.custom_emoji_ok = context, custom_emoji_ok
+        self.environment, self.decorate = environment, decorate
+
+    def _prepare(self, post: Post, chat_id: int | str, address: dict[str, Any] | None):
+        """Decorate -> validate -> plan. The ledger keeps the SOURCE post, so an
+        unchanged source is detected even if decoration is not deterministic."""
+        dec = decorate_post(post, self.context, self.decorate)
+        assert_valid(dec, context=self.context, custom_emoji_ok=self.custom_emoji_ok, environment=self.environment)
+        kind = resolve_kind(dec, self.context, self.environment)
+        return kind, plan(dec, chat_id, address=address, context=self.context, environment=self.environment)
 
     def _call(self, method: str, params: dict[str, Any]) -> Any:
         return call_with_policy(self.t, method, params, policy=self.policy, sleep=self.sleep, log=self.log)
@@ -878,9 +978,8 @@ class Publisher:
         if rec and rec["state"] in ("pending", "unknown", "partial"):
             return Result("unknown", key, rec.get("message_ids", []),
                           "a previous attempt may have been delivered: reconcile() before retrying")
-        assert_valid(post, context=self.context, custom_emoji_ok=self.custom_emoji_ok)
-        reqs = plan(post, chat_id, address=address)
-        self.ledger.put(key, state="pending", chat_id=chat_id, kind=resolve_kind(post), message_ids=[],
+        kind, reqs = self._prepare(post, chat_id, address)
+        self.ledger.put(key, state="pending", chat_id=chat_id, kind=kind, message_ids=[],
                         parts=[fingerprint(p) for _, p in reqs], methods=[m for m, _ in reqs],
                         post=post.to_dict(), address=address or {}, sent_at=self.clock())
         ids: list[int] = []
@@ -922,10 +1021,9 @@ class Publisher:
             return Result("locked", key, rec["message_ids"], "paid / approved suggested posts can't be edited")
         if fingerprint(new_post.to_dict()) == fingerprint(rec["post"]):
             return Result("unchanged", key, rec["message_ids"], "no request sent")
-        assert_valid(new_post, context=self.context, custom_emoji_ok=self.custom_emoji_ok)
-        new_reqs = plan(new_post, rec["chat_id"], address=rec.get("address") or None)
+        new_kind, new_reqs = self._prepare(new_post, rec["chat_id"], rec.get("address") or None)
         old_methods = rec["methods"]
-        if [m for m, _ in new_reqs] != old_methods or resolve_kind(new_post) != rec["kind"]:
+        if [m for m, _ in new_reqs] != old_methods or new_kind != rec["kind"]:
             return Result("repost_required", key, rec["message_ids"], "layout changed (kind or part count)")
         edits = []
         id_iter = iter(rec["message_ids"])
@@ -935,6 +1033,9 @@ class Publisher:
                 continue
             if method == "sendPoll":
                 return Result("repost_required", key, rec["message_ids"], "a sent poll can't be edited (stopPoll only)")
+            if method == "sendWidget":
+                return Result("repost_required", key, rec["message_ids"],
+                              "widget code is immutable; change state with editMessageWidgetData (references/widgets.md)")
             edits += _edit_requests(method, params, rec["chat_id"], mids)
         for m, p in edits:
             self._call(m, p)
@@ -1019,7 +1120,8 @@ def _edit_requests(method: str, params: dict[str, Any], chat_id: Any, mids: list
 
 
 # ---- correction decision ---------------------------------------------------
-def decide_correction(rec: dict[str, Any], new_post: Post, now: float, *, repost_window_s: float = 15 * 60) -> str:
+def decide_correction(rec: dict[str, Any], new_post: Post, now: float, *, repost_window_s: float = 15 * 60,
+                      context: str = "channel", environment: str = "production") -> str:
     """edit | repost | append_note | unchanged | locked.
 
     API facts: edits keep views, reactions and comments; deleteMessage works
@@ -1030,8 +1132,9 @@ def decide_correction(rec: dict[str, Any], new_post: Post, now: float, *, repost
         return "unchanged"
     if rec.get("paid_post") or rec.get("suggested_final"):
         return "append_note"
-    same_layout = resolve_kind(new_post) == rec["kind"] and \
-        [m for m, _ in plan(new_post, rec["chat_id"])] == rec["methods"] and rec["kind"] != "poll"
+    same_layout = resolve_kind(new_post, context, environment) == rec["kind"] and \
+        [m for m, _ in plan(new_post, rec["chat_id"], context=context, environment=environment)] == rec["methods"] \
+        and rec["kind"] not in ("poll", "widget")
     if same_layout:
         return "edit"
     age = now - rec["sent_at"]
@@ -1131,4 +1234,5 @@ def cross_post(publisher: Publisher, post: Post, targets: list[dict[str, Any]], 
 __all__ = ["LIMITS", "Post", "Issue", "PostInvalid", "resolve_kind", "to_entities", "to_html", "to_markdown_v2",
            "to_rich_blocks", "rich_size", "inline_keyboard", "validate", "assert_valid", "check_entities",
            "check_media_ref", "plan", "Ledger", "Publisher", "Result", "decide_correction", "FanOut",
-           "FanOutReport", "cross_post", "fingerprint", "plain"]
+           "FanOutReport", "cross_post", "fingerprint", "plain", "widget_supported", "decorate_post", "Decorator",
+           "CHANNEL_WIDGETS"]
