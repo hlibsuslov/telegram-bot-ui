@@ -26,6 +26,7 @@
 </p>
 
 <p align="center">
+  <a href="https://telegram-bot-ui-site.vercel.app">Сайт</a> ·
   <a href="#-быстрый-старт">Быстрый старт</a> ·
   <a href="#-что-умеет-агент">Возможности</a> ·
   <a href="#-html-виджеты">Виджеты</a> ·
@@ -40,6 +41,10 @@
 </p>
 
 ---
+
+<p align="center">
+  <a href="https://telegram-bot-ui-site.vercel.app"><img alt="Демо: одна фраза ИИ-агенту превращает перегруженное меню бота в чистый экран с цветными кнопками, затем потоковый ответ с кнопкой Stop и уведомление с подтверждением" src="docs/assets/demo.gif" width="720"></a>
+</p>
 
 ## ⚡ Быстрый старт
 
