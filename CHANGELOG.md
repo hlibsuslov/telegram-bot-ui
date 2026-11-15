@@ -5,6 +5,25 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## 2.2.0 - 2026-11-15
+
+- Widget kit: `K.ask` no longer locks the widget when `request()` throws `TypeError`
+  synchronously (empty or > 64-byte data); regression test runs the kit in Node.
+- Widget checks: canvas pixel access, patterns, shadows and compositing; SVG `clipPath`, `mask`,
+  `pattern`, `marker`, `foreignObject`, SMIL and `<image>`; logical properties, multi-column,
+  `display: contents/flow-root`, `background-clip: text`, `writing-mode`. Strict lint warns on
+  `request` from `pointerdown`, state written with `innerHTML`, and canvas arcs past 2π.
+  `media-carousel` used `margin-inline-end` (out of profile 1) and now uses physical margins.
+- Widget docs: bot-side lifecycle for long jobs, editor with autostart, image shrink loop,
+  canvas cut-outs, UI strings in `public_data`, the two-crash rule; raw exception text and
+  loguru `diagnose` as bot-token leaks in `errors-and-fallbacks.md`.
+- Widget checks also flag removed form elements (`datalist`, `output`, …), `meta`, `ruby`,
+  `math`, legacy presentational tags and attributes, editing/focus attributes, `popover` and
+  `data:` AVIF/BMP/ICO images; the `disabled-pseudo` warning is gone (profile 1 maps
+  `:disabled` to `[disabled]` on `<button>`).
+- SDK status: aiogram 3.32.0 and node-telegram-bot-api 2.4.0 ship the widget methods;
+  Telegram's widget-sandbox listed as an official source.
+
 ## 2.1.0 - 2026-11-15
 
 - Deep redesign path (`skills/telegram-bot-ui/references/redesign-orchestration.md`): access and mandate levels,

@@ -1,7 +1,6 @@
-<p align="center">
-  <img alt="" src="assets/icon.svg" width="96" height="96">
-</p>
-<h1 align="center">Telegram Bot UI</h1>
+<h1 align="center">
+  <img alt="" src="assets/icon.svg" width="44" height="44" align="top">&nbsp;Telegram Bot UI
+</h1>
 
 <a href="https://github.com/hlibsuslov/telegram-bot-ui">
   <picture>
@@ -37,7 +36,7 @@
 </p>
 
 <p align="center">
-  🌐 <a href="README.md">English</a> · <b>Русский</b> · <a href="README.uk.md">Українська</a>
+  🌐 <a href="README.md">English</a> · <a href="README.uk.md">Українська</a> · <b>Русский</b>
 </p>
 
 ---
@@ -195,7 +194,7 @@ gh skill install hlibsuslov/telegram-bot-ui telegram-bot-ui --agent claude-code 
 
 `--agent` принимает `claude-code`, `codex`, `cursor`, `gemini-cli`, `github-copilot`, `antigravity`,
 `cline`, `opencode` и ещё десятки агентов (`gh skill install --help`); без `--scope user` скилл ставится в
-текущий репозиторий. Ставится последний релиз; закрепить версию — `--pin v2.1.0`, обновить —
+текущий репозиторий. Ставится последний релиз; закрепить версию — `--pin v2.2.0`, обновить —
 `gh skill update`. Сабагенты так не ставятся: для них плагин Claude Code или установщик ниже.
 
 </details>
