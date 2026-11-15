@@ -174,6 +174,18 @@ class ManifestTest(unittest.TestCase):
         validate_skill.check_packaging(ROOT, "telegram-bot-ui", errors, warnings)
         self.assertEqual(errors, [])
 
+    def test_skill_front_matter_suits_directories(self):
+        with open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8") as fh:
+            fm, _ = validate_skill.split_front_matter(fh.read())
+        # Skill directories show a folded `>-` literally; keep description one quoted line.
+        self.assertRegex(fm, r'(?m)^description: "[^"\n]+"$')
+        self.assertRegex(fm, r"(?m)^license: MIT$")
+        errors = []
+        validate_skill.check_metadata_version(ROOT, fm, errors)
+        self.assertEqual(errors, [])
+        validate_skill.check_metadata_version(ROOT, 'metadata:\n  version: "0.0.1"\n', errors)
+        self.assertEqual(len(errors), 1)
+
 
 class InstallerTest(unittest.TestCase):
     def setUp(self):
