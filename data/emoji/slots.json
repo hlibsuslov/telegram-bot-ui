@@ -396,7 +396,6 @@
   "filter": {
    "group": "actions",
    "unicode": [
-    "⚙️",
     "🧹",
     "🔽"
    ],
@@ -404,7 +403,7 @@
    "use": [
     "button"
    ],
-   "note": "If ⚙ already means settings, take a different glyph."
+   "note": "Never the gear: ⚙ means settings."
   },
   "sort": {
    "group": "actions",

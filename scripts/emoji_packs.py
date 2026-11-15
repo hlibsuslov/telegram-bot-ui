@@ -29,7 +29,8 @@ from collections import Counter
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "examples", "python"))
 from tgkit.icons import (EmojiMap, Eligibility, IconSystem, SendContext, apply_request, emoji_key,  # noqa: E402
-                         iter_clusters, load_vocabulary, resolve_icon_map, strip_request, verify_ids)
+                         ids_from_message, load_vocabulary, resolve_icon_map, slots_in, strip_request,
+                         verify_ids)
 from tgkit.transport import live_transport_from_env  # noqa: E402
 
 for _s in (sys.stdout, sys.stderr):
@@ -112,17 +113,7 @@ def cmd_resolve(a) -> int:
 
 def needed_slots(source, vocab) -> list[str]:
     """Slots implied by the Unicode emoji found in texts/keyboards/payloads (any JSON or text)."""
-    blob = source if isinstance(source, str) else json.dumps(source, ensure_ascii=False)
-    keys: dict[str, str] = {}
-    for slot, v in vocab.items():
-        for u in v["unicode"]:
-            keys.setdefault(emoji_key(u), slot)
-    found: Counter = Counter()
-    for _, _, cl in iter_clusters(blob):
-        slot = keys.get(emoji_key(cl))
-        if slot:
-            found[slot] += 1
-    return [s for s, _ in found.most_common()]
+    return slots_in(source, vocab)
 
 
 def rank_packs(needed: list[str], vocab, packs: list[dict], *, sets: list[dict] | None = None,
@@ -252,19 +243,7 @@ CAPTURE_SNIPPET = '''def log_custom_emoji(update: dict) -> list[dict]:
 
 
 def captured(update: dict, vocab) -> list[dict]:
-    msg = update.get("message") or update
-    text = msg.get("text") or msg.get("caption") or ""
-    units = text.encode("utf-16-le")
-    keys: dict[str, str] = {}
-    for slot, v in vocab.items():
-        for u in v["unicode"]:
-            keys.setdefault(emoji_key(u), slot)
-    out = []
-    for e in msg.get("entities") or msg.get("caption_entities") or []:
-        if e.get("type") == "custom_emoji":
-            emoji = units[2 * e["offset"]: 2 * (e["offset"] + e["length"])].decode("utf-16-le")
-            out.append({"id": e["custom_emoji_id"], "emoji": emoji, "suggested_slot": keys.get(emoji_key(emoji))})
-    return out
+    return ids_from_message(update, vocab)
 
 
 def cmd_capture(a) -> int:

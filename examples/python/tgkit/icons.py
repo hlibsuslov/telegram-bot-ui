@@ -198,18 +198,21 @@ class EmojiMap:
         self.icons = {s: i for s, i in icons.items() if i.get("id")}
         self.keys: dict[str, str] = {}
         self.conflicts: list[str] = []
-        for slot, icon in self.icons.items():
-            cands = [icon.get("fallback") or ""] + list(icon.get("aliases") or [])
-            if vocabulary and slot in vocabulary:
-                cands += vocabulary[slot]["unicode"]
-            for u in cands:
-                k = emoji_key(u)
-                if not k:
-                    continue
-                if k in self.keys and self.keys[k] != slot:
-                    self.conflicts.append(f"{u} accepted by {self.keys[k]} and {slot}; kept {self.keys[k]}")
-                    continue
-                self.keys[k] = slot
+        # Pass 1: each slot's own fallback (the sticker's emoji) and explicit aliases win;
+        # pass 2: the vocabulary's other accepted equivalents fill in where still free.
+        primary = {slot: [icon.get("fallback") or ""] + list(icon.get("aliases") or []) for slot, icon in self.icons.items()}
+        extra = {slot: (vocabulary[slot]["unicode"] if vocabulary and slot in vocabulary else []) for slot in self.icons}
+        for cands_by_slot, report in ((primary, True), (extra, False)):
+            for slot, cands in cands_by_slot.items():
+                for u in cands:
+                    k = emoji_key(u)
+                    if not k:
+                        continue
+                    if k in self.keys and self.keys[k] != slot:
+                        if report:
+                            self.conflicts.append(f"{u} accepted by {self.keys[k]} and {slot}; kept {self.keys[k]}")
+                        continue
+                    self.keys[k] = slot
         self.by_id = {i["id"]: (s, i) for s, i in self.icons.items()}
 
     def slot_for(self, cluster: str) -> str | None:
@@ -692,6 +695,7 @@ class IconSystem:
     eligibility: Eligibility | None = None
     vocabulary: dict[str, dict[str, Any]] | None = None
     log: Callable[[str], None] | None = None
+    strict: bool = False                  # True: a message mixing custom icons and unmapped Unicode emoji is stripped
     _state: dict[str, Any] = field(default_factory=lambda: {"killed": False, "reason": ""}, repr=False)
 
     # ---- state ----
@@ -731,6 +735,10 @@ class IconSystem:
     def _on(self, icon: dict[str, Any] | None) -> bool:
         return bool(icon and icon.get("id") and self.active)
 
+    def _uncovered(self, icon: dict[str, Any]) -> bool:
+        """Icons are on but this slot has no id: show nothing rather than a Unicode look-alike."""
+        return self.active and not icon.get("id") and any(i.get("id") for i in self.icons.values())
+
     def button(self, text: str, slot: str | None = None, *, style: str | None = None, **action: Any) -> dict[str, Any]:
         b: dict[str, Any] = {"text": text, **action}
         icon = self._icon(slot)
@@ -739,6 +747,8 @@ class IconSystem:
             b["icon_custom_emoji_id"] = icon["id"]
             if lead and lead[1]:
                 b["text"] = lead[1]           # no double icon
+        elif icon and self._uncovered(icon):
+            pass                              # uncovered slot while icons are on: label only, no foreign style
         elif icon and self.unicode_fallback and icon.get("fallback") and not lead:
             b["text"] = f"{icon['fallback']} {text}"
         if style:
@@ -753,7 +763,7 @@ class IconSystem:
         fb = html.escape(icon.get("fallback") or "•")
         if self._on(icon):
             return f'<tg-emoji emoji-id="{icon["id"]}">{fb}</tg-emoji>'
-        return fb if self.unicode_fallback else ""
+        return fb if self.unicode_fallback and not self._uncovered(icon) else ""
 
     html = text
 
@@ -769,7 +779,7 @@ class IconSystem:
         fb = escape_markdown_v2(icon.get("fallback") or "•")
         if self._on(icon):
             return f"![{fb}](tg://emoji?id={icon['id']})"
-        return fb if self.unicode_fallback else ""
+        return fb if self.unicode_fallback and not self._uncovered(icon) else ""
 
     def rich_markdown(self, slot: str) -> str:
         icon = self._icon(slot)
@@ -778,7 +788,7 @@ class IconSystem:
         fb = icon.get("fallback") or "•"
         if self._on(icon):
             return f"![{fb}](tg://emoji?id={icon['id']})"
-        return fb if self.unicode_fallback else ""
+        return fb if self.unicode_fallback and not self._uncovered(icon) else ""
 
     def rich(self, slot: str) -> Any:
         """RichTextCustomEmoji node for rich blocks (or the fallback string)."""
@@ -788,7 +798,7 @@ class IconSystem:
         if self._on(icon):
             return {"type": "custom_emoji", "custom_emoji_id": icon["id"],
                     "alternative_text": icon.get("fallback") or "•"}
-        return (icon.get("fallback") or "") if self.unicode_fallback else ""
+        return (icon.get("fallback") or "") if self.unicode_fallback and not self._uncovered(icon) else ""
 
     def rich_label(self, slot: str, label: str) -> Any:
         """Rich text 'icon + label' (headings, RichMessageButton text, table cells)."""
@@ -804,7 +814,9 @@ class IconSystem:
     def prepare(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
         """All-or-nothing per message: decorate when active, strip every custom emoji when not."""
         if self.active:
-            return apply_request(method, params, self.emap)[0]
+            p, rep = apply_request(method, params, self.emap)
+            if not (self.strict and rep["replaced"] and rep["unmapped"]):
+                return p
         return strip_request(params, self.emap, unicode_fallback=self.unicode_fallback)
 
     def send(self, transport: Any, method: str, params: dict[str, Any], ctx: SendContext | None = None,
@@ -812,8 +824,10 @@ class IconSystem:
         """Send once; if Telegram refuses the custom emoji, flip the kill switch and retry ONCE
         without them. A second failure is raised. Never loops."""
         view = self.for_context(ctx) if ctx else self
-        p = view.prepare(method, params) if decorate else (params if view.active else
-                                                           strip_request(params, self.emap, unicode_fallback=self.unicode_fallback))
+        if decorate:
+            p = view.prepare(method, params)
+        else:
+            p = params if view.active else strip_request(params, self.emap, unicode_fallback=self.unicode_fallback)
         try:
             return transport.call(method, p)
         except TelegramError as err:
@@ -850,7 +864,7 @@ class TextComposer:
             fb = fb or "•"
             self.entities.append({"type": "custom_emoji", "offset": self._pos(), "length": utf16_len(fb),
                                   "custom_emoji_id": icon["id"]})
-        elif not self.icons.unicode_fallback or not fb:
+        elif not self.icons.unicode_fallback or not fb or self.icons._uncovered(icon):
             return self
         self.parts.append(fb + (" " if space else ""))
         return self
@@ -919,6 +933,45 @@ def resolve_icon_map(sticker_sets: list[dict[str, Any]], vocabulary: dict[str, d
               "per_set": {n: sum(1 for i in icons.values() if i["set"] == n) for n, _ in index}}
     doc = {"bot": "", "source": "getStickerSet(" + ", ".join(n for n, _ in index) + ")", "icons": icons}
     return doc, report
+
+
+def _vocab_keys(vocabulary: dict[str, dict[str, Any]]) -> dict[str, str]:
+    """Unicode key -> slot; a slot's FIRST (preferred) emoji wins over other slots' alternates."""
+    keys: dict[str, str] = {}
+    for slot, v in vocabulary.items():
+        if v["unicode"]:
+            keys.setdefault(emoji_key(v["unicode"][0]), slot)
+    for slot, v in vocabulary.items():
+        for u in v["unicode"][1:]:
+            keys.setdefault(emoji_key(u), slot)
+    return keys
+
+
+def slots_in(source: Any, vocabulary: dict[str, dict[str, Any]]) -> list[str]:
+    """Slots implied by the Unicode emoji in texts/keyboards/payloads, most used first."""
+    blob = source if isinstance(source, str) else json.dumps(source, ensure_ascii=False)
+    keys = _vocab_keys(vocabulary)
+    counts: dict[str, int] = {}
+    for _, _, cl in iter_clusters(blob):
+        slot = keys.get(emoji_key(cl))
+        if slot:
+            counts[slot] = counts.get(slot, 0) + 1
+    return sorted(counts, key=lambda s: -counts[s])
+
+
+def ids_from_message(message: dict[str, Any], vocabulary: dict[str, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
+    """Capture path: [{"id", "emoji", "suggested_slot"}] from custom_emoji entities of a
+    message the owner sent to the bot (offsets are UTF-16 code units)."""
+    msg = message.get("message") or message
+    text = msg.get("text") or msg.get("caption") or ""
+    units = text.encode("utf-16-le")
+    keys = _vocab_keys(vocabulary) if vocabulary else {}
+    out = []
+    for e in msg.get("entities") or msg.get("caption_entities") or []:
+        if e.get("type") == "custom_emoji" and e.get("custom_emoji_id"):
+            emoji = units[2 * e["offset"]: 2 * (e["offset"] + e["length"])].decode("utf-16-le")
+            out.append({"id": e["custom_emoji_id"], "emoji": emoji, "suggested_slot": keys.get(emoji_key(emoji))})
+    return out
 
 
 GET_CUSTOM_EMOJI_MAX = 200   # API: "At most 200 custom emoji identifiers can be specified."
@@ -994,4 +1047,4 @@ __all__ = ["IconSystem", "TextComposer", "Eligibility", "SendContext", "EmojiMap
            "apply_entities", "strip_entities", "apply_rich_message", "strip_rich_message", "apply_keyboard",
            "strip_keyboard", "apply_request", "strip_request", "uses_custom_emoji", "is_custom_emoji_rejection",
            "CUSTOM_EMOJI_ERROR_HINTS", "resolve_icon_map", "verify_ids", "batched", "load_vocabulary",
-           "decorate_post", "density_warnings", "count_custom_emoji", "DENSITY", "GET_CUSTOM_EMOJI_MAX"]
+           "decorate_post", "density_warnings", "slots_in", "ids_from_message", "count_custom_emoji", "DENSITY", "GET_CUSTOM_EMOJI_MAX"]
