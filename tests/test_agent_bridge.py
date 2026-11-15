@@ -330,7 +330,7 @@ class Progress(unittest.TestCase):
         b.progress("j", title="Job", stages=["A", "B"], stage="A")
         clock.sleep(5)
         self.assertEqual(b.progress("j", stage="B")["action"], "edited")
-        clock.sleep(5)
+        clock.sleep(20)                                            # note-only change: >= 15 s
         self.assertEqual(b.progress("j", stage="B", note="retrying")["action"], "resent")
 
     def test_failed_state_marks_current_stage(self):

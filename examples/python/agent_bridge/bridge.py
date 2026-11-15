@@ -72,7 +72,8 @@ class BridgeConfig:
     allow: Allowlist
     bot_username: str | None = None
     approvers: set[int] = field(default_factory=set)   # default: allow.operators
-    progress_min_interval: float = 3.0             # design heuristic: status cards, not tickers
+    progress_min_interval: float = 3.0             # design heuristic: a stage change waits >= 3 s
+    note_min_interval: float = 15.0                # a note-only change (same stage) waits >= 15 s
     send_min_interval: float = 1.0                 # per chat; official FAQ: avoid > ~1 msg/s per chat
     ask_timeout: float = 600.0
     approval_ttl: float = 900.0
@@ -198,17 +199,19 @@ class AgentBridge:
                 card["done"] = list(card["stages"])
         text = self._render_card(card, now)
         signature = self._render_card(card, None)      # content without the clock: the no-op test
+        core = self._render_card({**card, "note": None}, None)
         final = card["state"] != "running"
         if card["message_id"] is None:
             msg = self.call("sendMessage", {**self._addr(card["chat"], card["thread"]), "text": text,
-                                            "parse_mode": "HTML", "disable_notification": False})
-            card.update(message_id=msg["message_id"], last_text=signature, last_edit=now)
+                                            "parse_mode": "HTML"})
+            card.update(message_id=msg["message_id"], last_text=signature, last_core=core, last_edit=now)
             self.store.put_card(key, card)
             return {"action": "sent", "message_id": card["message_id"]}
         if signature == card["last_text"]:
             self.store.put_card(key, card)
             return {"action": "skipped_same", "message_id": card["message_id"]}
-        if not final and card["last_edit"] is not None and now - card["last_edit"] < self.cfg.progress_min_interval:
+        interval = self.cfg.note_min_interval if core == card.get("last_core") else self.cfg.progress_min_interval
+        if not final and card["last_edit"] is not None and now - card["last_edit"] < interval:
             self.store.put_card(key, card)        # newest state kept; the next call sends it
             return {"action": "skipped_throttled", "message_id": card["message_id"]}
         try:
@@ -221,7 +224,7 @@ class AgentBridge:
             msg = self.call("sendMessage", {**self._addr(card["chat"], card["thread"]), "text": text,
                                             "parse_mode": "HTML"})
             card["message_id"], action = msg["message_id"], "resent"
-        card.update(last_text=signature, last_edit=now)
+        card.update(last_text=signature, last_core=core, last_edit=now)
         self.store.put_card(key, card)
         if final and announce_final:
             self.call("sendMessage", {**self._addr(card["chat"], card["thread"]),
@@ -290,10 +293,11 @@ class AgentBridge:
 
     def request_answer(self, question: str, *, choices: list[str] | None = None, timeout: float | None = None,
                        default: str | None = None, placeholder: str | None = None,
-                       chat_id: int | None = None, thread_id: int | None = None) -> dict[str, Any]:
+                       chat_id: int | None = None, thread_id: int | None = None,
+                       approvers: set[int] | None = None, allow_text: bool = True) -> dict[str, Any]:
         timeout = timeout or self.cfg.ask_timeout
         chat = chat_id or self.cfg.chat_id
-        rec = self.book.create("ask", chat_id=chat, approvers=self.cfg.approvers, ttl=timeout,
+        rec = self.book.create("ask", chat_id=chat, approvers=approvers or self.cfg.approvers, ttl=timeout,
                                summary=self.redactor.text(question), choices=list(choices or []), default=default)
         text = escape_html(rec["summary"])
         if default is not None:
@@ -301,13 +305,15 @@ class AgentBridge:
         if choices:
             rows = [[{"text": c[:64], "callback_data": self.book.callback_data(rec, str(i))}]
                     for i, c in enumerate(choices)]
-            markup: dict[str, Any] = {"inline_keyboard": rows, "force_reply": True}   # 10.3: buttons + reply field
+            markup: dict[str, Any] = {"inline_keyboard": rows}
+            if allow_text:
+                markup["force_reply"] = True              # 10.3: buttons + a reply field
         else:
             markup = {"force_reply": True, "input_field_placeholder": (placeholder or self._t("placeholder"))[:64]}
         msg = self.call("sendMessage", {**self._addr(chat, thread_id), "text": text, "parse_mode": "HTML",
                                         "reply_markup": markup})
         rec = self.store.get_pending(rec["rid"])
-        rec.update(text=text, thread=thread_id)
+        rec.update(text=text, thread=thread_id, allow_text=bool(allow_text and choices))
         self.store.put_pending(rec["rid"], rec)
         self.book.attach(rec["rid"], msg["message_id"])
         return self.store.get_pending(rec["rid"])
@@ -431,7 +437,7 @@ class AgentBridge:
             else:
                 label = self._t("ask_timeout_nodefault")
             markup = {"inline_keyboard": [[{"text": label[:64], "disabled": {}}]]}
-            if rec["choices"]:
+            if rec.get("allow_text"):
                 markup["force_reply"] = True           # can't change force_reply in an edit
         try:
             self.call("editMessageText", {"chat_id": rec["chat"], "message_id": rec["message_id"],
@@ -500,7 +506,7 @@ class AgentBridge:
         return {"ok": True, "message_id": msg["message_id"], **meta}
 
     def report(self, *, data: dict[str, Any] | None = None, markdown: str | None = None,
-               chat_id: int | None = None, thread_id: int | None = None) -> dict[str, Any]:
+               chat_id: int | None = None, thread_id: int | None = None, silent: bool = False) -> dict[str, Any]:
         """A Rich Message report (10.x): JSON -> typed blocks, or Rich Markdown.
         Falls back to plain text when the server/SDK rejects rich messages."""
         if (data is None) == (markdown is None):
@@ -512,13 +518,16 @@ class AgentBridge:
             return {"ok": True, "format": "document",
                     "message_id": self._send_as_document(_plain(rich), chat_id, thread_id)}
         try:
-            msg = self.call("sendRichMessage", {**self._addr(chat_id, thread_id), "rich_message": rich})
+            params = {**self._addr(chat_id, thread_id), "rich_message": rich}
+            if silent:
+                params["disable_notification"] = True
+            msg = self.call("sendRichMessage", params)
             return {"ok": True, "format": "rich", "message_id": msg["message_id"], "chars": size}
         except TelegramError as err:
             if err.category not in ("unsupported", "validation"):
                 raise
             self._log({"event": "fallback", "from": "sendRichMessage", "class": err.category})
-            ids = self.send_text(_plain(rich), chat_id=chat_id, thread_id=thread_id)
+            ids = self.send_text(_plain(rich), chat_id=chat_id, thread_id=thread_id, silent=silent)
             return {"ok": True, "format": "plain", "message_id": ids[0], "fallback": err.category}
 
     # ----------------------------------------------------------- streaming
