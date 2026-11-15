@@ -26,6 +26,7 @@
 </p>
 
 <p align="center">
+  <a href="https://telegram-bot-ui-site.vercel.app">Website</a> ·
   <a href="#-quick-start">Quick start</a> ·
   <a href="#-what-your-agent-can-do">Capabilities</a> ·
   <a href="#-html-widgets">Widgets</a> ·
@@ -40,6 +41,10 @@
 </p>
 
 ---
+
+<p align="center">
+  <a href="https://telegram-bot-ui-site.vercel.app"><img alt="Demo: one sentence to the coding agent turns a cluttered bot menu into a clean screen with colored buttons, then a streaming reply with Stop and an approval notification" src="docs/assets/demo.gif" width="720"></a>
+</p>
 
 ## ⚡ Quick start
 
