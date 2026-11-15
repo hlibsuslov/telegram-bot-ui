@@ -56,6 +56,7 @@ COPY = {
         "btn_toggle": "{mark} {label}",
         "btn_quiet": "Quiet hours: from {start}:00",
         "btn_open_private": "Open settings",
+        "btn_start_again": "Start again",
         "t_shipping": "Shipping updates",
         "t_promos": "Offers and news",
         "t_digest": "Weekly digest",
@@ -87,6 +88,7 @@ COPY = {
         "btn_toggle": "{mark} {label}",
         "btn_quiet": "Тихие часы: с {start}:00",
         "btn_open_private": "Открыть настройки",
+        "btn_start_again": "Начать заново",
         "t_shipping": "Статус доставки",
         "t_promos": "Акции и новости",
         "t_digest": "Дайджест недели",
@@ -175,7 +177,8 @@ class Settings:
 
         @fl.screen("deleted")
         def deleted(fl, s):
-            return {"text": fl.tr(s, "deleted"), "reply_markup": f.kb()}
+            return {"text": fl.tr(s, "deleted"), "reply_markup": f.kb(
+                [f.btn(fl.tr(s, "btn_start_again"), url=f"https://t.me/{BOT}?start=new")])}
 
         @fl.action("go")
         def a_go(fl, s, args, cq):

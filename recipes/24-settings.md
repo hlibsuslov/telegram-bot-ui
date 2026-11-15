@@ -36,7 +36,7 @@ Verified 2026-11-15 against Bot API 10.4. Tags: **[API]** · **[official]** · *
    | privacy | “Show my name on the weekly leaderboard: no” | toggle · `← Back` | back |
    | confirm_delete | “Delete all your data? …” | `Cancel` · `Delete everything` danger | back / deleting |
    | deleting | “Deleting in 30 s” | `Undo` primary | root / deleted |
-   | deleted | “Your data was deleted.” | — | `/start` |
+   | deleted | “Your data was deleted.” | `Start again` (URL `t.me/<bot>?start=new`) | `/start` |
 
    Key part (confirmation):
    ```json

@@ -12,7 +12,7 @@ const EN: Record<string, string> = {
   undone: "Deletion cancelled.", too_late: "Too late — the data is already deleted.", group_hint: "Settings open in our private chat.",
   shown: "yes", hidden: "no", btn_lang: "Language: {lang}", btn_notif: "Notifications", btn_privacy: "Privacy",
   btn_delete: "Delete my data", btn_delete_yes: "Delete everything", btn_cancel: "Cancel", btn_undo: "Undo", btn_back: "← Back",
-  btn_toggle: "{mark} {label}", btn_quiet: "Quiet hours: from {start}:00", btn_open_private: "Open settings",
+  btn_toggle: "{mark} {label}", btn_quiet: "Quiet hours: from {start}:00", btn_open_private: "Open settings", btn_start_again: "Start again",
   t_shipping: "Shipping updates", t_promos: "Offers and news", t_digest: "Weekly digest",
   sys_stale: "This screen has changed.", sys_not_yours: "These are someone else's settings.", sys_expired: "This menu has expired.",
 };
@@ -43,7 +43,7 @@ export class Settings {
     fl.screen("confirm_delete", (fl, s) => ({ text: fl.tr(s, "confirm_delete"), reply_markup: kb(
       [btn(fl.tr(s, "btn_cancel"), fl.cb(s, "back"))], [btn(fl.tr(s, "btn_delete_yes"), fl.cb(s, "delete"), { style: "danger" })]) }));
     fl.screen("deleting", (fl, s) => ({ text: fl.tr(s, "deleting", { sec: UNDO_SECONDS }), reply_markup: kb([btn(fl.tr(s, "btn_undo"), fl.cb(s, "undo"), { style: "primary" })]) }));
-    fl.screen("deleted", (fl, s) => ({ text: fl.tr(s, "deleted"), reply_markup: kb() }));
+    fl.screen("deleted", (fl, s) => ({ text: fl.tr(s, "deleted"), reply_markup: kb([btn(fl.tr(s, "btn_start_again"), undefined, { url: `https://t.me/${BOT}?start=new` })]) }));
     fl.action("go", async (fl, s, [screen]) => { await fl.go(s, screen); });
     fl.action("back", async (fl, s) => { await fl.back(s); });
     fl.action("tog", async (fl, s, [k]) => {

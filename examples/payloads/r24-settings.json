@@ -618,7 +618,14 @@
         "message_id": 1002,
         "text": "<b>Your data was deleted.</b>\nSend /start to begin again.",
         "reply_markup": {
-          "inline_keyboard": []
+          "inline_keyboard": [
+            [
+              {
+                "text": "Start again",
+                "url": "https://t.me/coffee_demo_bot?start=new"
+              }
+            ]
+          ]
         },
         "parse_mode": "HTML"
       }
