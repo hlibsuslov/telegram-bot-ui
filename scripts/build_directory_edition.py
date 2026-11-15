@@ -39,17 +39,25 @@ COPIED_FILES = [
 ]
 COPIED_TREES = [SKILL_REL, "agents/claude"]
 
+SYMBOLS_REL = f"{SKILL_REL}/data/bot-api/symbols"
+LOOKUP_HINT = (
+    "look up one method in `data/bot-api/symbols/methods/<method>.json` or one type in "
+    "`data/bot-api/symbols/types/<Type>.json` (names and sections in "
+    "`data/bot-api/symbols/index.json`); field limits are in each field's official description "
+    "(for example `InlineKeyboardButton.callback_data`: 1-64 bytes), and message and caption "
+    "limits are in `references/limits-and-splitting.md`"
+)
 EDITION_NOTE = (
     "> **Directory edition.** This copy is the documentation-only build published to the Claude "
     "plugin directory. It ships without `scripts/` and the runnable code in `examples/` (Python, "
-    "TypeScript, widget kits). Where a step below names a script, do the same check by hand: read "
-    "`data/bot-api/catalog.json` for methods, types and fields, and apply the rules in "
-    f"`references/`. If the user wants the validators, publishing and widget tools, tell them the "
-    f"full toolset installs from {REPO_URL}."
+    "TypeScript, widget kits). Where a step below names a script, do the same check by hand: "
+    f"{LOOKUP_HINT}. Count `callback_data` and other byte limits in UTF-8 bytes, not characters. "
+    "If the user wants the validators, publishing and widget tools, tell them the full toolset "
+    f"installs from {REPO_URL}."
 )
 TOOLS_NOTE = (
-    "> Not bundled in the directory edition; the full version at "
-    f"{REPO_URL} has them. Without them, check against `data/bot-api/catalog.json` by hand."
+    f"> Not bundled in the directory edition; the full version at {REPO_URL} has them. "
+    f"Without them, {LOOKUP_HINT}."
 )
 
 README = f"""# Telegram Bot UI (directory edition)
@@ -99,6 +107,33 @@ def _annotate_skill(out: str) -> None:
         fh.write(text)
 
 
+def _write_json(path: str, data: object) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(data, fh, ensure_ascii=False, indent=1)
+        fh.write("\n")
+
+
+def _write_symbols(out: str) -> None:
+    """Split the 1 MB catalog into one small file per method and type, plus an index.
+
+    Without the lookup script, and in Claude apps that can't read a 1 MB file, the agent
+    can still open exactly the method or type it needs.
+    """
+    with open(os.path.join(ROOT, *SKILL_REL.split("/"), "data", "bot-api", "catalog.json"),
+              encoding="utf-8") as fh:
+        catalog = json.load(fh)
+    base = os.path.join(out, *SYMBOLS_REL.split("/"))
+    index = {"bot_api_version": catalog["meta"]["bot_api_version"],
+             "release_date": catalog["meta"]["release_date"],
+             "source": catalog["meta"]["source"], "methods": {}, "types": {}}
+    for group in ("methods", "types"):
+        for name, entry in sorted(catalog[group].items()):
+            _write_json(os.path.join(base, group, f"{name}.json"), entry)
+            index[group][name] = entry.get("section", "")
+    _write_json(os.path.join(base, "index.json"), index)
+
+
 def build(out: str) -> list[str]:
     """Write the edition into `out` (created or emptied) and return its files, relative."""
     if os.path.isdir(out):
@@ -116,6 +151,7 @@ def build(out: str) -> list[str]:
                     _copy(rel, rel, out)
     with open(os.path.join(out, "README.md"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write(README)
+    _write_symbols(out)
     _annotate_skill(out)
     return sorted(os.path.relpath(os.path.join(d, f), out).replace(os.sep, "/")
                   for d, _, fs in os.walk(out) for f in fs)
@@ -147,6 +183,14 @@ def verify(out: str, files: list[str]) -> list[str]:
             problems.append(f"plugin.json names {ref}, missing from the edition")
     if not os.path.isfile(os.path.join(out, *SKILL_REL.split("/"), "SKILL.md")):
         problems.append("skill SKILL.md missing")
+    if not os.path.isfile(os.path.join(out, *SKILL_REL.split("/"), "references", "limits-and-splitting.md")):
+        problems.append("the edition note points at references/limits-and-splitting.md, missing")
+    with open(os.path.join(out, *SYMBOLS_REL.split("/"), "index.json"), encoding="utf-8") as fh:
+        index = json.load(fh)
+    for group in ("methods", "types"):
+        for name in index[group]:
+            if not os.path.isfile(os.path.join(out, *SYMBOLS_REL.split("/"), group, f"{name}.json")):
+                problems.append(f"symbols index names {group}/{name}.json, missing")
     return problems
 
 

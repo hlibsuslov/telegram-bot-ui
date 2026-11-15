@@ -148,6 +148,13 @@ python skills/telegram-bot-ui/scripts/preview_widget.py --gallery -o preview.htm
 Скіл — це одна тека, точка входу якої — [`SKILL.md`](skills/telegram-bot-ui/SKILL.md). Кожен шлях нижче звірено з
 документацією відповідного середовища в [`docs/hosts.md`](docs/hosts.md).
 
+**Дві версії.** Цей репозиторій — повна версія: скіл, валідатори, інструмент публікації, набори віджетів і
+виконувані приклади. Каталог плагінів Claude не приймає скрипти від неверифікованих авторів, тому туди йде
+версія лише з документацією: скіл, довідники, рецепти, субагенти й каталог Bot API, розбитий на окремий JSON
+для кожного методу й типу (гілка [`claude-directory`](https://github.com/hlibsuslov/telegram-bot-ui/tree/claude-directory),
+збирається `scripts/build_directory_edition.py`). Вона підходить для застосунків Claude, де скрипти й так не
+запускаються. У Claude Code краще ставити повну версію і лише одну з двох: у них однакове імʼя — `telegram-bot-ui`.
+
 <details open>
 <summary><b>Claude Code — плагін (скіл + пʼять субагентів)</b></summary>
 
