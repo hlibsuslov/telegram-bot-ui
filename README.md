@@ -1,57 +1,64 @@
-# telegram-bot-ui
+<a href="https://github.com/hlibsuslov/telegram-bot-ui">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.png">
+    <img alt="telegram-bot-ui — Telegram bots that feel like real products. A skill that teaches your coding agent to design, build, publish and operate Telegram bots." src="docs/assets/hero-light.png" width="100%">
+  </picture>
+</a>
 
-**Make your Telegram bot look, feel and run like a well-designed product.**
-An Agent Skill that teaches AI coding agents to design and build Telegram bot interfaces, operate
-bots, publish to channels, build HTML widgets and look up the whole Bot API — using the newest
-Bot API correctly. Works in Claude Code, Codex, Cursor, Gemini CLI / Antigravity, GitHub Copilot,
-Devin, and any agent that reads `AGENTS.md` or a system prompt.
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="https://github.com/anthropics/skills"><img alt="Format: Agent Skills" src="https://img.shields.io/badge/format-Agent%20Skills-8A2BE2.svg"></a>
+  <a href="https://core.telegram.org/bots/api-changelog"><img alt="Telegram Bot API 10.4, verified 2026-11-15" src="https://img.shields.io/badge/Bot%20API-10.4%20verified%202026--11--15-26A5E4.svg"></a>
+  <a href="https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml"><img alt="checks" src="https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml/badge.svg"></a>
+  <img alt="Tools: Python standard library, no token" src="https://img.shields.io/badge/tools-stdlib%20%C2%B7%20offline%20%C2%B7%20no%20token-2ea44f.svg">
+</p>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Agent Skill](https://img.shields.io/badge/format-Agent%20Skills-8A2BE2.svg)](https://github.com/anthropics/skills)
-[![Verified: Bot API 10.4](https://img.shields.io/badge/Telegram%20Bot%20API-10.4%20verified%202026--11--15-26A5E4.svg)](https://core.telegram.org/bots/api-changelog)
-[![checks](https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml/badge.svg)](https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml)
+<p align="center">
+  <b>An Agent Skill that makes your Telegram bot look, feel and run like a well-designed product.</b><br>
+  Bot screens and keyboards · streaming AI answers · HTML widgets · channel publishing · agent-operated bots · premium emoji · the whole Bot API, offline.
+</p>
 
-🇷🇺 / 🇺🇦 По-русски: [README.ru.md](README.ru.md)
+<p align="center">
+  <a href="#-quick-start">Quick start</a> ·
+  <a href="#-what-your-agent-can-do">Capabilities</a> ·
+  <a href="#-html-widgets">Widgets</a> ·
+  <a href="#-install">Install</a> ·
+  <a href="#-recipes-and-examples">Recipes</a> ·
+  <a href="#-tools-you-can-use-without-an-agent">Tools</a> ·
+  <a href="#-faq">FAQ</a> ·
+  🇷🇺 🇺🇦 <a href="README.ru.md">По-русски</a>
+</p>
 
 ---
 
-## What your agent can do with it
+## ⚡ Quick start
 
-| Capability | What the agent gets right |
-|---|---|
-| **Build bot interfaces** | texts, menus, inline and reply keyboards, colored and disabled buttons, forms, navigation, streaming AI answers with Stop, private replies in groups, Rich Messages and tables, formatting, localization |
-| **Product flows** | shops, support, bookings, AI assistants, trackers: no stale "Pay" buttons, no double orders, no personal data leaking into groups (15 product recipes) |
-| **Publish to channels** | compose, validate, preview, approve and schedule channel posts; never post twice after a timeout (`scripts/tg_post.py`, 10 recipes) |
-| **Operate as an agent through a bot** | drive an agent from Telegram with an operator allowlist, approval buttons bound to one action, and inbound messages treated as data, not instructions (`agent_bridge` CLI, MCP server, Claude Code and Codex hooks, 10 recipes) |
-| **Build HTML widgets** | Bot API 10.4 widgets inside messages: size limit, production context, caption and text fallback, live cards, shared polls, wallet flows (18 ready widgets, build and preview tools, 7 recipes) |
-| **Premium emoji** | one custom emoji pack across buttons, texts, rich messages and posts: real ids resolved from the pack, all-or-nothing fallback when the bot is not eligible (6 recipes) |
-| **Look up the whole Bot API** | methods, types and fields from a local catalog; validate a payload before sending; refuse to invent a field (193 methods, 425 types, refreshable from the official docs) |
-
-And it knows **when not to** use something: no widget for a three-button menu, no table for two
-facts, no group widgets in production (they are test-server only today), no publishing without a
-human's yes.
-
-## What changes in your bot
-
-**Before** — a typical menu:
+**Claude Code** (2.1.275 or later) — skill plus five subagents, in one line inside a session:
 
 ```
-⚙️⚙️ SETTINGS MENU ⚙️⚙️
-Please select what you want to do from the options below:
-[🔔 Notifications] [🌐 Language] [🗑 Delete] [ℹ️ Help] [❌ Close]
+/plugin install telegram-bot-ui --marketplace hlibsuslov/telegram-bot-ui
 ```
 
-**After** — what the agent produces with the skill:
+**Any other agent** — clone once and let the installer place the files (standard library Python;
+on Windows use `py -3` instead of `python`):
 
+```bash
+git clone https://github.com/hlibsuslov/telegram-bot-ui.git && cd telegram-bot-ui
 ```
-<b>⚙️ Settings</b>
-Choose what to change.
 
-[🔔 Notifications]
-[🌐 Language]
-[Delete account]   ← style: danger, opens a confirmation that says what is lost
-[← Back]
+```bash
+python scripts/install.py --host all --scope user
 ```
+
+Then open your bot's repository and just ask: *"Improve the UX of this Telegram bot."*
+The skill activates on its own — no API names needed. More hosts and options: [Install](#-install).
+
+## ✨ What changes in your bot
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/before-after-dark.png">
+  <img alt="Side by side: a cluttered settings menu with cut-off labels and a duplicated order, versus a clean settings screen with a danger-styled delete button and a single order card marked as paid." src="docs/assets/before-after-light.png" width="100%">
+</picture>
 
 | Situation | Without the skill | With the skill |
 |---|---|---|
@@ -63,12 +70,65 @@ Choose what to change.
 | "Ignore your rules" in a message to an agent bot | the agent obeys | quoted as data; the operator is told |
 | Old SDK | new features silently dropped | the gap is detected and bridged with an isolated adapter |
 
-## Install
+## 🧠 What your agent can do
 
-The skill is one folder whose entry point is `SKILL.md`. Pick your agent; every path below is
-checked against that host's documentation in [`docs/hosts.md`](docs/hosts.md).
+| Capability | What the agent gets right |
+|---|---|
+| 🎛 **Build bot interfaces** | texts, menus, inline and reply keyboards, colored and disabled buttons, forms, navigation, streaming AI answers with Stop, private replies in groups, Rich Messages and tables, formatting, localization |
+| 🛒 **Product flows** | shops, support, bookings, AI assistants, trackers: no stale "Pay" buttons, no double orders, no personal data leaking into groups (15 product recipes) |
+| 📣 **Publish to channels** | compose, validate, preview, approve and schedule channel posts; never post twice after a timeout (`scripts/tg_post.py`, 10 recipes) |
+| 🤖 **Operate as an agent through a bot** | drive an agent from Telegram with an operator allowlist, approval buttons bound to one action, and inbound messages treated as data, not instructions (`agent_bridge` CLI, MCP server, Claude Code and Codex hooks, 10 recipes) |
+| 🧩 **Build HTML widgets** | Bot API 10.4 widgets inside messages: size limit, production context, caption and text fallback, live cards, shared polls, wallet flows (18 ready widgets, build and preview tools, 7 recipes) |
+| 💎 **Premium emoji** | one custom emoji pack across buttons, texts, rich messages and posts: real ids resolved from the pack, all-or-nothing fallback when the bot is not eligible (6 recipes) |
+| 📚 **Look up the whole Bot API** | methods, types and fields from a local catalog; validate a payload before sending; refuse to invent a field (193 methods, 425 types, refreshable from the official docs) |
 
-### Claude Code — plugin (skill + five subagents)
+It also knows **when not to** use something: no widget for a three-button menu, no table for two
+facts, no group widgets in production (they are test-server only today), no publishing without a
+human's yes.
+
+## 🧩 HTML widgets
+
+Eighteen ready widgets with light and dark themes, three languages, server handlers and a
+caption fallback — plus a kit to build your own, a size check that follows the server's algorithm,
+and a local preview.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/widgets-dark.png">
+  <img alt="Seven widgets from the gallery: a monitoring dashboard with charts, an order tracker, a slot booking calendar, a shopping cart with checkout, a quiz, a CSV export progress card and a price alert." src="docs/assets/widgets-light.png" width="100%">
+</picture>
+
+<sub>Rendered from <code>examples/widgets/</code> with <code>scripts/preview_widget.py --gallery</code>.
+That is a mock of the widget runtime in a desktop browser, not a Telegram client — real apps may draw them differently.</sub>
+
+```bash
+python scripts/build_widget.py examples/widgets/src/order-tracker.html \
+  --demo examples/widgets/demo/order-tracker.json --strict   # build from the kit, check size and caption
+python scripts/preview_widget.py --gallery -o preview.html   # every widget and state, light and dark
+```
+
+## 💬 Ask your agent
+
+No API names needed. In your bot's repository:
+
+| Area | Try saying |
+|---|---|
+| Interfaces | *"Improve the UX of this Telegram bot."* · *"The main menu is a mess — restructure it and make the main action stand out."* · *"Add a Stop button to the AI answers."* · *"Fix `can't parse entities`."* |
+| Product flows | *"People double-tap 'Place order' and get two orders."* · *"In our group, 'My orders' must show each person only their own orders."* · *"Design a booking bot: service, time, confirmation."* |
+| Channels | *"Post this release note to our channel tomorrow at 9:00 — show me the preview first."* · *"Every Monday, publish a digest of last week's releases without duplicates."* |
+| Agent through a bot | *"Let me drive my coding agent from Telegram, and only me."* · *"Make the agent ask for approval with buttons before anything risky."* |
+| Widgets | *"Turn the order status into one card that updates."* · *"Our widget is too big to send — make it fit."* |
+| Bot API lookup | *"Which update tells my bot that the user stopped the answer?"* · *"Can a bot delete a message for just one user?"* |
+
+You can also call it by name: `/telegram-bot-ui` (Claude Code), `$telegram-bot-ui` (Codex), the
+`/` menu (Cursor, Antigravity).
+
+## 📦 Install
+
+The skill is one folder whose entry point is [`SKILL.md`](SKILL.md). Every path below is checked
+against that host's documentation in [`docs/hosts.md`](docs/hosts.md).
+
+<details open>
+<summary><b>Claude Code — plugin (skill + five subagents)</b></summary>
 
 In a Claude Code session (2.1.275 or later):
 
@@ -87,9 +147,12 @@ claude plugin install telegram-bot-ui@telegram-bot-ui
 ```
 
 The skill is then `/telegram-bot-ui:telegram-bot-ui` and the subagents are
-`telegram-bot-ui:telegram-bot-designer` and so on.
+`telegram-bot-ui:telegram-bot-designer` and so on. Update with `claude plugin update telegram-bot-ui`.
 
-### Claude Code — plain skill folder
+</details>
+
+<details>
+<summary><b>Claude Code — plain skill folder</b></summary>
 
 ```bash
 git clone https://github.com/hlibsuslov/telegram-bot-ui.git ~/.claude/skills/telegram-bot-ui
@@ -98,10 +161,10 @@ git clone https://github.com/hlibsuslov/telegram-bot-ui.git ~/.claude/skills/tel
 One project only: clone into `<your-repo>/.claude/skills/telegram-bot-ui`. To add the subagents
 too, use the installer below.
 
-### Any host — the installer
+</details>
 
-Clone once, then let `scripts/install.py` put the right files in the right places (standard library
-Python; Windows: `py -3` instead of `python`):
+<details>
+<summary><b>Any host — the installer (Codex, Cursor, Gemini CLI, Copilot, Devin…)</b></summary>
 
 ```bash
 git clone https://github.com/hlibsuslov/telegram-bot-ui.git && cd telegram-bot-ui
@@ -111,11 +174,19 @@ git clone https://github.com/hlibsuslov/telegram-bot-ui.git && cd telegram-bot-u
 python scripts/install.py --host all --scope user --dry-run
 ```
 
-`--host claude|codex|cursor|gemini|copilot|all`, `--scope user|project` (`--project <path>` for
-another repository), `--with-instructions` adds a short pointer block to `AGENTS.md`, `GEMINI.md`,
-`.github/copilot-instructions.md` or a Cursor rule (project scope only), `--link` symlinks to the
-clone instead of copying, `--uninstall` removes only what the installer created. Anything already
-there that the installer did not create is first moved to `<name>.bak-<time>`.
+| Option | Meaning |
+|---|---|
+| `--host claude\|codex\|cursor\|gemini\|copilot\|all` | which agents to install for |
+| `--scope user\|project` | your home folder, or one repository (`--project <path>` for another one) |
+| `--with-instructions` | adds a short pointer block to `AGENTS.md`, `GEMINI.md`, `.github/copilot-instructions.md` or a Cursor rule (project scope only) |
+| `--link` | symlinks to the clone instead of copying, so `git pull` is the whole update |
+| `--uninstall` | removes only what the installer created |
+| `--dry-run` | prints the plan and changes nothing |
+
+Anything already there that the installer did not create is first moved to `<name>.bak-<time>`.
+Update: `git pull` in the clone and run the same install command again.
+
+</details>
 
 | Host | Skill folder (user / project) | Extras |
 |---|---|---|
@@ -128,63 +199,26 @@ there that the installer did not create is first moved to `<name>.bak-<time>`.
 | Cline and other `AGENTS.md` readers | — | paste [`adapters/agents-md/AGENTS.snippet.md`](adapters/agents-md/AGENTS.snippet.md) and keep the folder in the repo |
 | Your own agent on a model API | — | system prompt: [`adapters/portable/telegram-bot-ui.prompt.md`](adapters/portable/telegram-bot-ui.prompt.md); with a file tool: [`llms.txt`](llms.txt) |
 
-Update: `git pull` in the clone and run the same install command again (or use `--link` once).
-Claude Code plugin: `claude plugin update telegram-bot-ui`.
-
-## Subagents
+## 👥 Subagents
 
 Five roles that route into the skill instead of copying it. Claude Code: [`agents/claude/`](agents/claude/)
 (installed by the plugin or the installer). Codex: [`agents/codex/`](agents/codex/) as custom
-agents ("Have telegram_bot_reviewer review this diff").
+agents (*"Have telegram_bot_reviewer review this diff"*).
 
 | Role | Does | Edits code? |
-|---|---|---|
-| `telegram-bot-designer` | screen/state map, real UX defects, exact texts and keyboards | no |
-| `telegram-bot-builder` | implements from recipes, validates payloads, adds tests | yes |
-| `telegram-publisher` | composes, validates, previews and publishes channel posts — only after your explicit yes | yes |
-| `telegram-widget-builder` | designs and builds HTML widgets, checks size and fallback | yes |
-| `telegram-bot-reviewer` | reviews a diff against the skill's invariants with file:line findings | no |
+|---|---|:---:|
+| `telegram-bot-designer` | screen and state map, real UX defects, exact texts and keyboards | — |
+| `telegram-bot-builder` | implements from recipes, validates payloads, adds tests | ✓ |
+| `telegram-publisher` | composes, validates, previews and publishes channel posts — only after your explicit yes | ✓ |
+| `telegram-widget-builder` | designs and builds HTML widgets, checks size and fallback | ✓ |
+| `telegram-bot-reviewer` | reviews a diff against the skill's invariants with `file:line` findings | — |
 
 On hosts without subagents, ask for the role in words: *"Act as a reviewer of this diff using the
 telegram-bot-ui skill."*
 
-## Ask your agent
+## 🍳 Recipes and examples
 
-No API names needed. In your bot's repository:
-
-**Interfaces**
-- *"Improve the UX of this Telegram bot."*
-- *"The main menu is a mess — restructure it and make the main action stand out."*
-- *"Add a Stop button to the AI answers."*
-- *"Fix `can't parse entities`."*
-
-**Product flows**
-- *"People double-tap 'Place order' and get two orders."*
-- *"In our group, 'My orders' must show each person only their own orders."*
-- *"Design a booking bot: service, time, confirmation."*
-
-**Channels**
-- *"Post this release note to our channel tomorrow at 9:00 — show me the preview first."*
-- *"Every Monday, publish a digest of last week's releases without duplicates."*
-
-**Agent through a bot**
-- *"Let me drive my coding agent from Telegram, and only me."*
-- *"Make the agent ask for approval with buttons before anything risky."*
-
-**Widgets**
-- *"Turn the order status into one card that updates."*
-- *"Our widget is too big to send — make it fit."*
-
-**Bot API lookup**
-- *"Which update tells my bot that the user stopped the answer?"*
-- *"Can a bot delete a message for just one user?"*
-
-The skill activates automatically when a request matches. You can also call it by name:
-`/telegram-bot-ui` (Claude Code), `$telegram-bot-ui` (Codex), the `/` menu (Cursor, Antigravity).
-
-## Recipes and examples
-
-Ready to adapt and runnable offline (no bot token):
+57 end-to-end recipes plus mini-recipes, ready to adapt and runnable offline — no bot token.
 
 | Recipe | You get |
 |---|---|
@@ -201,77 +235,99 @@ Ready to adapt and runnable offline (no bot token):
 
 | Range | You get |
 |---|---|
-| [20-29, 60-64 Products](references/use-case-playbooks.md) | shop with Stars, support desk, booking, onboarding, settings, subscription, learning, assistant, expense split, community, inline mode, business account, alerts, search, delivery tracker |
-| [30-39 Channel publishing](references/publishing-pipeline.md) | autoposter, long read, album, poll, pinned digest, editorial approval, cross-posting, mailing, comments, corrections |
-| [40-49 Agent through its bot](references/agent-operated-bots.md) | deploy approval, live build status, nightly digest, ask and continue, streamed research with Stop, job topics, team group, incident alerts, coding-agent hooks |
-| [50-56 Widgets](references/widget-patterns.md) | monitoring dashboard, booking, shop card, shared quiz, job progress, design a widget from words, REST data browser |
-| [70-75 Premium emoji](references/emoji-packs.md) | restyle to one pack, icons from zero, channel series, mixed eligibility, Premium lapse, pack migration |
+| [20–29, 60–64 · Products](references/use-case-playbooks.md) | shop with Stars, support desk, booking, onboarding, settings, subscription, learning, assistant, expense split, community, inline mode, business account, alerts, search, delivery tracker |
+| [30–39 · Channel publishing](references/publishing-pipeline.md) | autoposter, long read, album, poll, pinned digest, editorial approval, cross-posting, mailing, comments, corrections |
+| [40–49 · Agent through its bot](references/agent-operated-bots.md) | deploy approval, live build status, nightly digest, ask and continue, streamed research with Stop, job topics, team group, incident alerts, coding-agent hooks |
+| [50–56 · Widgets](references/widget-patterns.md) | monitoring dashboard, booking, shop card, shared quiz, job progress, design a widget from words, REST data browser |
+| [70–75 · Premium emoji](references/emoji-packs.md) | restyle to one pack, icons from zero, channel series, mixed eligibility, Premium lapse, pack migration |
 
 Full index by task, API symbol, version and context: [`recipes/README.md`](recipes/README.md).
 
-Code: Python ([`examples/python/tgkit`](examples/python/tgkit), standard library) and TypeScript
+**Code:** Python ([`examples/python/tgkit`](examples/python/tgkit), standard library) and TypeScript
 ([`examples/ts`](examples/ts), no dependencies), plus adapters for **aiogram 3.31** and **grammY 1.46**.
 
 ```bash
 python examples/python/recipes/r01_ai_assistant.py
 ```
 
-## Tools you can use without an agent
+## 🛠 Tools you can use without an agent
 
-All offline, standard library, never need a bot token:
+All offline, standard library, and none of them needs a bot token.
 
-```bash
-python scripts/validate_keyboard.py keyboard.json   # button and keyboard payload rules
-python scripts/validate_rich.py message.json        # Rich Message limits and rules
-python scripts/validate_widget.py widget.html       # widget size (server algorithm) and sandbox gaps
-python scripts/audit_icons.py icon-map.json         # one icon family? animated mixed in?
-python scripts/audit_copy.py strings.json           # translations: placeholders, symbols, label length
-python scripts/install.py --host all --dry-run      # where the skill would be installed
-python scripts/run_checks.py                        # every check in this repository
-```
+| Check before you ship | |
+|---|---|
+| `python scripts/validate_keyboard.py keyboard.json` | button and keyboard payload rules |
+| `python scripts/validate_rich.py message.json` | Rich Message limits and rules |
+| `python scripts/validate_widget.py widget.html` | widget size (server algorithm) and sandbox gaps |
+| `python scripts/validate_payload.py request.json` | structural check against the Bot API catalog |
+| `python scripts/audit_icons.py icon-map.json` | one icon family? animated mixed in? |
+| `python scripts/audit_copy.py strings.json` | translations: placeholders, symbols, label length |
 
-```bash
-python scripts/tg_api_lookup.py show sendWidget      # any method or type, offline
-python scripts/validate_payload.py request.json      # structural check against the catalog
-python scripts/tg_post.py preview post.json          # render a channel post (publishing is opt-in)
-python scripts/build_widget.py src.html --strict     # build a widget from the kit, report its size
-python scripts/preview_widget.py widget.html         # mock preview page (not a real client)
-python scripts/emoji_packs.py capture                # how to collect real custom emoji ids
-```
+| Build and explore | |
+|---|---|
+| `python scripts/tg_api_lookup.py show sendWidget` | any method or type, offline |
+| `python scripts/tg_post.py preview post.json` | render a channel post (publishing is opt-in) |
+| `python scripts/build_widget.py src.html --strict` | build a widget from the kit, report its size |
+| `python scripts/preview_widget.py widget.html` | mock preview page (not a real client) |
+| `python scripts/emoji_packs.py capture` | how to collect real custom emoji ids |
+| `python scripts/install.py --host all --dry-run` | where the skill would be installed |
+| `python scripts/run_checks.py` | every check in this repository |
 
-## Quality and honesty
+## ✅ Quality and honesty
 
-- Verified against the **official Bot API 10.4 docs on 2026-11-15**; sources and dates in
-  [`references/official-sources.md`](references/official-sources.md).
-- Host formats (skill paths, subagent and plugin manifests, rule files) verified against each
-  host's documentation on **2026-11-15** — [`docs/hosts.md`](docs/hosts.md). The Claude Code
-  plugin passes `claude plugin validate --strict`. Cursor, Antigravity, Copilot, Devin and Cline
-  were checked by documentation only, not by running them.
-- Host entry files are generated from `SKILL.md` and one routing table by
-  `scripts/build_adapters.py`; CI fails when they drift.
-- Offline Python and TypeScript test suites run on Linux and Windows in CI, plus contract tests
-  against the real aiogram and grammY packages: 393 Python and 31 TypeScript tests.
-- **Agent evals are prepared, not yet run.** [`evals/`](evals/) holds activation prompts (English
-  and Russian, with and without API names) and behavioural tasks with pass criteria for every
-  capability; `scripts/run_evals.py` validates them and can execute the activation set against
-  the Claude Code or Codex CLI. No agent run has been recorded yet.
-- Not verified: live calls to Telegram and rendering in the Telegram apps. The skill tells the
-  agent to say which level of evidence it has — a JSON check is not a client test.
+| | |
+|---|---|
+| **Bot API** | verified against the official **Bot API 10.4** docs on **2026-11-15** — sources and dates in [`references/official-sources.md`](references/official-sources.md) |
+| **Hosts** | skill paths, subagent and plugin manifests and rule files verified against each host's docs on **2026-11-15** ([`docs/hosts.md`](docs/hosts.md)); the Claude Code plugin passes `claude plugin validate --strict` |
+| **Tests** | **393 Python** and **31 TypeScript** tests run offline on Linux and Windows in CI, plus contract tests against the real aiogram and grammY packages |
+| **Drift** | host entry files are generated from `SKILL.md` and one routing table by `scripts/build_adapters.py`; CI fails when they drift |
 
-## FAQ
+What is **not** verified yet, said plainly:
 
-**Does it change my bot?** No. It is knowledge and tools for your agent; the agent edits your bot when you ask.
+- **Agent evals are prepared, not yet run.** [`evals/`](evals/) holds activation prompts (English and
+  Russian, with and without API names) and behavioural tasks with pass criteria for every
+  capability; `scripts/run_evals.py` validates them and can run the activation set against the
+  Claude Code or Codex CLI. No agent run has been recorded yet.
+- Cursor, Antigravity, Copilot, Devin and Cline were checked by documentation only, not by running them.
+- Live calls to Telegram and rendering in the Telegram apps. The skill tells the agent to say which
+  level of evidence it has — a JSON check is not a client test.
 
-**Does it send messages or need my token?** The checks never do. Publishing and agent operation need a
-bot token from an environment variable, and the skill requires your explicit approval before anything
-is published.
+## ❓ FAQ
 
-**Do I need Telegram Premium?** Only for custom emoji icons in a regular bot (or Fragment usernames).
+<details>
+<summary><b>Does it change my bot?</b></summary>
 
-**My bot uses an old SDK.** The skill checks what your SDK supports and either suggests an upgrade or
-adds a small, isolated adapter with a "remove when" note.
+No. It is knowledge and tools for your agent; the agent edits your bot when you ask.
+</details>
 
-## Repository layout
+<details>
+<summary><b>Does it send messages or need my token?</b></summary>
+
+The checks never do. Publishing and agent operation need a bot token from an environment
+variable, and the skill requires your explicit approval before anything is published.
+</details>
+
+<details>
+<summary><b>Do I need Telegram Premium?</b></summary>
+
+Only for custom emoji icons in a regular bot (or Fragment usernames).
+</details>
+
+<details>
+<summary><b>My bot uses an old SDK.</b></summary>
+
+The skill checks what your SDK supports and either suggests an upgrade or adds a small, isolated
+adapter with a "remove when" note.
+</details>
+
+<details>
+<summary><b>Which language or framework does my bot need to use?</b></summary>
+
+Any. The skill is SDK-agnostic: it reasons in Bot API payloads, and ships runnable examples in
+Python and TypeScript plus adapters for aiogram and grammY.
+</details>
+
+## 🗂 Repository layout
 
 ```
 SKILL.md            entry point the agent reads first (routing, rules, invariants)
@@ -287,19 +343,20 @@ docs/hosts.md       how each agent host discovers skills, with sources
 tests/, evals/      offline tests; activation and behavioural evals
 ```
 
-## Contributing
+## 🤝 Contributing
 
 Issues and pull requests are welcome — especially screenshots from real Telegram clients, new
-recipes, SDK support updates and eval runs on more hosts. Cite official Telegram docs for capability
-claims, mark anything unverified, keep `SKILL.md` compact, run `python scripts/build_adapters.py`
-after editing `SKILL.md` or `adapters/`, then `python scripts/run_checks.py`.
+recipes, SDK support updates and eval runs on more hosts.
+
+1. Cite official Telegram docs for capability claims and mark anything unverified.
+2. Keep `SKILL.md` compact.
+3. After editing `SKILL.md` or `adapters/`, run `python scripts/build_adapters.py`.
+4. Run `python scripts/run_checks.py` before opening the PR.
 
 ## License
 
 [MIT](LICENSE).
 
-## Disclaimer
-
-Community project; not affiliated with or endorsed by Telegram. Telegram changes the Bot API often —
-verify current behavior against the [official docs](https://core.telegram.org/bots/api) before
-relying on a capability.
+<sub>Community project; not affiliated with or endorsed by Telegram. Telegram changes the Bot API
+often — verify current behavior against the [official docs](https://core.telegram.org/bots/api)
+before relying on a capability.</sub>
