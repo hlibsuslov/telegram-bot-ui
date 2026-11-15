@@ -1,5 +1,5 @@
 <h1 align="center">
-  <img alt="" src="assets/icon.svg" width="44" height="44" align="center">&nbsp;Telegram Bot UI
+  <img alt="" src="assets/icon.svg" width="44" height="44" align="top">&nbsp;Telegram Bot UI
 </h1>
 
 <a href="https://github.com/hlibsuslov/telegram-bot-ui">
