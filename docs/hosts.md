@@ -90,9 +90,22 @@ Authoritative check: `claude plugin validate <dir>` (`--strict` turns warnings i
 failures).
 
 **What this repo ships:** the repository root is both the marketplace and the plugin
-(`source: "./"`); the root `SKILL.md` loads as the single skill; `agents` lists the five
-files in `agents/claude/` explicitly so that `agents/openai.yaml` and the Codex TOML files
-are never scanned. Validated locally with `claude plugin validate . --strict`.
+(`source: "./"`); the default `skills/` scan finds the single skill in
+`skills/telegram-bot-ui/` (no `skills` key, no root `SKILL.md`); `agents` lists the five
+files in `agents/claude/` explicitly so that the Codex TOML files are never scanned.
+Validated locally with `claude plugin validate . --strict`; an install into a scratch
+`CLAUDE_CONFIG_DIR` reports `Skills (1) telegram-bot-ui`.
+
+**Agent Plugins and Copilot CLI** (checked 2026-11-15: <https://agent-plugins.org/specification>,
+<https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-plugin-reference>).
+The root `plugin.json` is an Agent Plugins 1.0.0 manifest: closed schema (`$schema`, `name`,
+`version`, `description`, `author`, `homepage`, `repository`, `license`, `keywords`,
+`extensions`), skills only from `skills/<name>/SKILL.md`, no component paths. In Copilot CLI
+a root Agent Plugins `plugin.json` takes precedence over `.claude-plugin/plugin.json`; the
+skill is still found in `skills/`, but Copilot agents would have to live in
+`com.github.copilot/agents/`, which this repo does not ship (**unverified** whether Copilot
+loaded our `.md` subagents before). No official validator exists; `scripts/validate_skill.py`
+checks the schema rules.
 
 ## OpenAI Codex CLI
 
@@ -133,8 +146,13 @@ agent in a prompt ("Have telegram_bot_reviewer review this diff"). We generate t
 roles as TOML from the same source as the Claude subagents and set only the three
 required fields.
 
-Codex plugins exist (`codex plugin`) and are recommended for distribution, but their
-manifest format was **not verified** for this note, so none is shipped.
+Codex plugins (<https://developers.openai.com/codex/plugins/build>, checked 2026-11-15): the
+portable root `plugin.json` plus the compatibility manifest `.codex-plugin/plugin.json`
+(`skills: "./skills/"`, `interface` for the directory listing), which Codex reads while the
+root manifest has no `extensions.com.openai`. Codex 0.167 reads the marketplace from
+`.claude-plugin/marketplace.json`; in a scratch `CODEX_HOME`, `codex plugin marketplace add
+<repo>` and `codex plugin add telegram-bot-ui@telegram-bot-ui` install it and the skill shows
+up as `telegram-bot-ui:telegram-bot-ui`. There is no `codex plugin validate`.
 
 ## Cursor
 

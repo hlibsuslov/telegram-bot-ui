@@ -8,7 +8,7 @@ import unittest
 import _paths
 import sync_bot_api as sync
 
-FIX = os.path.join(_paths.ROOT, "tests", "fixtures", "api")
+FIX = os.path.join(_paths.TESTS, "fixtures", "api")
 
 
 def fixture(name):

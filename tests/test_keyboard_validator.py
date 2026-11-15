@@ -8,15 +8,15 @@ import unittest
 import _paths
 import validate_keyboard as vk
 
-CASES = os.path.join(_paths.ROOT, "tests", "fixtures", "keyboards")
+CASES = os.path.join(_paths.TESTS, "fixtures", "keyboards")
 
 
 class RegressionFixtures(unittest.TestCase):
     def test_every_fixture_behaves(self):
-        for case in _paths.load("tests", "fixtures", "keyboards", "cases.json"):
+        for case in _paths.load_repo("tests", "fixtures", "keyboards", "cases.json"):
             with self.subTest(case=case["file"]):
-                doc = _paths.load("tests", "fixtures", "keyboards", case["file"])
-                prev = _paths.load("tests", "fixtures", "keyboards", case["previous"]) if case.get("previous") else None
+                doc = _paths.load_repo("tests", "fixtures", "keyboards", case["file"])
+                prev = _paths.load_repo("tests", "fixtures", "keyboards", case["previous"]) if case.get("previous") else None
                 rep = vk.validate(doc, context=case.get("context"), previous=prev)
                 if case["expect"] == "ok":
                     self.assertEqual(rep.errors, [])

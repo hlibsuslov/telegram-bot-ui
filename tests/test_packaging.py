@@ -20,7 +20,8 @@ import run_checks
 import run_evals
 import validate_skill
 
-ROOT = _paths.ROOT
+ROOT = _paths.REPO
+SKILL = _paths.ROOT
 
 
 def quiet(fn, *args, **kwargs):
@@ -38,11 +39,13 @@ class AdapterGeneratorTest(unittest.TestCase):
 
     def test_outputs_cover_every_host(self):
         out = ba.build()
-        for rel in ("agents/openai.yaml", "adapters/agents-md/AGENTS.snippet.md",
+        for rel in (f"{ba.SKILL_REL}/agents/openai.yaml", f"{ba.SKILL_REL}/LICENSE",
+                    "adapters/agents-md/AGENTS.snippet.md",
                     "adapters/cursor/telegram-bot-ui.mdc", "adapters/gemini/GEMINI.md",
                     "adapters/copilot/copilot-instructions.md",
                     "adapters/portable/telegram-bot-ui.prompt.md", "llms.txt",
-                    ".claude-plugin/plugin.json", ".claude-plugin/marketplace.json"):
+                    ".claude-plugin/plugin.json", ".claude-plugin/marketplace.json",
+                    "plugin.json", ".codex-plugin/plugin.json"):
             self.assertIn(rel, out)
         roles = ba.load_routing()["roles"]
         for role in roles:
@@ -149,10 +152,28 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(plugin["name"], "telegram-bot-ui")
         self.assertRegex(plugin["version"], r"^\d+\.\d+\.\d+$")
         self.assertNotIn("skills", plugin)
-        self.assertFalse(os.path.isdir(os.path.join(ROOT, "skills")))
+        # The default skills/ scan finds exactly one skill, and no root SKILL.md doubles it.
+        self.assertEqual(os.listdir(os.path.join(ROOT, "skills")), ["telegram-bot-ui"])
+        self.assertTrue(os.path.isfile(os.path.join(SKILL, "SKILL.md")))
+        self.assertFalse(os.path.exists(os.path.join(ROOT, "SKILL.md")))
         for rel in plugin["agents"]:
             self.assertTrue(rel.startswith("./agents/claude/") and rel.endswith(".md"))
             self.assertTrue(os.path.isfile(os.path.join(ROOT, rel[2:])))
+
+    def test_portable_manifests_share_the_plugin_identity(self):
+        out = ba.build()
+        claude = json.loads(out[".claude-plugin/plugin.json"])
+        portable = json.loads(out["plugin.json"])
+        codex = json.loads(out[".codex-plugin/plugin.json"])
+        self.assertEqual(portable["$schema"], ba.AGENT_PLUGINS_SCHEMA)
+        for key in ("name", "version", "description", "author", "license", "keywords"):
+            self.assertEqual(portable[key], claude[key], key)
+            self.assertEqual(codex[key], claude[key], key)
+        self.assertLessEqual(set(portable), validate_skill.AGENT_PLUGINS_KEYS)
+        self.assertEqual(codex["skills"], "./skills/")
+        errors = []
+        validate_skill.check_portable_manifests(ROOT, "telegram-bot-ui", errors)
+        self.assertEqual(errors, [])
 
     def test_marketplace_manifest(self):
         market = json.loads(ba.build()[".claude-plugin/marketplace.json"])
@@ -175,7 +196,7 @@ class ManifestTest(unittest.TestCase):
         self.assertEqual(errors, [])
 
     def test_skill_front_matter_suits_directories(self):
-        with open(os.path.join(ROOT, "SKILL.md"), encoding="utf-8") as fh:
+        with open(os.path.join(SKILL, "SKILL.md"), encoding="utf-8") as fh:
             fm, _ = validate_skill.split_front_matter(fh.read())
         # Skill directories show a folded `>-` literally; keep description one quoted line.
         self.assertRegex(fm, r'(?m)^description: "[^"\n]+"$')
@@ -238,6 +259,7 @@ class InstallerTest(unittest.TestCase):
         self.assertTrue(os.path.isfile(self.h(".codex", "agents", "telegram_publisher.toml")))
         installed = self.h(".agents", "skills", "telegram-bot-ui")
         self.assertTrue(os.path.isfile(os.path.join(installed, "agents", "openai.yaml")))
+        self.assertTrue(os.path.isfile(os.path.join(installed, "LICENSE")))
         self.assertFalse(os.path.exists(os.path.join(installed, "tests")))
         self.assertFalse(os.path.exists(os.path.join(installed, ".git")))
 
@@ -396,11 +418,11 @@ class RunChecksDiscoveryTest(unittest.TestCase):
     def test_node_tests_are_grouped_by_package(self):
         groups = {os.path.relpath(pkg, ROOT).replace(os.sep, "/"): (tests, needs)
                   for pkg, tests, needs in run_checks.node_groups()}
-        self.assertIn("examples/ts", groups)
-        self.assertFalse(groups["examples/ts"][1])
-        self.assertIn("test/recipes.test.ts", groups["examples/ts"][0])
-        if "examples/ts/sdk-grammy" in groups:
-            self.assertTrue(groups["examples/ts/sdk-grammy"][1])
+        self.assertIn("skills/telegram-bot-ui/examples/ts", groups)
+        self.assertFalse(groups["skills/telegram-bot-ui/examples/ts"][1])
+        self.assertIn("test/recipes.test.ts", groups["skills/telegram-bot-ui/examples/ts"][0])
+        if "skills/telegram-bot-ui/examples/ts/sdk-grammy" in groups:
+            self.assertTrue(groups["skills/telegram-bot-ui/examples/ts/sdk-grammy"][1])
 
 
 if __name__ == "__main__":

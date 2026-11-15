@@ -23,8 +23,9 @@ def slug(heading: str) -> str:
 
 def corpus() -> str:
     out = []
-    for base in ("examples", "tests", "references", "recipes"):
-        for dirpath, dirs, files in os.walk(os.path.join(_paths.ROOT, base)):
+    for base in (_paths.EXAMPLES, _paths.TESTS, os.path.join(_paths.ROOT, "references"),
+                 os.path.join(_paths.ROOT, "recipes")):
+        for dirpath, dirs, files in os.walk(base):
             dirs[:] = [d for d in dirs if d not in ("node_modules", "__pycache__")]
             for f in files:
                 if f.endswith((".py", ".ts", ".json", ".md", ".html")):
@@ -49,17 +50,18 @@ class Registry(unittest.TestCase):
                 body = _paths.read(path)
                 headings = {slug(h) for h in re.findall(r"^#{1,6} (.+)$", body, re.M)}
                 self.assertIn(anchor, headings, f"{path} lacks a heading for #{anchor}")
-                self.assertTrue(os.path.exists(os.path.join(_paths.ROOT, r["recipe"])))
-                self.assertTrue(os.path.exists(os.path.join(_paths.ROOT, r["example"])), r["example"])
+                self.assertTrue(os.path.exists(_paths.resolve(r["recipe"])))
+                self.assertTrue(os.path.exists(_paths.resolve(r["example"])), r["example"])
                 file, _, name = r["check"].partition("::")
-                src = _paths.read(file)
+                with open(_paths.resolve(file), encoding="utf-8") as fh:
+                    src = fh.read()
                 if name:
                     self.assertRegex(src, rf"(def|class) {re.escape(name)}\b")
                 for sym in r["symbols"]:
                     self.assertGreaterEqual(text.count(sym), 2, f"symbol {sym} not exemplified")
 
     def test_markdown_registry_is_generated_from_json(self):
-        p = subprocess.run([sys.executable, os.path.join(_paths.ROOT, "scripts", "render_registry.py"), "--check"],
+        p = subprocess.run([sys.executable, os.path.join(_paths.REPO, "scripts", "render_registry.py"), "--check"],
                            capture_output=True, text=True)
         self.assertEqual(p.returncode, 0, p.stdout)
 

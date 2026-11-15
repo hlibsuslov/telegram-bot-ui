@@ -35,11 +35,12 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import build_adapters as ba  # noqa: E402
 
 ROOT = ba.ROOT
+SKILL_SRC = ba.SKILL_DIR
 NAME = "telegram-bot-ui"
 MARKER = ".telegram-bot-ui-install.json"
 HOSTS = ("claude", "codex", "cursor", "gemini", "copilot")
-# Top-level entries of the repository that make up the installed skill.
-SKILL_CONTENT = ("SKILL.md", "LICENSE", "llms.txt", "agents/openai.yaml",
+# Entries of the skill folder (skills/telegram-bot-ui/) that make up the installed skill.
+SKILL_CONTENT = ("SKILL.md", "LICENSE", "agents/openai.yaml",
                  "references", "recipes", "examples", "scripts", "data")
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "node_modules", ".DS_Store")
 
@@ -147,7 +148,7 @@ class Installer:
     # ------------------------------------------------------------ skill folder
     def owns_skill_dir(self, dest: str) -> bool:
         if os.path.islink(dest):
-            return os.path.realpath(dest) == os.path.realpath(ROOT)
+            return os.path.realpath(dest) == os.path.realpath(SKILL_SRC)
         return os.path.isfile(os.path.join(dest, MARKER))
 
     def install_skill(self, host: str, scope: str) -> None:
@@ -156,8 +157,8 @@ class Installer:
             self.say("skip", f"{dest} (already handled for another host)")
             return
         self.done.add(dest)
-        if os.path.realpath(dest) == os.path.realpath(ROOT) and not os.path.islink(dest):
-            self.say("skip", f"{dest} is this repository itself")
+        if os.path.realpath(dest) == os.path.realpath(SKILL_SRC) and not os.path.islink(dest):
+            self.say("skip", f"{dest} is this repository's skill folder itself")
             return
         if os.path.lexists(dest):
             if self.owns_skill_dir(dest):
@@ -174,7 +175,7 @@ class Installer:
         os.makedirs(dest, exist_ok=True)
         files = []
         for rel in SKILL_CONTENT:
-            src = os.path.join(ROOT, *rel.split("/"))
+            src = os.path.join(SKILL_SRC, *rel.split("/"))
             dst = os.path.join(dest, *rel.split("/"))
             if os.path.isdir(src):
                 shutil.copytree(src, dst, ignore=IGNORE, dirs_exist_ok=True)
@@ -188,12 +189,12 @@ class Installer:
         self.write_text(os.path.join(dest, MARKER), json.dumps(marker, indent=2) + "\n")
 
     def _try_link(self, dest: str) -> bool:
-        self.say("link", f"{dest} -> {ROOT}")
+        self.say("link", f"{dest} -> {SKILL_SRC}")
         if self.dry_run:
             return True
         os.makedirs(os.path.dirname(dest), exist_ok=True)
         try:
-            os.symlink(ROOT, dest, target_is_directory=True)
+            os.symlink(SKILL_SRC, dest, target_is_directory=True)
             return True
         except OSError as exc:
             self.say("fallback", f"symlink not permitted ({exc.__class__.__name__}); copying")

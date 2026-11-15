@@ -6,12 +6,12 @@
 
 Runs, in order:
   * validate_skill, validate_references, render_registry --check;
-  * every other `scripts/*.py` that declares `# run-checks: <args>` in its first 40
-    lines (for example build_adapters --check, run_evals) - new validators join by
-    adding that line, without editing this file;
+  * every other `scripts/*.py` or `skills/telegram-bot-ui/scripts/*.py` that declares
+    `# run-checks: <args>` in its first 40 lines (for example build_adapters --check,
+    run_evals) - new validators join by adding that line, without editing this file;
   * the Python unittest suite: every `tests/test_*.py` (stdlib unittest discovery);
-  * Node tests: every `*.test.ts|mjs|js` under `examples/`, run with `node --test` from
-    the nearest folder with a package.json. A folder whose package.json declares
+  * Node tests: every `*.test.ts|mjs|js` under `skills/telegram-bot-ui/examples/`, run
+    with `node --test` from the nearest folder with a package.json. A folder whose package.json declares
     dependencies runs only when its node_modules exist (e.g. `npm ci`), otherwise it is
     reported as skipped. `.ts` tests need Node >= 22.18 (type stripping).
 """
@@ -26,9 +26,10 @@ import subprocess
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SKILL_REL = "skills/telegram-bot-ui"
 FIXED = [
     ("skill", "scripts/validate_skill.py", []),
-    ("references", "scripts/validate_references.py", []),
+    ("references", f"{SKILL_REL}/scripts/validate_references.py", []),
     ("registry", "scripts/render_registry.py", ["--check"]),
 ]
 MARKER = re.compile(r"^#\s*run-checks:(.*)$")
@@ -39,24 +40,25 @@ SKIP_DIRS = {"node_modules", ".git", "__pycache__"}
 def discovered_scripts() -> list[tuple[str, str, list[str]]]:
     fixed = {path for _, path, _ in FIXED}
     found = []
-    scripts = os.path.join(ROOT, "scripts")
-    for name in sorted(os.listdir(scripts)):
-        rel = f"scripts/{name}"
-        if not name.endswith(".py") or rel in fixed or name == "run_checks.py":
-            continue
-        with open(os.path.join(scripts, name), encoding="utf-8", errors="replace") as fh:
-            for _, line in zip(range(40), fh):
-                m = MARKER.match(line.strip())
-                if m:
-                    found.append((name[:-3], rel, m.group(1).split()))
-                    break
+    for folder in ("scripts", f"{SKILL_REL}/scripts"):
+        scripts = os.path.join(ROOT, *folder.split("/"))
+        for name in sorted(os.listdir(scripts)):
+            rel = f"{folder}/{name}"
+            if not name.endswith(".py") or rel in fixed or name == "run_checks.py":
+                continue
+            with open(os.path.join(scripts, name), encoding="utf-8", errors="replace") as fh:
+                for _, line in zip(range(40), fh):
+                    m = MARKER.match(line.strip())
+                    if m:
+                        found.append((name[:-3], rel, m.group(1).split()))
+                        break
     return found
 
 
 def node_groups() -> list[tuple[str, list[str], bool]]:
     """(package dir, test files relative to it, needs node_modules) for examples/**."""
     groups: dict[str, list[str]] = {}
-    base = os.path.join(ROOT, "examples")
+    base = os.path.join(ROOT, *SKILL_REL.split("/"), "examples")
     for dirpath, dirnames, filenames in os.walk(base):
         dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
         for name in sorted(filenames):

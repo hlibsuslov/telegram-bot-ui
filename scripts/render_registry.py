@@ -11,7 +11,7 @@ import json
 import os
 import sys
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "skills", "telegram-bot-ui")
 SRC = os.path.join(ROOT, "recipes", "registry.json")
 OUT = os.path.join(ROOT, "references", "bot-api-10.3-10.4.md")
 
