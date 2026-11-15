@@ -53,7 +53,7 @@ against **Bot API 10.4 (2026-11-09)** — the newest version in the changelog on
 | Giveaway-style post | regular post + poll or button | the Bot API has **no method to create a Telegram giveaway** (only `Giveaway` objects are received) **[API: absence]** |
 | Pinned index / digest | one post edited in place + `pinChatMessage` | pin needs `can_edit_messages` in channels; channels never notify about pins **[API]** (R34) |
 | Series / thread | each part a post; index post links to `https://t.me/<channel>/<id>` | edit the index as parts appear (R34 pattern) **[Heuristic]** |
-| Live card / widget | **not possible in a channel** | "Widgets cannot be posted in channels, directly or via the bot" **[Guide, Widgets]**; production widgets go to private chats only **[API]**; users may forward a widget into a channel — **test server only** **[Guide]**; `sendWidget.chat_id` names no channel **[API]** |
+| Live card / widget | **not possible in a channel** (see "When channels get widgets") | "Widgets cannot be posted in channels, directly or via the bot" **[Guide, Widgets]**; production widgets go to private chats only **[API]**; users may forward a widget into a channel — **test server only** **[Guide]**; `sendWidget.chat_id` names no channel **[API]** |
 | Story | `postStory` (business accounts) | out of scope here |
 
 Decision helper: `tgkit.publish.resolve_kind()` picks `rich` for tables, documents, checklists,
@@ -93,6 +93,67 @@ by the bot to private, group and supergroup chats if the owner of the bot has a 
 Premium subscription" **[API, formatting options]**. So: in a **channel** only a Fragment-
 username bot can use them; always give the fallback emoji **[API]**; never invent ids
 (`custom-emoji.md`). `validate(custom_emoji_ok=False)` refuses icons in channel posts.
+
+The button field says the same: `icon_custom_emoji_id` "Can only be used by bots that purchased
+additional usernames on Fragment or in the messages directly sent by the bot to private, group
+and supergroup chats if the owner of the bot has a Telegram Premium subscription"
+**[API, InlineKeyboardButton, re-read 2026-11-15]**. Channels are not in the Premium list, so
+for a channel post the only eligible bot is one with Fragment usernames.
+
+Picking packs, ids and fallbacks for posts is owned by the custom emoji stream:
+`references/emoji-packs.md`, `references/emoji-in-posts.md`, `examples/python/tgkit/icons.py`,
+`scripts/emoji_packs.py`. It plugs into publishing through the decoration hook, with no edits
+to `publish.py`:
+
+```python
+pub = Publisher(transport, context="channel", custom_emoji_ok=bot_has_fragment_username,
+                decorate=lambda post, context: add_premium_emoji(post, context))  # that stream's helper
+```
+
+The decorator receives a copy of the post and the target context (`channel`, `channel_dm`,
+`group`, `private`) and returns the decorated `Post`. It runs **before** validation, so an
+ineligible custom emoji is still refused; the ledger keeps the undecorated source, so
+"unchanged" detection does not depend on the decorator.
+
+## When channels get widgets
+
+**Status on 2026-11-15** (sources: `sendWidget` and `sendSharedWidget` method pages, Widgets guide
+"Where widgets live" table, Bot API 10.4 changelog):
+
+| Path into a channel | Production | Test server |
+|---|---|---|
+| `sendWidget` / `sendSharedWidget` by the bot | **not available** — production allows private chats only; `chat_id` names a chat or "the target supergroup", never a channel **[API]** | **not available** — "Widgets cannot be posted in channels, directly or via the bot" **[Guide]** |
+| Inline mode | not available | "Any chat except channels" **[Guide]** |
+| A user forwards a shared widget into a channel | not available | **test only** **[Guide]** |
+
+So: **not documented as available** for bots in channels. Do not promise HTML widget posts or
+widget notifications in channels until the method pages list channels. Rules, size limits and
+the runtime of widgets: `references/widgets.md`; examples: `examples/widgets/`.
+
+The pipeline is ready for the change:
+
+* `Post.widget = {"html", "public_data"?, "width"?, "height"?}` is used **only** where
+  `widget_supported(context, environment)` is true: today private chats (production, test) and
+  groups (test). Everywhere else the post's **blocks** are sent as a regular or Rich Message
+  post and `validate()` warns `widget_fallback`.
+* A widget post must have blocks: they become the widget **caption** (whole blocks up to 1024
+  characters — what notifications, the chat list, search and apps without widgets show) and the
+  fallback body.
+* The switch is `tgkit.publish.CHANNEL_WIDGETS` (default `False`). Flip it, and add a test, only
+  after the `sendWidget` page lists channels.
+
+A channel-safe widget must satisfy (enforced by `validate()` for `context="channel"`):
+
+1. **Read-only / public data only**: no `allow_queries`, so no per-user requests; state lives in
+   `public_data` (one state for every viewer), updated by the bot.
+2. **No per-user or per-chat state**: no `chat_data`; nothing personal in code or data (the
+   widget stream's `check_widget` also refuses secret-looking strings).
+3. **Caption first**: the caption alone carries the full meaning; the widget only adds a live
+   view of the same facts.
+4. Size limits as for any widget: 1–32768 bytes of HTML, ≤ 4096 bytes after zlib level 9,
+   `public_data` ≤ 1024 bytes **[API]**.
+5. A text/rich fallback always exists (the same blocks), and edits go through
+   `editMessageWidgetData` / `editSharedWidgetData` — widget code is immutable **[API]**.
 
 ## Comments: the linked discussion group
 

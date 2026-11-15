@@ -24,6 +24,7 @@ import copy
 import hashlib
 import json
 import os
+import re
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable
@@ -138,6 +139,8 @@ class Post:
     # {"html", "public_data"?, "chat_data"?, "width"?, "height"?, "allow_queries"?}.
     # Used only where widget_supported(); elsewhere the blocks are rendered instead.
     widget: dict[str, Any] | None = None
+    # Authoring format of a rich post: "blocks" (typed, default), "markdown" or "html".
+    rich_source: str = "blocks"
 
     @classmethod
     def from_dict(cls, d: dict[str, Any]) -> "Post":
@@ -466,6 +469,212 @@ def _rich_button(btn: dict[str, Any]) -> dict[str, Any]:
                             style=btn.get("style"))
 
 
+# ---- renderer 5/6: Rich HTML and Rich Markdown sources -----------------------
+# Same content, authored as text. Rich HTML has one escaper (&, <, >, and " in
+# attributes) and expresses everything (compact tables, expandable quotes,
+# buttons). Rich Markdown is shorter to read but needs HTML tags for features
+# without Markdown syntax; its backslash escaping beyond the documented `\#` is
+# CommonMark practice, not stated by the Bot API page [Unverified].
+_RICH_HTML_TAGS = {"bold": "b", "italic": "i", "underline": "u", "strike": "s", "spoiler": "tg-spoiler"}
+_RMD_INLINE = set("\\`*_[]<&|~=$^")      # can open inline markup anywhere
+_RMD_LINE_START = ("#", "-", "+", ">")   # open a block only at the start of a line
+_RMD_ORDERED = re.compile(r"^(\d+)\.")   # "1." at a line start would open an ordered list
+
+
+def _attr(s: str) -> str:
+    return escape_html(s).replace('"', "&quot;")
+
+
+def _rich_html_inline(node: Any) -> str:
+    out = []
+    for mark, val in _inline_parts(node):
+        if mark is None:
+            out.append(escape_html(val).replace("\n", "<br>"))
+        elif mark == "code":
+            out.append(f"<code>{escape_html(val)}</code>")
+        elif mark == "link":
+            out.append(f'<a href="{_attr(_check_url(val["link"]))}">{_rich_html_inline(val.get("text", val["link"]))}</a>')
+        else:
+            tag = _RICH_HTML_TAGS[mark]
+            out.append(f"<{tag}>{_rich_html_inline(val)}</{tag}>")
+    return "".join(out)
+
+
+def _escape_rich_md(s: str) -> str:
+    lines = []
+    for line in s.split("\n"):
+        out = "".join("\\" + ch if ch in _RMD_INLINE else ch for ch in line)
+        if out.startswith(_RMD_LINE_START):
+            out = "\\" + out
+        lines.append(_RMD_ORDERED.sub(r"\1\\.", out))
+    return "\n".join(lines)
+
+
+def _rich_md_inline(node: Any) -> str:
+    marks = {"bold": "**", "italic": "_", "strike": "~~", "spoiler": "||"}
+    out = []
+    for mark, val in _inline_parts(node):
+        if mark is None:
+            out.append(_escape_rich_md(val))
+        elif mark == "code":
+            out.append(f"<code>{escape_html(val)}</code>" if "`" in val else f"`{val}`")
+        elif mark == "link":
+            url = _check_url(val["link"]).replace("(", "%28").replace(")", "%29")
+            out.append(f"[{_rich_md_inline(val.get('text', val['link']))}]({url})")
+        elif mark == "underline":
+            out.append(f"<u>{_rich_md_inline(val)}</u>")
+        else:
+            out.append(f"{marks[mark]}{_rich_md_inline(val)}{marks[mark]}")
+    return "".join(out)
+
+
+def _rich_html_table(b: dict[str, Any]) -> str:
+    numeric = set(b.get("numeric", []))
+    attrs = " bordered" + (" compact" if b.get("compact", True) else "")
+    cap = f"<caption>{escape_html(b['caption'])}</caption>" if b.get("caption") else ""
+
+    def row(cells: list[Any], tag: str) -> str:
+        return "<tr>" + "".join(f'<{tag} align="{"right" if i in numeric else "left"}">{_rich_html_inline(c)}</{tag}>'
+                                for i, c in enumerate(cells)) + "</tr>"
+    return f"<table{attrs}>{cap}" + row(b["header"], "th") + "".join(row(r, "td") for r in b["rows"]) + "</table>"
+
+
+def _rich_html_quote(b: dict[str, Any]) -> str:
+    cite = f"<cite>{escape_html(b['credit'])}</cite>" if b.get("credit") else ""
+    return f"<blockquote{' expandable' if b.get('expandable') else ''}>{_rich_html_inline(b['text'])}{cite}</blockquote>"
+
+
+def _rich_buttons_html(buttons: list[list[dict[str, Any]]]) -> list[str]:
+    rows = []
+    for row in buttons:
+        items = []
+        for btn in row:
+            style = f' style="{_attr(btn["style"])}"' if btn.get("style") else ""
+            if "url" in btn:
+                attrs = f'type="url" url="{_attr(_check_url(btn["url"]))}"'
+            elif "callback_data" in btn:
+                attrs = f'type="callback_data" data="{_attr(btn["callback_data"])}"'
+            elif "copy_text" in btn:
+                ct = btn["copy_text"]["text"] if isinstance(btn["copy_text"], dict) else btn["copy_text"]
+                attrs = f'type="copy_text" text="{_attr(ct)}"'
+            else:
+                raise ValueError("rich sources render url / callback_data / copy_text buttons only")
+            items.append(f"<tg-button {attrs}{style}>{escape_html(btn['text'])}</tg-button>")
+        rows.append("<tg-button-row>" + "".join(items) + "</tg-button-row>")
+    return rows
+
+
+def _media_entry(i: int, ref: str) -> tuple[str, dict[str, Any]]:
+    mid = f"doc{i}"
+    return mid, {"id": mid, "media": {"type": "document", "media": ref}}
+
+
+def to_rich_html(blocks: list[dict[str, Any]], buttons: list[list[dict[str, Any]]] | None = None
+                 ) -> tuple[str, list[dict[str, Any]]]:
+    """(InputRichMessage.html, InputRichMessage.media)."""
+    parts, media, first_heading = [], [], True
+    for b in blocks:
+        t = b["type"]
+        if t == "heading":
+            n = b.get("size", 1 if first_heading else 2)
+            first_heading = False
+            parts.append(f"<h{n}>{_rich_html_inline(b['text'])}</h{n}>")
+        elif t == "paragraph":
+            parts.append(f"<p>{_rich_html_inline(b['text'])}</p>")
+        elif t == "list":
+            lis = []
+            for i in b["items"]:
+                box = ""
+                if isinstance(i, dict) and "done" in i:
+                    box = '<input type="checkbox" checked>' if i["done"] else '<input type="checkbox">'
+                lis.append(f"<li>{box}{_rich_html_inline(_item_text(i))}</li>")
+            parts.append("<ul>" + "".join(lis) + "</ul>")
+        elif t == "quote":
+            parts.append(_rich_html_quote(b))
+        elif t == "table":
+            parts.append(_rich_html_table(b))
+        elif t == "code":
+            lang = f' class="language-{_attr(b["language"])}"' if b.get("language") else ""
+            parts.append(f"<pre><code{lang}>{escape_html(b['text'])}</code></pre>")
+        elif t == "footer":
+            parts.append(f"<footer>{_rich_html_inline(b['text'])}</footer>")
+        elif t == "divider":
+            parts.append("<hr/>")
+        elif t == "document":
+            mid, entry = _media_entry(len(media) + 1, b["ref"])
+            media.append(entry)
+            cap = f"<figcaption>{escape_html(b['caption'])}</figcaption>" if b.get("caption") else ""
+            parts.append(f'<figure><tg-document src="tg://document?id={mid}"></tg-document>{cap}</figure>')
+        else:
+            raise ValueError(f"unknown block type {t!r}")
+    parts += _rich_buttons_html(buttons or [])
+    return "\n".join(parts), media
+
+
+def to_rich_markdown(blocks: list[dict[str, Any]], buttons: list[list[dict[str, Any]]] | None = None
+                     ) -> tuple[str, list[dict[str, Any]]]:
+    """(InputRichMessage.markdown, InputRichMessage.media). Features without
+    Markdown syntax (compact tables, expandable quotes, credits, footers,
+    buttons) are written as the documented HTML tags."""
+    parts, media, first_heading = [], [], True
+    for b in blocks:
+        t = b["type"]
+        if t == "heading":
+            n = b.get("size", 1 if first_heading else 2)
+            first_heading = False
+            parts.append("#" * n + " " + _rich_md_inline(b["text"]))
+        elif t == "paragraph":
+            parts.append(_rich_md_inline(b["text"]))
+        elif t == "list":
+            lines = []
+            for i in b["items"]:
+                box = ("[x] " if i["done"] else "[ ] ") if isinstance(i, dict) and "done" in i else ""
+                lines.append(f"- {box}{_rich_md_inline(_item_text(i))}")
+            parts.append("\n".join(lines))
+        elif t == "quote":
+            if b.get("expandable") or b.get("credit"):
+                parts.append(_rich_html_quote(b))
+            else:
+                parts.append("\n".join(">" + ln for ln in _rich_md_inline(b["text"]).split("\n")))
+        elif t == "table":
+            if b.get("compact", True) or b.get("caption"):
+                parts.append(_rich_html_table(b))
+            else:
+                numeric = set(b.get("numeric", []))
+                head = "| " + " | ".join(_rich_md_inline(h) for h in b["header"]) + " |"
+                sep = "|" + "|".join("---:" if i in numeric else ":---" for i in range(len(b["header"]))) + "|"
+                rows = ["| " + " | ".join(_rich_md_inline(c) for c in r) + " |" for r in b["rows"]]
+                parts.append("\n".join([head, sep, *rows]))
+        elif t == "code":
+            parts.append("```" + (b.get("language") or "") + "\n" + b["text"] + "\n```")
+        elif t == "footer":
+            parts.append(f"<footer>{_rich_html_inline(b['text'])}</footer>")
+        elif t == "divider":
+            parts.append("---")
+        elif t == "document":
+            mid, entry = _media_entry(len(media) + 1, b["ref"])
+            media.append(entry)
+            title = f' "{b["caption"].replace(chr(34), chr(39))}"' if b.get("caption") else ""
+            parts.append(f"![](tg://document?id={mid}{title})")
+        else:
+            raise ValueError(f"unknown block type {t!r}")
+    parts += _rich_buttons_html(buttons or [])
+    return "\n\n".join(parts), media
+
+
+def rich_message(post: "Post") -> dict[str, Any]:
+    """InputRichMessage in the post's chosen authoring format (exactly one of
+    blocks / markdown / html, plus media for the text formats)."""
+    source = post.rich_source
+    if source == "blocks":
+        return {"blocks": to_rich_blocks(post.blocks, post.buttons)}
+    text, media = (to_rich_markdown if source == "markdown" else to_rich_html)(post.blocks, post.buttons)
+    out: dict[str, Any] = {source: text}
+    if media:
+        out["media"] = media
+    return out
+
+
 def rich_size(blocks: list[dict[str, Any]]) -> tuple[int, int, int]:
     """(characters, blocks incl. nested/list items/table rows, media) of InputRichBlocks."""
     chars = blocks_n = media = 0
@@ -623,6 +832,13 @@ def validate(post: Post, *, context: str = "channel", custom_emoji_ok: bool = Fa
         if len(first) > 120:
             warn("first_line", "first line > 120 chars: the notification and pinned preview cut it")
     if kind == "rich":
+        if post.rich_source not in ("blocks", "markdown", "html"):
+            err("rich_source", "rich_source must be blocks, markdown or html")
+        else:
+            try:
+                rich_message(post)
+            except ValueError as exc:
+                err("format", str(exc))
         if post.link_preview:
             warn("link_preview", "sendRichMessage has no link_preview_options: the preview setting is ignored")
         try:
@@ -809,7 +1025,7 @@ def plan(post: Post, chat_id: int | str, *, address: dict[str, Any] | None = Non
     if kind == "text":
         text_messages(post.blocks, preview=True, silent_all=False)
     elif kind == "rich":
-        p = {**base, "rich_message": {"blocks": to_rich_blocks(post.blocks, post.buttons)}, **common}
+        p = {**base, "rich_message": rich_message(post), **common}
         reqs.append(("sendRichMessage", p))
     elif kind in ("photo", "video", "document"):
         m = post.media[0]
@@ -1235,4 +1451,4 @@ __all__ = ["LIMITS", "Post", "Issue", "PostInvalid", "resolve_kind", "to_entitie
            "to_rich_blocks", "rich_size", "inline_keyboard", "validate", "assert_valid", "check_entities",
            "check_media_ref", "plan", "Ledger", "Publisher", "Result", "decide_correction", "FanOut",
            "FanOutReport", "cross_post", "fingerprint", "plain", "widget_supported", "decorate_post", "Decorator",
-           "CHANNEL_WIDGETS"]
+           "CHANNEL_WIDGETS", "to_rich_html", "to_rich_markdown", "rich_message"]

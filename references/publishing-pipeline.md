@@ -36,7 +36,9 @@ Blocks: `heading`, `paragraph`, `list` (items may be `{"text", "done"}` checklis
 `code`, `divider`, `footer`, `document` (rich only). Inline: plain strings, `bold`, `italic`,
 `underline`, `strike`, `spoiler`, `code`, `link`. Media: `{"type": "photo"|"video"|"document",
 "ref": file_id | https URL | attach://name, "spoiler"}`. Plus `poll`, `stars` (paid media),
-`kind` (`auto` by default).
+`kind` (`auto` by default), `rich_source` (`blocks` | `markdown` | `html`, for rich posts) and
+`widget` (an HTML widget used only where the target supports widgets; see
+`channel-post-design.md#when-channels-get-widgets`).
 
 Why: one model renders safely to every format; untrusted text (feed titles, user names, model
 output) is never parsed as markup **[Heuristic]**; validation runs on data, not on strings.
@@ -49,10 +51,29 @@ output) is never parsed as markup **[Heuristic]**; validation runs on data, not 
 | `to_rich_blocks` | `InputRichBlock[]` | long reads, tables, checklists, documents, embedded buttons **[API]** |
 | `to_html` | regular HTML (`parse_mode=HTML`) | compatibility / preview in a CMS; escapes `& < >` and `"` in `href` |
 | `to_markdown_v2` | MarkdownV2 | compatibility; escapes all 18 specials; `)` and `\` in URLs |
+| `to_rich_html` | `InputRichMessage.html` + `media` | Rich HTML source of the same post (`rich_source: "html"`) |
+| `to_rich_markdown` | `InputRichMessage.markdown` + `media` | Rich Markdown source (`rich_source: "markdown"`); HTML tags for features without Markdown syntax |
 
 Every renderer refuses link URLs other than `http(s)://` and `tg://` (no `javascript:`).
-`resolve_kind()` chooses text / rich / photo / album / poll / paid media (rules in
+`resolve_kind()` chooses text / rich / photo / album / poll / paid media / widget (rules in
 `channel-post-design.md#choosing-the-format-per-post-type`).
+
+**Authoring format of a rich post** (`InputRichMessage` takes exactly one of `blocks`,
+`html`, `markdown` **[API]**; files referenced as `tg://document?id=…` go in `media` **[API]**):
+
+| Source | Best for in an automated pipeline | Watch out |
+|---|---|---|
+| `blocks` (default) | posts generated from data, a CMS AST, model output parsed into the content model | verbose JSON; nothing to escape |
+| Rich HTML | server templates, CMS exports; every feature has a tag (`<table compact>`, `<blockquote expandable>`, `<tg-button-row>`) | one escaper: `& < >`, plus `"` in attributes |
+| Rich Markdown | text people or a model write and review (short diffs) | needs HTML tags for compact tables, expandable quotes, credits, footers, buttons; escaping beyond the documented `\#` follows CommonMark practice **[Unverified]** |
+
+R31 sends the same long read in all three forms.
+
+**Decoration hook.** `plan(..., decorate=fn)` and `Publisher(..., decorate=fn)` accept an
+optional `fn(post, context) -> Post` (default: none). It runs before validation and planning,
+on a copy of the post. Use it for cross-cutting additions owned elsewhere, e.g. premium custom
+emoji from the custom emoji stream (`references/emoji-in-posts.md`) — eligibility is still
+enforced by `validate()`. The ledger stores the undecorated source post.
 
 ## 3. Validate before anything leaves
 

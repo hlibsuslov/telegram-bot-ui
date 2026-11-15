@@ -21,7 +21,8 @@ Markdown subset (one block per paragraph):
   ![photo](file_id-or-https-url)   ![video](...)   [button: Label](https://...)
   Inline: **bold**, _italic_, `code`, ||spoiler||, [text](https://...)
   Optional front matter between "---" lines: kind, silent, protect, preview
-  (a URL or "off"), caption_above, stars.
+  (a URL or "off"), caption_above, stars, rich_source (blocks | markdown | html:
+  how a rich post is sent; the content is the same).
 Exit codes: 0 ok, 1 invalid post or failed send, 2 usage / environment error.
 """
 from __future__ import annotations
@@ -81,8 +82,8 @@ def parse_markdown(src: str) -> Post:
                 k, v = (x.strip() for x in ln.split(":", 1))
                 if k in ("silent", "protect", "caption_above"):
                     d[k] = v.lower() in ("1", "true", "yes")
-                elif k == "kind":
-                    d["kind"] = v
+                elif k in ("kind", "rich_source"):
+                    d[k] = v
                 elif k == "stars":
                     d["stars"] = int(v)
                 elif k == "preview":

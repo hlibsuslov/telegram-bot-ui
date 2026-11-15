@@ -52,6 +52,10 @@ def run(transport: FakeTransport | None = None):
     pub = Publisher(t, sleep=lambda s: None)
     preview = pub.publish(post, EDITOR, "longread:q3:preview")        # the editor sees the exact post
     live = pub.publish(post, CHANNEL, "longread:q3")
+    # The same content authored as Rich Markdown and as Rich HTML (one source each),
+    # previewed side by side so an editor can compare the three authoring formats.
+    for source in ("markdown", "html"):
+        pub.publish(post.with_changes(rich_source=source), EDITOR, f"longread:q3:preview:{source}")
     return t, post, preview, live
 
 
@@ -60,8 +64,16 @@ def main() -> None:
     c.dump(t, "Long read as a Rich Message")
     c.check(resolve_kind(post) == "rich", "tables + several headings -> rich")
     sends = t.params_of("sendRichMessage")
-    c.check(len(sends) == 2 and sends[0]["rich_message"] == sends[1]["rich_message"],
+    c.check(len(sends) == 4 and sends[0]["rich_message"] == sends[1]["rich_message"],
             "preview and channel post are byte-identical rich payloads")
+    md, html = sends[2]["rich_message"], sends[3]["rich_message"]
+    c.check(set(md) == {"markdown", "media"} and set(html) == {"html", "media"} and md["media"] == html["media"],
+            "exactly one source field per InputRichMessage; the PDF goes through media + tg://document?id=")
+    c.check(md["markdown"].startswith("# Potholes Q3 2026") and "<table bordered compact>" in md["markdown"] and
+            "<blockquote expandable>" in md["markdown"] and "![](tg://document?id=doc1" in md["markdown"],
+            "Rich Markdown: Markdown headings/paragraphs, HTML tags for compact table and expandable quote")
+    c.check(html["html"].startswith("<h1>Potholes Q3 2026") and '<tg-document src="tg://document?id=doc1">' in html["html"]
+            and "<tg-button-row>" in html["html"], "Rich HTML: one tag set for everything, buttons included")
     blocks = sends[1]["rich_message"]["blocks"]
     types = [b["type"] for b in blocks]
     c.check(types[0] == "heading" and blocks[0]["size"] == 1, "first block is the title (largest heading)")

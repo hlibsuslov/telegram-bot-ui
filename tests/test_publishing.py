@@ -325,6 +325,145 @@ class ChannelRules(unittest.TestCase):
         self.assertIn("rich_table", codes(wide))
 
 
+class DecorationHook(unittest.TestCase):
+    def test_default_is_no_op(self):
+        self.assertEqual(plan(text_post(), CH), plan(text_post(), CH, decorate=None))
+
+    def test_decorator_gets_a_copy_and_the_context(self):
+        seen = []
+
+        def deco(post, context):
+            seen.append(context)
+            post.blocks[0]["text"] = "★ " + post.blocks[0]["text"]
+            return post
+        src = text_post()
+        (_, p), = plan(src, CH, context="group", decorate=deco)
+        self.assertEqual((seen, p["text"].split("\n")[0], src.blocks[0]["text"]), (["group"], "★ Title", "Title"))
+
+    def test_decorated_output_is_validated_and_source_is_stored(self):
+        icon = lambda post, ctx: post.with_changes(  # noqa: E731
+            buttons=[[{"text": "Open", "url": "https://example.com", "icon_custom_emoji_id": "5368324170671202286"}]])
+        t = FakeTransport()
+        from tgkit.publish import PostInvalid
+        with self.assertRaises(PostInvalid):
+            Publisher(t, decorate=icon).publish(text_post(), CH, "k")      # channel, no Fragment username
+        self.assertEqual(t.calls, [])
+        pub = Publisher(t, decorate=icon, custom_emoji_ok=True)
+        pub.publish(text_post(), CH, "k2")
+        self.assertIn("icon_custom_emoji_id", t.calls[0][1]["reply_markup"]["inline_keyboard"][0][0])
+        self.assertNotIn("icon_custom_emoji_id", json.dumps(pub.ledger.get("k2")["post"]))
+        self.assertEqual(pub.edit("k2", text_post()).status, "unchanged")
+
+    def test_decorator_must_return_a_post(self):
+        with self.assertRaises(TypeError):
+            plan(text_post(), CH, decorate=lambda post, ctx: None)
+
+
+class WidgetVariant(unittest.TestCase):
+    def widget_post(self, **w):
+        return Post(blocks=[{"type": "heading", "text": "BTC price"}, {"type": "paragraph", "text": "Updated every minute."}],
+                    widget={"html": "<div id=p>…</div>", "public_data": '{"p": 1}', **w})
+
+    def test_channel_falls_back_to_the_same_blocks(self):
+        import tgkit.publish as pubmod
+        self.assertFalse(pubmod.CHANNEL_WIDGETS)
+        reqs = plan(self.widget_post(), CH)
+        self.assertEqual([m for m, _ in reqs], ["sendMessage"])
+        self.assertTrue(reqs[0][1]["text"].startswith("BTC price"))
+        self.assertIn("widget_fallback", {i.code for i in validate(self.widget_post())})
+        self.assertEqual(codes(self.widget_post()), set())
+
+    def test_private_chat_gets_a_widget_with_caption(self):
+        (m, p), = plan(self.widget_post(), 111111111, context="private")
+        self.assertEqual(m, "sendWidget")
+        self.assertEqual(p["caption"], "BTC price\n\nUpdated every minute.")
+        self.assertEqual(p["caption_entities"], [{"type": "bold", "offset": 0, "length": 9}])
+        self.assertEqual(p["public_data"], '{"p": 1}')
+        self.assertNotIn("allow_queries", p)
+
+    def test_groups_only_on_the_test_server(self):
+        self.assertEqual(plan(self.widget_post(), -100, context="group")[0][0], "sendMessage")
+        self.assertEqual(plan(self.widget_post(), -100, context="group", environment="test")[0][0], "sendWidget")
+        self.assertEqual(plan(self.widget_post(), -100, context="channel_dm", environment="test")[0][0], "sendMessage")
+
+    def test_channel_rules_when_the_flag_is_flipped(self):
+        import tgkit.publish as pubmod
+        old = pubmod.CHANNEL_WIDGETS
+        pubmod.CHANNEL_WIDGETS = True
+        try:
+            self.assertEqual(plan(self.widget_post(), CH)[0][0], "sendWidget")
+            self.assertEqual(codes(self.widget_post()), set())
+            self.assertIn("widget_channel", codes(self.widget_post(chat_data="per-chat")))
+            self.assertIn("widget_channel", codes(self.widget_post(allow_queries=True)))
+        finally:
+            pubmod.CHANNEL_WIDGETS = old
+
+    def test_widget_needs_blocks_and_size_limits(self):
+        bare = Post(widget={"html": "<b>x</b>"})
+        self.assertIn("widget_fallback", codes(bare, context="private"))
+        big = self.widget_post()
+        big.widget["html"] = os.urandom(20000).hex()
+        self.assertIn("widget", codes(big, context="private"))
+
+    def test_sent_widget_is_not_edited_in_place(self):
+        t = FakeTransport()
+        pub = Publisher(t, context="private")
+        pub.publish(self.widget_post(), 111111111, "w")
+        changed = self.widget_post()
+        changed.blocks[1] = {"type": "paragraph", "text": "Updated every 5 minutes."}
+        self.assertEqual(pub.edit("w", changed).status, "repost_required")
+
+
+class RichSources(unittest.TestCase):
+    post = Post(kind="rich", blocks=[
+        {"type": "heading", "text": "Q3 <report> & #1"},
+        {"type": "paragraph", "text": ["1. ", {"bold": "a_b*c"}, " ", {"link": "https://ex.com/a)b?x=\"1\"", "text": "[src]"}]},
+        {"type": "table", "header": ["k", "v"], "rows": [["a|b", "1"]], "numeric": [1], "compact": False},
+        {"type": "quote", "text": "q", "expandable": True, "credit": "A & B"},
+        {"type": "list", "items": [{"text": "done", "done": True}, {"text": "todo", "done": False}]},
+        {"type": "document", "ref": "BQACdoc", "caption": "PDF"}],
+        buttons=[[{"text": "Go <now>", "url": "https://ex.com/?a=1&b=2", "style": "primary"},
+                  {"text": "Copy", "copy_text": 'he said "hi"'}]])
+
+    def test_one_source_field_and_media(self):
+        from tgkit.publish import rich_message
+        import validate_rich
+        for source in ("blocks", "markdown", "html"):
+            msg = rich_message(self.post.with_changes(rich_source=source))
+            self.assertEqual([k for k in ("blocks", "markdown", "html") if k in msg], [source])
+            errors, _, _ = validate_rich.validate({"rich_message": msg})
+            self.assertEqual(errors, [], source)
+            if source != "blocks":
+                self.assertEqual(msg["media"], [{"id": "doc1", "media": {"type": "document", "media": "BQACdoc"}}])
+
+    def test_rich_html_escapes(self):
+        from tgkit.publish import to_rich_html
+        html, _ = to_rich_html(self.post.blocks, self.post.buttons)
+        self.assertIn("<h1>Q3 &lt;report&gt; &amp; #1</h1>", html)
+        self.assertIn('href="https://ex.com/a)b?x=&quot;1&quot;"', html)
+        self.assertIn('text="he said &quot;hi&quot;"', html)
+        self.assertIn('url="https://ex.com/?a=1&amp;b=2"', html)
+        self.assertIn("<cite>A &amp; B</cite>", html)
+        self.assertIn('<li><input type="checkbox" checked>done</li>', html)
+        self.assertIn('<tg-document src="tg://document?id=doc1">', html)
+
+    def test_rich_markdown_escapes_and_html_fallbacks(self):
+        from tgkit.publish import to_rich_markdown
+        md, _ = to_rich_markdown(self.post.blocks, self.post.buttons)
+        lines = md.split("\n")
+        self.assertEqual(lines[0], "# Q3 \\<report> \\& #1")
+        self.assertIn("1\\. **a\\_b\\*c** [\\[src\\]](https://ex.com/a%29b?x=\"1\")", md)
+        self.assertIn("| a\\|b | 1 |", md)
+        self.assertIn("|:---|---:|", md)
+        self.assertIn("<blockquote expandable>q<cite>A &amp; B</cite></blockquote>", md)
+        self.assertIn("- [x] done\n- [ ] todo", md)
+        self.assertIn('![](tg://document?id=doc1 "PDF")', md)
+        self.assertIn('<tg-button type="url" url="https://ex.com/?a=1&amp;b=2" style="primary">Go &lt;now&gt;</tg-button>', md)
+
+    def test_invalid_source_refused(self):
+        self.assertIn("rich_source", codes(self.post.with_changes(rich_source="rtf")))
+
+
 class RecipesAndCli(unittest.TestCase):
     def test_recipes_run(self):
         import runpy
