@@ -1,8 +1,9 @@
 # Official sources and verification log
 
-> **Last verification: 2026-11-12.** Verified against **Bot API 10.4 (released
+> **Last verification: 2026-11-15.** Verified against **Bot API 10.4 (released
 > 2026-11-09)**, the newest version in the official changelog on that date (10.3 was
-> released 2026-08-24). Before version-dependent work, re-check the changelog for a newer
+> released 2026-08-24); no newer version existed on 2026-11-15. The full API is
+> snapshotted in `data/bot-api/` (see `api-catalog.md`). Before version-dependent work, re-check the changelog for a newer
 > version and update this file. Updating these references is part of maintaining the skill —
 > no separate permission step is needed when the task is to update the skill.
 
@@ -15,12 +16,37 @@ the task is version-sensitive:
 3. Update the references, `recipes/registry.json` and this log — **do not delete historic
    facts** needed for older-SDK compatibility; mark them as version-specific.
 
+## Machine-readable snapshot (2026-11-15)
+
+`py -3 scripts/sync_bot_api.py` parsed https://core.telegram.org/bots/api and
+https://core.telegram.org/bots/api-changelog on 2026-11-15: Bot API **10.4**, 193 methods,
+425 types, 29 union types, 81 changelog releases (`data/bot-api/catalog.json`,
+`changelog.json`). `robots.txt` on core.telegram.org returned 404. Re-run the sync
+whenever this file's date is older than the newest changelog entry, then diff with
+`py -3 scripts/tg_api_lookup.py diff`.
+
+Additional pages read on 2026-11-15 for the area references:
+
+| Source | URL | Used by |
+|---|---|---|
+| Payments in Telegram Stars | https://core.telegram.org/bots/payments-stars | `payments-and-stars.md` |
+| Inline bots | https://core.telegram.org/bots/inline | `inline-mode.md` |
+| Mini Apps | https://core.telegram.org/bots/webapps | `mini-apps-bridge.md` |
+| Bot API: getting updates, sending files, local server, payments, inline mode | https://core.telegram.org/bots/api | `updates-and-delivery.md`, `media-and-files.md`, the other area references |
+| SDK releases (aiogram, python-telegram-bot, pyTelegramBotAPI, grammY, Telegraf, go-telegram/bot, tdlib/telegram-bot-api) | GitHub releases, PyPI, npm | `sdk-compatibility.md#release-note-check-2026-11-15` |
+
+Known inconsistency in the official page (2026-11-15): `setBusinessAccountName`,
+`setBusinessAccountUsername` and `setBusinessAccountBio` say they require
+`can_change_name` / `can_change_username` / `can_change_bio`, while `BusinessBotRights`
+defines `can_edit_name` / `can_edit_username` / `can_edit_bio`
+(`business-accounts.md#rights-businessbotrights`).
+
 ## Primary sources (source of truth)
 
 | Source | URL | Purpose | Last checked |
 |---|---|---|---|
-| Telegram Bot API | https://core.telegram.org/bots/api | Object/method specs, formatting options | 2026-08-05 |
-| Bot API changelog | https://core.telegram.org/bots/api-changelog | Version history, what changed when | 2026-08-05 |
+| Telegram Bot API | https://core.telegram.org/bots/api | Object/method specs, formatting options | 2026-11-15 |
+| Bot API changelog | https://core.telegram.org/bots/api-changelog | Version history, what changed when | 2026-11-15 |
 | `InlineKeyboardButton` | https://core.telegram.org/bots/api#inlinekeyboardbutton | Button fields, one-action rule, `style`, icon | 2026-08-05 |
 | `KeyboardButton` | https://core.telegram.org/bots/api#keyboardbutton | Reply-button fields, `style`, icon | 2026-08-05 |
 | Bot API 9.4 changelog entry | https://core.telegram.org/bots/api-changelog#february-9-2026 | Colored buttons, button icons, Premium custom emoji | 2026-08-05 |
@@ -28,7 +54,7 @@ the task is version-sensitive:
 | `getCustomEmojiStickers` | https://core.telegram.org/bots/api#getcustomemojistickers | Resolving custom emoji IDs (≤200/call) | 2026-08-05 |
 | `getStickerSet` / `Sticker` | https://core.telegram.org/bots/api#getstickerset | Source of `custom_emoji_id` + Unicode fallback | 2026-08-05 |
 | Bots FAQ | https://core.telegram.org/bots/faq | Rate limits (per chat / group / broadcast) | 2026-08-05 |
-| Telegram Mini Apps | https://core.telegram.org/bots/webapps | `BottomButton` progress, `WebApp.ready()` | 2026-08-05 |
+| Telegram Mini Apps | https://core.telegram.org/bots/webapps | `BottomButton` progress, `WebApp.ready()`, launch modes, initData validation | 2026-11-15 |
 | Telegram Bot Features | https://core.telegram.org/bots/features | Feature overview | 2026-07-15 |
 | Bot API formatting options | https://core.telegram.org/bots/api#formatting-options | HTML / MarkdownV2 / entity escaping rules | 2026-07-15 |
 | Styled text with entities | https://core.telegram.org/api/entities | Entity types, nesting rules | 2026-07-15 |
