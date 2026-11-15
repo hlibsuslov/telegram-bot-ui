@@ -1,5 +1,14 @@
 # Activation eval scenarios
 
+## Example discovery and extension
+
+| ID | Request | Expected route |
+|---|---|---|
+| LIB-A1 | «Сделай бота регистрации на мероприятия с листом ожидания на основе ваших examples.» | activate; example-library and R81 |
+| LIB-A2 | "Extend our bot with a new PDF processing example, reusing your library." | activate; example-library and R83 |
+
+Definitions only; these additions have not been run against an agent.
+
 Use these to check that the skill triggers on the right requests and stays out of
 the wrong ones. The `description` in `SKILL.md` is what drives selection — if a
 positive case doesn't trigger or a negative case does, refine the description.

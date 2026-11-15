@@ -28,6 +28,9 @@ You report; you do not edit.
      injection), approvals bound to one action and expiring;
    - every Bot API method, type and field exists in the catalog or the official docs.
 4. Rank findings by impact. Do not report style preferences as defects.
+   For an adapted example, inspect its declared base recipes and verify their
+   invariants survived the changes. Flag in-memory demos presented as durable
+   production integrations; distinguish documented, offline, live API and client evidence.
 
 ## Output
 

@@ -222,7 +222,21 @@ python scripts/install.py --host all --scope user --dry-run
 
 ## 🍳 Рецепти й приклади
 
-57 наскрізних рецептів і міні-рецепти — готові до адаптації й запускаються офлайн, без токена бота.
+65 нумерованих recipes і міні-рецепти. Вісім нових сценаріїв R80–R87 —
+офлайн-моделі Python із callback-інтерфейсом; production-інтеграції позначені окремо.
+
+Агент шукає основу в каталозі 40 сімейств сценаріїв (`skills/telegram-bot-ui/recipes/use-cases.json`), повторно
+використовує helpers або поєднує потоки й дописує в проєкті користувача лише відсутнє
+([правила розширення](skills/telegram-bot-ui/references/example-library.md), [як додавати приклади](CONTRIBUTING.md)).
+
+```bash
+python skills/telegram-bot-ui/scripts/example_library.py --query "event waitlist" --json
+python skills/telegram-bot-ui/examples/python/recipes/r80_87_product_journeys.py --scenario R81
+```
+
+Нові сценарії: заявки, події й список очікування, нагадування, обробка файлів,
+модерація, відгуки, бонусні бали й електронна черга. Каталог позначає кожне сімейство:
+готовий приклад, композиція або план.
 
 | Рецепт | Що ви отримаєте |
 |---|---|
@@ -283,7 +297,7 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 |---|---|
 | **Bot API** | звірено з офіційною документацією **Bot API 10.4** станом на **2026-11-15** — джерела й дати в [`references/official-sources.md`](skills/telegram-bot-ui/references/official-sources.md) |
 | **Середовища** | шляхи скілів, маніфести субагентів і плагінів та файли правил звірено з документацією кожного середовища станом на **2026-11-15** ([`docs/hosts.md`](docs/hosts.md)); плагін Claude Code проходить `claude plugin validate --strict` |
-| **Тести** | **393 на Python** і **31 на TypeScript** — запускаються офлайн у CI на Linux і Windows, плюс контрактні тести на справжніх пакетах aiogram і grammY |
+| **Тести** | **414 на Python** і **31 на TypeScript** — запускаються офлайн у CI на Linux і Windows, плюс контрактні тести на справжніх пакетах aiogram і grammY |
 | **Розбіжності** | файли входу для середовищ генеруються з `skills/telegram-bot-ui/SKILL.md` та єдиної таблиці маршрутизації скриптом `scripts/build_adapters.py`; CI падає, щойно вони розходяться |
 
 Що **поки не** перевірено — кажемо прямо:

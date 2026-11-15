@@ -42,6 +42,13 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 - `references/updates-and-delivery.md` (Look up the whole Bot API)
 - `references/bot-api-10.3-10.4.md` (Look up the whole Bot API)
 - `references/official-sources.md` (Look up the whole Bot API)
+- `references/example-library.md` (Product flows and use cases)
+- `recipes/use-cases.json` (Product flows and use cases)
+- `scripts/example_library.py` (Product flows and use cases)
+- `references/use-case-playbooks.md` (Product flows and use cases)
+- `references/onboarding-and-first-run.md` (Product flows and use cases)
+- `references/bot-archetypes.md` (Product flows and use cases)
+- `recipes/manifest.json` (Product flows and use cases)
 
 ## How to work
 
@@ -66,6 +73,9 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
      injection), approvals bound to one action and expiring;
    - every Bot API method, type and field exists in the catalog or the official docs.
 4. Rank findings by impact. Do not report style preferences as defects.
+   For an adapted example, inspect its declared base recipes and verify their
+   invariants survived the changes. Flag in-memory demos presented as durable
+   production integrations; distinguish documented, offline, live API and client evidence.
 
 ## Output
 

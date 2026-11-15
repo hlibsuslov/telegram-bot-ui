@@ -8,6 +8,7 @@ import runpy
 import subprocess
 import sys
 import unittest
+from unittest.mock import patch
 
 import _paths
 
@@ -86,7 +87,10 @@ class Recipes(unittest.TestCase):
         for f in sorted(os.listdir(folder)):
             if f.endswith(".py") and not f.startswith("_"):
                 with self.subTest(recipe=f), contextlib.redirect_stdout(io.StringIO()):
-                    runpy.run_path(os.path.join(folder, f), run_name="__main__")
+                    path = os.path.join(folder, f)
+                    # Each recipe is an independent CLI; do not leak unittest flags.
+                    with patch.object(sys, "argv", [path]):
+                        runpy.run_path(path, run_name="__main__")
 
     def test_payload_files_match_the_code(self):
         p = subprocess.run([sys.executable, os.path.join(_paths.EXAMPLES, "python", "export_payloads.py"), "--check"],

@@ -223,7 +223,21 @@ telegram-bot-ui»*.
 
 ## 🍳 Рецепты и примеры
 
-57 сквозных рецептов и мини-рецепты: готовы к адаптации и запускаются офлайн, без токена бота.
+65 нумерованных recipes и мини-рецепты. Восемь новых сценариев R80–R87 —
+офлайн-модели на Python с callback-интерфейсом; production-интеграции отмечены отдельно.
+
+Агент ищет основу в каталоге 40 семейств сценариев (`skills/telegram-bot-ui/recipes/use-cases.json`), переиспользует
+helpers или собирает несколько потоков и дописывает в проекте пользователя только недостающее
+([правила расширения](skills/telegram-bot-ui/references/example-library.md), [как добавлять примеры](CONTRIBUTING.md)).
+
+```bash
+python skills/telegram-bot-ui/scripts/example_library.py --query "мероприятие лист ожидания" --json
+python skills/telegram-bot-ui/examples/python/recipes/r80_87_product_journeys.py --scenario R81 --lang ru
+```
+
+Новые сценарии: заявки, мероприятия и лист ожидания, напоминания, обработка файлов,
+модерация, отзывы, бонусные баллы и электронная очередь. Каталог помечает каждое семейство:
+готовый пример, композиция или план.
 
 | Рецепт | Что получаете |
 |---|---|
@@ -284,7 +298,7 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 |---|---|
 | **Bot API** | сверено с официальной документацией **Bot API 10.4** **15.11.2026** — источники и даты в [`references/official-sources.md`](skills/telegram-bot-ui/references/official-sources.md) |
 | **Среды** | пути скиллов, манифесты сабагентов и плагина, файлы правил сверены с документацией каждой среды **15.11.2026** ([`docs/hosts.md`](docs/hosts.md)); плагин Claude Code проходит `claude plugin validate --strict` |
-| **Тесты** | **393 на Python** и **31 на TypeScript** — идут офлайн в CI на Linux и Windows, плюс контрактные тесты против настоящих пакетов aiogram и grammY |
+| **Тесты** | **414 на Python** и **31 на TypeScript** — идут офлайн в CI на Linux и Windows, плюс контрактные тесты против настоящих пакетов aiogram и grammY |
 | **Рассинхрон** | файлы для разных сред генерируются из `skills/telegram-bot-ui/SKILL.md` и одной таблицы маршрутов скриптом `scripts/build_adapters.py`; CI падает, если они устарели |
 
 Что **пока не проверено** — честно и прямо:

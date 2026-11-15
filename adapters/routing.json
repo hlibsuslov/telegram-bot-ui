@@ -46,8 +46,11 @@
     {
       "id": "use-cases",
       "title": "Product flows and use cases",
-      "summary": "shops, support, AI assistants, trackers, communities: stale buttons, double submit, audience leaks",
+      "summary": "shops, support, events, queues, AI assistants and 35 more families: find an example by intent; stale buttons, double submit, audience leaks",
       "docs": [
+        "references/example-library.md",
+        "recipes/use-cases.json",
+        "scripts/example_library.py",
         "references/use-case-playbooks.md",
         "references/onboarding-and-first-run.md",
         "references/bot-archetypes.md",
@@ -144,7 +147,8 @@
         "globs": [
           "skills/telegram-bot-ui/recipes/*.md",
           "skills/telegram-bot-ui/recipes/manifest.json",
-          "skills/telegram-bot-ui/recipes/registry.json"
+          "skills/telegram-bot-ui/recipes/registry.json",
+          "skills/telegram-bot-ui/recipes/use-cases.json"
         ]
       },
       {
@@ -242,7 +246,8 @@
         "publishing",
         "agent-ops",
         "widgets",
-        "api-lookup"
+        "api-lookup",
+        "use-cases"
       ],
       "description": "Reviews a diff of a Telegram bot against the telegram-bot-ui invariants: one action per button, preserved callback_data, audience safety, single finalization, widget limits, publishing approval, agent allowlists and injection handling, invented Bot API fields. Read-only; reports findings with file:line and the invariant broken.",
       "tools": [

@@ -34,7 +34,7 @@ FIXED = [
 ]
 MARKER = re.compile(r"^#\s*run-checks:(.*)$")
 NODE_TEST = re.compile(r"\.test\.(ts|mjs|js)$")
-SKIP_DIRS = {"node_modules", ".git", "__pycache__"}
+SKIP_DIRS = {"node_modules", ".git", "__pycache__", ".claude"}  # .claude: local agent worktrees
 
 
 def discovered_scripts() -> list[tuple[str, str, list[str]]]:

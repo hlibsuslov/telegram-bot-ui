@@ -9,6 +9,8 @@ import io
 import json
 import os
 import re
+import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -242,6 +244,17 @@ class InstallerTest(unittest.TestCase):
         out = self.run_install("--host", "all", "--scope", "project", "--with-instructions", "--dry-run")
         self.assertIn("[dry-run]", out)
         self.assertEqual(self.snapshot(), before)
+
+    def test_installed_example_library_is_discoverable(self):
+        self.run_install("--host", "codex", "--scope", "project")
+        root = self.p(".agents", "skills", "telegram-bot-ui")
+        for rel in ("recipes/use-cases.json", "references/example-library.md"):
+            self.assertTrue(os.path.isfile(os.path.join(root, rel)), rel)
+        result = subprocess.run([sys.executable, os.path.join(root, "scripts", "example_library.py"),
+                                 "--query", "waitlist", "--json"], cwd=self.project,
+                                capture_output=True, text=True, encoding="utf-8")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)[0]["id"], "events")
 
     def test_user_scope_locations_per_host(self):
         expected = {
