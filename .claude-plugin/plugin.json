@@ -20,6 +20,8 @@
     "agent-skills"
   ],
   "icon": "./assets/icon.png",
+  "privacyPolicyUrl": "https://github.com/hlibsuslov/telegram-bot-ui/blob/main/PRIVACY.md",
+  "supportUrl": "https://github.com/hlibsuslov/telegram-bot-ui/issues",
   "agents": [
     "./agents/claude/telegram-bot-designer.md",
     "./agents/claude/telegram-bot-builder.md",

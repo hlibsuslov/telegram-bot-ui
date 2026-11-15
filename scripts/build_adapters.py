@@ -357,6 +357,8 @@ def render_plugin(routing: dict) -> str:
         "license": p["license"],
         "keywords": p["keywords"],
         "icon": PLUGIN_ICON_PNG,
+        "privacyPolicyUrl": f"{routing['repository']}/blob/main/PRIVACY.md",
+        "supportUrl": f"{routing['repository']}/issues",
         "agents": [f"./agents/claude/{r['name']}.md" for r in routing["roles"]],
     }
     return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
@@ -401,6 +403,7 @@ def render_codex_plugin(routing: dict) -> str:
             "category": codex["plugin_category"],
             "capabilities": codex["plugin_capabilities"],
             "websiteURL": routing["repository"],
+            "privacyPolicyURL": f"{routing['repository']}/blob/main/PRIVACY.md",
             "defaultPrompt": [codex["default_prompt"]],
             "composerIcon": PLUGIN_ICON_SVG,
             "logo": PLUGIN_ICON_PNG,
