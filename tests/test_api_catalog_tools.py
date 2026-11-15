@@ -15,7 +15,7 @@ V = vp.Validator(API.cat)
 
 # Payload files with structural mismatches already reported to the maintainers.
 # The test tolerates them being fixed; it fails only on NEW mismatches.
-KNOWN_PAYLOAD_MISMATCHES = {("r04-shared-card-personal-panel.json", "editEphemeralMessageText")}
+KNOWN_PAYLOAD_MISMATCHES: set = set()
 
 
 class Lookup(unittest.TestCase):

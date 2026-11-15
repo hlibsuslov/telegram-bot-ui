@@ -68,7 +68,7 @@
     {
       "method": "editEphemeralMessageText",
       "params": {
-        "chat_id": null,
+        "chat_id": -1001234567890,
         "receiver_user_id": 111111111,
         "ephemeral_message_id": 1001,
         "text": "Your order: Margherita, no olives — $9.50",
