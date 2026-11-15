@@ -158,7 +158,7 @@ export const textMessage = (from: Params, text: string, o: { chatId?: number; ch
 
 // Shape of a request sequence without human-language text: what a twin must reproduce exactly.
 const TEXT_KEYS = new Set(["text", "title", "description", "label", "error_message", "short_description",
-  "input_field_placeholder"]);
+  "input_field_placeholder", "message_text"]);
 export function protocol(calls: { method: string; params: Params }[]) {
   const strip = (v: unknown): unknown => {
     if (Array.isArray(v)) return v.map(strip);

@@ -72,7 +72,7 @@ design heuristic of this skill.
    `on_chosen`, `on_callback`) on top of `examples/python/tgkit/flows.py` (`pack`, `UpdateDedup`,
    `btn`, `kb`, `I18n`). It does not use `ScreenFlow`: an inline message has no `message`, no
    chat id and no single owner, and a per-render version would make a second voter's tap stale
-   **[heuristic]**. No TypeScript twin.
+   **[heuristic]**. TypeScript twin: `examples/ts/usecases/inline.ts` (replays this payload; `examples/ts/usecases/usecases.test.ts`).
 6. **Sequence and state.**
    ```mermaid
    stateDiagram-v2
