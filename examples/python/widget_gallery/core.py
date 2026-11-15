@@ -72,6 +72,7 @@ class Ctx:
     now: float
     query: dict[str, Any]
     lang: str = "en"
+    memo: dict[str, Any] = field(default_factory=dict)   # server-only data of this widget (never sent)
 
 
 # decide(state, action, ctx) -> (new_state | None, answer). Raise PermissionError to refuse,
@@ -123,10 +124,13 @@ class GalleryBot:
     widgets: dict[str, str] = field(default_factory=dict)       # store key -> gallery name
     shared: dict[str, dict[str, Any]] = field(default_factory=dict)   # widget_id -> {spec, writer}
     outcomes: list[str] = field(default_factory=list)
+    memos: dict[str, dict[str, Any]] = field(default_factory=dict)   # store key or widget_id -> memo
 
     def send(self, name: str, chat_id: int, *, state: str = "default", state_override: dict | None = None,
-             widget_id: str | None = None) -> dict[str, Any]:
+             widget_id: str | None = None, html: str | None = None) -> dict[str, Any]:
+        """Send a gallery widget. `html`: another build of it, e.g. the user's language."""
         spec = SPECS[name]
+        html = html or spec.html
         demo = spec.demo
         st = demo["states"][state]
         chat_data = st.get("chatData")
@@ -144,11 +148,11 @@ class GalleryBot:
                 params["chat_data"] = enc(chat_data)
             msg = self.transport.call("sendSharedWidget", params)
             return msg
-        report = check_widget(spec.html, caption=demo["caption"], chat_data=enc(chat_data),
+        report = check_widget(html, caption=demo["caption"], chat_data=enc(chat_data),
                               public_data=enc(public_data))
         if not report.ok:
             raise ValueError("; ".join(report.errors))
-        params = {"chat_id": chat_id, "html": spec.html, "caption": demo["caption"]}
+        params = {"chat_id": chat_id, "html": html, "caption": demo["caption"]}
         for key, value in (("chat_data", chat_data), ("public_data", public_data)):
             if value is not None:
                 params[key] = enc(value)
@@ -171,10 +175,36 @@ class GalleryBot:
             self.widgets[key] = name
         return msg
 
+    def push(self, chat_id: int, message_id: int, state: dict[str, Any], *, caption: str | None = None) -> bool:
+        """A change that starts on the server (an alert, a job step): edit, then commit.
+        Mirrors the main fact into the caption when given (the chat list shows only it).
+        Returns False when the edit failed; the record is then unchanged."""
+        key = f"msg:{chat_id}:{message_id}"
+        record = self.store.records[key]
+        field_name = SPECS[self.widgets[key]].field
+        candidate = StateRecord(state=state, revision=record.revision + 1)
+        try:
+            self.transport.call("editMessageWidgetData", {
+                "chat_id": chat_id, "message_id": message_id,
+                field_name: encode_state({**state, "r": candidate.revision})})
+        except TelegramError as err:
+            if err.category != "not_modified":
+                return False
+        self.store.records[key] = candidate
+        if caption:
+            try:
+                self.transport.call("editMessageCaption", {"chat_id": chat_id, "message_id": message_id,
+                                                           "caption": caption})
+            except TelegramError as err:
+                if err.category != "not_modified":
+                    raise
+        return True
+
     # -------------------------------------------------------------- queries
 
     def handle(self, update: dict[str, Any]) -> str:
-        q = update.get("widget_query") or update.get("shared_widget_query")
+        # An Update, or the inner query object a router hands over.
+        q = update.get("widget_query") or update.get("shared_widget_query") or (update if "data" in update else None)
         if q is None:
             return "ignored"
         wid = q.get("widget_id")
@@ -191,8 +221,9 @@ class GalleryBot:
         self.outcomes.append(outcome)
         return outcome
 
-    def _ctx(self, q: dict[str, Any]) -> Ctx:
-        return Ctx(user_id=q["from"]["id"], now=self.clock(), query=q, lang=q["from"].get("language_code", "en"))
+    def _ctx(self, q: dict[str, Any], key: str) -> Ctx:
+        return Ctx(user_id=q["from"]["id"], now=self.clock(), query=q, lang=q["from"].get("language_code", "en"),
+                   memo=self.memos.setdefault(key, {}))
 
     def _decider(self, spec: Spec, key: str):
         def decide(query, action, record):
@@ -202,7 +233,7 @@ class GalleryBot:
             if act.verb in spec.stale_verbs and act.rev != record.revision:
                 return None, {"err": "stale", "with_state": True}
             try:
-                new, answer = spec.decide(dict(record.state), act, self._ctx(query))
+                new, answer = spec.decide(dict(record.state), act, self._ctx(query, key))
             except BadRequest:
                 return None, {"err": "bad_request", "with_state": True}
             return new, {"with_state": True, **answer}
@@ -224,7 +255,7 @@ class GalleryBot:
         spec, record = entry["spec"], entry["record"]
         act = parse(q.get("data", ""))
         try:
-            new, answer = spec.decide(dict(record.state), act, self._ctx(q))
+            new, answer = spec.decide(dict(record.state), act, self._ctx(q, "shared:" + q["widget_id"]))
             ok = True
         except (BadRequest, PermissionError) as err:
             new, answer, ok = None, {"err": "bad_request" if isinstance(err, BadRequest) else "not_allowed"}, False
