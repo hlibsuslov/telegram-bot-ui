@@ -31,6 +31,7 @@
       "Write"
     ],
     "websiteURL": "https://github.com/hlibsuslov/telegram-bot-ui",
+    "privacyPolicyURL": "https://github.com/hlibsuslov/telegram-bot-ui/blob/main/PRIVACY.md",
     "defaultPrompt": [
       "Use $telegram-bot-ui to audit this Telegram bot's screens and propose fixes."
     ],
