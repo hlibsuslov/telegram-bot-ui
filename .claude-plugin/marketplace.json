@@ -1,0 +1,14 @@
+{
+  "name": "telegram-bot-ui",
+  "description": "Marketplace for the telegram-bot-ui plugin.",
+  "owner": {
+    "name": "hlibsuslov"
+  },
+  "plugins": [
+    {
+      "name": "telegram-bot-ui",
+      "source": "./",
+      "description": "Design, build, review and operate Telegram bots with the newest Bot API: bot screens and keyboards, streaming AI replies, HTML widgets, premium emoji, product flows, channel publishing, agent-operated bots and Bot API lookups. Bundles the telegram-bot-ui skill and five subagents."
+    }
+  ]
+}

@@ -41,7 +41,7 @@ class Size(unittest.TestCase):
             encode_state({"t": "я" * 600})
 
     def test_shipped_widgets_are_valid_for_production(self):
-        for name in sorted(os.listdir(WIDGETS)):
+        for name in sorted(n for n in os.listdir(WIDGETS) if n.endswith(".html")):
             with self.subTest(widget=name):
                 rep = check_widget(_paths.read("examples", "widgets", name), caption="Caption")
                 self.assertEqual(rep.errors, [])

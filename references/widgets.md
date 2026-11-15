@@ -11,8 +11,28 @@ web page. "A bot has no CSS" still holds for regular messages; widgets are the e
 only for their own bubble.
 
 Recipes: [05 private widget](../recipes/05-private-widget.md) ·
-[06 shared widget](../recipes/06-shared-widget.md) · [07 wallet](../recipes/07-wallet.md).
-Checker: `scripts/validate_widget.py`.
+[06 shared widget](../recipes/06-shared-widget.md) · [07 wallet](../recipes/07-wallet.md) ·
+[50 dashboard](../recipes/50-monitoring-dashboard-widget.md) · [51 booking](../recipes/51-booking-widget.md) ·
+[52 shop to checkout](../recipes/52-shop-card-to-checkout.md) · [53 shared quiz and leaderboard](../recipes/53-shared-quiz-leaderboard.md) ·
+[54 job progress](../recipes/54-job-progress-widget.md) · [55 design a new widget](../recipes/55-design-a-widget.md).
+Checker: `scripts/validate_widget.py` (`--strict` adds `scripts/widget_lint.py`).
+Design: [widget-design-system.md](widget-design-system.md) · state and interaction:
+[widget-patterns.md](widget-patterns.md).
+
+## Gallery, kit and tools (re-checked 2026-11-15)
+
+| Piece | Path | What it gives an agent |
+|---|---|---|
+| Kit | `examples/widgets/_kit/` (`tokens.css`, `runtime.js`, `i18n.js`, `chart.js`) | theme tokens and primitives, state with revisions, `K.ask` with every outcome, `K.sync`, `Intl` formatting, SVG sparkline/bars |
+| Sources | `examples/widgets/src/*.html` | readable widgets with `<!--@kit …-->` / `/*@kit …*/` includes and `/*@lang xx*/…/*@end*/` string blocks |
+| Built widgets | `examples/widgets/*.html` | minified, self-contained, English build; what `sendWidget` sends |
+| Demo state | `examples/widgets/demo/*.json` | caption, fallback keyboard, named states, sample request data |
+| Handlers | `examples/python/widget_gallery/h_*.py` + `core.py` | `decide()` per widget; owner check, stale revisions, answer once, coalesced shared edits |
+| Build | `py -3 scripts/build_widget.py SRC --strict --lang ru --payload p.json` | inlines the kit, prunes unused kit CSS, minifies, measures zlib-9, fails on runtime gaps, writes a `sendWidget`/`sendSharedWidget` payload |
+| Preview | `py -3 scripts/preview_widget.py SRC [--serve 8765]` | a **mock** runtime page: schemes, RTL, 200–600 px, states, places, bot failures, request log |
+
+`py -3 scripts/build_widget.py --all --check` rebuilds the gallery, checks every language against
+the 3800-byte working budget and fails if a committed build drifted from its source.
 
 ## When a widget is the right surface
 
@@ -150,8 +170,9 @@ treat code and `public_data` as public; respect `prefers-reduced-motion`. Heuris
 
 ## Testing
 
-Offline: `validate_widget.py`, `tests/test_widgets.py`, the browser stand-in from the Guide
-(a browser is **not** a Telegram client — it renders things apps remove). Live: production
+Offline: `validate_widget.py --strict`, `build_widget.py --all --check`, `tests/test_widgets.py`,
+`tests/test_widget_*.py`, and `preview_widget.py` — an extended version of the Guide's browser
+stand-in (a browser is **not** a Telegram client — it renders things apps remove). Live: production
 private chat; groups/inline/forwards on the test server; both color schemes, largest text, a
 narrow phone, desktop with mouse, RTL, an old phone. Report which of these were actually done.
 

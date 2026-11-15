@@ -127,7 +127,8 @@ class PersonalPanels:
         except (TelegramError, OutcomeUnknown) as err:
             return self._fallback(cq, text, err)
         self.panels[(chat_id or 0, user_id)] = Panel(
-            owner_id=user_id, chat_id=(msg.get("chat") or {}).get("id", chat_id),
+            # 10.4 sends may omit chat_id, but editEphemeralMessage* still requires it.
+            owner_id=user_id, chat_id=(msg.get("chat") or {}).get("id") or chat_id,
             ephemeral_message_id=msg.get("ephemeral_message_id"),
             created_at=self.clock())
         self.transport.call("answerCallbackQuery", {"callback_query_id": cq["id"]})

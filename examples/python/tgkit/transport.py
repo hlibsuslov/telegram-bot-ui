@@ -65,6 +65,14 @@ class FakeTransport:
         return [p for m, p in self.calls if m == method]
 
     def _default(self, method: str, params: dict[str, Any]) -> Any:
+        if method == "sendMediaGroup":          # real API: an array of Messages
+            first = self._next_message_id + 1
+            self._next_message_id += len(params.get("media") or [None])
+            return [{"message_id": i, "date": 0, "chat": {"id": params.get("chat_id")}}
+                    for i in range(first, self._next_message_id + 1)]
+        if method == "copyMessage":             # real API: a MessageId object
+            self._next_message_id += 1
+            return {"message_id": self._next_message_id}
         if method.startswith("send") and "Draft" not in method:
             self._next_message_id += 1
             chat_id = params.get("chat_id")

@@ -15,3 +15,9 @@ desktop.ini
 
 # Node
 node_modules/
+
+# Secrets and local state written by the example tools
+.env
+.env.*
+.tg_post_ledger.json
+.agent_bridge*.json

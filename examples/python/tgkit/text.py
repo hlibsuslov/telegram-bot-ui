@@ -15,7 +15,7 @@ MDV2_SPECIAL = set("_*[]()~`>#+-=|{}.!\\")
 
 
 def escape_html(s: str) -> str:
-    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
 def escape_markdown_v2(s: str) -> str:
