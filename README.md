@@ -8,7 +8,7 @@ Devin, and any agent that reads `AGENTS.md` or a system prompt.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Agent Skill](https://img.shields.io/badge/format-Agent%20Skills-8A2BE2.svg)](https://github.com/anthropics/skills)
-[![Verified: Bot API 10.4](https://img.shields.io/badge/Telegram%20Bot%20API-10.4%20verified%202026--11--12-26A5E4.svg)](https://core.telegram.org/bots/api-changelog)
+[![Verified: Bot API 10.4](https://img.shields.io/badge/Telegram%20Bot%20API-10.4%20verified%202026--11--15-26A5E4.svg)](https://core.telegram.org/bots/api-changelog)
 [![checks](https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml/badge.svg)](https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml)
 
 🇷🇺 / 🇺🇦 По-русски: [README.ru.md](README.ru.md)
@@ -20,11 +20,12 @@ Devin, and any agent that reads `AGENTS.md` or a system prompt.
 | Capability | What the agent gets right |
 |---|---|
 | **Build bot interfaces** | texts, menus, inline and reply keyboards, colored and disabled buttons, forms, navigation, streaming AI answers with Stop, private replies in groups, Rich Messages and tables, formatting, localization |
-| **Product flows** | shops, support, bookings, AI assistants, trackers: no stale "Pay" buttons, no double orders, no personal data leaking into groups <!-- CONFIRM: recipes 20-29 / 60-69 and references/use-case-playbooks.md --> |
-| **Publish to channels** | compose, validate, preview, approve and schedule channel posts; never post twice after a timeout <!-- CONFIRM: scripts/tg_post.py, recipes 30-39, references/publishing-pipeline.md --> |
-| **Operate as an agent through a bot** | drive an agent from Telegram with an operator allowlist, approval buttons bound to one action, and inbound messages treated as data, not instructions <!-- CONFIRM: recipes 40-49, examples/python/agent_bridge/, examples/mcp/telegram-bridge/ --> |
-| **Build HTML widgets** | Bot API 10.4 widgets inside messages: size limit, production context, caption and text fallback, live cards, shared polls, wallet flows <!-- CONFIRM: recipes 50-59, scripts/build_widget.py, scripts/preview_widget.py --> |
-| **Look up the whole Bot API** | methods, types and fields from a local catalog; validate a payload before sending; refuse to invent a field <!-- CONFIRM: data/bot-api/, scripts/tg_api_lookup.py, scripts/validate_payload.py --> |
+| **Product flows** | shops, support, bookings, AI assistants, trackers: no stale "Pay" buttons, no double orders, no personal data leaking into groups (15 product recipes) |
+| **Publish to channels** | compose, validate, preview, approve and schedule channel posts; never post twice after a timeout (`scripts/tg_post.py`, 10 recipes) |
+| **Operate as an agent through a bot** | drive an agent from Telegram with an operator allowlist, approval buttons bound to one action, and inbound messages treated as data, not instructions (`agent_bridge` CLI, MCP server, Claude Code and Codex hooks, 10 recipes) |
+| **Build HTML widgets** | Bot API 10.4 widgets inside messages: size limit, production context, caption and text fallback, live cards, shared polls, wallet flows (18 ready widgets, build and preview tools, 7 recipes) |
+| **Premium emoji** | one custom emoji pack across buttons, texts, rich messages and posts: real ids resolved from the pack, all-or-nothing fallback when the bot is not eligible (6 recipes) |
+| **Look up the whole Bot API** | methods, types and fields from a local catalog; validate a payload before sending; refuse to invent a field (193 methods, 425 types, refreshable from the official docs) |
 
 And it knows **when not to** use something: no widget for a three-button menu, no table for two
 facts, no group widgets in production (they are test-server only today), no publishing without a
@@ -198,7 +199,15 @@ Ready to adapt and runnable offline (no bot token):
 | [Tracker bot upgrade](recipes/09-tracker-bot.md) | a real bot moved to the new API |
 | [Mini-recipes](recipes/mini-recipes.md) | gifts, communities, share themes, managed bots, verification |
 
-<!-- CONFIRM: add the rows for the new recipe ranges (20-29 use cases, 30-39 publishing, 40-49 agent operation, 50-59 widgets, 60-69 use cases) once merged; full index: recipes/README.md -->
+| Range | You get |
+|---|---|
+| [20-29, 60-64 Products](references/use-case-playbooks.md) | shop with Stars, support desk, booking, onboarding, settings, subscription, learning, assistant, expense split, community, inline mode, business account, alerts, search, delivery tracker |
+| [30-39 Channel publishing](references/publishing-pipeline.md) | autoposter, long read, album, poll, pinned digest, editorial approval, cross-posting, mailing, comments, corrections |
+| [40-49 Agent through its bot](references/agent-operated-bots.md) | deploy approval, live build status, nightly digest, ask and continue, streamed research with Stop, job topics, team group, incident alerts, coding-agent hooks |
+| [50-56 Widgets](references/widget-patterns.md) | monitoring dashboard, booking, shop card, shared quiz, job progress, design a widget from words, REST data browser |
+| [70-75 Premium emoji](references/emoji-packs.md) | restyle to one pack, icons from zero, channel series, mixed eligibility, Premium lapse, pack migration |
+
+Full index by task, API symbol, version and context: [`recipes/README.md`](recipes/README.md).
 
 Code: Python ([`examples/python/tgkit`](examples/python/tgkit), standard library) and TypeScript
 ([`examples/ts`](examples/ts), no dependencies), plus adapters for **aiogram 3.31** and **grammY 1.46**.
@@ -221,11 +230,18 @@ python scripts/install.py --host all --dry-run      # where the skill would be i
 python scripts/run_checks.py                        # every check in this repository
 ```
 
-<!-- CONFIRM: tg_post.py, tg_api_lookup.py, validate_payload.py, build_widget.py, preview_widget.py usage lines -->
+```bash
+python scripts/tg_api_lookup.py show sendWidget      # any method or type, offline
+python scripts/validate_payload.py request.json      # structural check against the catalog
+python scripts/tg_post.py preview post.json          # render a channel post (publishing is opt-in)
+python scripts/build_widget.py src.html --strict     # build a widget from the kit, report its size
+python scripts/preview_widget.py widget.html         # mock preview page (not a real client)
+python scripts/emoji_packs.py capture                # how to collect real custom emoji ids
+```
 
 ## Quality and honesty
 
-- Verified against the **official Bot API 10.4 docs on 2026-11-12**; sources and dates in
+- Verified against the **official Bot API 10.4 docs on 2026-11-15**; sources and dates in
   [`references/official-sources.md`](references/official-sources.md).
 - Host formats (skill paths, subagent and plugin manifests, rule files) verified against each
   host's documentation on **2026-11-15** — [`docs/hosts.md`](docs/hosts.md). The Claude Code
@@ -234,7 +250,7 @@ python scripts/run_checks.py                        # every check in this reposi
 - Host entry files are generated from `SKILL.md` and one routing table by
   `scripts/build_adapters.py`; CI fails when they drift.
 - Offline Python and TypeScript test suites run on Linux and Windows in CI, plus contract tests
-  against the real aiogram and grammY packages. <!-- CONFIRM: test counts after merge -->
+  against the real aiogram and grammY packages: 383 Python and 28 TypeScript tests.
 - **Agent evals are prepared, not yet run.** [`evals/`](evals/) holds activation prompts (English
   and Russian, with and without API names) and behavioural tasks with pass criteria for every
   capability; `scripts/run_evals.py` validates them and can execute the activation set against

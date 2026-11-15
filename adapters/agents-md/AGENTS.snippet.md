@@ -3,7 +3,7 @@
 
 For any task about a Telegram bot's interface, a bot operated by an agent, publishing to a Telegram channel, Telegram HTML widgets, or Bot API methods and fields, read `.agents/skills/telegram-bot-ui/SKILL.md` first and follow its routing; load only the references the task needs. If that file is missing, say so instead of working from memory.
 
-Covers: build and audit bot interfaces; product flows and use cases; publish to Telegram channels; operate as an agent through a bot; build HTML widgets; look up the whole Bot API.
+Covers: build and audit bot interfaces; product flows and use cases; publish to Telegram channels; operate as an agent through a bot; build HTML widgets; use premium emoji packs; look up the whole Bot API.
 
 Rules that apply even before the skill is loaded:
 

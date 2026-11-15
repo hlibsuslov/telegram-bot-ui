@@ -16,6 +16,7 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 - `references/format-selection.md` (Build and audit bot interfaces)
 - `recipes/README.md` (Build and audit bot interfaces)
 - `references/use-case-playbooks.md` (Product flows and use cases)
+- `references/onboarding-and-first-run.md` (Product flows and use cases)
 - `references/bot-archetypes.md` (Product flows and use cases)
 - `recipes/manifest.json` (Product flows and use cases)
 
