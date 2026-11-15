@@ -1,7 +1,6 @@
-<p align="center">
-  <img alt="" src="assets/icon.svg" width="96" height="96">
-</p>
-<h1 align="center">Telegram Bot UI</h1>
+<h1 align="center">
+  <img alt="" src="assets/icon.svg" width="44" height="44" align="center">&nbsp;Telegram Bot UI
+</h1>
 
 <a href="https://github.com/hlibsuslov/telegram-bot-ui">
   <picture>
@@ -37,7 +36,7 @@
 </p>
 
 <p align="center">
-  🌐 <b>English</b> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a>
+  🌐 <b>English</b> · <a href="README.uk.md">Українська</a> · <a href="README.ru.md">Русский</a>
 </p>
 
 ---
