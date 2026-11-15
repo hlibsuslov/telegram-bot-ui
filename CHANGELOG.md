@@ -5,6 +5,14 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## 2.2.1 - 2026-11-15
+
+- `PRIVACY.md`, linked from the plugin manifests together with a support URL.
+- Directory edition: `scripts/build_directory_edition.py` builds a documentation-only copy of the
+  plugin (skill, references, recipes, JSON Bot API catalog, Claude subagents; no scripts or runnable
+  examples) and `.github/workflows/directory-edition.yml` publishes it to the `claude-directory`
+  branch for the Claude plugin directory.
+
 ## 2.2.0 - 2026-11-15
 
 - Widget kit: `K.ask` no longer locks the widget when `request()` throws `TypeError`
