@@ -13,6 +13,9 @@ Each release is tagged `v<version>`.
 - Bot style profile (`skills/telegram-bot-ui/references/bot-style-profile.md`): the knobs that tune a bot, each
   with its evidence. `scripts/style_profile.py` probes a project's style signals without
   opening secrets, scaffolds a profile and checks it against API limits and the skill's rules.
+- README (en, ru, uk): plugin icon and name above the banner, release and stars badges, install
+  with the GitHub CLI (`gh skill install hlibsuslov/telegram-bot-ui`); `docs/assets/social-preview.png`
+  for the repository's link preview.
 
 ## 2.0.1 - 2026-11-15
 
