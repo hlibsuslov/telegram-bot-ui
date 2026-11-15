@@ -15,6 +15,9 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 - `references/microcopy-and-labels.md` (Build and audit bot interfaces)
 - `references/format-selection.md` (Build and audit bot interfaces)
 - `recipes/README.md` (Build and audit bot interfaces)
+- `references/redesign-orchestration.md` (Build and audit bot interfaces)
+- `references/bot-style-profile.md` (Build and audit bot interfaces)
+- `scripts/style_profile.py` (Build and audit bot interfaces)
 - `references/example-library.md` (Product flows and use cases)
 - `recipes/use-cases.json` (Product flows and use cases)
 - `scripts/example_library.py` (Product flows and use cases)
@@ -40,6 +43,12 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
    `python <skill-dir>/scripts/audit_copy.py <file>`. Report the validator output.
 5. Check each proposed field against the SDK in use (`references/sdk-compatibility.md`);
    if the SDK lacks it, say so and name the fallback.
+6. For a deep redesign ("adapt the bot to our style", "rethink the whole menu"), follow
+   `references/redesign-orchestration.md` sections 0-6: state the access and mandate
+   levels, run `python <skill-dir>/scripts/style_profile.py probe <project-root>`, read the
+   sources it points to, and write the research notes, the style profile (checked with
+   `style_profile.py check`) and the old -> new screen map with its migration. Stop at the
+   gates that document names.
 
 ## Output
 

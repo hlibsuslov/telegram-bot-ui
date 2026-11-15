@@ -5,6 +5,18 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## 2.1.0 - 2026-11-15
+
+- Deep redesign path (`skills/telegram-bot-ui/references/redesign-orchestration.md`): access and mandate levels,
+  project style research, brand mapped onto what Telegram allows, a new menu structure with
+  a migration for old `callback_data`, commands and deep links, and a tuning loop.
+- Bot style profile (`skills/telegram-bot-ui/references/bot-style-profile.md`): the knobs that tune a bot, each
+  with its evidence. `scripts/style_profile.py` probes a project's style signals without
+  opening secrets, scaffolds a profile and checks it against API limits and the skill's rules.
+- README (en, ru, uk): plugin icon and name above the banner, release and stars badges, install
+  with the GitHub CLI (`gh skill install hlibsuslov/telegram-bot-ui`); `docs/assets/social-preview.png`
+  for the repository's link preview.
+
 ## 2.0.1 - 2026-11-15
 
 - Plugin icon: `assets/icon.svg` (Codex `interface.composerIcon`) and a 512 px

@@ -1,3 +1,8 @@
+<p align="center">
+  <img alt="" src="assets/icon.svg" width="96" height="96">
+</p>
+<h1 align="center">Telegram Bot UI</h1>
+
 <a href="https://github.com/hlibsuslov/telegram-bot-ui">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-ru-dark.png">
@@ -7,6 +12,8 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="Лицензия: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <a href="https://github.com/hlibsuslov/telegram-bot-ui/releases/latest"><img alt="Последний релиз" src="https://img.shields.io/github/v/release/hlibsuslov/telegram-bot-ui?color=3B82F6"></a>
+  <a href="https://github.com/hlibsuslov/telegram-bot-ui/stargazers"><img alt="Звёзды на GitHub" src="https://img.shields.io/github/stars/hlibsuslov/telegram-bot-ui?style=flat&color=22C55E"></a>
   <a href="https://github.com/anthropics/skills"><img alt="Формат: Agent Skills" src="https://img.shields.io/badge/format-Agent%20Skills-8A2BE2.svg"></a>
   <a href="https://core.telegram.org/bots/api-changelog"><img alt="Telegram Bot API 10.4, сверено 2026-11-15" src="https://img.shields.io/badge/Bot%20API-10.4%20verified%202026--11--15-26A5E4.svg"></a>
   <a href="https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml"><img alt="checks" src="https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml/badge.svg"></a>
@@ -42,7 +49,13 @@
 /plugin install telegram-bot-ui --marketplace hlibsuslov/telegram-bot-ui
 ```
 
-**Любой другой агент** — один раз склонируйте репозиторий, а установщик сам разложит файлы
+**Любой агент через GitHub CLI** (gh 2.96 или новее) — он сам спросит, для каких агентов ставить:
+
+```bash
+gh skill install hlibsuslov/telegram-bot-ui
+```
+
+**Без GitHub CLI** — один раз склонируйте репозиторий, а установщик сам разложит файлы
 (Python без зависимостей; в Windows вместо `python` пишите `py -3`):
 
 ```bash
@@ -165,6 +178,20 @@ git clone https://github.com/hlibsuslov/telegram-bot-ui.git && cp -r telegram-bo
 
 Только для одного проекта: скопируйте папку в `<ваш-репозиторий>/.claude/skills/telegram-bot-ui`.
 Чтобы добавить и сабагентов, используйте установщик ниже.
+
+</details>
+
+<details>
+<summary><b>Любая среда — GitHub CLI (<code>gh skill</code>, gh 2.96 или новее)</b></summary>
+
+```bash
+gh skill install hlibsuslov/telegram-bot-ui telegram-bot-ui --agent claude-code --scope user
+```
+
+`--agent` принимает `claude-code`, `codex`, `cursor`, `gemini-cli`, `github-copilot`, `antigravity`,
+`cline`, `opencode` и ещё десятки агентов (`gh skill install --help`); без `--scope user` скилл ставится в
+текущий репозиторий. Ставится последний релиз; закрепить версию — `--pin v2.1.0`, обновить —
+`gh skill update`. Сабагенты так не ставятся: для них плагин Claude Code или установщик ниже.
 
 </details>
 

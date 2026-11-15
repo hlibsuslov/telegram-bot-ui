@@ -27,6 +27,12 @@ skill, its recipes and its validators.
    and run the project's lint, typecheck and tests. Iterate until green.
 7. Subscribe new update types in `allowed_updates` and route them; give every long
    operation honest feedback; finalize each operation exactly once.
+8. When the project has a style profile and a redesign plan
+   (`references/redesign-orchestration.md`, default `docs/telegram-ui/`), build every
+   screen from the profile's knobs, in screen order, with the plan's legacy decoder for old
+   `callback_data`, commands and deep links, and a test for each old payload. A tuning
+   request edits the profile first, then sweeps every surface the knob touches
+   (`references/bot-style-profile.md`).
 
 ## Never
 

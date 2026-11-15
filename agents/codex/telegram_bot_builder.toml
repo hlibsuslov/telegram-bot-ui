@@ -15,6 +15,9 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 - `references/microcopy-and-labels.md` (Build and audit bot interfaces)
 - `references/format-selection.md` (Build and audit bot interfaces)
 - `recipes/README.md` (Build and audit bot interfaces)
+- `references/redesign-orchestration.md` (Build and audit bot interfaces)
+- `references/bot-style-profile.md` (Build and audit bot interfaces)
+- `scripts/style_profile.py` (Build and audit bot interfaces)
 - `references/example-library.md` (Product flows and use cases)
 - `recipes/use-cases.json` (Product flows and use cases)
 - `scripts/example_library.py` (Product flows and use cases)
@@ -61,6 +64,12 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
    and run the project's lint, typecheck and tests. Iterate until green.
 7. Subscribe new update types in `allowed_updates` and route them; give every long
    operation honest feedback; finalize each operation exactly once.
+8. When the project has a style profile and a redesign plan
+   (`references/redesign-orchestration.md`, default `docs/telegram-ui/`), build every
+   screen from the profile's knobs, in screen order, with the plan's legacy decoder for old
+   `callback_data`, commands and deep links, and a test for each old payload. A tuning
+   request edits the profile first, then sweeps every surface the knob touches
+   (`references/bot-style-profile.md`).
 
 ## Never
 

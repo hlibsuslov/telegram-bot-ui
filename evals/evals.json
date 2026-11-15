@@ -591,6 +591,32 @@
       "why": "feedback, no method named"
     },
     {
+      "id": "UI3",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Переосмысли всё меню нашего бота и адаптируй его под стилистику проекта, если сможешь — изучи сам проект.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/redesign-orchestration.md",
+        "references/bot-style-profile.md"
+      ],
+      "why": "deep redesign path with project style research"
+    },
+    {
+      "id": "UI4",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Make our Telegram bot feel like the rest of our product, then let me tune how chatty it is.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/redesign-orchestration.md",
+        "references/bot-style-profile.md"
+      ],
+      "why": "brand adaptation plus tuning knobs"
+    },
+    {
       "id": "UIN1",
       "area": "out-of-scope",
       "lang": "ru",
@@ -1254,6 +1280,27 @@
         "widgets in groups for production",
         "four messages kept",
         "tables for 4 facts"
+      ]
+    },
+    {
+      "id": "B15",
+      "area": "ui",
+      "lang": "en",
+      "request": "Rethink our bot's whole menu so it matches our web app's design.",
+      "context": "Repo with a grammY bot, a web app with Tailwind tokens and DESIGN.md, en/ru locales, a .env file, and users holding old messages with old buttons.",
+      "must": [
+        "states access and mandate levels before changing anything",
+        "runs the style probe and cites sources for brand and voice decisions",
+        "maps the brand onto Telegram surfaces and records non-applicable traits instead of approximating colour",
+        "writes a style profile that passes style_profile.py check",
+        "produces an old -> new screen map and keeps a legacy decoder for old callback_data, commands and deep links",
+        "asks only at the voice, removal and contract gates"
+      ],
+      "critical_failures": [
+        "reads .env values or credentials to research the project",
+        "puts brand hex colours on buttons or fakes them with coloured emoji",
+        "breaks old messages' buttons or published deep links",
+        "changes callback_data without an M4 mandate and a migration"
       ]
     },
     {

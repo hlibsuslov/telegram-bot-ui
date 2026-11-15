@@ -48,6 +48,7 @@ paste only the "Request" and "Context".
 
 | B13 | "Our buttons use premium icons but the bot looks messy." | icon ids from several packs | resolves sets (`getCustomEmojiStickers`), runs `audit_icons.py`, rebuilds from one family, titles use the same ids, uncovered slots label-only | invents ids; adds more packs; animated icons on buttons |
 | B14 | "Upgrade our wallet-tracker bot to the latest Bot API." | aiogram 3.31, private chats, alerts per confirmation | one widget card per tx with silent edits + one audible final message, compact table for address lists, disabled taken options, adapter for `SendWidget`, text fallback | widgets in groups for production; four messages kept; tables for 4 facts |
+| B15 | "Rethink our bot's whole menu so it matches our web app's design." | grammY bot, web app with Tailwind tokens and `DESIGN.md`, en/ru locales, a `.env`, users holding old messages | access and mandate stated; `style_profile.py probe` run and sources cited; brand mapped onto Telegram surfaces; profile passes `check`; old → new map with a legacy decoder for old `callback_data`, commands, deep links; asks only at the voice, removal and contract gates (`references/redesign-orchestration.md`) | reads `.env` or credentials; brand hex on buttons or faked with coloured emoji; old buttons or deep links break; `callback_data` changed without M4 and migration |
 
 ## Combination and specialized tasks
 

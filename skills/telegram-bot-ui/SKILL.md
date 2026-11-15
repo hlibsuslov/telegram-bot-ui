@@ -4,7 +4,7 @@ description: "Telegram bot UI/UX skill, updated for every Bot API release. Desig
 license: MIT
 metadata:
   author: hlibsuslov
-  version: "2.0.1"
+  version: "2.1.0"
 ---
 
 # Telegram Bot UI
@@ -46,6 +46,7 @@ pipelines, Mini App front-end internals. Microsoft `.rtf` files.
 | The user wants | Start here | Recipes |
 |---|---|---|
 | Better screens, keyboards, wording, feedback in an existing bot | core workflow below, `references/navigation-and-flows.md` | 01-09 |
+| Fit the bot to the project's style, rethink every menu, tune it | `references/redesign-orchestration.md` | — |
 | "Build me a bot for X" (shop, support, booking, learning, community…) | `references/example-library.md`, `recipes/use-cases.json`, `references/use-case-playbooks.md` | 20-29, 60-64, 80-87 |
 | Posts in a channel, digests, mailings, editorial approval | `references/publishing-pipeline.md`, `references/channel-post-design.md` | 30-39 |
 | The agent itself reports, asks, waits for approval over Telegram | `references/agent-operated-bots.md`, `references/agent-bot-security.md` | 40-49 |
@@ -209,6 +210,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 - Spotting when text should be a table, list, heading or collapsible block, and when to
   act, offer or ask → `references/content-shape-detection.md`
 - Auditing an existing bot: inventory, diagnose, rank, propose → `references/auditing-existing-bots.md`
+- Brand-fit redesign, menu rethink, migration → `references/redesign-orchestration.md`; knobs, `scripts/style_profile.py` → `references/bot-style-profile.md`
 - Colors, emphasis, layout and grouping → `references/buttons-and-styles.md`
 - Inline keyboards, `callback_data`, pagination → `references/inline-keyboards.md`
 - Reply keyboards, `ForceReply`, placeholders → `references/reply-keyboards.md`

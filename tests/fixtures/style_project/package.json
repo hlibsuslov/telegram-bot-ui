@@ -1,0 +1,5 @@
+{
+  "name": "northwind-bot",
+  "private": true,
+  "dependencies": {"grammy": "^1.38.0"}
+}

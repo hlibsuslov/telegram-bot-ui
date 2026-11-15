@@ -15,6 +15,9 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 - `references/microcopy-and-labels.md` (Build and audit bot interfaces)
 - `references/format-selection.md` (Build and audit bot interfaces)
 - `recipes/README.md` (Build and audit bot interfaces)
+- `references/redesign-orchestration.md` (Build and audit bot interfaces)
+- `references/bot-style-profile.md` (Build and audit bot interfaces)
+- `scripts/style_profile.py` (Build and audit bot interfaces)
 - `references/channel-post-design.md` (Publish to Telegram channels)
 - `references/publishing-pipeline.md` (Publish to Telegram channels)
 - `references/channels-and-broadcasting.md` (Publish to Telegram channels)
@@ -68,7 +71,10 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
    - publishing: explicit approval bound to the exact content, idempotent publish;
    - agent-operated bots: operator allowlist, inbound text treated as data (prompt
      injection), approvals bound to one action and expiring;
-   - every Bot API method, type and field exists in the catalog or the official docs.
+   - every Bot API method, type and field exists in the catalog or the official docs;
+   - with a style profile in the project: `scripts/style_profile.py check` passes, the
+     changed screens follow its knobs, and every old payload in the redesign plan still
+     gets an answer.
 4. Rank findings by impact. Do not report style preferences as defects.
    For an adapted example, inspect its declared base recipes and verify their
    invariants survived the changes. Flag in-memory demos presented as durable

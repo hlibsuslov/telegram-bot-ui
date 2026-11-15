@@ -4,7 +4,7 @@
   "display_name": "Telegram Bot UI",
   "repository": "https://github.com/hlibsuslov/telegram-bot-ui",
   "plugin": {
-    "version": "2.0.1",
+    "version": "2.1.0",
     "description": "Design, build, review and operate Telegram bots with the newest Bot API: bot screens and keyboards, streaming AI replies, HTML widgets, premium emoji, product flows, channel publishing, agent-operated bots and Bot API lookups. Bundles the telegram-bot-ui skill and five subagents.",
     "author": "hlibsuslov",
     "license": "MIT",
@@ -40,7 +40,10 @@
         "references/buttons-and-styles.md",
         "references/microcopy-and-labels.md",
         "references/format-selection.md",
-        "recipes/README.md"
+        "recipes/README.md",
+        "references/redesign-orchestration.md",
+        "references/bot-style-profile.md",
+        "scripts/style_profile.py"
       ]
     },
     {
