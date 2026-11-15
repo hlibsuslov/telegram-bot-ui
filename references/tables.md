@@ -69,20 +69,25 @@ bold `<td>`. Whitelist tags/attributes exactly as for regular HTML
 (`security-and-escaping.md`); escape `< > &` in every dynamic cell value.
 
 ```html
-<table>
-  <thead>
-    <tr><th>Team</th><th>Played</th><th>Won</th><th>Points</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>Alpha</td><td align="right">10</td><td align="right">7</td><td align="right">21</td></tr>
-    <tr><td>Bravo</td><td align="right">10</td><td align="right">6</td><td align="right">19</td></tr>
-  </tbody>
+<table compact>
+  <caption>Standings after round 10</caption>
+  <tr><th>Team</th><th>Played</th><th>Won</th><th>Points</th></tr>
+  <tr><td>Alpha</td><td align="right">10</td><td align="right">7</td><td align="right">21</td></tr>
+  <tr><td>Bravo</td><td align="right">10</td><td align="right">6</td><td align="right">19</td></tr>
 </table>
 ```
 
-Put the string in `InputRichMessage.html`. Confirm the supported table tag set
-(`table`/`thead`/`tbody`/`tr`/`th`/`td` and which cell attributes) on the
-official **Rich message formatting options** page before shipping.
+Put the string in `InputRichMessage.html`. Official tag set (Bot API page, *Rich HTML
+style*, checked 2026-11-15) **[API]**: `<table>` with the flags `bordered`, `striped`,
+`compact`; an optional `<caption>`; `<tr>` **directly inside `<table>`** — there is no
+`<thead>` or `<tbody>`; `<th>` / `<td>` with `colspan`, `rowspan`, `align`
+(`left|center|right`) and `valign` (`top|middle|bottom`).
+
+**Budget:** every table row counts toward the **500-block** Rich Message limit
+(together with nested blocks, list items, quotations and details blocks), and a table
+has at most **20 columns** **[API]**. A 400-row table leaves almost nothing for the
+rest of the message: split long tables or page them, long before the 32,768-character
+limit is in sight.
 
 ### 3. Explicit `InputRichBlockTable` blocks (programmatic — preferred for data)
 
