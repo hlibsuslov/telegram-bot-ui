@@ -356,9 +356,9 @@ class InstallerTest(unittest.TestCase):
         out = self.run_install("--host", "codex", "--scope", "project", "--link", "--no-agents")
         dest = self.p(".agents", "skills", "telegram-bot-ui")
         if os.path.islink(dest):
-            self.assertEqual(os.path.realpath(dest), os.path.realpath(ROOT))
+            self.assertEqual(os.path.realpath(dest), os.path.realpath(SKILL))
             self.run_install("--host", "codex", "--scope", "project", "--uninstall")
-            self.assertTrue(os.path.isfile(os.path.join(ROOT, "SKILL.md")), "uninstall must not follow the link")
+            self.assertTrue(os.path.isfile(os.path.join(SKILL, "SKILL.md")), "uninstall must not follow the link")
             self.assertFalse(os.path.lexists(dest))
         else:
             self.assertIn("fallback", out)
