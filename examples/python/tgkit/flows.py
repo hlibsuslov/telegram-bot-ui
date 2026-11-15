@@ -120,7 +120,7 @@ class I18n:
         code = (language_code or "").split("-")[0].lower()
         return code if code in self.catalog else self.default
 
-    def t(self, lang: str, key: str, **values: Any) -> str:
+    def t(self, lang: str, key: str, /, **values: Any) -> str:
         table = self.catalog.get(lang) or self.catalog[self.default]
         template = table.get(key, self.catalog[self.default].get(key))
         if template is None:
@@ -216,7 +216,7 @@ class ScreenFlow:
         """callback_data for the NEXT render of `s` (render bumps the version first)."""
         return pack(self.app, b36(s.version), action, *args)
 
-    def tr(self, s: Session, key: str, **values: Any) -> str:
+    def tr(self, s: Session, key: str, /, **values: Any) -> str:
         if self.i18n is None:
             raise RuntimeError("no i18n catalog")
         return self.i18n.t(s.lang, key, **values)
