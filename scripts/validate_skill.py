@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate this skill's SKILL.md against the Agent Skills format.
+"""Validate skills/telegram-bot-ui/SKILL.md against the Agent Skills format.
 
 Portable: standard library only (uses PyYAML if present, else a minimal
 front-matter parser). Safe: reads local files only. Never needs a bot token,
@@ -20,8 +20,10 @@ Checks:
     - Codex custom agents (agents/codex/*.toml): name, description,
       developer_instructions (parsed with tomllib on Python >= 3.11);
     - agents/openai.yaml uses only the documented interface/policy/dependencies keys;
+    - root plugin.json against the closed Agent Plugins 1.0.0 schema, and the Codex
+      manifest .codex-plugin/plugin.json;
     - .claude-plugin/plugin.json and marketplace.json: names, version, agent paths,
-      relative source, and that the root SKILL.md still loads as the plugin's skill.
+      relative source, and that skills/ holds exactly one skill, the one below.
 
 Exit code 0 on success, 1 on any error. Warnings do not fail the run.
 
@@ -54,8 +56,15 @@ MIN_DESCRIPTION_LEN = 40
 BODY_WARN_CHARS = 20000  # ~5k tokens; progressive-disclosure guideline
 
 
-def skill_dir() -> str:
+SKILL_REL = "skills/telegram-bot-ui"
+
+
+def repo_dir() -> str:
     return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def skill_dir() -> str:
+    return os.path.join(repo_dir(), *SKILL_REL.split("/"))
 
 
 def split_front_matter(text: str):
@@ -205,7 +214,7 @@ def check_codex_agents(root: str, errors: list[str], warnings: list[str]) -> Non
 
 
 def check_openai_yaml(root: str, errors: list[str]) -> None:
-    path = os.path.join(root, "agents", "openai.yaml")
+    path = os.path.join(root, *SKILL_REL.split("/"), "agents", "openai.yaml")
     if not os.path.isfile(path):
         return
     section = None
@@ -243,9 +252,15 @@ def check_plugin(root: str, skill_name: str, agent_names: list[str],
         listed = sorted(os.path.basename(a)[:-3] for a in agents)
         if listed != sorted(agent_names):
             errors.append("plugin.json: agents list differs from agents/claude/*.md.")
-        # The root SKILL.md loads as the plugin's single skill only without skills/ or a skills key.
-        if "skills" in plugin or os.path.isdir(os.path.join(root, "skills")):
-            errors.append("plugin: a skills/ folder or 'skills' key stops the root SKILL.md loading.")
+        # The default skills/ scan must find exactly one skill: skills/<name>/SKILL.md.
+        if "skills" in plugin:
+            errors.append("plugin.json: a 'skills' key is not needed; the default skills/ scan finds the skill.")
+        found = sorted(d for d in os.listdir(os.path.join(root, "skills"))
+                       if os.path.isfile(os.path.join(root, "skills", d, "SKILL.md")))             if os.path.isdir(os.path.join(root, "skills")) else []
+        if found != [skill_name]:
+            errors.append(f"plugin: skills/ must hold exactly one skill '{skill_name}'; found {found}.")
+        if os.path.isfile(os.path.join(root, "SKILL.md")):
+            errors.append("a root SKILL.md would register the skill twice; keep it in skills/.")
         if os.path.isfile(os.path.join(root, "CLAUDE.md")):
             warnings.append("plugin: a root CLAUDE.md is not loaded by plugins.")
     if market:
@@ -256,6 +271,40 @@ def check_plugin(root: str, skill_name: str, agent_names: list[str],
         entries = market.get("plugins") or []
         if not any(p.get("name") == skill_name and p.get("source") in ("./", ".") for p in entries):
             errors.append("marketplace.json: needs an entry for the plugin with source './'.")
+
+
+AGENT_PLUGINS_KEYS = {"$schema", "name", "version", "description", "author", "homepage",
+                      "repository", "license", "keywords", "extensions"}
+AGENT_PLUGINS_NAME_RE = re.compile(r"^(?!.*--)(?!.*\.\.)[a-z0-9](?:[a-z0-9.-]{0,62}[a-z0-9])?$")
+
+
+def check_portable_manifests(root: str, skill_name: str, errors: list[str]) -> None:
+    """Root plugin.json against the closed Agent Plugins 1.0.0 schema; .codex-plugin/plugin.json basics."""
+    ap = _load_json(root, "plugin.json", errors)
+    if ap:
+        if ap.get("$schema") != "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json":
+            errors.append("plugin.json: $schema must be the Agent Plugins 1.0.0 identifier.")
+        if set(ap) - AGENT_PLUGINS_KEYS:
+            errors.append(f"plugin.json: fields outside the Agent Plugins schema: {sorted(set(ap) - AGENT_PLUGINS_KEYS)}.")
+        if not AGENT_PLUGINS_NAME_RE.match(str(ap.get("name", ""))) or ap.get("name") != skill_name:
+            errors.append("plugin.json: name must be the skill name and a valid Agent Plugins name.")
+        if set(ap.get("author") or {}) - {"name", "email", "url"}:
+            errors.append("plugin.json: author takes only name, email and url.")
+        if not all(isinstance(k, str) for k in ap.get("keywords", [])):
+            errors.append("plugin.json: keywords must be strings.")
+    codex = _load_json(root, ".codex-plugin/plugin.json", errors)
+    if codex:
+        if codex.get("name") != skill_name or codex.get("skills") != "./skills/":
+            errors.append(".codex-plugin/plugin.json: name must be the skill name and skills './skills/'.")
+        for key in ("version", "description"):
+            if not str(codex.get(key, "")).strip():
+                errors.append(f".codex-plugin/plugin.json: '{key}' is required.")
+        if not str((codex.get("author") or {}).get("name", "")).strip():
+            errors.append(".codex-plugin/plugin.json: author.name is required.")
+        if len((codex.get("interface") or {}).get("defaultPrompt", [])) > 3:
+            errors.append(".codex-plugin/plugin.json: at most 3 defaultPrompt entries are used.")
+        if os.listdir(os.path.join(root, ".codex-plugin")) != ["plugin.json"]:
+            errors.append(".codex-plugin/ must hold only plugin.json.")
 
 
 def check_metadata_version(root: str, fm: str, errors: list[str]) -> None:
@@ -276,10 +325,11 @@ def check_packaging(root: str, skill_name: str, errors: list[str], warnings: lis
     check_codex_agents(root, errors, warnings)
     check_openai_yaml(root, errors)
     check_plugin(root, skill_name, names, errors, warnings)
+    check_portable_manifests(root, skill_name, errors)
 
 
 def main() -> int:
-    root = skill_dir()
+    repo, root = repo_dir(), skill_dir()
     path = os.path.join(root, "SKILL.md")
     errors: list[str] = []
     warnings: list[str] = []
@@ -308,9 +358,7 @@ def main() -> int:
         if not NAME_RE.match(name):
             errors.append(f"`name` must be kebab-case [a-z0-9-]; got '{name}'.")
         if name != os.path.basename(root):
-            warnings.append(
-                f"`name` '{name}' != directory '{os.path.basename(root)}'."
-            )
+            errors.append(f"`name` '{name}' != directory '{os.path.basename(root)}'.")
 
     # description
     desc = str(meta.get("description", "")).strip()
@@ -345,8 +393,8 @@ def main() -> int:
     if TOKEN_RE.search(text):
         errors.append("possible bot token / secret embedded in SKILL.md.")
 
-    check_packaging(root, name, errors, warnings)
-    check_metadata_version(root, fm or "", errors)
+    check_packaging(repo, name, errors, warnings)
+    check_metadata_version(repo, fm or "", errors)
 
     for w in warnings:
         print(f"WARN: {w}")

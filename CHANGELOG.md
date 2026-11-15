@@ -2,7 +2,7 @@
 
 Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `adapters/routing.json` (generated into `.claude-plugin/plugin.json`) and in the
-`metadata.version` of `SKILL.md`; `scripts/validate_skill.py` fails if they differ.
+`metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
 ## 2.0.0 - 2026-11-15
@@ -18,6 +18,8 @@ skill.
   core.
 - Offline Bot API catalog and lookup, payload, keyboard, rich message and widget
   validators.
-- Packaging: Claude Code plugin and marketplace, five subagents, Codex agents, and adapters
-  for Cursor, Gemini CLI, Copilot and plain `AGENTS.md`, all generated from `SKILL.md` and
+- Packaging: the skill lives in `skills/telegram-bot-ui/` (the folder installers copy, with
+  its own `LICENSE`); Claude Code plugin and marketplace, an Agent Plugins `plugin.json`, a
+  Codex `.codex-plugin/plugin.json`, five subagents, Codex agents, and adapters for Cursor,
+  Gemini CLI, Copilot and plain `AGENTS.md`, all generated from the skill's `SKILL.md` and
   `adapters/routing.json`.

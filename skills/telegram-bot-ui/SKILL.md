@@ -285,7 +285,8 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 
 Libraries: `examples/python/tgkit/` (Python) and `examples/ts/` (TypeScript);
 SDK adapters `examples/python/sdk_aiogram/`, `examples/ts/sdk-grammy/`; MCP server
-`examples/mcp/telegram-bridge/`. Run every check: `py -3 scripts/run_checks.py`.
+`examples/mcp/telegram-bridge/`. In a clone of the repository, `run_checks.py` in its
+root `scripts/` folder runs every check.
 Live modes need an explicit flag and a **test** bot token from an environment
 variable; never paste a token into chat or code.
 

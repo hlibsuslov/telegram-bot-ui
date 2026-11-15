@@ -80,7 +80,7 @@ python scripts/install.py --host all --scope user
 |---|---|
 | 🎛 **Інтерфейс бота** | тексти, меню, inline- і reply-клавіатури, кольорові й неактивні кнопки, форми, навігація, потокові відповіді ШІ з кнопкою Stop, особисті відповіді в групах, Rich Messages і таблиці, форматування, локалізація |
 | 🛒 **Продуктові сценарії** | магазини, підтримка, запис на послуги, ШІ-асистенти, трекери: без застарілих кнопок «Оплатити», подвійних замовлень і витоку особистих даних у групи (15 продуктових рецептів) |
-| 📣 **Публікації в каналах** | скласти, перевірити, показати превʼю, погодити й запланувати пост; ніколи не публікувати двічі після тайм-ауту (`scripts/tg_post.py`, 10 рецептів) |
+| 📣 **Публікації в каналах** | скласти, перевірити, показати превʼю, погодити й запланувати пост; ніколи не публікувати двічі після тайм-ауту (`skills/telegram-bot-ui/scripts/tg_post.py`, 10 рецептів) |
 | 🤖 **Агент, що працює через бота** | керування агентом із Telegram: список дозволених операторів, кнопки підтвердження, привʼязані до однієї конкретної дії, вхідні повідомлення — це дані, а не інструкції (CLI `agent_bridge`, MCP-сервер, хуки Claude Code і Codex, 10 рецептів) |
 | 🧩 **HTML-віджети** | віджети Bot API 10.4 усередині повідомлень: ліміт розміру, контекст продакшену, підпис і текстовий запасний варіант, живі картки, спільні опитування, сценарії з гаманцем (18 готових віджетів, інструменти збирання й перегляду, 7 рецептів) |
 | 💎 **Преміум-емодзі** | один пак custom emoji на кнопках, у текстах, Rich Messages і постах: справжні id із паку, відкат на звичайні емодзі повністю, якщо бот не має права їх використовувати (6 рецептів) |
@@ -101,13 +101,13 @@ python scripts/install.py --host all --scope user
   <img alt="Сім віджетів із галереї: панель моніторингу з графіками, трекер замовлення, календар запису на послугу, кошик з оформленням замовлення, вікторина, картка прогресу експорту в CSV і сповіщення про ціну." src="docs/assets/widgets-uk-light.png" width="100%">
 </picture>
 
-<sub>Знято з <code>examples/widgets/</code> за допомогою <code>scripts/preview_widget.py --gallery</code>.
+<sub>Знято з <code>skills/telegram-bot-ui/examples/widgets/</code> за допомогою <code>skills/telegram-bot-ui/scripts/preview_widget.py --gallery</code>.
 Це імітація середовища віджетів у браузері на компʼютері, а не клієнт Telegram — справжні застосунки можуть малювати їх інакше.</sub>
 
 ```bash
-python scripts/build_widget.py examples/widgets/src/order-tracker.html \
-  --demo examples/widgets/demo/order-tracker.json --strict   # зібрати з набору, перевірити розмір і підпис
-python scripts/preview_widget.py --gallery -o preview.html   # усі віджети й стани, світла й темна теми
+python skills/telegram-bot-ui/scripts/build_widget.py skills/telegram-bot-ui/examples/widgets/src/order-tracker.html \
+  --demo skills/telegram-bot-ui/examples/widgets/demo/order-tracker.json --strict   # зібрати з набору, перевірити розмір і підпис
+python skills/telegram-bot-ui/scripts/preview_widget.py --gallery -o preview.html   # усі віджети й стани, світла й темна теми
 ```
 
 ## 💬 Попросіть агента
@@ -128,7 +128,7 @@ python scripts/preview_widget.py --gallery -o preview.html   # усі відже
 
 ## 📦 Встановлення
 
-Скіл — це одна тека, точка входу якої — [`SKILL.md`](SKILL.md). Кожен шлях нижче звірено з
+Скіл — це одна тека, точка входу якої — [`SKILL.md`](skills/telegram-bot-ui/SKILL.md). Кожен шлях нижче звірено з
 документацією відповідного середовища в [`docs/hosts.md`](docs/hosts.md).
 
 <details open>
@@ -159,10 +159,10 @@ claude plugin install telegram-bot-ui@telegram-bot-ui
 <summary><b>Claude Code — проста тека скіла</b></summary>
 
 ```bash
-git clone https://github.com/hlibsuslov/telegram-bot-ui.git ~/.claude/skills/telegram-bot-ui
+git clone https://github.com/hlibsuslov/telegram-bot-ui.git && cp -r telegram-bot-ui/skills/telegram-bot-ui ~/.claude/skills/
 ```
 
-Лише для одного проєкту: клонуйте в `<your-repo>/.claude/skills/telegram-bot-ui`. Щоб додати ще й
+Лише для одного проєкту: скопіюйте теку в `<your-repo>/.claude/skills/telegram-bot-ui`. Щоб додати ще й
 субагентів, скористайтеся інсталятором нижче.
 
 </details>
@@ -225,13 +225,13 @@ python scripts/install.py --host all --scope user --dry-run
 65 нумерованих recipes і міні-рецепти. Вісім нових сценаріїв R80–R87 —
 офлайн-моделі Python із callback-інтерфейсом; production-інтеграції позначені окремо.
 
-Агент шукає основу в каталозі 40 сімейств сценаріїв (`recipes/use-cases.json`), повторно
+Агент шукає основу в каталозі 40 сімейств сценаріїв (`skills/telegram-bot-ui/recipes/use-cases.json`), повторно
 використовує helpers або поєднує потоки й дописує в проєкті користувача лише відсутнє
-([правила розширення](references/example-library.md), [як додавати приклади](CONTRIBUTING.md)).
+([правила розширення](skills/telegram-bot-ui/references/example-library.md), [як додавати приклади](CONTRIBUTING.md)).
 
 ```bash
-python scripts/example_library.py --query "event waitlist" --json
-python examples/python/recipes/r80_87_product_journeys.py --scenario R81
+python skills/telegram-bot-ui/scripts/example_library.py --query "event waitlist" --json
+python skills/telegram-bot-ui/examples/python/recipes/r80_87_product_journeys.py --scenario R81
 ```
 
 Нові сценарії: заявки, події й список очікування, нагадування, обробка файлів,
@@ -240,32 +240,32 @@ python examples/python/recipes/r80_87_product_journeys.py --scenario R81
 
 | Рецепт | Що ви отримаєте |
 |---|---|
-| [ШІ-асистент із кнопкою Stop](recipes/01-ai-assistant.md) | розширений потоковий вивід, справжні етапи, Stop, одне підсумкове повідомлення без гонок |
-| [Інтерактивний документ](recipes/02-interactive-document.md) | компактна таблиця, згортана цитата, вкладений файл, кнопки в тексті |
-| [Багатокрокова форма](recipes/03-multi-step-form.md) | кнопки + поле для відповіді, неактивна кнопка «Надіслати», «Назад», жодних дублікатів |
-| [Спільна картка + особиста панель](recipes/04-shared-card-personal-panel.md) | особисті подання для кожного учасника групи |
-| [Приватний віджет](recipes/05-private-widget.md) | картка замовлення, що оновлюється на місці |
-| [Спільний віджет](recipes/06-shared-widget.md) | одне живе опитування в багатьох чатах |
-| [Гаманець](recipes/07-wallet.md) | оплата й підпис із віджета, чесні стани платежу |
-| [Бот із кількома темами](recipes/08-multi-topic-bot.md) | паралельні розмови, посилання на теми |
-| [Оновлення бота-трекера](recipes/09-tracker-bot.md) | справжній бот, перенесений на новий API |
-| [Міні-рецепти](recipes/mini-recipes.md) | подарунки, спільноти, теми для поширення, керовані боти, верифікація |
+| [ШІ-асистент із кнопкою Stop](skills/telegram-bot-ui/recipes/01-ai-assistant.md) | розширений потоковий вивід, справжні етапи, Stop, одне підсумкове повідомлення без гонок |
+| [Інтерактивний документ](skills/telegram-bot-ui/recipes/02-interactive-document.md) | компактна таблиця, згортана цитата, вкладений файл, кнопки в тексті |
+| [Багатокрокова форма](skills/telegram-bot-ui/recipes/03-multi-step-form.md) | кнопки + поле для відповіді, неактивна кнопка «Надіслати», «Назад», жодних дублікатів |
+| [Спільна картка + особиста панель](skills/telegram-bot-ui/recipes/04-shared-card-personal-panel.md) | особисті подання для кожного учасника групи |
+| [Приватний віджет](skills/telegram-bot-ui/recipes/05-private-widget.md) | картка замовлення, що оновлюється на місці |
+| [Спільний віджет](skills/telegram-bot-ui/recipes/06-shared-widget.md) | одне живе опитування в багатьох чатах |
+| [Гаманець](skills/telegram-bot-ui/recipes/07-wallet.md) | оплата й підпис із віджета, чесні стани платежу |
+| [Бот із кількома темами](skills/telegram-bot-ui/recipes/08-multi-topic-bot.md) | паралельні розмови, посилання на теми |
+| [Оновлення бота-трекера](skills/telegram-bot-ui/recipes/09-tracker-bot.md) | справжній бот, перенесений на новий API |
+| [Міні-рецепти](skills/telegram-bot-ui/recipes/mini-recipes.md) | подарунки, спільноти, теми для поширення, керовані боти, верифікація |
 
 | Діапазон | Що ви отримаєте |
 |---|---|
-| [20–29, 60–64 · Продукти](references/use-case-playbooks.md) | магазин за Stars, служба підтримки, запис на послуги, онбординг, налаштування, підписка, навчання, асистент, розподіл витрат у групі, спільнота, inline-режим, бізнес-акаунт, сповіщення, пошук, відстеження доставки |
-| [30–39 · Публікації в каналах](references/publishing-pipeline.md) | автопостер, лонгрід, альбом, опитування, закріплений дайджест, редакційне погодження, кросопублікація, розсилка, коментарі, виправлення |
-| [40–49 · Агент через свого бота](references/agent-operated-bots.md) | погодження деплою, живий статус збирання, нічний дайджест, запитати й продовжити, потокове дослідження зі Stop, теми для завдань, командна група, сповіщення про інциденти, хуки агента для програмування |
-| [50–56 · Віджети](references/widget-patterns.md) | панель моніторингу, запис на послугу, картка магазину, спільна вікторина, прогрес завдання, віджет за словесним описом, браузер даних REST |
-| [70–75 · Преміум-емодзі](references/emoji-packs.md) | перехід на один пак, іконки з нуля, серія постів у каналі, змішане право на емодзі, закінчення Premium, міграція паку |
+| [20–29, 60–64 · Продукти](skills/telegram-bot-ui/references/use-case-playbooks.md) | магазин за Stars, служба підтримки, запис на послуги, онбординг, налаштування, підписка, навчання, асистент, розподіл витрат у групі, спільнота, inline-режим, бізнес-акаунт, сповіщення, пошук, відстеження доставки |
+| [30–39 · Публікації в каналах](skills/telegram-bot-ui/references/publishing-pipeline.md) | автопостер, лонгрід, альбом, опитування, закріплений дайджест, редакційне погодження, кросопублікація, розсилка, коментарі, виправлення |
+| [40–49 · Агент через свого бота](skills/telegram-bot-ui/references/agent-operated-bots.md) | погодження деплою, живий статус збирання, нічний дайджест, запитати й продовжити, потокове дослідження зі Stop, теми для завдань, командна група, сповіщення про інциденти, хуки агента для програмування |
+| [50–56 · Віджети](skills/telegram-bot-ui/references/widget-patterns.md) | панель моніторингу, запис на послугу, картка магазину, спільна вікторина, прогрес завдання, віджет за словесним описом, браузер даних REST |
+| [70–75 · Преміум-емодзі](skills/telegram-bot-ui/references/emoji-packs.md) | перехід на один пак, іконки з нуля, серія постів у каналі, змішане право на емодзі, закінчення Premium, міграція паку |
 
-Повний покажчик за задачею, символом API, версією й контекстом: [`recipes/README.md`](recipes/README.md).
+Повний покажчик за задачею, символом API, версією й контекстом: [`recipes/README.md`](skills/telegram-bot-ui/recipes/README.md).
 
-**Код:** Python ([`examples/python/tgkit`](examples/python/tgkit), стандартна бібліотека) і TypeScript
-([`examples/ts`](examples/ts), без залежностей), а також адаптери для **aiogram 3.31** і **grammY 1.46**.
+**Код:** Python ([`examples/python/tgkit`](skills/telegram-bot-ui/examples/python/tgkit), стандартна бібліотека) і TypeScript
+([`examples/ts`](skills/telegram-bot-ui/examples/ts), без залежностей), а також адаптери для **aiogram 3.31** і **grammY 1.46**.
 
 ```bash
-python examples/python/recipes/r01_ai_assistant.py
+python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 ```
 
 ## 🛠 Інструменти без агента
@@ -274,20 +274,20 @@ python examples/python/recipes/r01_ai_assistant.py
 
 | Перевірки перед релізом | |
 |---|---|
-| `python scripts/validate_keyboard.py keyboard.json` | правила для кнопок і payload клавіатур |
-| `python scripts/validate_rich.py message.json` | ліміти й правила Rich Messages |
-| `python scripts/validate_widget.py widget.html` | розмір віджета (за алгоритмом сервера) і прогалини пісочниці |
-| `python scripts/validate_payload.py request.json` | структурна перевірка за каталогом Bot API |
-| `python scripts/audit_icons.py icon-map.json` | одне сімейство іконок? не затесалися анімовані? |
-| `python scripts/audit_copy.py strings.json` | переклади: плейсхолдери, символи, довжина підписів |
+| `python skills/telegram-bot-ui/scripts/validate_keyboard.py keyboard.json` | правила для кнопок і payload клавіатур |
+| `python skills/telegram-bot-ui/scripts/validate_rich.py message.json` | ліміти й правила Rich Messages |
+| `python skills/telegram-bot-ui/scripts/validate_widget.py widget.html` | розмір віджета (за алгоритмом сервера) і прогалини пісочниці |
+| `python skills/telegram-bot-ui/scripts/validate_payload.py request.json` | структурна перевірка за каталогом Bot API |
+| `python skills/telegram-bot-ui/scripts/audit_icons.py icon-map.json` | одне сімейство іконок? не затесалися анімовані? |
+| `python skills/telegram-bot-ui/scripts/audit_copy.py strings.json` | переклади: плейсхолдери, символи, довжина підписів |
 
 | Збирання й довідка | |
 |---|---|
-| `python scripts/tg_api_lookup.py show sendWidget` | будь-який метод або тип, офлайн |
-| `python scripts/tg_post.py preview post.json` | відмалювати пост для каналу (публікація — лише за явним увімкненням) |
-| `python scripts/build_widget.py src.html --strict` | зібрати віджет із набору й показати його розмір |
-| `python scripts/preview_widget.py widget.html` | сторінка-імітація для перегляду (не справжній клієнт) |
-| `python scripts/emoji_packs.py capture` | як зібрати справжні id custom emoji |
+| `python skills/telegram-bot-ui/scripts/tg_api_lookup.py show sendWidget` | будь-який метод або тип, офлайн |
+| `python skills/telegram-bot-ui/scripts/tg_post.py preview post.json` | відмалювати пост для каналу (публікація — лише за явним увімкненням) |
+| `python skills/telegram-bot-ui/scripts/build_widget.py src.html --strict` | зібрати віджет із набору й показати його розмір |
+| `python skills/telegram-bot-ui/scripts/preview_widget.py widget.html` | сторінка-імітація для перегляду (не справжній клієнт) |
+| `python skills/telegram-bot-ui/scripts/emoji_packs.py capture` | як зібрати справжні id custom emoji |
 | `python scripts/install.py --host all --dry-run` | куди саме буде встановлено скіл |
 | `python scripts/run_checks.py` | усі перевірки цього репозиторію |
 
@@ -295,10 +295,10 @@ python examples/python/recipes/r01_ai_assistant.py
 
 | | |
 |---|---|
-| **Bot API** | звірено з офіційною документацією **Bot API 10.4** станом на **2026-11-15** — джерела й дати в [`references/official-sources.md`](references/official-sources.md) |
+| **Bot API** | звірено з офіційною документацією **Bot API 10.4** станом на **2026-11-15** — джерела й дати в [`references/official-sources.md`](skills/telegram-bot-ui/references/official-sources.md) |
 | **Середовища** | шляхи скілів, маніфести субагентів і плагінів та файли правил звірено з документацією кожного середовища станом на **2026-11-15** ([`docs/hosts.md`](docs/hosts.md)); плагін Claude Code проходить `claude plugin validate --strict` |
 | **Тести** | **414 на Python** і **31 на TypeScript** — запускаються офлайн у CI на Linux і Windows, плюс контрактні тести на справжніх пакетах aiogram і grammY |
-| **Розбіжності** | файли входу для середовищ генеруються з `SKILL.md` та єдиної таблиці маршрутизації скриптом `scripts/build_adapters.py`; CI падає, щойно вони розходяться |
+| **Розбіжності** | файли входу для середовищ генеруються з `skills/telegram-bot-ui/SKILL.md` та єдиної таблиці маршрутизації скриптом `scripts/build_adapters.py`; CI падає, щойно вони розходяться |
 
 Що **поки не** перевірено — кажемо прямо:
 
@@ -349,12 +349,16 @@ python examples/python/recipes/r01_ai_assistant.py
 ## 🗂 Структура репозиторію
 
 ```
-SKILL.md            точка входу, яку агент читає першою (маршрутизація, правила, інваріанти)
-references/         тематичні посібники, завантажуються лише коли задача їх потребує
-recipes/            наскрізні рецепти, registry.json, manifest.json
-examples/           код на Python/TS, який можна запустити, віджети, фікстури, payload-и, адаптери SDK
-scripts/            валідатори, інсталятор, генератор адаптерів, запуск оцінювань (офлайн)
-agents/             метадані Codex (openai.yaml), субагенти Claude, власні агенти Codex
+skills/telegram-bot-ui/   скіл; інсталятори копіюють лише цю теку
+  SKILL.md          точка входу, яку агент читає першою (маршрутизація, правила, інваріанти)
+  references/       тематичні посібники, завантажуються лише коли задача їх потребує
+  recipes/          наскрізні рецепти, registry.json, manifest.json
+  examples/         код на Python/TS, який можна запустити, віджети, фікстури, payload-и, адаптери SDK
+  scripts/          валідатори й інструменти скіла (офлайн)
+  data/             офлайн-каталог Bot API, реєстр емодзі-паків
+  agents/           метадані Codex (openai.yaml)
+scripts/            інсталятор, генератор адаптерів, запуск оцінювань і перевірок (офлайн)
+agents/             субагенти Claude, власні агенти Codex
 adapters/           таблиця маршрутизації й згенеровані файли входу для інших середовищ
 .claude-plugin/     маніфести плагіна й маркетплейсу Claude Code
 llms.txt            покажчик усіх документів для агентів, що читають файли на вимогу
@@ -368,8 +372,8 @@ Issues і pull requests вітаються — особливо скриншот
 рецепти, оновлення підтримки SDK і прогони оцінювань на інших середовищах.
 
 1. Підкріплюйте твердження про можливості посиланнями на офіційну документацію Telegram і позначайте все неперевірене.
-2. Тримайте `SKILL.md` компактним.
-3. Після змін у `SKILL.md` або `adapters/` запустіть `python scripts/build_adapters.py`.
+2. Тримайте `skills/telegram-bot-ui/SKILL.md` компактним.
+3. Після змін у `skills/telegram-bot-ui/SKILL.md` або `adapters/` запустіть `python scripts/build_adapters.py`.
 4. Перед відкриттям PR запустіть `python scripts/run_checks.py`.
 
 ## Ліцензія

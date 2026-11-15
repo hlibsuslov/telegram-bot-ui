@@ -77,7 +77,7 @@ py -3 scripts/tg_api_lookup.py version <new>
   re-run. `--api-html` / `--changelog-html` parse saved pages offline.
 - After a sync: update `references/official-sources.md`, `references/ui-changelog.md`,
   `recipes/registry.json` for the new rows, and the reference that owns each changed
-  area (map below). Run `py -3 scripts/run_checks.py`.
+  area (map below). Run `py -3 scripts/run_checks.py` from the repository root.
 
 ## Map: API area → reference
 

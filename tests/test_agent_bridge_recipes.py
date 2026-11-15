@@ -26,7 +26,7 @@ class AgentRecipes(unittest.TestCase):
             body = open(f, encoding="utf-8").read()
             for p in PATH_RE.findall(body):
                 p = p.rstrip(".,:;)").split("::")[0]
-                self.assertTrue(os.path.exists(os.path.join(_paths.ROOT, p)), f"{os.path.basename(f)}: {p}")
+                self.assertTrue(os.path.exists(_paths.resolve(p)), f"{os.path.basename(f)}: {p}")
             n = os.path.basename(f)[:2]
             self.assertIn(f"examples/payloads/r{n}-", body)
             self.assertTrue(glob.glob(os.path.join(_paths.EXAMPLES, "python", "recipes", f"r{n}_*.py")))

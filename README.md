@@ -79,7 +79,7 @@ The skill activates on its own — no API names needed. More hosts and options: 
 |---|---|
 | 🎛 **Build bot interfaces** | texts, menus, inline and reply keyboards, colored and disabled buttons, forms, navigation, streaming AI answers with Stop, private replies in groups, Rich Messages and tables, formatting, localization |
 | 🛒 **Product flows** | shops, support, bookings, AI assistants, trackers: no stale "Pay" buttons, no double orders, no personal data leaking into groups (15 product recipes) |
-| 📣 **Publish to channels** | compose, validate, preview, approve and schedule channel posts; never post twice after a timeout (`scripts/tg_post.py`, 10 recipes) |
+| 📣 **Publish to channels** | compose, validate, preview, approve and schedule channel posts; never post twice after a timeout (`skills/telegram-bot-ui/scripts/tg_post.py`, 10 recipes) |
 | 🤖 **Operate as an agent through a bot** | drive an agent from Telegram with an operator allowlist, approval buttons bound to one action, and inbound messages treated as data, not instructions (`agent_bridge` CLI, MCP server, Claude Code and Codex hooks, 10 recipes) |
 | 🧩 **Build HTML widgets** | Bot API 10.4 widgets inside messages: size limit, production context, caption and text fallback, live cards, shared polls, wallet flows (18 ready widgets, build and preview tools, 7 recipes) |
 | 💎 **Premium emoji** | one custom emoji pack across buttons, texts, rich messages and posts: real ids resolved from the pack, all-or-nothing fallback when the bot is not eligible (6 recipes) |
@@ -100,13 +100,13 @@ and a local preview.
   <img alt="Seven widgets from the gallery: a monitoring dashboard with charts, an order tracker, a slot booking calendar, a shopping cart with checkout, a quiz, a CSV export progress card and a price alert." src="docs/assets/widgets-light.png" width="100%">
 </picture>
 
-<sub>Rendered from <code>examples/widgets/</code> with <code>scripts/preview_widget.py --gallery</code>.
+<sub>Rendered from <code>skills/telegram-bot-ui/examples/widgets/</code> with <code>skills/telegram-bot-ui/scripts/preview_widget.py --gallery</code>.
 That is a mock of the widget runtime in a desktop browser, not a Telegram client — real apps may draw them differently.</sub>
 
 ```bash
-python scripts/build_widget.py examples/widgets/src/order-tracker.html \
-  --demo examples/widgets/demo/order-tracker.json --strict   # build from the kit, check size and caption
-python scripts/preview_widget.py --gallery -o preview.html   # every widget and state, light and dark
+python skills/telegram-bot-ui/scripts/build_widget.py skills/telegram-bot-ui/examples/widgets/src/order-tracker.html \
+  --demo skills/telegram-bot-ui/examples/widgets/demo/order-tracker.json --strict   # build from the kit, check size and caption
+python skills/telegram-bot-ui/scripts/preview_widget.py --gallery -o preview.html   # every widget and state, light and dark
 ```
 
 ## 💬 Ask your agent
@@ -127,7 +127,7 @@ You can also call it by name: `/telegram-bot-ui` (Claude Code), `$telegram-bot-u
 
 ## 📦 Install
 
-The skill is one folder whose entry point is [`SKILL.md`](SKILL.md). Every path below is checked
+The skill is one folder whose entry point is [`SKILL.md`](skills/telegram-bot-ui/SKILL.md). Every path below is checked
 against that host's documentation in [`docs/hosts.md`](docs/hosts.md).
 
 <details open>
@@ -158,10 +158,10 @@ The skill is then `/telegram-bot-ui:telegram-bot-ui` and the subagents are
 <summary><b>Claude Code — plain skill folder</b></summary>
 
 ```bash
-git clone https://github.com/hlibsuslov/telegram-bot-ui.git ~/.claude/skills/telegram-bot-ui
+git clone https://github.com/hlibsuslov/telegram-bot-ui.git && cp -r telegram-bot-ui/skills/telegram-bot-ui ~/.claude/skills/
 ```
 
-One project only: clone into `<your-repo>/.claude/skills/telegram-bot-ui`. To add the subagents
+One project only: copy the folder into `<your-repo>/.claude/skills/telegram-bot-ui`. To add the subagents
 too, use the installer below.
 
 </details>
@@ -224,13 +224,13 @@ telegram-bot-ui skill."*
 65 numbered recipes plus mini-recipes. The eight new product journeys (R80–R87) are
 Python offline models with callback demos; their production integrations are explicitly pending.
 
-Agents search a catalog of 40 product families (`recipes/use-cases.json`), reuse or compose
+Agents search a catalog of 40 product families (`skills/telegram-bot-ui/recipes/use-cases.json`), reuse or compose
 existing helpers, and write only the missing behavior in the user's project
-([extension guide](references/example-library.md), [contributing](CONTRIBUTING.md)).
+([extension guide](skills/telegram-bot-ui/references/example-library.md), [contributing](CONTRIBUTING.md)).
 
 ```bash
-python scripts/example_library.py --query "event waitlist" --json
-python examples/python/recipes/r80_87_product_journeys.py --scenario R81
+python skills/telegram-bot-ui/scripts/example_library.py --query "event waitlist" --json
+python skills/telegram-bot-ui/examples/python/recipes/r80_87_product_journeys.py --scenario R81
 ```
 
 New journeys cover lead intake, events/waitlists, reminders, file jobs, moderation review,
@@ -239,32 +239,32 @@ example, a composition or planned work.
 
 | Recipe | You get |
 |---|---|
-| [AI assistant with Stop](recipes/01-ai-assistant.md) | rich streaming, real stages, Stop, race-safe single final message |
-| [Interactive document](recipes/02-interactive-document.md) | compact table, collapsible quote, attached file, buttons in text |
-| [Multi-step form](recipes/03-multi-step-form.md) | buttons + reply field, disabled Submit, Back, no duplicates |
-| [Shared card + personal panel](recipes/04-shared-card-personal-panel.md) | per-user private views in a group |
-| [Private widget](recipes/05-private-widget.md) | an order card that updates in place |
-| [Shared widget](recipes/06-shared-widget.md) | one live poll in many chats |
-| [Wallet](recipes/07-wallet.md) | pay and sign from a widget, honest payment states |
-| [Multi-topic bot](recipes/08-multi-topic-bot.md) | parallel conversations, topic links |
-| [Tracker bot upgrade](recipes/09-tracker-bot.md) | a real bot moved to the new API |
-| [Mini-recipes](recipes/mini-recipes.md) | gifts, communities, share themes, managed bots, verification |
+| [AI assistant with Stop](skills/telegram-bot-ui/recipes/01-ai-assistant.md) | rich streaming, real stages, Stop, race-safe single final message |
+| [Interactive document](skills/telegram-bot-ui/recipes/02-interactive-document.md) | compact table, collapsible quote, attached file, buttons in text |
+| [Multi-step form](skills/telegram-bot-ui/recipes/03-multi-step-form.md) | buttons + reply field, disabled Submit, Back, no duplicates |
+| [Shared card + personal panel](skills/telegram-bot-ui/recipes/04-shared-card-personal-panel.md) | per-user private views in a group |
+| [Private widget](skills/telegram-bot-ui/recipes/05-private-widget.md) | an order card that updates in place |
+| [Shared widget](skills/telegram-bot-ui/recipes/06-shared-widget.md) | one live poll in many chats |
+| [Wallet](skills/telegram-bot-ui/recipes/07-wallet.md) | pay and sign from a widget, honest payment states |
+| [Multi-topic bot](skills/telegram-bot-ui/recipes/08-multi-topic-bot.md) | parallel conversations, topic links |
+| [Tracker bot upgrade](skills/telegram-bot-ui/recipes/09-tracker-bot.md) | a real bot moved to the new API |
+| [Mini-recipes](skills/telegram-bot-ui/recipes/mini-recipes.md) | gifts, communities, share themes, managed bots, verification |
 
 | Range | You get |
 |---|---|
-| [20–29, 60–64 · Products](references/use-case-playbooks.md) | shop with Stars, support desk, booking, onboarding, settings, subscription, learning, assistant, expense split, community, inline mode, business account, alerts, search, delivery tracker |
-| [30–39 · Channel publishing](references/publishing-pipeline.md) | autoposter, long read, album, poll, pinned digest, editorial approval, cross-posting, mailing, comments, corrections |
-| [40–49 · Agent through its bot](references/agent-operated-bots.md) | deploy approval, live build status, nightly digest, ask and continue, streamed research with Stop, job topics, team group, incident alerts, coding-agent hooks |
-| [50–56 · Widgets](references/widget-patterns.md) | monitoring dashboard, booking, shop card, shared quiz, job progress, design a widget from words, REST data browser |
-| [70–75 · Premium emoji](references/emoji-packs.md) | restyle to one pack, icons from zero, channel series, mixed eligibility, Premium lapse, pack migration |
+| [20–29, 60–64 · Products](skills/telegram-bot-ui/references/use-case-playbooks.md) | shop with Stars, support desk, booking, onboarding, settings, subscription, learning, assistant, expense split, community, inline mode, business account, alerts, search, delivery tracker |
+| [30–39 · Channel publishing](skills/telegram-bot-ui/references/publishing-pipeline.md) | autoposter, long read, album, poll, pinned digest, editorial approval, cross-posting, mailing, comments, corrections |
+| [40–49 · Agent through its bot](skills/telegram-bot-ui/references/agent-operated-bots.md) | deploy approval, live build status, nightly digest, ask and continue, streamed research with Stop, job topics, team group, incident alerts, coding-agent hooks |
+| [50–56 · Widgets](skills/telegram-bot-ui/references/widget-patterns.md) | monitoring dashboard, booking, shop card, shared quiz, job progress, design a widget from words, REST data browser |
+| [70–75 · Premium emoji](skills/telegram-bot-ui/references/emoji-packs.md) | restyle to one pack, icons from zero, channel series, mixed eligibility, Premium lapse, pack migration |
 
-Full index by task, API symbol, version and context: [`recipes/README.md`](recipes/README.md).
+Full index by task, API symbol, version and context: [`recipes/README.md`](skills/telegram-bot-ui/recipes/README.md).
 
-**Code:** Python ([`examples/python/tgkit`](examples/python/tgkit), standard library) and TypeScript
-([`examples/ts`](examples/ts), no dependencies), plus adapters for **aiogram 3.31** and **grammY 1.46**.
+**Code:** Python ([`examples/python/tgkit`](skills/telegram-bot-ui/examples/python/tgkit), standard library) and TypeScript
+([`examples/ts`](skills/telegram-bot-ui/examples/ts), no dependencies), plus adapters for **aiogram 3.31** and **grammY 1.46**.
 
 ```bash
-python examples/python/recipes/r01_ai_assistant.py
+python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 ```
 
 ## 🛠 Tools you can use without an agent
@@ -273,20 +273,20 @@ All offline, standard library, and none of them needs a bot token.
 
 | Check before you ship | |
 |---|---|
-| `python scripts/validate_keyboard.py keyboard.json` | button and keyboard payload rules |
-| `python scripts/validate_rich.py message.json` | Rich Message limits and rules |
-| `python scripts/validate_widget.py widget.html` | widget size (server algorithm) and sandbox gaps |
-| `python scripts/validate_payload.py request.json` | structural check against the Bot API catalog |
-| `python scripts/audit_icons.py icon-map.json` | one icon family? animated mixed in? |
-| `python scripts/audit_copy.py strings.json` | translations: placeholders, symbols, label length |
+| `python skills/telegram-bot-ui/scripts/validate_keyboard.py keyboard.json` | button and keyboard payload rules |
+| `python skills/telegram-bot-ui/scripts/validate_rich.py message.json` | Rich Message limits and rules |
+| `python skills/telegram-bot-ui/scripts/validate_widget.py widget.html` | widget size (server algorithm) and sandbox gaps |
+| `python skills/telegram-bot-ui/scripts/validate_payload.py request.json` | structural check against the Bot API catalog |
+| `python skills/telegram-bot-ui/scripts/audit_icons.py icon-map.json` | one icon family? animated mixed in? |
+| `python skills/telegram-bot-ui/scripts/audit_copy.py strings.json` | translations: placeholders, symbols, label length |
 
 | Build and explore | |
 |---|---|
-| `python scripts/tg_api_lookup.py show sendWidget` | any method or type, offline |
-| `python scripts/tg_post.py preview post.json` | render a channel post (publishing is opt-in) |
-| `python scripts/build_widget.py src.html --strict` | build a widget from the kit, report its size |
-| `python scripts/preview_widget.py widget.html` | mock preview page (not a real client) |
-| `python scripts/emoji_packs.py capture` | how to collect real custom emoji ids |
+| `python skills/telegram-bot-ui/scripts/tg_api_lookup.py show sendWidget` | any method or type, offline |
+| `python skills/telegram-bot-ui/scripts/tg_post.py preview post.json` | render a channel post (publishing is opt-in) |
+| `python skills/telegram-bot-ui/scripts/build_widget.py src.html --strict` | build a widget from the kit, report its size |
+| `python skills/telegram-bot-ui/scripts/preview_widget.py widget.html` | mock preview page (not a real client) |
+| `python skills/telegram-bot-ui/scripts/emoji_packs.py capture` | how to collect real custom emoji ids |
 | `python scripts/install.py --host all --dry-run` | where the skill would be installed |
 | `python scripts/run_checks.py` | every check in this repository |
 
@@ -294,10 +294,10 @@ All offline, standard library, and none of them needs a bot token.
 
 | | |
 |---|---|
-| **Bot API** | verified against the official **Bot API 10.4** docs on **2026-11-15** — sources and dates in [`references/official-sources.md`](references/official-sources.md) |
+| **Bot API** | verified against the official **Bot API 10.4** docs on **2026-11-15** — sources and dates in [`references/official-sources.md`](skills/telegram-bot-ui/references/official-sources.md) |
 | **Hosts** | skill paths, subagent and plugin manifests and rule files verified against each host's docs on **2026-11-15** ([`docs/hosts.md`](docs/hosts.md)); the Claude Code plugin passes `claude plugin validate --strict` |
 | **Tests** | **414 Python** and **31 TypeScript** tests run offline on Linux and Windows in CI, plus contract tests against the real aiogram and grammY packages |
-| **Drift** | host entry files are generated from `SKILL.md` and one routing table by `scripts/build_adapters.py`; CI fails when they drift |
+| **Drift** | host entry files are generated from `skills/telegram-bot-ui/SKILL.md` and one routing table by `scripts/build_adapters.py`; CI fails when they drift |
 
 What is **not** verified yet, said plainly:
 
@@ -347,12 +347,16 @@ Python and TypeScript plus adapters for aiogram and grammY.
 ## 🗂 Repository layout
 
 ```
-SKILL.md            entry point the agent reads first (routing, rules, invariants)
-references/         focused guides, loaded only when a task needs them
-recipes/            end-to-end recipes, registry.json, manifest.json
-examples/           runnable Python/TS code, widgets, fixtures, payloads, SDK adapters
-scripts/            validators, installer, adapter generator, eval runner (offline)
-agents/             Codex metadata (openai.yaml), Claude subagents, Codex custom agents
+skills/telegram-bot-ui/   the skill; installers copy only this folder
+  SKILL.md          entry point the agent reads first (routing, rules, invariants)
+  references/       focused guides, loaded only when a task needs them
+  recipes/          end-to-end recipes, registry.json, manifest.json
+  examples/         runnable Python/TS code, widgets, fixtures, payloads, SDK adapters
+  scripts/          validators and tools the skill runs (offline)
+  data/             offline Bot API catalog, emoji pack registry
+  agents/           Codex metadata (openai.yaml)
+scripts/            installer, adapter generator, eval runner, check runner (offline)
+agents/             Claude subagents, Codex custom agents
 adapters/           routing table and generated entry files for other hosts
 .claude-plugin/     Claude Code plugin and marketplace manifests
 llms.txt            index of every document for agents that read files on demand
@@ -366,8 +370,8 @@ Issues and pull requests are welcome — especially screenshots from real Telegr
 recipes, SDK support updates and eval runs on more hosts.
 
 1. Cite official Telegram docs for capability claims and mark anything unverified.
-2. Keep `SKILL.md` compact.
-3. After editing `SKILL.md` or `adapters/`, run `python scripts/build_adapters.py`.
+2. Keep `skills/telegram-bot-ui/SKILL.md` compact.
+3. After editing `skills/telegram-bot-ui/SKILL.md` or `adapters/`, run `python scripts/build_adapters.py`.
 4. Run `python scripts/run_checks.py` before opening the PR.
 
 ## License

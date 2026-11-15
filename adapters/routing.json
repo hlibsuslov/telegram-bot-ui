@@ -1,5 +1,5 @@
 {
-  "$comment": "Single source of truth for scripts/build_adapters.py. Edit this file and adapters/source/roles/*.md, then run `python scripts/build_adapters.py`. Paths that do not exist yet are skipped in indexes (llms.txt) but kept in role bodies, which tell the agent to say so instead of guessing.",
+  "$comment": "Single source of truth for scripts/build_adapters.py. Edit this file and adapters/source/roles/*.md, then run `python scripts/build_adapters.py`. Capability `docs` are relative to the skill folder (skills/telegram-bot-ui/); `llms` globs are relative to the repository root. Paths that do not exist yet are skipped in indexes (llms.txt) but kept in role bodies, which tell the agent to say so instead of guessing.",
   "skill": "telegram-bot-ui",
   "display_name": "Telegram Bot UI",
   "repository": "https://github.com/hlibsuslov/telegram-bot-ui",
@@ -24,6 +24,9 @@
   "codex": {
     "short_description": "Design, build and operate Telegram bots with the newest Bot API: screens, keyboards, streaming AI replies with Stop, private panels in groups, Rich Messages, HTML widgets and TON wallet flows, premium emoji packs, whole product flows, channel publishing with approval, agent-operated bots and offline Bot API lookups. Preserves callback_data, deep links, handlers and translations.",
     "default_prompt": "Use $telegram-bot-ui to audit this Telegram bot's screens and propose fixes.",
+    "plugin_short_description": "UI/UX for Telegram bots, updated for every Bot API release",
+    "plugin_category": "Developer Tools",
+    "plugin_capabilities": ["Interactive", "Read", "Write"],
     "allow_implicit_invocation": true
   },
   "capabilities": [
@@ -130,28 +133,28 @@
       {
         "title": "Entry point",
         "globs": [
-          "SKILL.md"
+          "skills/telegram-bot-ui/SKILL.md"
         ]
       },
       {
         "title": "References",
         "globs": [
-          "references/*.md"
+          "skills/telegram-bot-ui/references/*.md"
         ]
       },
       {
         "title": "Recipes",
         "globs": [
-          "recipes/*.md",
-          "recipes/manifest.json",
-          "recipes/registry.json",
-          "recipes/use-cases.json"
+          "skills/telegram-bot-ui/recipes/*.md",
+          "skills/telegram-bot-ui/recipes/manifest.json",
+          "skills/telegram-bot-ui/recipes/registry.json",
+          "skills/telegram-bot-ui/recipes/use-cases.json"
         ]
       },
       {
         "title": "Tools",
         "globs": [
-          "scripts/*.py"
+          "skills/telegram-bot-ui/scripts/*.py"
         ]
       },
       {

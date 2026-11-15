@@ -116,7 +116,7 @@ class Payloads(unittest.TestCase):
             bw.payload("<p>x</p>", chat_id=1, caption="c", chat_data={"t": "я" * 600})
 
     def test_cli_writes_payload_from_demo(self):
-        out = os.path.join(_paths.ROOT, "tests", "_tmp_payload.json")
+        out = os.path.join(_paths.TESTS, "_tmp_payload.json")
         try:
             r = subprocess.run([sys.executable, os.path.join(SCRIPTS, "build_widget.py"),
                                 os.path.join(bw.SRC_DIR, "quiz.html"), "--strict", "--lang", "uk",
