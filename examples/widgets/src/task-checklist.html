@@ -46,7 +46,7 @@ function draw() {
     ls.appendChild(b);
   });
   $("em").textContent = n ? "" : K.t("empty");
-  $("pc").textContent = n ? done + " " + K.t("of") + " " + n + " " + K.t("dn") : "";
+  $("pc").dir = "auto"; $("pc").textContent = n ? done + " " + K.t("of") + " " + n + " " + K.t("dn") : "";
   $("pb").style.width = n ? Math.round(done / n * 100) + "%" : "0";
   $("pb").style.background = n && done == n ? "var(--k-ok)" : "";
 }

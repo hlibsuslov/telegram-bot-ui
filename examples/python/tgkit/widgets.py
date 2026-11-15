@@ -48,7 +48,7 @@ _RUNTIME_GAPS = [
      "element is outside widget profile 1 and is removed"),
     (r"<\s*script[^>]*\bsrc\s*=|<\s*link\b|@import|@font-face",
      "external scripts, stylesheets and fonts are never loaded; inline everything"),
-    (r"<\s*img[^>]*\bsrc\s*=\s*[\"']?(?!data:)",
+    (r"<\s*img[^>]*\bsrc\s*=\s*(?![\"']?data:)",
      "images load only from data: URLs (PNG/JPEG/GIF/WebP) - others show a placeholder"),
     (r"\d\s*(vh|dvh|svh|lvh)\b",
      "height-relative units are not supported; content beyond 600 px is clipped"),

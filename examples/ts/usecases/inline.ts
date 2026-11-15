@@ -38,7 +38,7 @@ export class PlaceBot {
       [btn(I18N.t(lang, "btn_open"), undefined, { url: `https://t.me/${BOT}?start=place_${key}` })]);
   }
   card(lang: string, key: string, voters: Map<number, string>) {
-    const p = PLACES[key], esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const p = PLACES[key], esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     const going = voters.size ? I18N.t(lang, "going_some", { n: voters.size, names: new Raw([...voters.values()].map(esc).join(", ")) })
       : I18N.t(lang, "going_none");
     return I18N.t(lang, "card", { title: p.title, area: p.area, note: p.note, going: new Raw(going) });

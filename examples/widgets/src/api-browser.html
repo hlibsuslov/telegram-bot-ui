@@ -103,7 +103,7 @@ function draw() {
     prev.disabled = prev.disabled || s.pg < 2;
     next.disabled = next.disabled || s.pg >= s.np;
     pg.appendChild(prev);
-    pg.appendChild(K.h("span", "mt", s.pg + " " + K.t("of") + " " + s.np));
+    var pl = K.h("span", "mt", s.pg + " " + K.t("of") + " " + s.np); pl.dir = "auto"; pg.appendChild(pl);
     pg.appendChild(next);
     v.appendChild(pg);
   }

@@ -25,7 +25,7 @@ export function btn(text: string, data?: string, o: { style?: string; disabled?:
 }
 export const kb = (...rows: (Params[] | null | undefined)[]) => ({ inline_keyboard: rows.filter((r) => r && r.length) });
 
-const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 export class Raw { text: string; constructor(text: string) { this.text = text; } }
 
 export class I18n {

@@ -47,7 +47,7 @@ function draw() {
     return;
   }
   var done = s.sel >= 0;
-  $("hl").textContent = K.t("q") + " " + (s.q + 1) + " " + K.t("of") + " " + s.n;
+  $("hl").dir = "auto"; $("hl").textContent = K.t("q") + " " + (s.q + 1) + " " + K.t("of") + " " + s.n;
   $("sl").textContent = K.t("sc") + " " + s.sc;
   $("pb").style.width = Math.round((s.q + (done ? 1 : 0)) / s.n * 100) + "%";
   $("qq").textContent = s.t;
