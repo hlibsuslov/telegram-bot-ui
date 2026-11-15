@@ -281,6 +281,8 @@ def steps_from(doc, method: str | None):
 
 
 def main(argv=None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description="Structural Bot API payload check (not full semantic validation)")
     ap.add_argument("files", nargs="+", help="JSON files, or - for stdin")
     g = ap.add_mutually_exclusive_group()

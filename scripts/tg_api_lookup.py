@@ -223,6 +223,8 @@ def card(api: Api, sym: dict) -> str:
 
 
 def main(argv=None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description="Offline Bot API lookup")
     ap.add_argument("--data", default=DATA_DIR)
     ap.add_argument("--json", action="store_true")

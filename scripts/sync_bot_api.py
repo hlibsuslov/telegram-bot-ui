@@ -598,6 +598,8 @@ def load_changelog(data_dir: str = DATA_DIR) -> list:
 
 
 def main(argv=None) -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--api-html", help="parse this saved copy of /bots/api instead of fetching")
     ap.add_argument("--changelog-html", help="parse this saved copy of /bots/api-changelog")
