@@ -1,0 +1,59 @@
+{
+ "name": "ChatBoostRemoved",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatboostremoved",
+ "url": "https://core.telegram.org/bots/api#chatboostremoved",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Chat which was boosted"
+  },
+  {
+   "name": "boost_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the boost"
+  },
+  {
+   "name": "remove_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Point in time (Unix timestamp) when the boost was removed"
+  },
+  {
+   "name": "source",
+   "type": "ChatBoostSource",
+   "types": [
+    {
+     "name": "ChatBoostSource",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Source of the removed boost"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a boost removed from a chat."
+}

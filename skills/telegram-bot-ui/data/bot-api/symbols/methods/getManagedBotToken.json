@@ -1,0 +1,23 @@
+{
+ "name": "getManagedBotToken",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getmanagedbottoken",
+ "url": "https://core.telegram.org/bots/api#getmanagedbottoken",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User identifier of the managed bot whose token will be returned"
+  }
+ ],
+ "description": "Use this method to get the token of a managed bot. Returns the token as String on success.",
+ "returns": "String"
+}

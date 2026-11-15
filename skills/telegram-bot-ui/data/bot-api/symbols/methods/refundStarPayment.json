@@ -1,0 +1,35 @@
+{
+ "name": "refundStarPayment",
+ "kind": "method",
+ "section": "Payments",
+ "anchor": "refundstarpayment",
+ "url": "https://core.telegram.org/bots/api#refundstarpayment",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the user whose payment will be refunded"
+  },
+  {
+   "name": "telegram_payment_charge_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Telegram payment identifier"
+  }
+ ],
+ "description": "Refunds a successful payment in Telegram Stars. Returns True on success.",
+ "returns": "True"
+}

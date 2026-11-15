@@ -1,0 +1,48 @@
+{
+ "name": "RichTextHashtag",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtexthashtag",
+ "url": "https://core.telegram.org/bots/api#richtexthashtag",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “hashtag”",
+   "const": "hashtag"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  },
+  {
+   "name": "hashtag",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The hashtag"
+  }
+ ],
+ "subtypes": [],
+ "description": "A hashtag."
+}

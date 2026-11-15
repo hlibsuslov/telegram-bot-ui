@@ -1,0 +1,119 @@
+{
+ "name": "WebhookInfo",
+ "kind": "type",
+ "section": "Getting updates",
+ "anchor": "webhookinfo",
+ "url": "https://core.telegram.org/bots/api#webhookinfo",
+ "fields": [
+  {
+   "name": "url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Webhook URL, may be empty if webhook is not set up"
+  },
+  {
+   "name": "has_custom_certificate",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if a custom certificate was provided for webhook certificate checks"
+  },
+  {
+   "name": "pending_update_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Number of updates awaiting delivery"
+  },
+  {
+   "name": "ip_address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Currently used webhook IP address"
+  },
+  {
+   "name": "last_error_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unix time for the most recent error that happened when trying to deliver an update via webhook"
+  },
+  {
+   "name": "last_error_message",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Error message in human-readable format for the most recent error that happened when trying to deliver an update via webhook"
+  },
+  {
+   "name": "last_synchronization_error_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unix time of the most recent error that happened when trying to synchronize available updates with Telegram datacenters"
+  },
+  {
+   "name": "max_connections",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The maximum allowed number of simultaneous HTTPS connections to the webhook for update delivery"
+  },
+  {
+   "name": "allowed_updates",
+   "type": "Array of String",
+   "types": [
+    {
+     "name": "String",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "A list of update types the bot is subscribed to. Defaults to all update types except chat_member, message_reaction, and message_reaction_count."
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes the current status of a webhook."
+}

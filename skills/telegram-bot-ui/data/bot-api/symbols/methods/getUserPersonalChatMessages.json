@@ -1,0 +1,35 @@
+{
+ "name": "getUserPersonalChatMessages",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getuserpersonalchatmessages",
+ "url": "https://core.telegram.org/bots/api#getuserpersonalchatmessages",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target user"
+  },
+  {
+   "name": "limit",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The maximum number of messages to return; 1-20"
+  }
+ ],
+ "description": "Use this method to get the last messages from the personal chat (i.e., the chat currently added to their profile) of a given user. On success, an Array of Message objects is returned.",
+ "returns": "Array of Message"
+}

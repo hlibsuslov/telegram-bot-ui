@@ -1,0 +1,71 @@
+{
+ "name": "SharedWidgetQuery",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "sharedwidgetquery",
+ "url": "https://core.telegram.org/bots/api#sharedwidgetquery",
+ "fields": [
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this query"
+  },
+  {
+   "name": "from",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sender"
+  },
+  {
+   "name": "type",
+   "type": "WidgetQueryType",
+   "types": [
+    {
+     "name": "WidgetQueryType",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the query"
+  },
+  {
+   "name": "data",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Data of the query, 1-64 bytes"
+  },
+  {
+   "name": "widget_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the shared widget, which sent the query"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents an incoming query from a forwarded message with a shared widget created by the bot. Use answerWidgetQuery to answer the query. Each user can send at most 5 queries per 5 seconds to the bot from all its widgets."
+}

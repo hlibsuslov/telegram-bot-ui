@@ -1,0 +1,195 @@
+{
+ "name": "sendSharedWidget",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "sendsharedwidget",
+ "url": "https://core.telegram.org/bots/api#sendsharedwidget",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target supergroup in the format @username"
+  },
+  {
+   "name": "message_thread_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only"
+  },
+  {
+   "name": "widget_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the shared widget"
+  },
+  {
+   "name": "chat_data",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Data of the widget, which is specific to the message, 0-1024 bytes"
+  },
+  {
+   "name": "caption",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Widget caption, 0-1024 characters after entities parsing"
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the widget caption. See formatting options for more details."
+  },
+  {
+   "name": "caption_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode"
+  },
+  {
+   "name": "show_caption_above_media",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the caption must be shown above the widget"
+  },
+  {
+   "name": "disable_notification",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sends the message silently. Users will receive a notification with no sound."
+  },
+  {
+   "name": "protect_content",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Protects the contents of the sent message from forwarding and saving"
+  },
+  {
+   "name": "allow_paid_broadcast",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance."
+  },
+  {
+   "name": "message_effect_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the message effect to be added to the message; for private chats only"
+  },
+  {
+   "name": "reply_parameters",
+   "type": "ReplyParameters",
+   "types": [
+    {
+     "name": "ReplyParameters",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Description of the message to reply to"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    },
+    {
+     "name": "ReplyKeyboardMarkup",
+     "array": 0
+    },
+    {
+     "name": "ReplyKeyboardRemove",
+     "array": 0
+    },
+    {
+     "name": "ForceReply",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user."
+  }
+ ],
+ "description": "Use this method to send again a shared widget created by the bot. Currently, in the production environment, widgets can be sent only to private chats, and sent widgets automatically have protected content and therefore can't be forwarded. On success, the sent Message is returned.",
+ "returns": "Message"
+}

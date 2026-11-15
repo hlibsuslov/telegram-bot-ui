@@ -1,0 +1,10 @@
+{
+ "name": "getAvailableGifts",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getavailablegifts",
+ "url": "https://core.telegram.org/bots/api#getavailablegifts",
+ "parameters": [],
+ "description": "Returns the list of gifts that can be sent by the bot to users and channel chats. Requires no parameters. Returns a Gifts object.",
+ "returns": "Gifts"
+}

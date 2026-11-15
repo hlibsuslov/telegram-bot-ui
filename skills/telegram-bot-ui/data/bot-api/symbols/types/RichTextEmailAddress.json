@@ -1,0 +1,48 @@
+{
+ "name": "RichTextEmailAddress",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextemailaddress",
+ "url": "https://core.telegram.org/bots/api#richtextemailaddress",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “email_address”",
+   "const": "email_address"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  },
+  {
+   "name": "email_address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The email address"
+  }
+ ],
+ "subtypes": [],
+ "description": "A text with an email address."
+}

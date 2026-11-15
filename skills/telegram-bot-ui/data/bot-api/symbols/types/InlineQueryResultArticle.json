@@ -1,0 +1,132 @@
+{
+ "name": "InlineQueryResultArticle",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inlinequeryresultarticle",
+ "url": "https://core.telegram.org/bots/api#inlinequeryresultarticle",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the result, must be article",
+   "const": "article"
+  },
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this result, 1-64 Bytes"
+  },
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Title of the result"
+  },
+  {
+   "name": "input_message_content",
+   "type": "InputMessageContent",
+   "types": [
+    {
+     "name": "InputMessageContent",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Content of the message to be sent"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Inline keyboard attached to the message"
+  },
+  {
+   "name": "url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "URL of the result"
+  },
+  {
+   "name": "description",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Short description of the result"
+  },
+  {
+   "name": "thumbnail_url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Url of the thumbnail for the result"
+  },
+  {
+   "name": "thumbnail_width",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Thumbnail width"
+  },
+  {
+   "name": "thumbnail_height",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Thumbnail height"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a link to an article or web page."
+}

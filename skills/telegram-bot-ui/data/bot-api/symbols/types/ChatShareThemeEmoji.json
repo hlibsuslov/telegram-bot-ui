@@ -1,0 +1,48 @@
+{
+ "name": "ChatShareThemeEmoji",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatsharethemeemoji",
+ "url": "https://core.telegram.org/bots/api#chatsharethemeemoji",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the theme, always “emoji”",
+   "const": "emoji"
+  },
+  {
+   "name": "emojis",
+   "type": "Array of EmojiType",
+   "types": [
+    {
+     "name": "EmojiType",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "The emoji; 0-6 regular or custom emoji"
+  },
+  {
+   "name": "background_backdrop_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Identifier of the backdrop used as the background; omitted if the default background is used. Use getChatShareThemeBackdrops to get details about the backdrop."
+  }
+ ],
+ "subtypes": [],
+ "description": "The theme with emoji placed on a background."
+}

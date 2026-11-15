@@ -1,0 +1,84 @@
+{
+ "name": "BackgroundTypePattern",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "backgroundtypepattern",
+ "url": "https://core.telegram.org/bots/api#backgroundtypepattern",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the background, always “pattern”",
+   "const": "pattern"
+  },
+  {
+   "name": "document",
+   "type": "Document",
+   "types": [
+    {
+     "name": "Document",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Document with the pattern"
+  },
+  {
+   "name": "fill",
+   "type": "BackgroundFill",
+   "types": [
+    {
+     "name": "BackgroundFill",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The background fill that is combined with the pattern"
+  },
+  {
+   "name": "intensity",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Intensity of the pattern when it is shown above the filled background; 0-100"
+  },
+  {
+   "name": "is_inverted",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the background fill must be applied only to the pattern itself. All other pixels are black in this case. For dark themes only."
+  },
+  {
+   "name": "is_moving",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the background moves slightly when the device is tilted"
+  }
+ ],
+ "subtypes": [],
+ "description": "The background is a .PNG or .TGV (gzipped subset of SVG with MIME type “application/x-tgwallpattern”) pattern to be combined with the background fill chosen by the user."
+}

@@ -1,0 +1,23 @@
+{
+ "name": "getBusinessAccountStarBalance",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getbusinessaccountstarbalance",
+ "url": "https://core.telegram.org/bots/api#getbusinessaccountstarbalance",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection"
+  }
+ ],
+ "description": "Returns the amount of Telegram Stars owned by a managed business account. Requires the can_view_gifts_and_stars business bot right. Returns StarAmount on success.",
+ "returns": "StarAmount"
+}

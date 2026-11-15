@@ -1,0 +1,59 @@
+{
+ "name": "OrderInfo",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "orderinfo",
+ "url": "https://core.telegram.org/bots/api#orderinfo",
+ "fields": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "User name"
+  },
+  {
+   "name": "phone_number",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "User's phone number"
+  },
+  {
+   "name": "email",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "User email"
+  },
+  {
+   "name": "shipping_address",
+   "type": "ShippingAddress",
+   "types": [
+    {
+     "name": "ShippingAddress",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "User shipping address"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents information about an order."
+}

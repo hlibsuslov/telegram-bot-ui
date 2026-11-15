@@ -1,0 +1,10 @@
+{
+ "name": "CallbackGame",
+ "kind": "type",
+ "section": "Games",
+ "anchor": "callbackgame",
+ "url": "https://core.telegram.org/bots/api#callbackgame",
+ "fields": [],
+ "subtypes": [],
+ "description": "A placeholder, currently holds no information. Use BotFather to set up your game."
+}

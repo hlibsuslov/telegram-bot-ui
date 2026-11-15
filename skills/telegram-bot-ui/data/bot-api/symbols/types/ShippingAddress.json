@@ -1,0 +1,83 @@
+{
+ "name": "ShippingAddress",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "shippingaddress",
+ "url": "https://core.telegram.org/bots/api#shippingaddress",
+ "fields": [
+  {
+   "name": "country_code",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Two-letter ISO 3166-1 alpha-2 country code"
+  },
+  {
+   "name": "state",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "State, if applicable"
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "City"
+  },
+  {
+   "name": "street_line1",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "First line for the address"
+  },
+  {
+   "name": "street_line2",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Second line for the address"
+  },
+  {
+   "name": "post_code",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Address post code"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a shipping address."
+}

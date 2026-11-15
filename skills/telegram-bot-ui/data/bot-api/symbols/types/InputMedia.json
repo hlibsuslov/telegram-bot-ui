@@ -1,0 +1,17 @@
+{
+ "name": "InputMedia",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inputmedia",
+ "url": "https://core.telegram.org/bots/api#inputmedia",
+ "fields": [],
+ "subtypes": [
+  "InputMediaAnimation",
+  "InputMediaAudio",
+  "InputMediaDocument",
+  "InputMediaLivePhoto",
+  "InputMediaPhoto",
+  "InputMediaVideo"
+ ],
+ "description": "This object represents the content of a media message to be sent. It should be one of"
+}

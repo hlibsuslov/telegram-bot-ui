@@ -1,0 +1,47 @@
+{
+ "name": "MessageGenerationStopped",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "messagegenerationstopped",
+ "url": "https://core.telegram.org/bots/api#messagegenerationstopped",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Chat in which the message is generated"
+  },
+  {
+   "name": "message_thread_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the message thread in which the message is generated"
+  },
+  {
+   "name": "draft_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the message draft which was stopped"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes an update about a user stopping message generation."
+}

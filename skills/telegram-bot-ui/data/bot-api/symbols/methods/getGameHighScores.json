@@ -1,0 +1,59 @@
+{
+ "name": "getGameHighScores",
+ "kind": "method",
+ "section": "Games",
+ "anchor": "getgamehighscores",
+ "url": "https://core.telegram.org/bots/api#getgamehighscores",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Target user id"
+  },
+  {
+   "name": "chat_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Required if inline_message_id is not specified. Unique identifier for the target chat."
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Required if inline_message_id is not specified. Identifier of the sent message."
+  },
+  {
+   "name": "inline_message_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Required if chat_id and message_id are not specified. Identifier of the inline message."
+  }
+ ],
+ "description": "Use this method to get data for high score tables. Will return the score of the specified user and several of their neighbors in a game. Returns an Array of GameHighScore objects. This method will currently return scores for the target user, plus two of their closest neighbors on each side. Will also return the top three users if the user and their neighbors are not among them. Please note that this behavior is subject to change.",
+ "returns": "Array of GameHighScore"
+}

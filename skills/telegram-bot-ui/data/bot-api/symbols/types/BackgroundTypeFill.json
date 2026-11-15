@@ -1,0 +1,48 @@
+{
+ "name": "BackgroundTypeFill",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "backgroundtypefill",
+ "url": "https://core.telegram.org/bots/api#backgroundtypefill",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the background, always “fill”",
+   "const": "fill"
+  },
+  {
+   "name": "fill",
+   "type": "BackgroundFill",
+   "types": [
+    {
+     "name": "BackgroundFill",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The background fill"
+  },
+  {
+   "name": "dark_theme_dimming",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Dimming of the background in dark themes, as a percentage; 0-100"
+  }
+ ],
+ "subtypes": [],
+ "description": "The background is automatically filled based on the selected colors."
+}

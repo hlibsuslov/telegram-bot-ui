@@ -1,0 +1,23 @@
+{
+ "name": "VideoChatEnded",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "videochatended",
+ "url": "https://core.telegram.org/bots/api#videochatended",
+ "fields": [
+  {
+   "name": "duration",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Video chat duration in seconds"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a service message about a video chat ended in the chat."
+}

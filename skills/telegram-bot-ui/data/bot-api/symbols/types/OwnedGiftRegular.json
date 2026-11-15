@@ -1,0 +1,192 @@
+{
+ "name": "OwnedGiftRegular",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "ownedgiftregular",
+ "url": "https://core.telegram.org/bots/api#ownedgiftregular",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the gift, always “regular”",
+   "const": "regular"
+  },
+  {
+   "name": "gift",
+   "type": "Gift",
+   "types": [
+    {
+     "name": "Gift",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the regular gift"
+  },
+  {
+   "name": "owned_gift_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the gift for the bot; for gifts received on behalf of business accounts only"
+  },
+  {
+   "name": "sender_user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sender of the gift if it is a known user"
+  },
+  {
+   "name": "send_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date the gift was sent in Unix time"
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Text of the message that was added to the gift"
+  },
+  {
+   "name": "entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Special entities that appear in the text"
+  },
+  {
+   "name": "is_private",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the sender and gift text are shown only to the gift receiver; otherwise, everyone will be able to see them"
+  },
+  {
+   "name": "is_saved",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the gift is displayed on the account's profile page; for gifts received on behalf of business accounts only"
+  },
+  {
+   "name": "can_be_upgraded",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the gift can be upgraded to a unique gift; for gifts received on behalf of business accounts only"
+  },
+  {
+   "name": "was_refunded",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the gift was refunded and isn't available anymore"
+  },
+  {
+   "name": "convert_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Number of Telegram Stars that can be claimed by the receiver instead of the gift; omitted if the gift cannot be converted to Telegram Stars; for gifts received on behalf of business accounts only"
+  },
+  {
+   "name": "prepaid_upgrade_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Number of Telegram Stars that were paid for the ability to upgrade the gift"
+  },
+  {
+   "name": "is_upgrade_separate",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the gift's upgrade was purchased after the gift was sent; for gifts received on behalf of business accounts only"
+  },
+  {
+   "name": "unique_gift_number",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique number reserved for this gift when upgraded. See the number field in UniqueGift."
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a regular gift owned by a user or a chat."
+}

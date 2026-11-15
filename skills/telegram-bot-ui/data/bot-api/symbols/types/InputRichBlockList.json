@@ -1,0 +1,36 @@
+{
+ "name": "InputRichBlockList",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblocklist",
+ "url": "https://core.telegram.org/bots/api#inputrichblocklist",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “list”",
+   "const": "list"
+  },
+  {
+   "name": "items",
+   "type": "Array of InputRichBlockListItem",
+   "types": [
+    {
+     "name": "InputRichBlockListItem",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Items of the list"
+  }
+ ],
+ "subtypes": [],
+ "description": "A list of blocks, corresponding to the HTML tag <ul> or <ol> with multiple nested tags <li>."
+}

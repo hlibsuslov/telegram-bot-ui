@@ -1,0 +1,47 @@
+{
+ "name": "GameHighScore",
+ "kind": "type",
+ "section": "Games",
+ "anchor": "gamehighscore",
+ "url": "https://core.telegram.org/bots/api#gamehighscore",
+ "fields": [
+  {
+   "name": "position",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Position in high score table for the game"
+  },
+  {
+   "name": "user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User"
+  },
+  {
+   "name": "score",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Score"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents one row of the high scores table for a game. And that's about all we've got for now. If you've got any questions, please check out our Bot FAQ »"
+}

@@ -1,0 +1,23 @@
+{
+ "name": "ChatBoostAdded",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatboostadded",
+ "url": "https://core.telegram.org/bots/api#chatboostadded",
+ "fields": [
+  {
+   "name": "boost_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Number of boosts added by the user"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a service message about a user boosting a chat."
+}

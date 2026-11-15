@@ -1,0 +1,10 @@
+{
+ "name": "DisabledButton",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "disabledbutton",
+ "url": "https://core.telegram.org/bots/api#disabledbutton",
+ "fields": [],
+ "subtypes": [],
+ "description": "This object represents a disabled button which does nothing. Currently holds no information."
+}

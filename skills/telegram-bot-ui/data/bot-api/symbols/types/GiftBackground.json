@@ -1,0 +1,47 @@
+{
+ "name": "GiftBackground",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "giftbackground",
+ "url": "https://core.telegram.org/bots/api#giftbackground",
+ "fields": [
+  {
+   "name": "center_color",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Center color of the background in RGB format"
+  },
+  {
+   "name": "edge_color",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Edge color of the background in RGB format"
+  },
+  {
+   "name": "text_color",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text color of the background in RGB format"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes the background of a gift."
+}

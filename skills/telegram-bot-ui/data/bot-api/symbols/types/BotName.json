@@ -1,0 +1,23 @@
+{
+ "name": "BotName",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "botname",
+ "url": "https://core.telegram.org/bots/api#botname",
+ "fields": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The bot's name"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents the bot's name."
+}

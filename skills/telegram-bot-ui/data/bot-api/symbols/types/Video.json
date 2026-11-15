@@ -1,0 +1,155 @@
+{
+ "name": "Video",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "video",
+ "url": "https://core.telegram.org/bots/api#video",
+ "fields": [
+  {
+   "name": "file_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier for this file, which can be used to download or reuse the file"
+  },
+  {
+   "name": "file_unique_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this file, which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file."
+  },
+  {
+   "name": "width",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Video width as defined by the sender"
+  },
+  {
+   "name": "height",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Video height as defined by the sender"
+  },
+  {
+   "name": "duration",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Duration of the video in seconds as defined by the sender"
+  },
+  {
+   "name": "thumbnail",
+   "type": "PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Video thumbnail"
+  },
+  {
+   "name": "cover",
+   "type": "Array of PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Available sizes of the cover of the video in the message"
+  },
+  {
+   "name": "start_timestamp",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Timestamp in seconds from which the video will play in the message"
+  },
+  {
+   "name": "qualities",
+   "type": "Array of VideoQuality",
+   "types": [
+    {
+     "name": "VideoQuality",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "List of available qualities of the video"
+  },
+  {
+   "name": "file_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Original filename as defined by the sender"
+  },
+  {
+   "name": "mime_type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "MIME type of the file as defined by the sender"
+  },
+  {
+   "name": "file_size",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "File size in bytes. It can be bigger than 2^31 and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this value."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a video file."
+}

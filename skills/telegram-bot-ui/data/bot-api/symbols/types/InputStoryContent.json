@@ -1,0 +1,13 @@
+{
+ "name": "InputStoryContent",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inputstorycontent",
+ "url": "https://core.telegram.org/bots/api#inputstorycontent",
+ "fields": [],
+ "subtypes": [
+  "InputStoryContentPhoto",
+  "InputStoryContentVideo"
+ ],
+ "description": "This object describes the content of a story to post. Currently, it can be one of"
+}

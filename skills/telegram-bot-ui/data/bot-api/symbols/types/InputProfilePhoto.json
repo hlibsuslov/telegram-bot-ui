@@ -1,0 +1,13 @@
+{
+ "name": "InputProfilePhoto",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inputprofilephoto",
+ "url": "https://core.telegram.org/bots/api#inputprofilephoto",
+ "fields": [],
+ "subtypes": [
+  "InputProfilePhotoStatic",
+  "InputProfilePhotoAnimated"
+ ],
+ "description": "This object describes a profile photo to set. Currently, it can be one of"
+}

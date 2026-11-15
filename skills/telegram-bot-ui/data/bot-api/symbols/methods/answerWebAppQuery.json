@@ -1,0 +1,35 @@
+{
+ "name": "answerWebAppQuery",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "answerwebappquery",
+ "url": "https://core.telegram.org/bots/api#answerwebappquery",
+ "parameters": [
+  {
+   "name": "web_app_query_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the query to be answered"
+  },
+  {
+   "name": "result",
+   "type": "InlineQueryResult",
+   "types": [
+    {
+     "name": "InlineQueryResult",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "A JSON-serialized object describing the message to be sent"
+  }
+ ],
+ "description": "Use this method to set the result of an interaction with a Web App and send a corresponding message on behalf of the user to the chat from which the query originated. On success, a SentWebAppMessage object is returned.",
+ "returns": "SentWebAppMessage"
+}

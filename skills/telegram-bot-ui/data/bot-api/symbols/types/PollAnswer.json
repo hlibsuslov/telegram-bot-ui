@@ -1,0 +1,71 @@
+{
+ "name": "PollAnswer",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "pollanswer",
+ "url": "https://core.telegram.org/bots/api#pollanswer",
+ "fields": [
+  {
+   "name": "poll_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique poll identifier"
+  },
+  {
+   "name": "voter_chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The chat that changed the answer to the poll, if the voter is anonymous"
+  },
+  {
+   "name": "user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The user that changed the answer to the poll, if the voter isn't anonymous"
+  },
+  {
+   "name": "option_ids",
+   "type": "Array of Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "0-based identifiers of chosen answer options. May be empty if the vote was retracted."
+  },
+  {
+   "name": "option_persistent_ids",
+   "type": "Array of String",
+   "types": [
+    {
+     "name": "String",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Persistent identifiers of the chosen answer options. May be empty if the vote was retracted."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents an answer of a user in a non-anonymous poll."
+}

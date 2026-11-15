@@ -1,0 +1,111 @@
+{
+ "name": "sendChecklist",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "sendchecklist",
+ "url": "https://core.telegram.org/bots/api#sendchecklist",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection on behalf of which the message will be sent"
+  },
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target bot in the format @username"
+  },
+  {
+   "name": "checklist",
+   "type": "InputChecklist",
+   "types": [
+    {
+     "name": "InputChecklist",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "A JSON-serialized object for the checklist to send"
+  },
+  {
+   "name": "disable_notification",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sends the message silently. Users will receive a notification with no sound."
+  },
+  {
+   "name": "protect_content",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Protects the contents of the sent message from forwarding and saving"
+  },
+  {
+   "name": "message_effect_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the message effect to be added to the message"
+  },
+  {
+   "name": "reply_parameters",
+   "type": "ReplyParameters",
+   "types": [
+    {
+     "name": "ReplyParameters",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object for description of the message to reply to"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object for an inline keyboard"
+  }
+ ],
+ "description": "Use this method to send a checklist on behalf of a connected business account. On success, the sent Message is returned.",
+ "returns": "Message"
+}

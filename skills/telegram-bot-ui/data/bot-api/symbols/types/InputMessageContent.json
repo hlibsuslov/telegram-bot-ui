@@ -1,0 +1,19 @@
+{
+ "name": "InputMessageContent",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inputmessagecontent",
+ "url": "https://core.telegram.org/bots/api#inputmessagecontent",
+ "fields": [],
+ "subtypes": [
+  "InputTextMessageContent",
+  "InputRichMessageContent",
+  "InputLocationMessageContent",
+  "InputVenueMessageContent",
+  "InputContactMessageContent",
+  "InputInvoiceMessageContent",
+  "InputWidgetMessageContent",
+  "InputSharedWidgetMessageContent"
+ ],
+ "description": "This object represents the content of a message to be sent as a result of an inline query. Telegram clients currently support the following types:"
+}

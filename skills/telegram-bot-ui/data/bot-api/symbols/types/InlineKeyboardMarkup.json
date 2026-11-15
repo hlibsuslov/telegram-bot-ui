@@ -1,0 +1,35 @@
+{
+ "name": "InlineKeyboardMarkup",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inlinekeyboardmarkup",
+ "url": "https://core.telegram.org/bots/api#inlinekeyboardmarkup",
+ "fields": [
+  {
+   "name": "inline_keyboard",
+   "type": "Array of Array of InlineKeyboardButton",
+   "types": [
+    {
+     "name": "InlineKeyboardButton",
+     "array": 2
+    }
+   ],
+   "required": true,
+   "description": "Array of button rows, each represented by an Array of InlineKeyboardButton objects"
+  },
+  {
+   "name": "force_reply",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the reply interface must be shown to the user, as if they had manually selected the bot's message and tapped 'Reply'. The value of the field can't be changed when the inline keyboard is edited."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents an inline keyboard that appears right next to the message it belongs to."
+}

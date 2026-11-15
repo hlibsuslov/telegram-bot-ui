@@ -1,0 +1,36 @@
+{
+ "name": "TransactionPartnerTelegramApi",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "transactionpartnertelegramapi",
+ "url": "https://core.telegram.org/bots/api#transactionpartnertelegramapi",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the transaction partner, always “telegram_api”",
+   "const": "telegram_api"
+  },
+  {
+   "name": "request_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The number of successful requests that exceeded regular limits and were therefore billed"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a transaction with payment for paid broadcasting."
+}

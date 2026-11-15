@@ -1,0 +1,59 @@
+{
+ "name": "InputTextMessageContent",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inputtextmessagecontent",
+ "url": "https://core.telegram.org/bots/api#inputtextmessagecontent",
+ "fields": [
+  {
+   "name": "message_text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text of the message to be sent, 1-4096 characters"
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the message text. See formatting options for more details."
+  },
+  {
+   "name": "entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "List of special entities that appear in message text, which can be specified instead of parse_mode"
+  },
+  {
+   "name": "link_preview_options",
+   "type": "LinkPreviewOptions",
+   "types": [
+    {
+     "name": "LinkPreviewOptions",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Link preview generation options for the message"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the content of a text message to be sent as the result of an inline query."
+}

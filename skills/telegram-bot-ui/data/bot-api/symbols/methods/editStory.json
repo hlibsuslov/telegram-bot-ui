@@ -1,0 +1,95 @@
+{
+ "name": "editStory",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "editstory",
+ "url": "https://core.telegram.org/bots/api#editstory",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection"
+  },
+  {
+   "name": "story_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the story to edit"
+  },
+  {
+   "name": "content",
+   "type": "InputStoryContent",
+   "types": [
+    {
+     "name": "InputStoryContent",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Content of the story"
+  },
+  {
+   "name": "caption",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the story, 0-2048 characters after entities parsing"
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the story caption. See formatting options for more details."
+  },
+  {
+   "name": "caption_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode"
+  },
+  {
+   "name": "areas",
+   "type": "Array of StoryArea",
+   "types": [
+    {
+     "name": "StoryArea",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized list of clickable areas to be shown on the story"
+  }
+ ],
+ "description": "Edits a story previously posted by the bot on behalf of a managed business account. Requires the can_manage_stories business bot right. Returns Story on success.",
+ "returns": "Story"
+}

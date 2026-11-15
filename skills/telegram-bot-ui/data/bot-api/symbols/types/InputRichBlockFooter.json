@@ -1,0 +1,36 @@
+{
+ "name": "InputRichBlockFooter",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblockfooter",
+ "url": "https://core.telegram.org/bots/api#inputrichblockfooter",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “footer”",
+   "const": "footer"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A footer, corresponding to the HTML tag <footer>."
+}

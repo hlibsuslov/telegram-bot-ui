@@ -1,0 +1,83 @@
+{
+ "name": "Widget",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "widget",
+ "url": "https://core.telegram.org/bots/api#widget",
+ "fields": [
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the shared widget, which can be used to send the widget again using the method sendSharedWidget; omitted if the widget isn't shared"
+  },
+  {
+   "name": "width",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Width of the widget in logical pixels; omitted if the widget must occupy the whole width of the message bubble"
+  },
+  {
+   "name": "height",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Height of the widget in logical pixels; omitted if the height of the widget isn't fixed"
+  },
+  {
+   "name": "html",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "HTML code of the widget"
+  },
+  {
+   "name": "public_data",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Public data of the widget, which is available wherever the widget is shown. All messages with a shared widget have the same public data."
+  },
+  {
+   "name": "chat_data",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Data of the widget, which is specific to the message"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes an HTML widget."
+}

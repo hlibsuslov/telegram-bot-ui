@@ -1,0 +1,83 @@
+{
+ "name": "AreaPosition",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "areaposition",
+ "url": "https://core.telegram.org/bots/api#areaposition",
+ "fields": [
+  {
+   "name": "x_percentage",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The abscissa of the area's center, as a percentage of the media or the card width"
+  },
+  {
+   "name": "y_percentage",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The ordinate of the area's center, as a percentage of the media or the card height"
+  },
+  {
+   "name": "width_percentage",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The width of the area's rectangle, as a percentage of the media or the card width"
+  },
+  {
+   "name": "height_percentage",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The height of the area's rectangle, as a percentage of the media or the card height"
+  },
+  {
+   "name": "rotation_angle",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The clockwise rotation angle of the rectangle, in degrees; 0-360"
+  },
+  {
+   "name": "corner_radius_percentage",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The radius of the rectangle corner rounding, as a percentage of the media or the card width"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes the position of a rectangle area on a story media or a TON wallet card."
+}

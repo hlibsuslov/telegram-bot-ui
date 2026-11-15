@@ -1,0 +1,35 @@
+{
+ "name": "TonNftAttribute",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "tonnftattribute",
+ "url": "https://core.telegram.org/bots/api#tonnftattribute",
+ "fields": [
+  {
+   "name": "trait_type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Trait type of the attribute"
+  },
+  {
+   "name": "value",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Value of the attribute"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents an attribute of an NFT in the TON blockchain."
+}

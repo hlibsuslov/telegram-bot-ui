@@ -1,0 +1,23 @@
+{
+ "name": "BotShortDescription",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "botshortdescription",
+ "url": "https://core.telegram.org/bots/api#botshortdescription",
+ "fields": [
+  {
+   "name": "short_description",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The bot's short description"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents the bot's short description."
+}

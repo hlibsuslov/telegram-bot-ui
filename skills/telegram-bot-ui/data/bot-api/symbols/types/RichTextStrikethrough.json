@@ -1,0 +1,36 @@
+{
+ "name": "RichTextStrikethrough",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextstrikethrough",
+ "url": "https://core.telegram.org/bots/api#richtextstrikethrough",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “strikethrough”",
+   "const": "strikethrough"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  }
+ ],
+ "subtypes": [],
+ "description": "A strikethrough text."
+}

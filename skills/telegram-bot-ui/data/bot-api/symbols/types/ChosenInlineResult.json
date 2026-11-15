@@ -1,0 +1,71 @@
+{
+ "name": "ChosenInlineResult",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "choseninlineresult",
+ "url": "https://core.telegram.org/bots/api#choseninlineresult",
+ "fields": [
+  {
+   "name": "result_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The unique identifier for the result that was chosen"
+  },
+  {
+   "name": "from",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The user that chose the result"
+  },
+  {
+   "name": "location",
+   "type": "Location",
+   "types": [
+    {
+     "name": "Location",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sender location, only for bots that require user location"
+  },
+  {
+   "name": "inline_message_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Identifier of the sent inline message. Available only if there is an inline keyboard attached to the message. Will be also received in callback queries and can be used to edit the message."
+  },
+  {
+   "name": "query",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The query that was used to obtain the result"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a result of an inline query that was chosen by the user and sent to their chat partner. Note: It is necessary to enable inline feedback via @BotFather in order to receive these objects in updates."
+}

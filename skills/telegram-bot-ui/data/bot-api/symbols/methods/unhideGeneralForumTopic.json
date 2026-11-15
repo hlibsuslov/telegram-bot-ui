@@ -1,0 +1,27 @@
+{
+ "name": "unhideGeneralForumTopic",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "unhidegeneralforumtopic",
+ "url": "https://core.telegram.org/bots/api#unhidegeneralforumtopic",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target supergroup in the format @username"
+  }
+ ],
+ "description": "Use this method to unhide the 'General' topic in a forum supergroup chat. The bot must be an administrator in the chat for this to work and must have the can_manage_topics administrator rights. Returns True on success.",
+ "returns": "True"
+}

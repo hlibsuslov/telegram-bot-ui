@@ -1,0 +1,16 @@
+{
+ "name": "StoryAreaType",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "storyareatype",
+ "url": "https://core.telegram.org/bots/api#storyareatype",
+ "fields": [],
+ "subtypes": [
+  "StoryAreaTypeLocation",
+  "StoryAreaTypeSuggestedReaction",
+  "StoryAreaTypeLink",
+  "StoryAreaTypeWeather",
+  "StoryAreaTypeUniqueGift"
+ ],
+ "description": "Describes the type of a clickable area on a story. Currently, it can be one of"
+}

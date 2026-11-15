@@ -1,0 +1,60 @@
+{
+ "name": "InputMediaLocation",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inputmedialocation",
+ "url": "https://core.telegram.org/bots/api#inputmedialocation",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the media, must be location",
+   "const": "location"
+  },
+  {
+   "name": "latitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Latitude of the location"
+  },
+  {
+   "name": "longitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Longitude of the location"
+  },
+  {
+   "name": "horizontal_accuracy",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The radius of uncertainty for the location, measured in meters; 0-1500"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a location to be sent."
+}

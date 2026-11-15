@@ -1,0 +1,125 @@
+{
+ "name": "editEphemeralMessageText",
+ "kind": "method",
+ "section": "Updating messages",
+ "anchor": "editephemeralmessagetext",
+ "url": "https://core.telegram.org/bots/api#editephemeralmessagetext",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target supergroup in the format @username"
+  },
+  {
+   "name": "receiver_user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the user who received the message"
+  },
+  {
+   "name": "ephemeral_message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the ephemeral message to edit"
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "New text of the message, 1-4096 characters after entity parsing; required if rich_message isn't specified",
+   "conditional": true
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the message text. See formatting options for more details."
+  },
+  {
+   "name": "entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized list of special entities that appear in message text, which can be specified instead of parse_mode"
+  },
+  {
+   "name": "rich_message",
+   "type": "InputRichMessage",
+   "types": [
+    {
+     "name": "InputRichMessage",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "New rich content of the message; required if text isn't specified",
+   "conditional": true
+  },
+  {
+   "name": "link_preview_options",
+   "type": "LinkPreviewOptions",
+   "types": [
+    {
+     "name": "LinkPreviewOptions",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Link preview generation options for the message"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object for an inline keyboard"
+  }
+ ],
+ "description": "Use this method to edit an ephemeral text or rich message. Note that it is not guaranteed that the user will receive the message edit event, especially if they are offline. On success, True is returned.",
+ "returns": "True"
+}

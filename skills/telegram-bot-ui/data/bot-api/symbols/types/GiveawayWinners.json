@@ -1,0 +1,155 @@
+{
+ "name": "GiveawayWinners",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "giveawaywinners",
+ "url": "https://core.telegram.org/bots/api#giveawaywinners",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The chat that created the giveaway"
+  },
+  {
+   "name": "giveaway_message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the message with the giveaway in the chat"
+  },
+  {
+   "name": "winners_selection_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Point in time (Unix timestamp) when winners of the giveaway were selected"
+  },
+  {
+   "name": "winner_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Total number of winners in the giveaway"
+  },
+  {
+   "name": "winners",
+   "type": "Array of User",
+   "types": [
+    {
+     "name": "User",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "List of up to 100 winners of the giveaway"
+  },
+  {
+   "name": "additional_chat_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The number of other chats the user had to join in order to be eligible for the giveaway"
+  },
+  {
+   "name": "prize_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The number of Telegram Stars that were split between giveaway winners; for Telegram Star giveaways only"
+  },
+  {
+   "name": "premium_subscription_month_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The number of months the Telegram Premium subscription won from the giveaway will be active for; for Telegram Premium giveaways only"
+  },
+  {
+   "name": "unclaimed_prize_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Number of undistributed prizes"
+  },
+  {
+   "name": "only_new_members",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if only users who had joined the chats after the giveaway started were eligible to win"
+  },
+  {
+   "name": "was_refunded",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the giveaway was canceled because the payment for it was refunded"
+  },
+  {
+   "name": "prize_description",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Description of additional giveaway prize"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a message about the completion of a giveaway with public winners."
+}

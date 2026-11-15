@@ -1,0 +1,36 @@
+{
+ "name": "InputMediaLink",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inputmedialink",
+ "url": "https://core.telegram.org/bots/api#inputmedialink",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the media, must be link",
+   "const": "link"
+  },
+  {
+   "name": "url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "HTTP URL of the link"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents an HTTP link to be sent."
+}

@@ -1,0 +1,47 @@
+{
+ "name": "setBusinessAccountName",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "setbusinessaccountname",
+ "url": "https://core.telegram.org/bots/api#setbusinessaccountname",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection"
+  },
+  {
+   "name": "first_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The new value of the first name for the business account; 1-64 characters"
+  },
+  {
+   "name": "last_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The new value of the last name for the business account; 0-64 characters"
+  }
+ ],
+ "description": "Changes the first and last name of a managed business account. Requires the can_change_name business bot right. Returns True on success.",
+ "returns": "True"
+}

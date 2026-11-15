@@ -1,0 +1,83 @@
+{
+ "name": "RichBlockTableCell",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblocktablecell",
+ "url": "https://core.telegram.org/bots/api#richblocktablecell",
+ "fields": [
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Text in the cell. If omitted, then the cell is invisible."
+  },
+  {
+   "name": "is_header",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the cell is a header cell"
+  },
+  {
+   "name": "colspan",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The number of columns the cell spans if it is bigger than 1"
+  },
+  {
+   "name": "rowspan",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The number of rows the cell spans if it is bigger than 1"
+  },
+  {
+   "name": "align",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Horizontal cell content alignment. Currently, must be one of “left”, “center”, or “right”."
+  },
+  {
+   "name": "valign",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Vertical cell content alignment. Currently, must be one of “top”, “middle”, or “bottom”."
+  }
+ ],
+ "subtypes": [],
+ "description": "Cell in a table."
+}

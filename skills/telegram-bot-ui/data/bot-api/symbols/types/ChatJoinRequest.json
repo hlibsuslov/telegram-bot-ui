@@ -1,0 +1,95 @@
+{
+ "name": "ChatJoinRequest",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatjoinrequest",
+ "url": "https://core.telegram.org/bots/api#chatjoinrequest",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Chat to which the request was sent"
+  },
+  {
+   "name": "from",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User that sent the join request"
+  },
+  {
+   "name": "user_chat_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of a private chat with the user who sent the join request. This number may have more than 32 significant bits and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a 64-bit integer or double-precision float type are safe for storing this identifier. The bot can use this identifier for 5 minutes to send messages until the join request is processed, assuming no other administrator contacted the user."
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date the request was sent in Unix time"
+  },
+  {
+   "name": "bio",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Bio of the user"
+  },
+  {
+   "name": "invite_link",
+   "type": "ChatInviteLink",
+   "types": [
+    {
+     "name": "ChatInviteLink",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Chat invite link that was used by the user to send the join request"
+  },
+  {
+   "name": "query_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Identifier of the join request query; for bots assigned to process join requests only. If present, then the bot must call sendChatJoinRequestWebApp or directly call answerChatJoinRequestQuery within 10 seconds."
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a join request sent to a chat."
+}

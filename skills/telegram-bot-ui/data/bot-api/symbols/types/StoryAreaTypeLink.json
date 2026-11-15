@@ -1,0 +1,36 @@
+{
+ "name": "StoryAreaTypeLink",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "storyareatypelink",
+ "url": "https://core.telegram.org/bots/api#storyareatypelink",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the area, always “link”",
+   "const": "link"
+  },
+  {
+   "name": "url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "HTTP or tg:// URL to be opened when the area is clicked"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a story area pointing to an HTTP or tg:// link. Currently, a story can have up to 3 link areas."
+}

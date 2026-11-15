@@ -1,0 +1,60 @@
+{
+ "name": "ChatMemberOwner",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatmemberowner",
+ "url": "https://core.telegram.org/bots/api#chatmemberowner",
+ "fields": [
+  {
+   "name": "status",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The member's status in the chat, always “creator”",
+   "const": "creator"
+  },
+  {
+   "name": "user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the user"
+  },
+  {
+   "name": "is_anonymous",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the user's presence in the chat is hidden"
+  },
+  {
+   "name": "custom_title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Custom title for this user"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a chat member that owns the chat and has all administrator privileges."
+}

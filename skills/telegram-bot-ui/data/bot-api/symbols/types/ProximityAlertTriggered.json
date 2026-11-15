@@ -1,0 +1,47 @@
+{
+ "name": "ProximityAlertTriggered",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "proximityalerttriggered",
+ "url": "https://core.telegram.org/bots/api#proximityalerttriggered",
+ "fields": [
+  {
+   "name": "traveler",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User that triggered the alert"
+  },
+  {
+   "name": "watcher",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User that set the alert"
+  },
+  {
+   "name": "distance",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The distance between the users"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents the content of a service message, sent whenever a user in the chat triggers a proximity alert set by another user."
+}

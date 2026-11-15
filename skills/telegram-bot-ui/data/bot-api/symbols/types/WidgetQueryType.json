@@ -1,0 +1,14 @@
+{
+ "name": "WidgetQueryType",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "widgetquerytype",
+ "url": "https://core.telegram.org/bots/api#widgetquerytype",
+ "fields": [],
+ "subtypes": [
+  "WidgetQueryTypeData",
+  "WidgetQueryTypeSignData",
+  "WidgetQueryTypeSentTransaction"
+ ],
+ "description": "This object describes the type of a query from a widget. Currently, it can be one of"
+}

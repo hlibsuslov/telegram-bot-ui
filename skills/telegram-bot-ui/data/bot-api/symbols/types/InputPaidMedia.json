@@ -1,0 +1,14 @@
+{
+ "name": "InputPaidMedia",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inputpaidmedia",
+ "url": "https://core.telegram.org/bots/api#inputpaidmedia",
+ "fields": [],
+ "subtypes": [
+  "InputPaidMediaLivePhoto",
+  "InputPaidMediaPhoto",
+  "InputPaidMediaVideo"
+ ],
+ "description": "This object describes the paid media to be sent. Currently, it can be one of"
+}

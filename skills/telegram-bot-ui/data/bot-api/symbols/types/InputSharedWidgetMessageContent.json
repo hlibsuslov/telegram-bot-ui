@@ -1,0 +1,83 @@
+{
+ "name": "InputSharedWidgetMessageContent",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inputsharedwidgetmessagecontent",
+ "url": "https://core.telegram.org/bots/api#inputsharedwidgetmessagecontent",
+ "fields": [
+  {
+   "name": "widget_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the shared widget created by the bot"
+  },
+  {
+   "name": "chat_data",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Data of the widget, which is specific to the message, 0-1024 bytes"
+  },
+  {
+   "name": "caption",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Widget caption, 0-1024 characters after entities parsing"
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the widget caption. See formatting options for more details."
+  },
+  {
+   "name": "caption_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "List of special entities that appear in the caption, which can be specified instead of parse_mode"
+  },
+  {
+   "name": "show_caption_above_media",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the caption must be shown above the widget"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the content of a message with a shared widget to be sent as the result of an inline query. Currently, widgets can't be sent in response to inline queries in the production environment."
+}

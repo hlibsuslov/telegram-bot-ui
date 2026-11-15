@@ -1,0 +1,36 @@
+{
+ "name": "RichBlockMathematicalExpression",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockmathematicalexpression",
+ "url": "https://core.telegram.org/bots/api#richblockmathematicalexpression",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “mathematical_expression”",
+   "const": "mathematical_expression"
+  },
+  {
+   "name": "expression",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The mathematical expression in LaTeX format"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with a mathematical expression in LaTeX format, corresponding to the custom HTML tag <tg-math-block>."
+}

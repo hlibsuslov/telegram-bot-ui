@@ -1,0 +1,15 @@
+{
+ "name": "PaidMedia",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "paidmedia",
+ "url": "https://core.telegram.org/bots/api#paidmedia",
+ "fields": [],
+ "subtypes": [
+  "PaidMediaLivePhoto",
+  "PaidMediaPhoto",
+  "PaidMediaPreview",
+  "PaidMediaVideo"
+ ],
+ "description": "This object describes paid media. Currently, it can be one of"
+}

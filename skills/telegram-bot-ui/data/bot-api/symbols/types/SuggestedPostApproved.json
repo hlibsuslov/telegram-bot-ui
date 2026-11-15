@@ -1,0 +1,47 @@
+{
+ "name": "SuggestedPostApproved",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "suggestedpostapproved",
+ "url": "https://core.telegram.org/bots/api#suggestedpostapproved",
+ "fields": [
+  {
+   "name": "suggested_post_message",
+   "type": "Message",
+   "types": [
+    {
+     "name": "Message",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message containing the suggested post. Note that the Message object in this field will not contain the reply_to_message field even if it itself is a reply."
+  },
+  {
+   "name": "price",
+   "type": "SuggestedPostPrice",
+   "types": [
+    {
+     "name": "SuggestedPostPrice",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Amount paid for the post"
+  },
+  {
+   "name": "send_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date when the post will be published"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about the approval of a suggested post."
+}

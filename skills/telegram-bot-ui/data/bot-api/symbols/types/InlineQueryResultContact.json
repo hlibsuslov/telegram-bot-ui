@@ -1,0 +1,144 @@
+{
+ "name": "InlineQueryResultContact",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inlinequeryresultcontact",
+ "url": "https://core.telegram.org/bots/api#inlinequeryresultcontact",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the result, must be contact",
+   "const": "contact"
+  },
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this result, 1-64 Bytes"
+  },
+  {
+   "name": "phone_number",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Contact's phone number"
+  },
+  {
+   "name": "first_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Contact's first name"
+  },
+  {
+   "name": "last_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Contact's last name"
+  },
+  {
+   "name": "vcard",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Additional data about the contact in the form of a vCard, 0-2048 bytes"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Inline keyboard attached to the message"
+  },
+  {
+   "name": "input_message_content",
+   "type": "InputMessageContent",
+   "types": [
+    {
+     "name": "InputMessageContent",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Content of the message to be sent instead of the contact"
+  },
+  {
+   "name": "thumbnail_url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Url of the thumbnail for the result"
+  },
+  {
+   "name": "thumbnail_width",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Thumbnail width"
+  },
+  {
+   "name": "thumbnail_height",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Thumbnail height"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a contact with a phone number. By default, this contact will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the contact."
+}

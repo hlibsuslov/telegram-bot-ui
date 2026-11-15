@@ -1,0 +1,23 @@
+{
+ "name": "GiveawayCreated",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "giveawaycreated",
+ "url": "https://core.telegram.org/bots/api#giveawaycreated",
+ "fields": [
+  {
+   "name": "prize_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The number of Telegram Stars to be split between giveaway winners; for Telegram Star giveaways only"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a service message about the creation of a scheduled giveaway."
+}

@@ -1,0 +1,23 @@
+{
+ "name": "SentGuestMessage",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "sentguestmessage",
+ "url": "https://core.telegram.org/bots/api#sentguestmessage",
+ "fields": [
+  {
+   "name": "inline_message_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the sent inline message"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes an inline message sent by a guest bot."
+}

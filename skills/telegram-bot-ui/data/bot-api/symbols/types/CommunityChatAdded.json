@@ -1,0 +1,23 @@
+{
+ "name": "CommunityChatAdded",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "communitychatadded",
+ "url": "https://core.telegram.org/bots/api#communitychatadded",
+ "fields": [
+  {
+   "name": "community",
+   "type": "Community",
+   "types": [
+    {
+     "name": "Community",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The new community to which the chat or the bot belongs"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about a chat or a bot being added to a community."
+}

@@ -1,0 +1,132 @@
+{
+ "name": "InlineQueryResultVoice",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inlinequeryresultvoice",
+ "url": "https://core.telegram.org/bots/api#inlinequeryresultvoice",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the result, must be voice",
+   "const": "voice"
+  },
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this result, 1-64 bytes"
+  },
+  {
+   "name": "voice_url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "A valid URL for the voice recording"
+  },
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Recording title"
+  },
+  {
+   "name": "caption",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption, 0-1024 characters after entities parsing"
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the voice message caption. See formatting options for more details."
+  },
+  {
+   "name": "caption_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "List of special entities that appear in the caption, which can be specified instead of parse_mode"
+  },
+  {
+   "name": "voice_duration",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Recording duration in seconds"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Inline keyboard attached to the message"
+  },
+  {
+   "name": "input_message_content",
+   "type": "InputMessageContent",
+   "types": [
+    {
+     "name": "InputMessageContent",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Content of the message to be sent instead of the voice recording"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a link to a voice recording in an .OGG container encoded with OPUS. By default, this voice recording will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the the voice message."
+}

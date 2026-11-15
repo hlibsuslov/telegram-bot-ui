@@ -1,0 +1,59 @@
+{
+ "name": "LocationAddress",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "locationaddress",
+ "url": "https://core.telegram.org/bots/api#locationaddress",
+ "fields": [
+  {
+   "name": "country_code",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The two-letter ISO 3166-1 alpha-2 country code of the country where the location is located"
+  },
+  {
+   "name": "state",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "State of the location"
+  },
+  {
+   "name": "city",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "City of the location"
+  },
+  {
+   "name": "street",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Street address of the location"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes the physical address of a location."
+}

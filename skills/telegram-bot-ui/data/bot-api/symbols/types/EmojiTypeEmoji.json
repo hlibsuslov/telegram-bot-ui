@@ -1,0 +1,36 @@
+{
+ "name": "EmojiTypeEmoji",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "emojitypeemoji",
+ "url": "https://core.telegram.org/bots/api#emojitypeemoji",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the emoji, always “emoji”",
+   "const": "emoji"
+  },
+  {
+   "name": "emoji",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The emoji"
+  }
+ ],
+ "subtypes": [],
+ "description": "A regular emoji."
+}

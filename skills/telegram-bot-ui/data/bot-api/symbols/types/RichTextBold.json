@@ -1,0 +1,36 @@
+{
+ "name": "RichTextBold",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextbold",
+ "url": "https://core.telegram.org/bots/api#richtextbold",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “bold”",
+   "const": "bold"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  }
+ ],
+ "subtypes": [],
+ "description": "A bold text."
+}

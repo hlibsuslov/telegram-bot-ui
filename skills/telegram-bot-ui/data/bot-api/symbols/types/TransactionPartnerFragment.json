@@ -1,0 +1,36 @@
+{
+ "name": "TransactionPartnerFragment",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "transactionpartnerfragment",
+ "url": "https://core.telegram.org/bots/api#transactionpartnerfragment",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the transaction partner, always “fragment”",
+   "const": "fragment"
+  },
+  {
+   "name": "withdrawal_state",
+   "type": "RevenueWithdrawalState",
+   "types": [
+    {
+     "name": "RevenueWithdrawalState",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "State of the transaction if the transaction is outgoing"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a withdrawal transaction with Fragment."
+}

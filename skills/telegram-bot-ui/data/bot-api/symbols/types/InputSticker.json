@@ -1,0 +1,71 @@
+{
+ "name": "InputSticker",
+ "kind": "type",
+ "section": "Stickers",
+ "anchor": "inputsticker",
+ "url": "https://core.telegram.org/bots/api#inputsticker",
+ "fields": [
+  {
+   "name": "sticker",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The added sticker. Pass a file_id as a String to send a file that already exists on the Telegram servers, pass an HTTP URL as a String for Telegram to get a file from the Internet, or pass “attach://<file_attach_name>” to upload a new file using multipart/form-data under <file_attach_name> name. Animated and video stickers can't be uploaded via HTTP URL. More information on Sending Files »"
+  },
+  {
+   "name": "format",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Format of the added sticker, must be one of “static” for a .WEBP or .PNG image, “animated” for a .TGS animation, “video” for a .WEBM video"
+  },
+  {
+   "name": "emoji_list",
+   "type": "Array of String",
+   "types": [
+    {
+     "name": "String",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "List of 1-20 emoji associated with the sticker"
+  },
+  {
+   "name": "mask_position",
+   "type": "MaskPosition",
+   "types": [
+    {
+     "name": "MaskPosition",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Position where the mask should be placed on faces. For “mask” stickers only."
+  },
+  {
+   "name": "keywords",
+   "type": "Array of String",
+   "types": [
+    {
+     "name": "String",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "List of 0-20 search keywords for the sticker with total length of up to 64 characters. For “regular” and “custom_emoji” stickers only."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes a sticker to be added to a sticker set."
+}

@@ -1,0 +1,23 @@
+{
+ "name": "VideoChatScheduled",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "videochatscheduled",
+ "url": "https://core.telegram.org/bots/api#videochatscheduled",
+ "fields": [
+  {
+   "name": "start_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Point in time (Unix timestamp) when the video chat is supposed to be started by a chat administrator"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a service message about a video chat scheduled in the chat."
+}

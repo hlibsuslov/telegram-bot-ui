@@ -1,0 +1,63 @@
+{
+ "name": "pinChatMessage",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "pinchatmessage",
+ "url": "https://core.telegram.org/bots/api#pinchatmessage",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the business connection on behalf of which the message will be pinned"
+  },
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target channel in the format @username"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of a message to pin"
+  },
+  {
+   "name": "disable_notification",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if it is not necessary to send a notification to all chat members about the new pinned message. Notifications are always disabled in channels and private chats."
+  }
+ ],
+ "description": "Use this method to add a message to the list of pinned messages in a chat. In private chats and channel direct messages chats, all non-service messages can be pinned. Conversely, the bot must be an administrator with the 'can_pin_messages' right or the 'can_edit_messages' right to pin messages in groups and channels respectively. Returns True on success.",
+ "returns": "True"
+}

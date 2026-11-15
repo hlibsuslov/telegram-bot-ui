@@ -1,0 +1,35 @@
+{
+ "name": "setMyName",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "setmyname",
+ "url": "https://core.telegram.org/bots/api#setmyname",
+ "parameters": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "New bot name; 0-64 characters. Pass an empty string to remove the dedicated name for the given language."
+  },
+  {
+   "name": "language_code",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A two-letter ISO 639-1 language code. If empty, the name will be shown to all users for whose language there is no dedicated name."
+  }
+ ],
+ "description": "Use this method to change the bot's name. Returns True on success.",
+ "returns": "True"
+}

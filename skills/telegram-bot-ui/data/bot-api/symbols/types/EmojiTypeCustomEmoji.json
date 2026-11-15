@@ -1,0 +1,36 @@
+{
+ "name": "EmojiTypeCustomEmoji",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "emojitypecustomemoji",
+ "url": "https://core.telegram.org/bots/api#emojitypecustomemoji",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the emoji, always “custom_emoji”",
+   "const": "custom_emoji"
+  },
+  {
+   "name": "custom_emoji_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the custom emoji. Use getCustomEmojiStickers to get full information about the sticker."
+  }
+ ],
+ "subtypes": [],
+ "description": "A custom emoji."
+}

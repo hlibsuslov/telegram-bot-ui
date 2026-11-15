@@ -1,0 +1,35 @@
+{
+ "name": "SuggestedPostDeclined",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "suggestedpostdeclined",
+ "url": "https://core.telegram.org/bots/api#suggestedpostdeclined",
+ "fields": [
+  {
+   "name": "suggested_post_message",
+   "type": "Message",
+   "types": [
+    {
+     "name": "Message",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message containing the suggested post. Note that the Message object in this field will not contain the reply_to_message field even if it itself is a reply."
+  },
+  {
+   "name": "comment",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Comment with which the post was declined"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about the rejection of a suggested post."
+}

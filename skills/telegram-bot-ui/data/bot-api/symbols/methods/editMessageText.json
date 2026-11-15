@@ -1,0 +1,137 @@
+{
+ "name": "editMessageText",
+ "kind": "method",
+ "section": "Updating messages",
+ "anchor": "editmessagetext",
+ "url": "https://core.telegram.org/bots/api#editmessagetext",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the business connection on behalf of which the message to be edited was sent"
+  },
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Required if inline_message_id is not specified. Unique identifier for the target chat or username of the target bot, supergroup, or channel in the format @username."
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Required if inline_message_id is not specified. Identifier of the message to edit."
+  },
+  {
+   "name": "inline_message_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Required if chat_id and message_id are not specified. Identifier of the inline message."
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "New text of the message, 1-4096 characters after entity parsing; required if rich_message isn't specified",
+   "conditional": true
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the message text. See formatting options for more details."
+  },
+  {
+   "name": "entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized list of special entities that appear in message text, which can be specified instead of parse_mode"
+  },
+  {
+   "name": "link_preview_options",
+   "type": "LinkPreviewOptions",
+   "types": [
+    {
+     "name": "LinkPreviewOptions",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Link preview generation options for the message"
+  },
+  {
+   "name": "rich_message",
+   "type": "InputRichMessage",
+   "types": [
+    {
+     "name": "InputRichMessage",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "New rich content of the message; required if text isn't specified. Direct upload of new files and explicit upload of files by a URL isn't supported when an inline message is edited.",
+   "conditional": true
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object for an inline keyboard"
+  }
+ ],
+ "description": "Use this method to edit text, rich and game messages. On success, if the edited message is not an inline message, the edited Message is returned, otherwise True is returned. Note that business messages that were not sent by the bot and do not contain an inline keyboard can only be edited within 48 hours from the time they were sent.",
+ "returns": "Message or True"
+}

@@ -1,0 +1,14 @@
+{
+ "name": "BackgroundFill",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "backgroundfill",
+ "url": "https://core.telegram.org/bots/api#backgroundfill",
+ "fields": [],
+ "subtypes": [
+  "BackgroundFillSolid",
+  "BackgroundFillGradient",
+  "BackgroundFillFreeformGradient"
+ ],
+ "description": "This object describes the way a background is filled based on the selected colors. Currently, it can be one of"
+}

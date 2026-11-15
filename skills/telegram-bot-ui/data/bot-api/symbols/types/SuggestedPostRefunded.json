@@ -1,0 +1,35 @@
+{
+ "name": "SuggestedPostRefunded",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "suggestedpostrefunded",
+ "url": "https://core.telegram.org/bots/api#suggestedpostrefunded",
+ "fields": [
+  {
+   "name": "suggested_post_message",
+   "type": "Message",
+   "types": [
+    {
+     "name": "Message",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message containing the suggested post. Note that the Message object in this field will not contain the reply_to_message field even if it itself is a reply."
+  },
+  {
+   "name": "reason",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Reason for the refund. Currently, one of “post_deleted” if the post was deleted within 24 hours of being posted or removed from scheduled messages without being posted, or “payment_refunded” if the payer refunded their payment."
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about a payment refund for a suggested post."
+}

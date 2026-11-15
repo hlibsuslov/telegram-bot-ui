@@ -1,0 +1,95 @@
+{
+ "name": "MessageReactionUpdated",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "messagereactionupdated",
+ "url": "https://core.telegram.org/bots/api#messagereactionupdated",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The chat containing the message the user reacted to"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the message inside the chat"
+  },
+  {
+   "name": "user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The user that changed the reaction, if the user isn't anonymous"
+  },
+  {
+   "name": "actor_chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The chat on behalf of which the reaction was changed, if the user is anonymous"
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date of the change in Unix time"
+  },
+  {
+   "name": "old_reaction",
+   "type": "Array of ReactionType",
+   "types": [
+    {
+     "name": "ReactionType",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Previous list of reaction types that were set by the user"
+  },
+  {
+   "name": "new_reaction",
+   "type": "Array of ReactionType",
+   "types": [
+    {
+     "name": "ReactionType",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "New list of reaction types that have been set by the user"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a change of a reaction on a message performed by a user."
+}

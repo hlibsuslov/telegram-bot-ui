@@ -1,0 +1,23 @@
+{
+ "name": "getUniqueGift",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getuniquegift",
+ "url": "https://core.telegram.org/bots/api#getuniquegift",
+ "parameters": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique name of the gift"
+  }
+ ],
+ "description": "Use this method to get information about a unique gift by its name. Returns a UniqueGift object on success.",
+ "returns": "UniqueGift"
+}

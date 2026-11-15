@@ -1,0 +1,19 @@
+{
+ "name": "InputPollOptionMedia",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inputpolloptionmedia",
+ "url": "https://core.telegram.org/bots/api#inputpolloptionmedia",
+ "fields": [],
+ "subtypes": [
+  "InputMediaAnimation",
+  "InputMediaLink",
+  "InputMediaLivePhoto",
+  "InputMediaLocation",
+  "InputMediaPhoto",
+  "InputMediaSticker",
+  "InputMediaVenue",
+  "InputMediaVideo"
+ ],
+ "description": "This object represents the content of a poll option to be sent. It should be one of"
+}

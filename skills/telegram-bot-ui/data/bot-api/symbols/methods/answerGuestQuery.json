@@ -1,0 +1,35 @@
+{
+ "name": "answerGuestQuery",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "answerguestquery",
+ "url": "https://core.telegram.org/bots/api#answerguestquery",
+ "parameters": [
+  {
+   "name": "guest_query_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the query to be answered"
+  },
+  {
+   "name": "result",
+   "type": "InlineQueryResult",
+   "types": [
+    {
+     "name": "InlineQueryResult",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "A JSON-serialized object describing the message to be sent"
+  }
+ ],
+ "description": "Use this method to reply to a received guest message. On success, a SentGuestMessage object is returned.",
+ "returns": "SentGuestMessage"
+}

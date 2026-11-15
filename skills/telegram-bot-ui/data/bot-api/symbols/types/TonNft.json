@@ -1,0 +1,95 @@
+{
+ "name": "TonNft",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "tonnft",
+ "url": "https://core.telegram.org/bots/api#tonnft",
+ "fields": [
+  {
+   "name": "address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Address of the NFT"
+  },
+  {
+   "name": "collection_address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Address of the collection to which the NFT belongs; omitted if unknown"
+  },
+  {
+   "name": "index",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Index of the NFT among all NFTs from the collection as a decimal number"
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the NFT"
+  },
+  {
+   "name": "description",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Description of the NFT"
+  },
+  {
+   "name": "attributes",
+   "type": "Array of TonNftAttribute",
+   "types": [
+    {
+     "name": "TonNftAttribute",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Attributes of the NFT"
+  },
+  {
+   "name": "gift",
+   "type": "UniqueGift",
+   "types": [
+    {
+     "name": "UniqueGift",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The unique gift corresponding to the NFT"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents an NFT in the TON blockchain."
+}

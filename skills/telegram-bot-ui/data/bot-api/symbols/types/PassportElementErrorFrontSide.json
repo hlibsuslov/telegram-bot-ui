@@ -1,0 +1,60 @@
+{
+ "name": "PassportElementErrorFrontSide",
+ "kind": "type",
+ "section": "Telegram Passport",
+ "anchor": "passportelementerrorfrontside",
+ "url": "https://core.telegram.org/bots/api#passportelementerrorfrontside",
+ "fields": [
+  {
+   "name": "source",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Error source, must be front_side",
+   "const": "front_side"
+  },
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The section of the user's Telegram Passport which has the issue, one of “passport”, “driver_license”, “identity_card”, “internal_passport”"
+  },
+  {
+   "name": "file_hash",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Base64-encoded hash of the file with the front side of the document"
+  },
+  {
+   "name": "message",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Error message"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents an issue with the front side of a document. The error is considered resolved when the file with the front side of the document changes."
+}

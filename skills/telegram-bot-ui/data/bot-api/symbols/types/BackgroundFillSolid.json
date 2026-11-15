@@ -1,0 +1,36 @@
+{
+ "name": "BackgroundFillSolid",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "backgroundfillsolid",
+ "url": "https://core.telegram.org/bots/api#backgroundfillsolid",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the background fill, always “solid”",
+   "const": "solid"
+  },
+  {
+   "name": "color",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The color of the background fill in the RGB24 format"
+  }
+ ],
+ "subtypes": [],
+ "description": "The background is filled using the selected color."
+}

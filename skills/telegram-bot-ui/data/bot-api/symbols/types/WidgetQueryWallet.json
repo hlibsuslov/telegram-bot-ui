@@ -1,0 +1,59 @@
+{
+ "name": "WidgetQueryWallet",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "widgetquerywallet",
+ "url": "https://core.telegram.org/bots/api#widgetquerywallet",
+ "fields": [
+  {
+   "name": "address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Address of the wallet"
+  },
+  {
+   "name": "amount",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Balance of the wallet, in the smallest units of the cryptocurrency, as a decimal number"
+  },
+  {
+   "name": "public_key",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Hex-encoded public key of the wallet; omitted if unknown"
+  },
+  {
+   "name": "state_init",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Base64-encoded serialized StateInit of the wallet contract; omitted if and only if public_key is omitted"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes a TON wallet of the user, which is used in a query from a widget."
+}

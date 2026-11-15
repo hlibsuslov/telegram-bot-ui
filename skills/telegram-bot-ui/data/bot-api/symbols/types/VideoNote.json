@@ -1,0 +1,83 @@
+{
+ "name": "VideoNote",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "videonote",
+ "url": "https://core.telegram.org/bots/api#videonote",
+ "fields": [
+  {
+   "name": "file_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier for this file, which can be used to download or reuse the file"
+  },
+  {
+   "name": "file_unique_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this file, which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file."
+  },
+  {
+   "name": "length",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Video width and height (diameter of the video message) as defined by the sender"
+  },
+  {
+   "name": "duration",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Duration of the video in seconds as defined by the sender"
+  },
+  {
+   "name": "thumbnail",
+   "type": "PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Video thumbnail"
+  },
+  {
+   "name": "file_size",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "File size in bytes"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a video message."
+}

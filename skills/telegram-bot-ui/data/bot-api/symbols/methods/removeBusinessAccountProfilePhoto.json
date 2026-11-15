@@ -1,0 +1,35 @@
+{
+ "name": "removeBusinessAccountProfilePhoto",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "removebusinessaccountprofilephoto",
+ "url": "https://core.telegram.org/bots/api#removebusinessaccountprofilephoto",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection"
+  },
+  {
+   "name": "is_public",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to remove the public photo, which is visible even if the main photo is hidden by the business account's privacy settings. After the main photo is removed, the previous profile photo (if present) becomes the main photo."
+  }
+ ],
+ "description": "Removes the current profile photo of a managed business account. Requires the can_edit_profile_photo business bot right. Returns True on success.",
+ "returns": "True"
+}

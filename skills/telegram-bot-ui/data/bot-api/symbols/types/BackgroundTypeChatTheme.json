@@ -1,0 +1,36 @@
+{
+ "name": "BackgroundTypeChatTheme",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "backgroundtypechattheme",
+ "url": "https://core.telegram.org/bots/api#backgroundtypechattheme",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the background, always “chat_theme”",
+   "const": "chat_theme"
+  },
+  {
+   "name": "theme_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the chat theme, which is usually an emoji"
+  }
+ ],
+ "subtypes": [],
+ "description": "The background is taken directly from a built-in chat theme."
+}

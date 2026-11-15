@@ -1,0 +1,48 @@
+{
+ "name": "RichTextUrl",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtexturl",
+ "url": "https://core.telegram.org/bots/api#richtexturl",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “url”",
+   "const": "url"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  },
+  {
+   "name": "url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "URL of the link"
+  }
+ ],
+ "subtypes": [],
+ "description": "A text with a link."
+}

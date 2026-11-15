@@ -1,0 +1,60 @@
+{
+ "name": "BackgroundFillGradient",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "backgroundfillgradient",
+ "url": "https://core.telegram.org/bots/api#backgroundfillgradient",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the background fill, always “gradient”",
+   "const": "gradient"
+  },
+  {
+   "name": "top_color",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Top color of the gradient in the RGB24 format"
+  },
+  {
+   "name": "bottom_color",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Bottom color of the gradient in the RGB24 format"
+  },
+  {
+   "name": "rotation_angle",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Clockwise rotation angle of the background fill in degrees; 0-359"
+  }
+ ],
+ "subtypes": [],
+ "description": "The background is a gradient fill."
+}

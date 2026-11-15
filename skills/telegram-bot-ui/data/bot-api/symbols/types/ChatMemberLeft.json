@@ -1,0 +1,36 @@
+{
+ "name": "ChatMemberLeft",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatmemberleft",
+ "url": "https://core.telegram.org/bots/api#chatmemberleft",
+ "fields": [
+  {
+   "name": "status",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The member's status in the chat, always “left”",
+   "const": "left"
+  },
+  {
+   "name": "user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the user"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a chat member that isn't currently a member of the chat, but may join it themselves."
+}

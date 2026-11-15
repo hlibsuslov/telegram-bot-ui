@@ -1,0 +1,47 @@
+{
+ "name": "SuggestedPostInfo",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "suggestedpostinfo",
+ "url": "https://core.telegram.org/bots/api#suggestedpostinfo",
+ "fields": [
+  {
+   "name": "state",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "State of the suggested post. Currently, it can be one of “pending”, “approved”, “declined”."
+  },
+  {
+   "name": "price",
+   "type": "SuggestedPostPrice",
+   "types": [
+    {
+     "name": "SuggestedPostPrice",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Proposed price of the post. If the field is omitted, then the post is unpaid."
+  },
+  {
+   "name": "send_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Proposed send date of the post. If the field is omitted, then the post can be published at any time within 30 days at the sole discretion of the user or administrator who approves it."
+  }
+ ],
+ "subtypes": [],
+ "description": "Contains information about a suggested post."
+}

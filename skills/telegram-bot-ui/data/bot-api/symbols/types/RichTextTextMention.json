@@ -1,0 +1,48 @@
+{
+ "name": "RichTextTextMention",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtexttextmention",
+ "url": "https://core.telegram.org/bots/api#richtexttextmention",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “text_mention”",
+   "const": "text_mention"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  },
+  {
+   "name": "user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The mentioned user"
+  }
+ ],
+ "subtypes": [],
+ "description": "A mention of a Telegram user by their identifier."
+}

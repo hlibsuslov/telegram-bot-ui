@@ -1,0 +1,143 @@
+{
+ "name": "KeyboardButtonRequestChat",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "keyboardbuttonrequestchat",
+ "url": "https://core.telegram.org/bots/api#keyboardbuttonrequestchat",
+ "fields": [
+  {
+   "name": "request_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Signed 32-bit identifier of the request, which will be received back in the ChatShared object. Must be unique within the message."
+  },
+  {
+   "name": "chat_is_channel",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Pass True to request a channel chat, pass False to request a group or a supergroup chat"
+  },
+  {
+   "name": "chat_is_forum",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to request a forum supergroup, pass False to request a non-forum chat. If not specified, no additional restrictions are applied."
+  },
+  {
+   "name": "chat_has_username",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to request a supergroup or a channel with a username, pass False to request a chat without a username. If not specified, no additional restrictions are applied."
+  },
+  {
+   "name": "chat_is_created",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to request a chat owned by the user. Otherwise, no additional restrictions are applied."
+  },
+  {
+   "name": "user_administrator_rights",
+   "type": "ChatAdministratorRights",
+   "types": [
+    {
+     "name": "ChatAdministratorRights",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object listing the required administrator rights of the user in the chat. The rights must be a superset of bot_administrator_rights. If not specified, no additional restrictions are applied."
+  },
+  {
+   "name": "bot_administrator_rights",
+   "type": "ChatAdministratorRights",
+   "types": [
+    {
+     "name": "ChatAdministratorRights",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object listing the required administrator rights of the bot in the chat. The rights must be a subset of user_administrator_rights. If not specified, no additional restrictions are applied."
+  },
+  {
+   "name": "bot_is_member",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to request a chat with the bot as a member. Otherwise, no additional restrictions are applied."
+  },
+  {
+   "name": "request_title",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to request the chat's title"
+  },
+  {
+   "name": "request_username",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to request the chat's username"
+  },
+  {
+   "name": "request_photo",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to request the chat's photo"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object defines the criteria used to request a suitable chat. Information about the selected chat will be shared with the bot when the corresponding button is pressed. The bot will be granted requested rights in the chat if appropriate. More about requesting chats »."
+}

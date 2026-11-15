@@ -1,0 +1,72 @@
+{
+ "name": "MessageOriginChannel",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "messageoriginchannel",
+ "url": "https://core.telegram.org/bots/api#messageoriginchannel",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the message origin, always “channel”",
+   "const": "channel"
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date the message was sent originally in Unix time"
+  },
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Channel chat to which the message was originally sent"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique message identifier inside the chat"
+  },
+  {
+   "name": "author_signature",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Signature of the original post author"
+  }
+ ],
+ "subtypes": [],
+ "description": "The message was originally sent to a channel chat."
+}

@@ -1,0 +1,48 @@
+{
+ "name": "WidgetQueryTypeSentTransaction",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "widgetquerytypesenttransaction",
+ "url": "https://core.telegram.org/bots/api#widgetquerytypesenttransaction",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the query, always “sent_transaction”",
+   "const": "sent_transaction"
+  },
+  {
+   "name": "wallet",
+   "type": "WidgetQueryWallet",
+   "types": [
+    {
+     "name": "WidgetQueryWallet",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The wallet from which the transaction was sent"
+  },
+  {
+   "name": "msg_hash",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Value of msg_hash of the transaction"
+  }
+ ],
+ "subtypes": [],
+ "description": "The query notifies the bot about a transaction sent from a TON wallet of the user who sent the query."
+}

@@ -1,0 +1,24 @@
+{
+ "name": "InputRichBlockDivider",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblockdivider",
+ "url": "https://core.telegram.org/bots/api#inputrichblockdivider",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “divider”",
+   "const": "divider"
+  }
+ ],
+ "subtypes": [],
+ "description": "A divider, corresponding to the HTML tag <hr/>."
+}

@@ -1,0 +1,24 @@
+{
+ "name": "MenuButtonDefault",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "menubuttondefault",
+ "url": "https://core.telegram.org/bots/api#menubuttondefault",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the button, must be default",
+   "const": "default"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes that no specific value for the menu button was set."
+}

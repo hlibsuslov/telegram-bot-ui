@@ -1,0 +1,23 @@
+{
+ "name": "getMyShortDescription",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getmyshortdescription",
+ "url": "https://core.telegram.org/bots/api#getmyshortdescription",
+ "parameters": [
+  {
+   "name": "language_code",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A two-letter ISO 639-1 language code or an empty string"
+  }
+ ],
+ "description": "Use this method to get the current bot short description for the given user language. Returns BotShortDescription on success.",
+ "returns": "BotShortDescription"
+}

@@ -1,0 +1,48 @@
+{
+ "name": "MenuButtonWebApp",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "menubuttonwebapp",
+ "url": "https://core.telegram.org/bots/api#menubuttonwebapp",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the button, must be web_app",
+   "const": "web_app"
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text on the button"
+  },
+  {
+   "name": "web_app",
+   "type": "WebAppInfo",
+   "types": [
+    {
+     "name": "WebAppInfo",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Description of the Web App that will be launched when the user presses the button. The Web App will be able to send an arbitrary message on behalf of the user using the method answerWebAppQuery. Alternatively, a t.me link to a Web App of the bot can be specified in the object instead of the Web App's URL, in which case the Web App will be opened as if the user pressed the link."
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a menu button, which launches a Web App."
+}

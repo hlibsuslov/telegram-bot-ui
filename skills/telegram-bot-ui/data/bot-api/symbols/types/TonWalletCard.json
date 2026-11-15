@@ -1,0 +1,59 @@
+{
+ "name": "TonWalletCard",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "tonwalletcard",
+ "url": "https://core.telegram.org/bots/api#tonwalletcard",
+ "fields": [
+  {
+   "name": "address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Address of the wallet"
+  },
+  {
+   "name": "amount",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Balance of the wallet, in the smallest units of the cryptocurrency, as a decimal number"
+  },
+  {
+   "name": "stickers",
+   "type": "Array of TonWalletCardSticker",
+   "types": [
+    {
+     "name": "TonWalletCardSticker",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Stickers placed on the card"
+  },
+  {
+   "name": "background_nft_address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Address of the NFT of one of the stickers, whose colors must be used for the card background; omitted if the default background must be used"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes a TON wallet card, which is shown on the profile page of a user to everyone."
+}

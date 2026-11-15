@@ -1,0 +1,23 @@
+{
+ "name": "Link",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "link",
+ "url": "https://core.telegram.org/bots/api#link",
+ "fields": [
+  {
+   "name": "url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "URL of the link"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents an HTTP link."
+}

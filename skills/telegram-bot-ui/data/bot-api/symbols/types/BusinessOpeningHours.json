@@ -1,0 +1,35 @@
+{
+ "name": "BusinessOpeningHours",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "businessopeninghours",
+ "url": "https://core.telegram.org/bots/api#businessopeninghours",
+ "fields": [
+  {
+   "name": "time_zone_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique name of the time zone for which the opening hours are defined"
+  },
+  {
+   "name": "opening_hours",
+   "type": "Array of BusinessOpeningHoursInterval",
+   "types": [
+    {
+     "name": "BusinessOpeningHoursInterval",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "List of time intervals describing business opening hours"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes the opening hours of a business."
+}

@@ -1,0 +1,24 @@
+{
+ "name": "TransactionPartnerOther",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "transactionpartnerother",
+ "url": "https://core.telegram.org/bots/api#transactionpartnerother",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the transaction partner, always “other”",
+   "const": "other"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a transaction with an unknown source or recipient."
+}

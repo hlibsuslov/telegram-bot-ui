@@ -1,0 +1,83 @@
+{
+ "name": "InputChecklist",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inputchecklist",
+ "url": "https://core.telegram.org/bots/api#inputchecklist",
+ "fields": [
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Title of the checklist; 1-255 characters after entities parsing"
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the title. See formatting options for more details."
+  },
+  {
+   "name": "title_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "List of special entities that appear in the title, which can be specified instead of parse_mode. Currently, only bold, italic, underline, strikethrough, spoiler, custom_emoji, and date_time entities are allowed."
+  },
+  {
+   "name": "tasks",
+   "type": "Array of InputChecklistTask",
+   "types": [
+    {
+     "name": "InputChecklistTask",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "List of 1-30 tasks in the checklist"
+  },
+  {
+   "name": "others_can_add_tasks",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if other users can add tasks to the checklist"
+  },
+  {
+   "name": "others_can_mark_tasks_as_done",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if other users can mark tasks as done or not done in the checklist"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a checklist to create."
+}

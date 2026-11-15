@@ -1,0 +1,60 @@
+{
+ "name": "RichTextDateTime",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextdatetime",
+ "url": "https://core.telegram.org/bots/api#richtextdatetime",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “date_time”",
+   "const": "date_time"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  },
+  {
+   "name": "unix_time",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The Unix time associated with the entity"
+  },
+  {
+   "name": "date_time_format",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The string that defines the formatting of the date and time. See date-time entity formatting for more details."
+  }
+ ],
+ "subtypes": [],
+ "description": "Formatted date and time."
+}

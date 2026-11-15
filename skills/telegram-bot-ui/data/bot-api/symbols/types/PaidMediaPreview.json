@@ -1,0 +1,60 @@
+{
+ "name": "PaidMediaPreview",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "paidmediapreview",
+ "url": "https://core.telegram.org/bots/api#paidmediapreview",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the paid media, always “preview”",
+   "const": "preview"
+  },
+  {
+   "name": "width",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media width as defined by the sender"
+  },
+  {
+   "name": "height",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media height as defined by the sender"
+  },
+  {
+   "name": "duration",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Duration of the media in seconds as defined by the sender"
+  }
+ ],
+ "subtypes": [],
+ "description": "The paid media isn't available before the payment."
+}

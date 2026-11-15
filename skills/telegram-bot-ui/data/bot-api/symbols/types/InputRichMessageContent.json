@@ -1,0 +1,23 @@
+{
+ "name": "InputRichMessageContent",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inputrichmessagecontent",
+ "url": "https://core.telegram.org/bots/api#inputrichmessagecontent",
+ "fields": [
+  {
+   "name": "rich_message",
+   "type": "InputRichMessage",
+   "types": [
+    {
+     "name": "InputRichMessage",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The message to be sent. Only previously uploaded files may be used in the message."
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the content of a rich message to be sent as the result of an inline query."
+}

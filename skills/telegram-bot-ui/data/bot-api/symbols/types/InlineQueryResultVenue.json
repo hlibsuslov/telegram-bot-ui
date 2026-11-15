@@ -1,0 +1,192 @@
+{
+ "name": "InlineQueryResultVenue",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inlinequeryresultvenue",
+ "url": "https://core.telegram.org/bots/api#inlinequeryresultvenue",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the result, must be venue",
+   "const": "venue"
+  },
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this result, 1-64 Bytes"
+  },
+  {
+   "name": "latitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Latitude of the venue location in degrees"
+  },
+  {
+   "name": "longitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Longitude of the venue location in degrees"
+  },
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Title of the venue"
+  },
+  {
+   "name": "address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Address of the venue"
+  },
+  {
+   "name": "foursquare_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Foursquare identifier of the venue if known"
+  },
+  {
+   "name": "foursquare_type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Foursquare type of the venue, if known. (For example, “arts_entertainment/default”, “arts_entertainment/aquarium” or “food/icecream”.)"
+  },
+  {
+   "name": "google_place_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Google Places identifier of the venue"
+  },
+  {
+   "name": "google_place_type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Google Places type of the venue. (See supported types.)"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Inline keyboard attached to the message"
+  },
+  {
+   "name": "input_message_content",
+   "type": "InputMessageContent",
+   "types": [
+    {
+     "name": "InputMessageContent",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Content of the message to be sent instead of the venue"
+  },
+  {
+   "name": "thumbnail_url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Url of the thumbnail for the result"
+  },
+  {
+   "name": "thumbnail_width",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Thumbnail width"
+  },
+  {
+   "name": "thumbnail_height",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Thumbnail height"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a venue. By default, the venue will be sent by the user. Alternatively, you can use input_message_content to send a message with the specified content instead of the venue."
+}

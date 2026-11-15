@@ -1,0 +1,48 @@
+{
+ "name": "TransactionPartnerAffiliateProgram",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "transactionpartneraffiliateprogram",
+ "url": "https://core.telegram.org/bots/api#transactionpartneraffiliateprogram",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the transaction partner, always “affiliate_program”",
+   "const": "affiliate_program"
+  },
+  {
+   "name": "sponsor_user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Information about the bot that sponsored the affiliate program"
+  },
+  {
+   "name": "commission_per_mille",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The number of Telegram Stars received by the bot for each 1000 Telegram Stars received by the affiliate program sponsor from referred users"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes the affiliate program that issued the affiliate commission received via this transaction."
+}

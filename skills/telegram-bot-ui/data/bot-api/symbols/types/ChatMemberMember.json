@@ -1,0 +1,60 @@
+{
+ "name": "ChatMemberMember",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatmembermember",
+ "url": "https://core.telegram.org/bots/api#chatmembermember",
+ "fields": [
+  {
+   "name": "status",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The member's status in the chat, always “member”",
+   "const": "member"
+  },
+  {
+   "name": "tag",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Tag of the member"
+  },
+  {
+   "name": "user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the user"
+  },
+  {
+   "name": "until_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Date when the user's subscription will expire; Unix time"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a chat member that has no additional privileges or restrictions."
+}

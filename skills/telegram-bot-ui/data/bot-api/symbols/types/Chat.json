@@ -1,0 +1,107 @@
+{
+ "name": "Chat",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chat",
+ "url": "https://core.telegram.org/bots/api#chat",
+ "fields": [
+  {
+   "name": "id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this chat. This number may have more than 32 significant bits and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this identifier."
+  },
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the chat, can be either “private”, “group”, “supergroup” or “channel”"
+  },
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Title, for supergroups, channels and group chats"
+  },
+  {
+   "name": "username",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Username, for private chats, supergroups and channels if available"
+  },
+  {
+   "name": "first_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "First name of the other party in a private chat"
+  },
+  {
+   "name": "last_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Last name of the other party in a private chat"
+  },
+  {
+   "name": "is_forum",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the supergroup chat is a forum (has topics enabled)"
+  },
+  {
+   "name": "is_direct_messages",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the chat is the direct messages chat of a channel"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a chat."
+}

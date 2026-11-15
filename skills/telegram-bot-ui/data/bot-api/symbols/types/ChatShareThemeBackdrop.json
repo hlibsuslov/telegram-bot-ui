@@ -1,0 +1,47 @@
+{
+ "name": "ChatShareThemeBackdrop",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatsharethemebackdrop",
+ "url": "https://core.telegram.org/bots/api#chatsharethemebackdrop",
+ "fields": [
+  {
+   "name": "id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the backdrop"
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the backdrop"
+  },
+  {
+   "name": "colors",
+   "type": "UniqueGiftBackdropColors",
+   "types": [
+    {
+     "name": "UniqueGiftBackdropColors",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Colors of the backdrop"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes a backdrop, which can be used as the background of a theme of the screen for sharing a link to a user or a chat."
+}

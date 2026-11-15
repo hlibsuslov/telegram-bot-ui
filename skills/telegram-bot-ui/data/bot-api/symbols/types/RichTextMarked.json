@@ -1,0 +1,36 @@
+{
+ "name": "RichTextMarked",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextmarked",
+ "url": "https://core.telegram.org/bots/api#richtextmarked",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “marked”",
+   "const": "marked"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  }
+ ],
+ "subtypes": [],
+ "description": "A marked text."
+}

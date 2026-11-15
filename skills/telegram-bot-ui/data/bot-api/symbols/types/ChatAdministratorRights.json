@@ -1,0 +1,227 @@
+{
+ "name": "ChatAdministratorRights",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatadministratorrights",
+ "url": "https://core.telegram.org/bots/api#chatadministratorrights",
+ "fields": [
+  {
+   "name": "is_anonymous",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the user's presence in the chat is hidden"
+  },
+  {
+   "name": "can_manage_chat",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the administrator can access the chat event log, get boost list, see hidden supergroup and channel members, report spam messages, ignore slow mode, and send messages to the chat without paying Telegram Stars. Implied by any other administrator privilege."
+  },
+  {
+   "name": "can_delete_messages",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the administrator can delete messages of other users"
+  },
+  {
+   "name": "can_manage_video_chats",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the administrator can manage video chats"
+  },
+  {
+   "name": "can_restrict_members",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the administrator can restrict, ban or unban chat members, or access supergroup statistics"
+  },
+  {
+   "name": "can_promote_members",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the administrator can add new administrators with a subset of their own privileges or demote administrators that they have promoted, directly or indirectly (promoted by administrators that were appointed by the user)"
+  },
+  {
+   "name": "can_change_info",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the user is allowed to change the chat title, photo and other settings"
+  },
+  {
+   "name": "can_invite_users",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the user is allowed to invite new users to the chat"
+  },
+  {
+   "name": "can_post_stories",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the administrator can post stories to the chat"
+  },
+  {
+   "name": "can_edit_stories",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the administrator can edit stories posted by other users, post stories to the chat page, pin chat stories, and access the chat's story archive"
+  },
+  {
+   "name": "can_delete_stories",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the administrator can delete stories posted by other users"
+  },
+  {
+   "name": "can_post_messages",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the administrator can post messages in the channel, approve suggested posts, or access channel statistics; for channels only"
+  },
+  {
+   "name": "can_edit_messages",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the administrator can edit messages of other users and can pin messages; for channels only"
+  },
+  {
+   "name": "can_pin_messages",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the user is allowed to pin messages; for groups and supergroups only"
+  },
+  {
+   "name": "can_manage_topics",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the user is allowed to create, rename, close, and reopen forum topics; for supergroups only"
+  },
+  {
+   "name": "can_manage_direct_messages",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the administrator can manage direct messages of the channel and decline suggested posts; for channels only"
+  },
+  {
+   "name": "can_manage_tags",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the administrator can edit the tags of regular members; for groups and supergroups only"
+  },
+  {
+   "name": "can_send_welcome_messages",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the administrator can manage chat welcome messages or directly send them in the case of bots"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the rights of an administrator in a chat."
+}

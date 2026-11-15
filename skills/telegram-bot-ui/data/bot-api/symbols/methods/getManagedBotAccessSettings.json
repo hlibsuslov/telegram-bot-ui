@@ -1,0 +1,23 @@
+{
+ "name": "getManagedBotAccessSettings",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getmanagedbotaccesssettings",
+ "url": "https://core.telegram.org/bots/api#getmanagedbotaccesssettings",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User identifier of the managed bot whose access settings will be returned"
+  }
+ ],
+ "description": "Use this method to get the access settings of a managed bot. Returns a BotAccessSettings object on success.",
+ "returns": "BotAccessSettings"
+}

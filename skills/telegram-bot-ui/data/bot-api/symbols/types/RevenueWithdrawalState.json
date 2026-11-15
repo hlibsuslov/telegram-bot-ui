@@ -1,0 +1,14 @@
+{
+ "name": "RevenueWithdrawalState",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "revenuewithdrawalstate",
+ "url": "https://core.telegram.org/bots/api#revenuewithdrawalstate",
+ "fields": [],
+ "subtypes": [
+  "RevenueWithdrawalStatePending",
+  "RevenueWithdrawalStateSucceeded",
+  "RevenueWithdrawalStateFailed"
+ ],
+ "description": "This object describes the state of a revenue withdrawal operation. Currently, it can be one of"
+}

@@ -1,0 +1,23 @@
+{
+ "name": "VideoChatParticipantsInvited",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "videochatparticipantsinvited",
+ "url": "https://core.telegram.org/bots/api#videochatparticipantsinvited",
+ "fields": [
+  {
+   "name": "users",
+   "type": "Array of User",
+   "types": [
+    {
+     "name": "User",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "New members that were invited to the video chat"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a service message about new members invited to a video chat."
+}

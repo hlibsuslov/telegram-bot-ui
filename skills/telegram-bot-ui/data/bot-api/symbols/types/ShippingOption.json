@@ -1,0 +1,47 @@
+{
+ "name": "ShippingOption",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "shippingoption",
+ "url": "https://core.telegram.org/bots/api#shippingoption",
+ "fields": [
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Shipping option identifier"
+  },
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Option title"
+  },
+  {
+   "name": "prices",
+   "type": "Array of LabeledPrice",
+   "types": [
+    {
+     "name": "LabeledPrice",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "List of price portions"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents one shipping option."
+}

@@ -1,0 +1,23 @@
+{
+ "name": "UserChatBoosts",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "userchatboosts",
+ "url": "https://core.telegram.org/bots/api#userchatboosts",
+ "fields": [
+  {
+   "name": "boosts",
+   "type": "Array of ChatBoost",
+   "types": [
+    {
+     "name": "ChatBoost",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "The list of boosts added to the chat by the user"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a list of boosts added to a chat by a user."
+}

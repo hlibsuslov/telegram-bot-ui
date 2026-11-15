@@ -1,0 +1,24 @@
+{
+ "name": "TransactionPartnerTelegramAds",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "transactionpartnertelegramads",
+ "url": "https://core.telegram.org/bots/api#transactionpartnertelegramads",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the transaction partner, always “telegram_ads”",
+   "const": "telegram_ads"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a withdrawal transaction to the Telegram Ads platform."
+}

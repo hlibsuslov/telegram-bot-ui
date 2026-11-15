@@ -1,0 +1,35 @@
+{
+ "name": "setStickerPositionInSet",
+ "kind": "method",
+ "section": "Stickers",
+ "anchor": "setstickerpositioninset",
+ "url": "https://core.telegram.org/bots/api#setstickerpositioninset",
+ "parameters": [
+  {
+   "name": "sticker",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "File identifier of the sticker"
+  },
+  {
+   "name": "position",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "New sticker position in the set, zero-based"
+  }
+ ],
+ "description": "Use this method to move a sticker in a set created by the bot to a specific position. Returns True on success.",
+ "returns": "True"
+}

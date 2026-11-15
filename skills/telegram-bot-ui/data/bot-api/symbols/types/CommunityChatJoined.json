@@ -1,0 +1,23 @@
+{
+ "name": "CommunityChatJoined",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "communitychatjoined",
+ "url": "https://core.telegram.org/bots/api#communitychatjoined",
+ "fields": [
+  {
+   "name": "community",
+   "type": "Community",
+   "types": [
+    {
+     "name": "Community",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The community from which the chat was joined"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about a chat being joined by a user from a community."
+}

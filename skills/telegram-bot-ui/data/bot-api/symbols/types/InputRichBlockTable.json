@@ -1,0 +1,84 @@
+{
+ "name": "InputRichBlockTable",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblocktable",
+ "url": "https://core.telegram.org/bots/api#inputrichblocktable",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “table”",
+   "const": "table"
+  },
+  {
+   "name": "cells",
+   "type": "Array of Array of RichBlockTableCell",
+   "types": [
+    {
+     "name": "RichBlockTableCell",
+     "array": 2
+    }
+   ],
+   "required": true,
+   "description": "Cells of the table"
+  },
+  {
+   "name": "is_bordered",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the table has borders"
+  },
+  {
+   "name": "is_striped",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the table is striped"
+  },
+  {
+   "name": "is_compact",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if table cells must have smaller indents"
+  },
+  {
+   "name": "caption",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the table"
+  }
+ ],
+ "subtypes": [],
+ "description": "A table, corresponding to the HTML tag <table>."
+}

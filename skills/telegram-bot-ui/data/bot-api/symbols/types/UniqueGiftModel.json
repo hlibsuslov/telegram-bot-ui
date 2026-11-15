@@ -1,0 +1,59 @@
+{
+ "name": "UniqueGiftModel",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "uniquegiftmodel",
+ "url": "https://core.telegram.org/bots/api#uniquegiftmodel",
+ "fields": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the model"
+  },
+  {
+   "name": "sticker",
+   "type": "Sticker",
+   "types": [
+    {
+     "name": "Sticker",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The sticker that represents the unique gift"
+  },
+  {
+   "name": "rarity_per_mille",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The number of unique gifts that receive this model for every 1000 gift upgrades. Always 0 for crafted gifts."
+  },
+  {
+   "name": "rarity",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Rarity of the model if it is a crafted model. Currently, can be “uncommon”, “rare”, “epic”, or “legendary”."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes the model of a unique gift."
+}

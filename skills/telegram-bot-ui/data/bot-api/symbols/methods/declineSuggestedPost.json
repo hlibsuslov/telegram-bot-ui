@@ -1,0 +1,47 @@
+{
+ "name": "declineSuggestedPost",
+ "kind": "method",
+ "section": "Updating messages",
+ "anchor": "declinesuggestedpost",
+ "url": "https://core.telegram.org/bots/api#declinesuggestedpost",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target direct messages chat"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of a suggested post message to decline"
+  },
+  {
+   "name": "comment",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Comment for the creator of the suggested post; 0-128 characters"
+  }
+ ],
+ "description": "Use this method to decline a suggested post in a direct messages chat. The bot must have the 'can_manage_direct_messages' administrator right in the corresponding channel chat. Returns True on success.",
+ "returns": "True"
+}

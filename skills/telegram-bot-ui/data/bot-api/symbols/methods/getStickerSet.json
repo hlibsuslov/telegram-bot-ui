@@ -1,0 +1,23 @@
+{
+ "name": "getStickerSet",
+ "kind": "method",
+ "section": "Stickers",
+ "anchor": "getstickerset",
+ "url": "https://core.telegram.org/bots/api#getstickerset",
+ "parameters": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the sticker set"
+  }
+ ],
+ "description": "Use this method to get a sticker set. On success, a StickerSet object is returned.",
+ "returns": "StickerSet"
+}

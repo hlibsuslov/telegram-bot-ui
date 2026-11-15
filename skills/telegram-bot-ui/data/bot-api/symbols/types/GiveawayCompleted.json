@@ -1,0 +1,59 @@
+{
+ "name": "GiveawayCompleted",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "giveawaycompleted",
+ "url": "https://core.telegram.org/bots/api#giveawaycompleted",
+ "fields": [
+  {
+   "name": "winner_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Number of winners in the giveaway"
+  },
+  {
+   "name": "unclaimed_prize_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Number of undistributed prizes"
+  },
+  {
+   "name": "giveaway_message",
+   "type": "Message",
+   "types": [
+    {
+     "name": "Message",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message with the giveaway that was completed, if it wasn't deleted"
+  },
+  {
+   "name": "is_star_giveaway",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the giveaway is a Telegram Star giveaway. Otherwise, currently, the giveaway is a Telegram Premium giveaway."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a service message about the completion of a giveaway without public winners."
+}

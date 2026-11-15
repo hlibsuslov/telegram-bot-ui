@@ -1,0 +1,335 @@
+{
+ "name": "ExternalReplyInfo",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "externalreplyinfo",
+ "url": "https://core.telegram.org/bots/api#externalreplyinfo",
+ "fields": [
+  {
+   "name": "origin",
+   "type": "MessageOrigin",
+   "types": [
+    {
+     "name": "MessageOrigin",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Origin of the message replied to by the given message"
+  },
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Chat the original message belongs to. Available only if the chat is a supergroup or a channel."
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique message identifier inside the original chat. Available only if the original chat is a supergroup or a channel."
+  },
+  {
+   "name": "link_preview_options",
+   "type": "LinkPreviewOptions",
+   "types": [
+    {
+     "name": "LinkPreviewOptions",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Options used for link preview generation for the original message, if it is a text message"
+  },
+  {
+   "name": "animation",
+   "type": "Animation",
+   "types": [
+    {
+     "name": "Animation",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is an animation, information about the animation"
+  },
+  {
+   "name": "audio",
+   "type": "Audio",
+   "types": [
+    {
+     "name": "Audio",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is an audio file, information about the file"
+  },
+  {
+   "name": "document",
+   "type": "Document",
+   "types": [
+    {
+     "name": "Document",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a general file, information about the file"
+  },
+  {
+   "name": "live_photo",
+   "type": "LivePhoto",
+   "types": [
+    {
+     "name": "LivePhoto",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a live photo, information about the live photo"
+  },
+  {
+   "name": "paid_media",
+   "type": "PaidMediaInfo",
+   "types": [
+    {
+     "name": "PaidMediaInfo",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message contains paid media; information about the paid media"
+  },
+  {
+   "name": "photo",
+   "type": "Array of PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Message is a photo, available sizes of the photo"
+  },
+  {
+   "name": "sticker",
+   "type": "Sticker",
+   "types": [
+    {
+     "name": "Sticker",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a sticker, information about the sticker"
+  },
+  {
+   "name": "story",
+   "type": "Story",
+   "types": [
+    {
+     "name": "Story",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a forwarded story"
+  },
+  {
+   "name": "video",
+   "type": "Video",
+   "types": [
+    {
+     "name": "Video",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a video, information about the video"
+  },
+  {
+   "name": "video_note",
+   "type": "VideoNote",
+   "types": [
+    {
+     "name": "VideoNote",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a video note, information about the video message"
+  },
+  {
+   "name": "voice",
+   "type": "Voice",
+   "types": [
+    {
+     "name": "Voice",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a voice message, information about the file"
+  },
+  {
+   "name": "widget",
+   "type": "Widget",
+   "types": [
+    {
+     "name": "Widget",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is an HTML widget, information about the widget"
+  },
+  {
+   "name": "has_media_spoiler",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the message media is covered by a spoiler animation"
+  },
+  {
+   "name": "checklist",
+   "type": "Checklist",
+   "types": [
+    {
+     "name": "Checklist",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a checklist"
+  },
+  {
+   "name": "contact",
+   "type": "Contact",
+   "types": [
+    {
+     "name": "Contact",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a shared contact, information about the contact"
+  },
+  {
+   "name": "dice",
+   "type": "Dice",
+   "types": [
+    {
+     "name": "Dice",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a dice with random value"
+  },
+  {
+   "name": "game",
+   "type": "Game",
+   "types": [
+    {
+     "name": "Game",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a game, information about the game. More about games »"
+  },
+  {
+   "name": "giveaway",
+   "type": "Giveaway",
+   "types": [
+    {
+     "name": "Giveaway",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a scheduled giveaway, information about the giveaway"
+  },
+  {
+   "name": "giveaway_winners",
+   "type": "GiveawayWinners",
+   "types": [
+    {
+     "name": "GiveawayWinners",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A giveaway with public winners was completed"
+  },
+  {
+   "name": "invoice",
+   "type": "Invoice",
+   "types": [
+    {
+     "name": "Invoice",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is an invoice for a payment, information about the invoice. More about payments »"
+  },
+  {
+   "name": "location",
+   "type": "Location",
+   "types": [
+    {
+     "name": "Location",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a shared location, information about the location"
+  },
+  {
+   "name": "poll",
+   "type": "Poll",
+   "types": [
+    {
+     "name": "Poll",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a native poll, information about the poll"
+  },
+  {
+   "name": "venue",
+   "type": "Venue",
+   "types": [
+    {
+     "name": "Venue",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a venue, information about the venue"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object contains information about a message that is being replied to, which may come from another chat or forum topic."
+}

@@ -9,7 +9,7 @@ metadata:
 
 # Telegram Bot UI
 
-> **Directory edition.** This copy is the documentation-only build published to the Claude plugin directory. It ships without `scripts/` and the runnable code in `examples/` (Python, TypeScript, widget kits). Where a step below names a script, do the same check by hand: read `data/bot-api/catalog.json` for methods, types and fields, and apply the rules in `references/`. If the user wants the validators, publishing and widget tools, tell them the full toolset installs from https://github.com/hlibsuslov/telegram-bot-ui.
+> **Directory edition.** This copy is the documentation-only build published to the Claude plugin directory. It ships without `scripts/` and the runnable code in `examples/` (Python, TypeScript, widget kits). Where a step below names a script, do the same check by hand: look up one method in `data/bot-api/symbols/methods/<method>.json` or one type in `data/bot-api/symbols/types/<Type>.json` (names and sections in `data/bot-api/symbols/index.json`); field limits are in each field's official description (for example `InlineKeyboardButton.callback_data`: 1-64 bytes), and message and caption limits are in `references/limits-and-splitting.md`. Count `callback_data` and other byte limits in UTF-8 bytes, not characters. If the user wants the validators, publishing and widget tools, tell them the full toolset installs from https://github.com/hlibsuslov/telegram-bot-ui.
 
 Portable, SDK-agnostic skill for everything a Telegram bot shows and sends: bot
 screens, whole products, channel posts, HTML widgets, premium emoji, and an
@@ -274,7 +274,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 
 ## Tools (offline, stdlib, no token)
 
-> Not bundled in the directory edition; the full version at https://github.com/hlibsuslov/telegram-bot-ui has them. Without them, check against `data/bot-api/catalog.json` by hand.
+> Not bundled in the directory edition; the full version at https://github.com/hlibsuslov/telegram-bot-ui has them. Without them, look up one method in `data/bot-api/symbols/methods/<method>.json` or one type in `data/bot-api/symbols/types/<Type>.json` (names and sections in `data/bot-api/symbols/index.json`); field limits are in each field's official description (for example `InlineKeyboardButton.callback_data`: 1-64 bytes), and message and caption limits are in `references/limits-and-splitting.md`.
 
 | Tool | Use |
 |---|---|

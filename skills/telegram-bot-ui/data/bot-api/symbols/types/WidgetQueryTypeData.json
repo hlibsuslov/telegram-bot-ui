@@ -1,0 +1,36 @@
+{
+ "name": "WidgetQueryTypeData",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "widgetquerytypedata",
+ "url": "https://core.telegram.org/bots/api#widgetquerytypedata",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the query, always “data”",
+   "const": "data"
+  },
+  {
+   "name": "wallet_card",
+   "type": "TonWalletCard",
+   "types": [
+    {
+     "name": "TonWalletCard",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "TON wallet card of the user who sent the query, if it was sent to the bot along with the query"
+  }
+ ],
+ "subtypes": [],
+ "description": "The query contains data for the bot."
+}

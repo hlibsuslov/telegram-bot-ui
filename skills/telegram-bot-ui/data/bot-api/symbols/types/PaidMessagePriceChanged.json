@@ -1,0 +1,23 @@
+{
+ "name": "PaidMessagePriceChanged",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "paidmessagepricechanged",
+ "url": "https://core.telegram.org/bots/api#paidmessagepricechanged",
+ "fields": [
+  {
+   "name": "paid_message_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The new number of Telegram Stars that must be paid by non-administrator users of the supergroup chat for each sent message"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about a change in the price of paid messages within a chat."
+}

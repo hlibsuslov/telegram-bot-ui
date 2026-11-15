@@ -1,0 +1,35 @@
+{
+ "name": "PassportData",
+ "kind": "type",
+ "section": "Telegram Passport",
+ "anchor": "passportdata",
+ "url": "https://core.telegram.org/bots/api#passportdata",
+ "fields": [
+  {
+   "name": "data",
+   "type": "Array of EncryptedPassportElement",
+   "types": [
+    {
+     "name": "EncryptedPassportElement",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Array with information about documents and other Telegram Passport elements that was shared with the bot"
+  },
+  {
+   "name": "credentials",
+   "type": "EncryptedCredentials",
+   "types": [
+    {
+     "name": "EncryptedCredentials",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Encrypted credentials required to decrypt the data"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes Telegram Passport data shared with the bot by the user."
+}

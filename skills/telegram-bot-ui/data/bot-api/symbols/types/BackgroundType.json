@@ -1,0 +1,15 @@
+{
+ "name": "BackgroundType",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "backgroundtype",
+ "url": "https://core.telegram.org/bots/api#backgroundtype",
+ "fields": [],
+ "subtypes": [
+  "BackgroundTypeFill",
+  "BackgroundTypeWallpaper",
+  "BackgroundTypePattern",
+  "BackgroundTypeChatTheme"
+ ],
+ "description": "This object describes the type of a background. Currently, it can be one of"
+}

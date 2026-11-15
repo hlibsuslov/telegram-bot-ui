@@ -1,0 +1,60 @@
+{
+ "name": "StoryAreaTypeLocation",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "storyareatypelocation",
+ "url": "https://core.telegram.org/bots/api#storyareatypelocation",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the area, always “location”",
+   "const": "location"
+  },
+  {
+   "name": "latitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Location latitude in degrees"
+  },
+  {
+   "name": "longitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Location longitude in degrees"
+  },
+  {
+   "name": "address",
+   "type": "LocationAddress",
+   "types": [
+    {
+     "name": "LocationAddress",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Address of the location"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a story area pointing to a location. Currently, a story can have up to 10 location areas."
+}

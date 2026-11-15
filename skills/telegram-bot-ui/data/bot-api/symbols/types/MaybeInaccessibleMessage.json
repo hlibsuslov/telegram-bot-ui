@@ -1,0 +1,13 @@
+{
+ "name": "MaybeInaccessibleMessage",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "maybeinaccessiblemessage",
+ "url": "https://core.telegram.org/bots/api#maybeinaccessiblemessage",
+ "fields": [],
+ "subtypes": [
+  "Message",
+  "InaccessibleMessage"
+ ],
+ "description": "This object describes a message that can be inaccessible to the bot. It can be one of"
+}

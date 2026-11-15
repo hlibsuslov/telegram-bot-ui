@@ -1,0 +1,47 @@
+{
+ "name": "BusinessIntro",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "businessintro",
+ "url": "https://core.telegram.org/bots/api#businessintro",
+ "fields": [
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Title text of the business intro"
+  },
+  {
+   "name": "message",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message text of the business intro"
+  },
+  {
+   "name": "sticker",
+   "type": "Sticker",
+   "types": [
+    {
+     "name": "Sticker",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sticker of the business intro"
+  }
+ ],
+ "subtypes": [],
+ "description": "Contains information about the start page settings of a Telegram Business account."
+}

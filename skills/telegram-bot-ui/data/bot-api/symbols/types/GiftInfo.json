@@ -1,0 +1,131 @@
+{
+ "name": "GiftInfo",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "giftinfo",
+ "url": "https://core.telegram.org/bots/api#giftinfo",
+ "fields": [
+  {
+   "name": "gift",
+   "type": "Gift",
+   "types": [
+    {
+     "name": "Gift",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the gift"
+  },
+  {
+   "name": "owned_gift_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the received gift for the bot; only present for gifts received on behalf of business accounts"
+  },
+  {
+   "name": "convert_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Number of Telegram Stars that can be claimed by the receiver by converting the gift; omitted if conversion to Telegram Stars is impossible"
+  },
+  {
+   "name": "prepaid_upgrade_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Number of Telegram Stars that were prepaid for the ability to upgrade the gift"
+  },
+  {
+   "name": "is_upgrade_separate",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the gift's upgrade was purchased after the gift was sent"
+  },
+  {
+   "name": "can_be_upgraded",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the gift can be upgraded to a unique gift"
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Text of the message that was added to the gift"
+  },
+  {
+   "name": "entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Special entities that appear in the text"
+  },
+  {
+   "name": "is_private",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the sender and gift text are shown only to the gift receiver; otherwise, everyone will be able to see them"
+  },
+  {
+   "name": "unique_gift_number",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique number reserved for this gift when upgraded. See the number field in UniqueGift."
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about a regular gift that was sent or received."
+}

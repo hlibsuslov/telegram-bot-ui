@@ -1,0 +1,35 @@
+{
+ "name": "setStickerSetTitle",
+ "kind": "method",
+ "section": "Stickers",
+ "anchor": "setstickersettitle",
+ "url": "https://core.telegram.org/bots/api#setstickersettitle",
+ "parameters": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sticker set name"
+  },
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sticker set title, 1-64 characters"
+  }
+ ],
+ "description": "Use this method to set the title of a created sticker set. Returns True on success.",
+ "returns": "True"
+}

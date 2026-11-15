@@ -1,0 +1,35 @@
+{
+ "name": "ForumTopicEdited",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "forumtopicedited",
+ "url": "https://core.telegram.org/bots/api#forumtopicedited",
+ "fields": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "New name of the topic, if it was edited"
+  },
+  {
+   "name": "icon_custom_emoji_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "New identifier of the custom emoji shown as the topic icon, if it was edited; an empty string if the icon was removed"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a service message about an edited forum topic."
+}

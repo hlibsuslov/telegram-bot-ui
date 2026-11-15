@@ -1,0 +1,75 @@
+{
+ "name": "editMessageChecklist",
+ "kind": "method",
+ "section": "Updating messages",
+ "anchor": "editmessagechecklist",
+ "url": "https://core.telegram.org/bots/api#editmessagechecklist",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection on behalf of which the message will be sent"
+  },
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target bot in the format @username"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target message"
+  },
+  {
+   "name": "checklist",
+   "type": "InputChecklist",
+   "types": [
+    {
+     "name": "InputChecklist",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "A JSON-serialized object for the new checklist"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object for the new inline keyboard for the message"
+  }
+ ],
+ "description": "Use this method to edit a checklist on behalf of a connected business account. On success, the edited Message is returned.",
+ "returns": "Message"
+}

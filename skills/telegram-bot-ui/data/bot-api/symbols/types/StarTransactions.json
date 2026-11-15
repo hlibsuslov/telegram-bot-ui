@@ -1,0 +1,23 @@
+{
+ "name": "StarTransactions",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "startransactions",
+ "url": "https://core.telegram.org/bots/api#startransactions",
+ "fields": [
+  {
+   "name": "transactions",
+   "type": "Array of StarTransaction",
+   "types": [
+    {
+     "name": "StarTransaction",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "The list of transactions"
+  }
+ ],
+ "subtypes": [],
+ "description": "Contains a list of Telegram Star transactions."
+}

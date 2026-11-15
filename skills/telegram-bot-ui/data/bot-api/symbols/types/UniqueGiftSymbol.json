@@ -1,0 +1,47 @@
+{
+ "name": "UniqueGiftSymbol",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "uniquegiftsymbol",
+ "url": "https://core.telegram.org/bots/api#uniquegiftsymbol",
+ "fields": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the symbol"
+  },
+  {
+   "name": "sticker",
+   "type": "Sticker",
+   "types": [
+    {
+     "name": "Sticker",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The sticker that represents the unique gift"
+  },
+  {
+   "name": "rarity_per_mille",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The number of unique gifts that receive this model for every 1000 gifts upgraded"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes the symbol shown on the pattern of a unique gift."
+}

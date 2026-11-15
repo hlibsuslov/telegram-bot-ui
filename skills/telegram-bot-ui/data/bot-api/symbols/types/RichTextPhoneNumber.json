@@ -1,0 +1,48 @@
+{
+ "name": "RichTextPhoneNumber",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextphonenumber",
+ "url": "https://core.telegram.org/bots/api#richtextphonenumber",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “phone_number”",
+   "const": "phone_number"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  },
+  {
+   "name": "phone_number",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The phone number"
+  }
+ ],
+ "subtypes": [],
+ "description": "A text with a phone number."
+}

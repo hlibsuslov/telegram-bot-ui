@@ -1,0 +1,47 @@
+{
+ "name": "setUserEmojiStatus",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "setuseremojistatus",
+ "url": "https://core.telegram.org/bots/api#setuseremojistatus",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the target user"
+  },
+  {
+   "name": "emoji_status_custom_emoji_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Custom emoji identifier of the emoji status to set. Pass an empty string to remove the status."
+  },
+  {
+   "name": "emoji_status_expiration_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Expiration date of the emoji status, if any"
+  }
+ ],
+ "description": "Changes the emoji status for a given user that previously allowed the bot to manage their emoji status via the Mini App method requestEmojiStatusAccess. Returns True on success.",
+ "returns": "True"
+}

@@ -1,0 +1,13 @@
+{
+ "name": "EmojiType",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "emojitype",
+ "url": "https://core.telegram.org/bots/api#emojitype",
+ "fields": [],
+ "subtypes": [
+  "EmojiTypeEmoji",
+  "EmojiTypeCustomEmoji"
+ ],
+ "description": "This object describes an emoji. Currently, it can be one of"
+}

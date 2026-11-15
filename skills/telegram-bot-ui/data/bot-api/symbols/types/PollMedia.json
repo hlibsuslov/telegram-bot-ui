@@ -1,0 +1,131 @@
+{
+ "name": "PollMedia",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "pollmedia",
+ "url": "https://core.telegram.org/bots/api#pollmedia",
+ "fields": [
+  {
+   "name": "animation",
+   "type": "Animation",
+   "types": [
+    {
+     "name": "Animation",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media is an animation, information about the animation"
+  },
+  {
+   "name": "audio",
+   "type": "Audio",
+   "types": [
+    {
+     "name": "Audio",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media is an audio file, information about the file; currently, can't be received in a poll option"
+  },
+  {
+   "name": "document",
+   "type": "Document",
+   "types": [
+    {
+     "name": "Document",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media is a general file, information about the file; currently, can't be received in a poll option"
+  },
+  {
+   "name": "link",
+   "type": "Link",
+   "types": [
+    {
+     "name": "Link",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The HTTP link attached to the poll option"
+  },
+  {
+   "name": "live_photo",
+   "type": "LivePhoto",
+   "types": [
+    {
+     "name": "LivePhoto",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media is a live photo, information about the live photo"
+  },
+  {
+   "name": "location",
+   "type": "Location",
+   "types": [
+    {
+     "name": "Location",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media is a shared location, information about the location"
+  },
+  {
+   "name": "photo",
+   "type": "Array of PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Media is a photo, available sizes of the photo"
+  },
+  {
+   "name": "sticker",
+   "type": "Sticker",
+   "types": [
+    {
+     "name": "Sticker",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media is a sticker, information about the sticker; currently, for poll options only"
+  },
+  {
+   "name": "venue",
+   "type": "Venue",
+   "types": [
+    {
+     "name": "Venue",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media is a venue, information about the venue"
+  },
+  {
+   "name": "video",
+   "type": "Video",
+   "types": [
+    {
+     "name": "Video",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Media is a video, information about the video"
+  }
+ ],
+ "subtypes": [],
+ "description": "At most one of the optional fields can be present in any given object."
+}

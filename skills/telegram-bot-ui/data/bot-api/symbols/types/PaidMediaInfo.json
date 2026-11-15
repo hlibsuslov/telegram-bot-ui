@@ -1,0 +1,35 @@
+{
+ "name": "PaidMediaInfo",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "paidmediainfo",
+ "url": "https://core.telegram.org/bots/api#paidmediainfo",
+ "fields": [
+  {
+   "name": "star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The number of Telegram Stars that must be paid to buy access to the media"
+  },
+  {
+   "name": "paid_media",
+   "type": "Array of PaidMedia",
+   "types": [
+    {
+     "name": "PaidMedia",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Information about the paid media"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes the paid media added to a message."
+}

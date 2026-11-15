@@ -1,0 +1,83 @@
+{
+ "name": "Game",
+ "kind": "type",
+ "section": "Games",
+ "anchor": "game",
+ "url": "https://core.telegram.org/bots/api#game",
+ "fields": [
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Title of the game"
+  },
+  {
+   "name": "description",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Description of the game"
+  },
+  {
+   "name": "photo",
+   "type": "Array of PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Photo that will be displayed in the game message in chats"
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Brief description of the game or high scores included in the game message. Can be automatically edited to include current high scores for the game when the bot calls setGameScore, or manually edited using editMessageText. 0-4096 characters."
+  },
+  {
+   "name": "text_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Special entities that appear in text, such as usernames, URLs, bot commands, etc."
+  },
+  {
+   "name": "animation",
+   "type": "Animation",
+   "types": [
+    {
+     "name": "Animation",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Animation that will be displayed in the game message in chats. Upload via BotFather."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a game. Use BotFather to create and edit games, their short names will act as unique identifiers."
+}

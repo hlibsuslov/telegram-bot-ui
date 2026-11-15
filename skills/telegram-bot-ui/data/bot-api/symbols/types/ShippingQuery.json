@@ -1,0 +1,59 @@
+{
+ "name": "ShippingQuery",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "shippingquery",
+ "url": "https://core.telegram.org/bots/api#shippingquery",
+ "fields": [
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique query identifier"
+  },
+  {
+   "name": "from",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User who sent the query"
+  },
+  {
+   "name": "invoice_payload",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Bot-specified invoice payload"
+  },
+  {
+   "name": "shipping_address",
+   "type": "ShippingAddress",
+   "types": [
+    {
+     "name": "ShippingAddress",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User specified shipping address"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object contains information about an incoming shipping query."
+}

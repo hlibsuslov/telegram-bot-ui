@@ -1,0 +1,13 @@
+{
+ "name": "ChatShareTheme",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatsharetheme",
+ "url": "https://core.telegram.org/bots/api#chatsharetheme",
+ "fields": [],
+ "subtypes": [
+  "ChatShareThemeEmoji",
+  "ChatShareThemeUniqueGift"
+ ],
+ "description": "This object describes the theme of the screen for sharing a link to a user or a chat. Currently, it can be one of"
+}

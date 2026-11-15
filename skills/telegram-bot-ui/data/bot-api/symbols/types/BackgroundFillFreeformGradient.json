@@ -1,0 +1,36 @@
+{
+ "name": "BackgroundFillFreeformGradient",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "backgroundfillfreeformgradient",
+ "url": "https://core.telegram.org/bots/api#backgroundfillfreeformgradient",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the background fill, always “freeform_gradient”",
+   "const": "freeform_gradient"
+  },
+  {
+   "name": "colors",
+   "type": "Array of Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "A list of the 3 or 4 base colors that are used to generate the freeform gradient in the RGB24 format"
+  }
+ ],
+ "subtypes": [],
+ "description": "The background is a freeform gradient that rotates after every message in the chat."
+}

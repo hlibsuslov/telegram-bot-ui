@@ -1,0 +1,24 @@
+{
+ "name": "RevenueWithdrawalStatePending",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "revenuewithdrawalstatepending",
+ "url": "https://core.telegram.org/bots/api#revenuewithdrawalstatepending",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the state, always “pending”",
+   "const": "pending"
+  }
+ ],
+ "subtypes": [],
+ "description": "The withdrawal is in progress."
+}

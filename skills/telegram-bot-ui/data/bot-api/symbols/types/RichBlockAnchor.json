@@ -1,0 +1,36 @@
+{
+ "name": "RichBlockAnchor",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockanchor",
+ "url": "https://core.telegram.org/bots/api#richblockanchor",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “anchor”",
+   "const": "anchor"
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The name of the anchor"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with an anchor, corresponding to the HTML tag <a> with the attribute name."
+}

@@ -1,0 +1,59 @@
+{
+ "name": "TonWalletTransfer",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "tonwallettransfer",
+ "url": "https://core.telegram.org/bots/api#tonwallettransfer",
+ "fields": [
+  {
+   "name": "transaction_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the transaction; may be empty if the transfer hasn't been sent yet"
+  },
+  {
+   "name": "peer_address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Address of the transfer peer in the TON blockchain"
+  },
+  {
+   "name": "amount",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The amount of transferred cryptocurrency, in the smallest units of the cryptocurrency, as a decimal number; negative for outgoing transfers"
+  },
+  {
+   "name": "comment",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Comment added to the transfer; omitted if the comment is encrypted"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about a transfer with a TON wallet."
+}

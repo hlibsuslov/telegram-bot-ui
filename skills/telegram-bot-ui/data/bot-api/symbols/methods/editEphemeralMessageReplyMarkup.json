@@ -1,0 +1,63 @@
+{
+ "name": "editEphemeralMessageReplyMarkup",
+ "kind": "method",
+ "section": "Updating messages",
+ "anchor": "editephemeralmessagereplymarkup",
+ "url": "https://core.telegram.org/bots/api#editephemeralmessagereplymarkup",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target supergroup in the format @username"
+  },
+  {
+   "name": "receiver_user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the user who received the message"
+  },
+  {
+   "name": "ephemeral_message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the ephemeral message to edit"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object for an inline keyboard"
+  }
+ ],
+ "description": "Use this method to edit only the reply markup of an ephemeral message. Note that it is not guaranteed that the user will receive the message edit event, especially if they are offline. On success, True is returned.",
+ "returns": "True"
+}

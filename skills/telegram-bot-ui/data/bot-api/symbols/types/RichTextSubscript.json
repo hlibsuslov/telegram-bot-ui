@@ -1,0 +1,36 @@
+{
+ "name": "RichTextSubscript",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextsubscript",
+ "url": "https://core.telegram.org/bots/api#richtextsubscript",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “subscript”",
+   "const": "subscript"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  }
+ ],
+ "subtypes": [],
+ "description": "A subscript text."
+}

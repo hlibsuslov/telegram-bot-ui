@@ -1,0 +1,48 @@
+{
+ "name": "RichTextReference",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextreference",
+ "url": "https://core.telegram.org/bots/api#richtextreference",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “reference”",
+   "const": "reference"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text of the reference"
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The name of the reference"
+  }
+ ],
+ "subtypes": [],
+ "description": "A reference."
+}

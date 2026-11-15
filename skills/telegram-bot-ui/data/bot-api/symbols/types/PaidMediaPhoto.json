@@ -1,0 +1,36 @@
+{
+ "name": "PaidMediaPhoto",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "paidmediaphoto",
+ "url": "https://core.telegram.org/bots/api#paidmediaphoto",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the paid media, always “photo”",
+   "const": "photo"
+  },
+  {
+   "name": "photo",
+   "type": "Array of PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "The photo"
+  }
+ ],
+ "subtypes": [],
+ "description": "The paid media is a photo."
+}

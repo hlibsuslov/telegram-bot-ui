@@ -1,0 +1,24 @@
+{
+ "name": "MenuButtonCommands",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "menubuttoncommands",
+ "url": "https://core.telegram.org/bots/api#menubuttoncommands",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the button, must be commands",
+   "const": "commands"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a menu button, which opens the bot's list of commands."
+}

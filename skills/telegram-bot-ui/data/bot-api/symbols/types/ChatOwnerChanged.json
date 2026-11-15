@@ -1,0 +1,23 @@
+{
+ "name": "ChatOwnerChanged",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatownerchanged",
+ "url": "https://core.telegram.org/bots/api#chatownerchanged",
+ "fields": [
+  {
+   "name": "new_owner",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The new owner of the chat"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about an ownership change in the chat."
+}

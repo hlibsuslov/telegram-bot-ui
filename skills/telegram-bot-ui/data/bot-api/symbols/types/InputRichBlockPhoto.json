@@ -1,0 +1,48 @@
+{
+ "name": "InputRichBlockPhoto",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblockphoto",
+ "url": "https://core.telegram.org/bots/api#inputrichblockphoto",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “photo”",
+   "const": "photo"
+  },
+  {
+   "name": "photo",
+   "type": "InputMediaPhoto",
+   "types": [
+    {
+     "name": "InputMediaPhoto",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The photo. Caption is ignored."
+  },
+  {
+   "name": "caption",
+   "type": "RichBlockCaption",
+   "types": [
+    {
+     "name": "RichBlockCaption",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with a photo, corresponding to the HTML tag <img>."
+}

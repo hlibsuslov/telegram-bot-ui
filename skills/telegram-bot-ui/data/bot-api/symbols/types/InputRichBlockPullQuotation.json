@@ -1,0 +1,48 @@
+{
+ "name": "InputRichBlockPullQuotation",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblockpullquotation",
+ "url": "https://core.telegram.org/bots/api#inputrichblockpullquotation",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “pullquote”",
+   "const": "pullquote"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text of the block"
+  },
+  {
+   "name": "credit",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Credit of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A quotation with centered text, loosely corresponding to the HTML tag <aside>."
+}

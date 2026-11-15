@@ -1,0 +1,55 @@
+{
+ "name": "InputRichMessageMedia",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichmessagemedia",
+ "url": "https://core.telegram.org/bots/api#inputrichmessagemedia",
+ "fields": [
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the media used in a tg://photo?id=, tg://video?id=, tg://document?id=, or tg://audio?id= link. 1-64 characters, only A-Z, a-z, 0-9, _ and - are allowed."
+  },
+  {
+   "name": "media",
+   "type": "InputMediaAnimation or InputMediaAudio or InputMediaDocument or InputMediaPhoto or InputMediaVideo or InputMediaVoiceNote",
+   "types": [
+    {
+     "name": "InputMediaAnimation",
+     "array": 0
+    },
+    {
+     "name": "InputMediaAudio",
+     "array": 0
+    },
+    {
+     "name": "InputMediaDocument",
+     "array": 0
+    },
+    {
+     "name": "InputMediaPhoto",
+     "array": 0
+    },
+    {
+     "name": "InputMediaVideo",
+     "array": 0
+    },
+    {
+     "name": "InputMediaVoiceNote",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The media to be sent. Everything except the media itself and its properties is ignored."
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a media element embedded in an outgoing rich message."
+}

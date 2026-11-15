@@ -1,0 +1,24 @@
+{
+ "name": "ReactionTypePaid",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "reactiontypepaid",
+ "url": "https://core.telegram.org/bots/api#reactiontypepaid",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the reaction, always “paid”",
+   "const": "paid"
+  }
+ ],
+ "subtypes": [],
+ "description": "The reaction is paid."
+}

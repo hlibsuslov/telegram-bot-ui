@@ -1,0 +1,23 @@
+{
+ "name": "ChatBackground",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatbackground",
+ "url": "https://core.telegram.org/bots/api#chatbackground",
+ "fields": [
+  {
+   "name": "type",
+   "type": "BackgroundType",
+   "types": [
+    {
+     "name": "BackgroundType",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the background"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a chat background."
+}

@@ -1,0 +1,35 @@
+{
+ "name": "BotAccessSettings",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "botaccesssettings",
+ "url": "https://core.telegram.org/bots/api#botaccesssettings",
+ "fields": [
+  {
+   "name": "is_access_restricted",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if only selected users can access the bot. The bot's owner can always access it."
+  },
+  {
+   "name": "added_users",
+   "type": "Array of User",
+   "types": [
+    {
+     "name": "User",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "The list of other users who have access to the bot if the access is restricted"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes the access settings of a bot."
+}

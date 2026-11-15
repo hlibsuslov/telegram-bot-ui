@@ -1,0 +1,95 @@
+{
+ "name": "setGameScore",
+ "kind": "method",
+ "section": "Games",
+ "anchor": "setgamescore",
+ "url": "https://core.telegram.org/bots/api#setgamescore",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User identifier"
+  },
+  {
+   "name": "score",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "New score, must be non-negative"
+  },
+  {
+   "name": "force",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the high score is allowed to decrease. This can be useful when fixing mistakes or banning cheaters."
+  },
+  {
+   "name": "disable_edit_message",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the game message should not be automatically edited to include the current scoreboard"
+  },
+  {
+   "name": "chat_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Required if inline_message_id is not specified. Unique identifier for the target chat."
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Required if inline_message_id is not specified. Identifier of the sent message."
+  },
+  {
+   "name": "inline_message_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Required if chat_id and message_id are not specified. Identifier of the inline message."
+  }
+ ],
+ "description": "Use this method to set the score of the specified user in a game message. On success, if the message is not an inline message, the Message is returned, otherwise True is returned. Returns an error, if the new score is not greater than the user's current score in the chat and force is False.",
+ "returns": "Message or True"
+}

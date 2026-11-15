@@ -1,0 +1,36 @@
+{
+ "name": "PaidMediaLivePhoto",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "paidmedialivephoto",
+ "url": "https://core.telegram.org/bots/api#paidmedialivephoto",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the paid media, always “live_photo”",
+   "const": "live_photo"
+  },
+  {
+   "name": "live_photo",
+   "type": "LivePhoto",
+   "types": [
+    {
+     "name": "LivePhoto",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The photo"
+  }
+ ],
+ "subtypes": [],
+ "description": "The paid media is a live photo."
+}

@@ -1,0 +1,59 @@
+{
+ "name": "transferGift",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "transfergift",
+ "url": "https://core.telegram.org/bots/api#transfergift",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection"
+  },
+  {
+   "name": "owned_gift_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the regular gift that should be transferred"
+  },
+  {
+   "name": "new_owner_chat_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the chat which will own the gift. The chat must be active in the last 24 hours."
+  },
+  {
+   "name": "star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The amount of Telegram Stars that will be paid for the transfer from the business account balance. If positive, then the can_transfer_stars business bot right is required."
+  }
+ ],
+ "description": "Transfers an owned unique gift to another user. Requires the can_transfer_and_upgrade_gifts business bot right. Requires can_transfer_stars business bot right if the transfer is paid. Returns True on success.",
+ "returns": "True"
+}

@@ -1,0 +1,60 @@
+{
+ "name": "StoryAreaTypeWeather",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "storyareatypeweather",
+ "url": "https://core.telegram.org/bots/api#storyareatypeweather",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the area, always “weather”",
+   "const": "weather"
+  },
+  {
+   "name": "temperature",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Temperature, in degree Celsius"
+  },
+  {
+   "name": "emoji",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Emoji representing the weather"
+  },
+  {
+   "name": "background_color",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "A color of the area background in the ARGB format"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a story area containing weather information. Currently, a story can have up to 3 weather areas."
+}

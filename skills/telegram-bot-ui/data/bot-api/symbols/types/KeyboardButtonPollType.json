@@ -1,0 +1,23 @@
+{
+ "name": "KeyboardButtonPollType",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "keyboardbuttonpolltype",
+ "url": "https://core.telegram.org/bots/api#keyboardbuttonpolltype",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "If quiz is passed, the user will be allowed to create only polls in the quiz mode. If regular is passed, only regular polls will be allowed. Otherwise, the user will be allowed to create a poll of any type."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents type of a poll, which is allowed to be created and sent when the corresponding button is pressed."
+}

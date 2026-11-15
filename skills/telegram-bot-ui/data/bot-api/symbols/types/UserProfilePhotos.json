@@ -1,0 +1,35 @@
+{
+ "name": "UserProfilePhotos",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "userprofilephotos",
+ "url": "https://core.telegram.org/bots/api#userprofilephotos",
+ "fields": [
+  {
+   "name": "total_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Total number of profile pictures the target user has"
+  },
+  {
+   "name": "photos",
+   "type": "Array of Array of PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 2
+    }
+   ],
+   "required": true,
+   "description": "Requested profile pictures (in up to 4 sizes each)"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represent a user's profile pictures."
+}

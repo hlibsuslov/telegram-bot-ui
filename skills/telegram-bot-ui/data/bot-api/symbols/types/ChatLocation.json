@@ -1,0 +1,35 @@
+{
+ "name": "ChatLocation",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatlocation",
+ "url": "https://core.telegram.org/bots/api#chatlocation",
+ "fields": [
+  {
+   "name": "location",
+   "type": "Location",
+   "types": [
+    {
+     "name": "Location",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The location to which the supergroup is connected. Can't be a live location."
+  },
+  {
+   "name": "address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Location address; 1-64 characters, as defined by the chat owner"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a location to which a chat is connected."
+}

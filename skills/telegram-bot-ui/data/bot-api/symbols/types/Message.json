@@ -1,0 +1,1487 @@
+{
+ "name": "Message",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "message",
+ "url": "https://core.telegram.org/bots/api#message",
+ "fields": [
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique message identifier inside this chat; 0 for ephemeral messages. In specific instances (e.g., a message containing a video sent to a big chat), the server might automatically schedule a message instead of sending it immediately. In such cases, this field will be 0 and the relevant message will be unusable until it is actually sent."
+  },
+  {
+   "name": "message_thread_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of a message thread or forum topic to which the message belongs; for supergroups and private chats only"
+  },
+  {
+   "name": "direct_messages_topic",
+   "type": "DirectMessagesTopic",
+   "types": [
+    {
+     "name": "DirectMessagesTopic",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Information about the direct messages chat topic that contains the message"
+  },
+  {
+   "name": "from",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sender of the message; may be empty for messages sent to channels. For backward compatibility, if the message was sent on behalf of a chat, the field contains a fake sender user in non-channel chats."
+  },
+  {
+   "name": "sender_chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sender of the message when sent on behalf of a chat. For example, the supergroup itself for messages sent by its anonymous administrators or a linked channel for messages automatically forwarded to the channel's discussion group. For backward compatibility, if the message was sent on behalf of a chat, the field from contains a fake sender user in non-channel chats."
+  },
+  {
+   "name": "sender_boost_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "If the sender of the message boosted the chat, the number of boosts added by the user"
+  },
+  {
+   "name": "sender_business_bot",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The bot that actually sent the message on behalf of the business account. Available only for outgoing messages sent on behalf of the connected business account."
+  },
+  {
+   "name": "sender_tag",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Tag or custom title of the sender of the message; for supergroups only"
+  },
+  {
+   "name": "receiver_user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For ephemeral messages, the user who received the message"
+  },
+  {
+   "name": "ephemeral_message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For ephemeral messages, identifier of the ephemeral message inside this chat. The identifier may be reused for another ephemeral message after the message is deleted or expires."
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date the message was sent in Unix time. It is always a positive number, representing a valid date."
+  },
+  {
+   "name": "guest_query_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The unique identifier for the guest query. Use this identifier with the method answerGuestQuery to send a response message. If non-empty, the message belongs to the chat where the guest bot was summoned, which may not coincide with other existing bot chats sharing the same identifier."
+  },
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the business connection from which the message was received. If non-empty, the message belongs to a chat of the corresponding business account that is independent from any potential bot chat which might share the same identifier."
+  },
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Chat the message belongs to"
+  },
+  {
+   "name": "forward_origin",
+   "type": "MessageOrigin",
+   "types": [
+    {
+     "name": "MessageOrigin",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Information about the original message for forwarded messages"
+  },
+  {
+   "name": "is_topic_message",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the message is sent to a topic in a forum supergroup or a private chat with the bot"
+  },
+  {
+   "name": "is_automatic_forward",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the message is a channel post that was automatically forwarded to the connected discussion group"
+  },
+  {
+   "name": "reply_to_message",
+   "type": "Message",
+   "types": [
+    {
+     "name": "Message",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For replies in the same chat and message thread, the original message. Note that the Message object in this field will not contain further reply_to_message fields even if it itself is a reply. If the message is a reply to an ephemeral message, then this field may be omitted."
+  },
+  {
+   "name": "external_reply",
+   "type": "ExternalReplyInfo",
+   "types": [
+    {
+     "name": "ExternalReplyInfo",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Information about the message that is being replied to, which may come from another chat or forum topic"
+  },
+  {
+   "name": "quote",
+   "type": "TextQuote",
+   "types": [
+    {
+     "name": "TextQuote",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For replies that quote part of the original message, the quoted part of the message"
+  },
+  {
+   "name": "reply_to_story",
+   "type": "Story",
+   "types": [
+    {
+     "name": "Story",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For replies to a story, the original story"
+  },
+  {
+   "name": "reply_to_checklist_task_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Identifier of the specific checklist task that is being replied to"
+  },
+  {
+   "name": "reply_to_poll_option_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Persistent identifier of the specific poll option that is being replied to"
+  },
+  {
+   "name": "via_bot",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Bot through which the message was sent"
+  },
+  {
+   "name": "guest_bot_caller_user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For a message sent by a guest bot, this is the user whose original message triggered the bot's response"
+  },
+  {
+   "name": "guest_bot_caller_chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For a message sent by a guest bot, this is the chat whose original message triggered the bot's response"
+  },
+  {
+   "name": "edit_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Date the message was last edited in Unix time"
+  },
+  {
+   "name": "has_protected_content",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the message can't be forwarded"
+  },
+  {
+   "name": "is_from_offline",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the message was sent by an implicit action, for example, as an away or a greeting business message, or as a scheduled message"
+  },
+  {
+   "name": "is_paid_post",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the message is a paid post. Note that such posts must not be deleted for 24 hours to receive the payment and can't be edited."
+  },
+  {
+   "name": "media_group_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The unique identifier inside this chat of a media message group this message belongs to"
+  },
+  {
+   "name": "author_signature",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Signature of the post author for messages in channels, or the custom title of an anonymous group administrator"
+  },
+  {
+   "name": "paid_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The number of Telegram Stars that were paid by the sender of the message to send it"
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For text messages, the actual UTF-8 text of the message"
+  },
+  {
+   "name": "entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "For text messages, special entities like usernames, URLs, bot commands, etc. that appear in the text"
+  },
+  {
+   "name": "link_preview_options",
+   "type": "LinkPreviewOptions",
+   "types": [
+    {
+     "name": "LinkPreviewOptions",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Options used for link preview generation for the message, if it is a text message and link preview options were changed"
+  },
+  {
+   "name": "suggested_post_info",
+   "type": "SuggestedPostInfo",
+   "types": [
+    {
+     "name": "SuggestedPostInfo",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Information about suggested post parameters if the message is a suggested post in a channel direct messages chat. If the message is an approved or declined suggested post, then it can't be edited."
+  },
+  {
+   "name": "effect_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the message effect added to the message"
+  },
+  {
+   "name": "rich_message",
+   "type": "RichMessage",
+   "types": [
+    {
+     "name": "RichMessage",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a rich formatted message"
+  },
+  {
+   "name": "animation",
+   "type": "Animation",
+   "types": [
+    {
+     "name": "Animation",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is an animation, information about the animation. For backward compatibility, when this field is set, the document field will also be set."
+  },
+  {
+   "name": "audio",
+   "type": "Audio",
+   "types": [
+    {
+     "name": "Audio",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is an audio file, information about the file"
+  },
+  {
+   "name": "document",
+   "type": "Document",
+   "types": [
+    {
+     "name": "Document",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a general file, information about the file"
+  },
+  {
+   "name": "live_photo",
+   "type": "LivePhoto",
+   "types": [
+    {
+     "name": "LivePhoto",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a live photo, information about the live photo. For backward compatibility, when this field is set, the photo field will also be set."
+  },
+  {
+   "name": "paid_media",
+   "type": "PaidMediaInfo",
+   "types": [
+    {
+     "name": "PaidMediaInfo",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message contains paid media; information about the paid media"
+  },
+  {
+   "name": "photo",
+   "type": "Array of PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Message is a photo, available sizes of the photo"
+  },
+  {
+   "name": "sticker",
+   "type": "Sticker",
+   "types": [
+    {
+     "name": "Sticker",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a sticker, information about the sticker"
+  },
+  {
+   "name": "story",
+   "type": "Story",
+   "types": [
+    {
+     "name": "Story",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a forwarded story"
+  },
+  {
+   "name": "video",
+   "type": "Video",
+   "types": [
+    {
+     "name": "Video",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a video, information about the video"
+  },
+  {
+   "name": "video_note",
+   "type": "VideoNote",
+   "types": [
+    {
+     "name": "VideoNote",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a video note, information about the video message"
+  },
+  {
+   "name": "voice",
+   "type": "Voice",
+   "types": [
+    {
+     "name": "Voice",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a voice message, information about the file"
+  },
+  {
+   "name": "widget",
+   "type": "Widget",
+   "types": [
+    {
+     "name": "Widget",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is an HTML widget, information about the widget"
+  },
+  {
+   "name": "caption",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption for the animation, audio, document, live photo, paid media, photo, video, voice, or widget"
+  },
+  {
+   "name": "caption_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "For messages with a caption, special entities like usernames, URLs, bot commands, etc. that appear in the caption"
+  },
+  {
+   "name": "show_caption_above_media",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the caption must be shown above the message media or the widget"
+  },
+  {
+   "name": "has_media_spoiler",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the message media is covered by a spoiler animation"
+  },
+  {
+   "name": "checklist",
+   "type": "Checklist",
+   "types": [
+    {
+     "name": "Checklist",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a checklist"
+  },
+  {
+   "name": "contact",
+   "type": "Contact",
+   "types": [
+    {
+     "name": "Contact",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a shared contact, information about the contact"
+  },
+  {
+   "name": "dice",
+   "type": "Dice",
+   "types": [
+    {
+     "name": "Dice",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a dice with random value"
+  },
+  {
+   "name": "game",
+   "type": "Game",
+   "types": [
+    {
+     "name": "Game",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a game, information about the game. More about games »"
+  },
+  {
+   "name": "poll",
+   "type": "Poll",
+   "types": [
+    {
+     "name": "Poll",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a native poll, information about the poll"
+  },
+  {
+   "name": "venue",
+   "type": "Venue",
+   "types": [
+    {
+     "name": "Venue",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a venue, information about the venue. For backward compatibility, when this field is set, the location field will also be set."
+  },
+  {
+   "name": "location",
+   "type": "Location",
+   "types": [
+    {
+     "name": "Location",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a shared location, information about the location"
+  },
+  {
+   "name": "new_chat_members",
+   "type": "Array of User",
+   "types": [
+    {
+     "name": "User",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "New members that were added to the group or supergroup and information about them (the bot itself may be one of these members)"
+  },
+  {
+   "name": "left_chat_member",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A member was removed from the group, information about them (this member may be the bot itself)"
+  },
+  {
+   "name": "chat_owner_left",
+   "type": "ChatOwnerLeft",
+   "types": [
+    {
+     "name": "ChatOwnerLeft",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: chat owner has left"
+  },
+  {
+   "name": "chat_owner_changed",
+   "type": "ChatOwnerChanged",
+   "types": [
+    {
+     "name": "ChatOwnerChanged",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: chat owner has changed"
+  },
+  {
+   "name": "new_chat_title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A chat title was changed to this value"
+  },
+  {
+   "name": "new_chat_photo",
+   "type": "Array of PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "A chat photo was change to this value"
+  },
+  {
+   "name": "delete_chat_photo",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the chat photo was deleted"
+  },
+  {
+   "name": "group_chat_created",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the group has been created"
+  },
+  {
+   "name": "supergroup_chat_created",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the supergroup has been created. This field can't be received in a message coming through updates, because bot can't be a member of a supergroup when it is created. It can only be found in reply_to_message if someone replies to a very first message in a directly created supergroup."
+  },
+  {
+   "name": "channel_chat_created",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the channel has been created. This field can't be received in a message coming through updates, because bot can't be a member of a channel when it is created. It can only be found in reply_to_message if someone replies to a very first message in a channel."
+  },
+  {
+   "name": "message_auto_delete_timer_changed",
+   "type": "MessageAutoDeleteTimerChanged",
+   "types": [
+    {
+     "name": "MessageAutoDeleteTimerChanged",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: auto-delete timer settings changed in the chat"
+  },
+  {
+   "name": "migrate_to_chat_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The group has been migrated to a supergroup with the specified identifier. This number may have more than 32 significant bits and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this identifier."
+  },
+  {
+   "name": "migrate_from_chat_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The supergroup has been migrated from a group with the specified identifier. This number may have more than 32 significant bits and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a signed 64-bit integer or double-precision float type are safe for storing this identifier."
+  },
+  {
+   "name": "pinned_message",
+   "type": "MaybeInaccessibleMessage",
+   "types": [
+    {
+     "name": "MaybeInaccessibleMessage",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Specified message was pinned. Note that the Message object in this field will not contain further reply_to_message fields even if it itself is a reply."
+  },
+  {
+   "name": "invoice",
+   "type": "Invoice",
+   "types": [
+    {
+     "name": "Invoice",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is an invoice for a payment, information about the invoice. More about payments »"
+  },
+  {
+   "name": "successful_payment",
+   "type": "SuccessfulPayment",
+   "types": [
+    {
+     "name": "SuccessfulPayment",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a service message about a successful payment, information about the payment. More about payments »"
+  },
+  {
+   "name": "refunded_payment",
+   "type": "RefundedPayment",
+   "types": [
+    {
+     "name": "RefundedPayment",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message is a service message about a refunded payment, information about the payment. More about payments »"
+  },
+  {
+   "name": "users_shared",
+   "type": "UsersShared",
+   "types": [
+    {
+     "name": "UsersShared",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: users were shared with the bot"
+  },
+  {
+   "name": "chat_shared",
+   "type": "ChatShared",
+   "types": [
+    {
+     "name": "ChatShared",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: a chat was shared with the bot"
+  },
+  {
+   "name": "gift",
+   "type": "GiftInfo",
+   "types": [
+    {
+     "name": "GiftInfo",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: a regular gift was sent or received"
+  },
+  {
+   "name": "unique_gift",
+   "type": "UniqueGiftInfo",
+   "types": [
+    {
+     "name": "UniqueGiftInfo",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: a unique gift was sent or received"
+  },
+  {
+   "name": "gift_upgrade_sent",
+   "type": "GiftInfo",
+   "types": [
+    {
+     "name": "GiftInfo",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: upgrade of a gift was purchased after the gift was sent"
+  },
+  {
+   "name": "connected_website",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The domain name of the website on which the user has logged in. More about Telegram Login »"
+  },
+  {
+   "name": "write_access_allowed",
+   "type": "WriteAccessAllowed",
+   "types": [
+    {
+     "name": "WriteAccessAllowed",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the user allowed the bot to write messages after adding it to the attachment or side menu, launching a Web App from a link, or accepting an explicit request from a Web App sent by the method requestWriteAccess"
+  },
+  {
+   "name": "passport_data",
+   "type": "PassportData",
+   "types": [
+    {
+     "name": "PassportData",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Telegram Passport data"
+  },
+  {
+   "name": "proximity_alert_triggered",
+   "type": "ProximityAlertTriggered",
+   "types": [
+    {
+     "name": "ProximityAlertTriggered",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: a user in the chat triggered another user's proximity alert while sharing Live Location"
+  },
+  {
+   "name": "boost_added",
+   "type": "ChatBoostAdded",
+   "types": [
+    {
+     "name": "ChatBoostAdded",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: user boosted the chat"
+  },
+  {
+   "name": "chat_background_set",
+   "type": "ChatBackground",
+   "types": [
+    {
+     "name": "ChatBackground",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: chat background set"
+  },
+  {
+   "name": "checklist_tasks_done",
+   "type": "ChecklistTasksDone",
+   "types": [
+    {
+     "name": "ChecklistTasksDone",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: some tasks in a checklist were marked as done or not done"
+  },
+  {
+   "name": "checklist_tasks_added",
+   "type": "ChecklistTasksAdded",
+   "types": [
+    {
+     "name": "ChecklistTasksAdded",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: tasks were added to a checklist"
+  },
+  {
+   "name": "community_chat_added",
+   "type": "CommunityChatAdded",
+   "types": [
+    {
+     "name": "CommunityChatAdded",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: chat or bot added to a Community"
+  },
+  {
+   "name": "community_chat_joined",
+   "type": "CommunityChatJoined",
+   "types": [
+    {
+     "name": "CommunityChatJoined",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: chat was joined by a user from a Community"
+  },
+  {
+   "name": "community_chat_removed",
+   "type": "CommunityChatRemoved",
+   "types": [
+    {
+     "name": "CommunityChatRemoved",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: chat or bot removed from a Community"
+  },
+  {
+   "name": "direct_message_price_changed",
+   "type": "DirectMessagePriceChanged",
+   "types": [
+    {
+     "name": "DirectMessagePriceChanged",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the price for paid messages in the corresponding direct messages chat of a channel has changed"
+  },
+  {
+   "name": "forum_topic_created",
+   "type": "ForumTopicCreated",
+   "types": [
+    {
+     "name": "ForumTopicCreated",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: forum topic created"
+  },
+  {
+   "name": "forum_topic_edited",
+   "type": "ForumTopicEdited",
+   "types": [
+    {
+     "name": "ForumTopicEdited",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: forum topic edited"
+  },
+  {
+   "name": "forum_topic_closed",
+   "type": "ForumTopicClosed",
+   "types": [
+    {
+     "name": "ForumTopicClosed",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: forum topic closed"
+  },
+  {
+   "name": "forum_topic_reopened",
+   "type": "ForumTopicReopened",
+   "types": [
+    {
+     "name": "ForumTopicReopened",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: forum topic reopened"
+  },
+  {
+   "name": "general_forum_topic_hidden",
+   "type": "GeneralForumTopicHidden",
+   "types": [
+    {
+     "name": "GeneralForumTopicHidden",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the 'General' forum topic hidden"
+  },
+  {
+   "name": "general_forum_topic_unhidden",
+   "type": "GeneralForumTopicUnhidden",
+   "types": [
+    {
+     "name": "GeneralForumTopicUnhidden",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the 'General' forum topic unhidden"
+  },
+  {
+   "name": "giveaway_created",
+   "type": "GiveawayCreated",
+   "types": [
+    {
+     "name": "GiveawayCreated",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: a scheduled giveaway was created"
+  },
+  {
+   "name": "giveaway",
+   "type": "Giveaway",
+   "types": [
+    {
+     "name": "Giveaway",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The message is a scheduled giveaway message"
+  },
+  {
+   "name": "giveaway_winners",
+   "type": "GiveawayWinners",
+   "types": [
+    {
+     "name": "GiveawayWinners",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A giveaway with public winners was completed"
+  },
+  {
+   "name": "giveaway_completed",
+   "type": "GiveawayCompleted",
+   "types": [
+    {
+     "name": "GiveawayCompleted",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: a giveaway without public winners was completed"
+  },
+  {
+   "name": "managed_bot_created",
+   "type": "ManagedBotCreated",
+   "types": [
+    {
+     "name": "ManagedBotCreated",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: user created a bot that will be managed by the current bot"
+  },
+  {
+   "name": "paid_message_price_changed",
+   "type": "PaidMessagePriceChanged",
+   "types": [
+    {
+     "name": "PaidMessagePriceChanged",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the price for paid messages has changed in the chat"
+  },
+  {
+   "name": "paid_messages_waived",
+   "type": "PaidMessagesWaived",
+   "types": [
+    {
+     "name": "PaidMessagesWaived",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: the sender of the message used a link of the other user, which allows sending messages to the user without paying Telegram Stars"
+  },
+  {
+   "name": "poll_option_added",
+   "type": "PollOptionAdded",
+   "types": [
+    {
+     "name": "PollOptionAdded",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: answer option was added to a poll"
+  },
+  {
+   "name": "poll_option_deleted",
+   "type": "PollOptionDeleted",
+   "types": [
+    {
+     "name": "PollOptionDeleted",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: answer option was deleted from a poll"
+  },
+  {
+   "name": "suggested_post_approved",
+   "type": "SuggestedPostApproved",
+   "types": [
+    {
+     "name": "SuggestedPostApproved",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: a suggested post was approved"
+  },
+  {
+   "name": "suggested_post_approval_failed",
+   "type": "SuggestedPostApprovalFailed",
+   "types": [
+    {
+     "name": "SuggestedPostApprovalFailed",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: approval of a suggested post has failed"
+  },
+  {
+   "name": "suggested_post_declined",
+   "type": "SuggestedPostDeclined",
+   "types": [
+    {
+     "name": "SuggestedPostDeclined",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: a suggested post was declined"
+  },
+  {
+   "name": "suggested_post_paid",
+   "type": "SuggestedPostPaid",
+   "types": [
+    {
+     "name": "SuggestedPostPaid",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: payment for a suggested post was received"
+  },
+  {
+   "name": "suggested_post_refunded",
+   "type": "SuggestedPostRefunded",
+   "types": [
+    {
+     "name": "SuggestedPostRefunded",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: payment for a suggested post was refunded"
+  },
+  {
+   "name": "ton_wallet_transfer",
+   "type": "TonWalletTransfer",
+   "types": [
+    {
+     "name": "TonWalletTransfer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: a transfer with a TON wallet"
+  },
+  {
+   "name": "video_chat_scheduled",
+   "type": "VideoChatScheduled",
+   "types": [
+    {
+     "name": "VideoChatScheduled",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: video chat scheduled"
+  },
+  {
+   "name": "video_chat_started",
+   "type": "VideoChatStarted",
+   "types": [
+    {
+     "name": "VideoChatStarted",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: video chat started"
+  },
+  {
+   "name": "video_chat_ended",
+   "type": "VideoChatEnded",
+   "types": [
+    {
+     "name": "VideoChatEnded",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: video chat ended"
+  },
+  {
+   "name": "video_chat_participants_invited",
+   "type": "VideoChatParticipantsInvited",
+   "types": [
+    {
+     "name": "VideoChatParticipantsInvited",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: new participants invited to a video chat"
+  },
+  {
+   "name": "web_app_data",
+   "type": "WebAppData",
+   "types": [
+    {
+     "name": "WebAppData",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Service message: data sent by a Web App"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Inline keyboard attached to the message. login_url buttons are represented as ordinary url buttons."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a message."
+}

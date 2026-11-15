@@ -1,0 +1,35 @@
+{
+ "name": "Story",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "story",
+ "url": "https://core.telegram.org/bots/api#story",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Chat that posted the story"
+  },
+  {
+   "name": "id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the story in the chat"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a story."
+}

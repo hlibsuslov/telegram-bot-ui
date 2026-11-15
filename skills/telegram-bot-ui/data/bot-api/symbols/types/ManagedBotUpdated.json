@@ -1,0 +1,35 @@
+{
+ "name": "ManagedBotUpdated",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "managedbotupdated",
+ "url": "https://core.telegram.org/bots/api#managedbotupdated",
+ "fields": [
+  {
+   "name": "user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User that created the bot"
+  },
+  {
+   "name": "bot",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the bot. Token of the bot can be fetched using the method getManagedBotToken."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object contains information about the creation, token update, or owner update of a bot that is managed by the current bot."
+}

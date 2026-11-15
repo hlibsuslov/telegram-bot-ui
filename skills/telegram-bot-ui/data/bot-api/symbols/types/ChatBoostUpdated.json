@@ -1,0 +1,35 @@
+{
+ "name": "ChatBoostUpdated",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatboostupdated",
+ "url": "https://core.telegram.org/bots/api#chatboostupdated",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Chat which was boosted"
+  },
+  {
+   "name": "boost",
+   "type": "ChatBoost",
+   "types": [
+    {
+     "name": "ChatBoost",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the chat boost"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a boost added to a chat or changed."
+}

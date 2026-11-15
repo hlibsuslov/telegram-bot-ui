@@ -1,0 +1,24 @@
+{
+ "name": "BotCommandScopeDefault",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "botcommandscopedefault",
+ "url": "https://core.telegram.org/bots/api#botcommandscopedefault",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Scope type, must be default",
+   "const": "default"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the default scope of bot commands. Default commands are used if no commands with a narrower scope are specified for the user."
+}

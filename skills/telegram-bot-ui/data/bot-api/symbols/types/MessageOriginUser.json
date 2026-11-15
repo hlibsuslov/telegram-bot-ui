@@ -1,0 +1,48 @@
+{
+ "name": "MessageOriginUser",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "messageoriginuser",
+ "url": "https://core.telegram.org/bots/api#messageoriginuser",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the message origin, always “user”",
+   "const": "user"
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date the message was sent originally in Unix time"
+  },
+  {
+   "name": "sender_user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User that sent the message originally"
+  }
+ ],
+ "subtypes": [],
+ "description": "The message was originally sent by a known user."
+}

@@ -1,0 +1,48 @@
+{
+ "name": "TransactionPartnerChat",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "transactionpartnerchat",
+ "url": "https://core.telegram.org/bots/api#transactionpartnerchat",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the transaction partner, always “chat”",
+   "const": "chat"
+  },
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the chat"
+  },
+  {
+   "name": "gift",
+   "type": "Gift",
+   "types": [
+    {
+     "name": "Gift",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The gift sent to the chat by the bot"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a transaction with a chat."
+}

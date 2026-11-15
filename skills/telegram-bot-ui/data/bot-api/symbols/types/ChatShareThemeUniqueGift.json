@@ -1,0 +1,36 @@
+{
+ "name": "ChatShareThemeUniqueGift",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatsharethemeuniquegift",
+ "url": "https://core.telegram.org/bots/api#chatsharethemeuniquegift",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the theme, always “unique_gift”",
+   "const": "unique_gift"
+  },
+  {
+   "name": "gift",
+   "type": "UniqueGift",
+   "types": [
+    {
+     "name": "UniqueGift",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The gift"
+  }
+ ],
+ "subtypes": [],
+ "description": "The theme based on a unique gift owned by the user or the chat."
+}

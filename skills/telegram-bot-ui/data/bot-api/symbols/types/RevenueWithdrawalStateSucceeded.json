@@ -1,0 +1,48 @@
+{
+ "name": "RevenueWithdrawalStateSucceeded",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "revenuewithdrawalstatesucceeded",
+ "url": "https://core.telegram.org/bots/api#revenuewithdrawalstatesucceeded",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the state, always “succeeded”",
+   "const": "succeeded"
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date the withdrawal was completed in Unix time"
+  },
+  {
+   "name": "url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "An HTTPS URL that can be used to see transaction details"
+  }
+ ],
+ "subtypes": [],
+ "description": "The withdrawal succeeded."
+}

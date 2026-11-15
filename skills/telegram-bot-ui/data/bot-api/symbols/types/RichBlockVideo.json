@@ -1,0 +1,60 @@
+{
+ "name": "RichBlockVideo",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockvideo",
+ "url": "https://core.telegram.org/bots/api#richblockvideo",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “video”",
+   "const": "video"
+  },
+  {
+   "name": "video",
+   "type": "Video",
+   "types": [
+    {
+     "name": "Video",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The video"
+  },
+  {
+   "name": "has_spoiler",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the media preview is covered by a spoiler animation"
+  },
+  {
+   "name": "caption",
+   "type": "RichBlockCaption",
+   "types": [
+    {
+     "name": "RichBlockCaption",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with a video, corresponding to the HTML tag <video>."
+}

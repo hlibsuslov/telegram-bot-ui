@@ -1,0 +1,72 @@
+{
+ "name": "BackgroundTypeWallpaper",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "backgroundtypewallpaper",
+ "url": "https://core.telegram.org/bots/api#backgroundtypewallpaper",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the background, always “wallpaper”",
+   "const": "wallpaper"
+  },
+  {
+   "name": "document",
+   "type": "Document",
+   "types": [
+    {
+     "name": "Document",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Document with the wallpaper"
+  },
+  {
+   "name": "dark_theme_dimming",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Dimming of the background in dark themes, as a percentage; 0-100"
+  },
+  {
+   "name": "is_blurred",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the wallpaper is downscaled to fit in a 450x450 square and then box-blurred with radius 12"
+  },
+  {
+   "name": "is_moving",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the background moves slightly when the device is tilted"
+  }
+ ],
+ "subtypes": [],
+ "description": "The background is a wallpaper in the JPEG format."
+}

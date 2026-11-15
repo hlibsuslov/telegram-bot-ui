@@ -1,0 +1,48 @@
+{
+ "name": "RichBlockVoiceNote",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockvoicenote",
+ "url": "https://core.telegram.org/bots/api#richblockvoicenote",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “voice_note”",
+   "const": "voice_note"
+  },
+  {
+   "name": "voice_note",
+   "type": "Voice",
+   "types": [
+    {
+     "name": "Voice",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The voice note"
+  },
+  {
+   "name": "caption",
+   "type": "RichBlockCaption",
+   "types": [
+    {
+     "name": "RichBlockCaption",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with a voice note, corresponding to the HTML tag <audio>."
+}

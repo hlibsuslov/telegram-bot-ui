@@ -1,0 +1,107 @@
+{
+ "name": "ChatMemberUpdated",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatmemberupdated",
+ "url": "https://core.telegram.org/bots/api#chatmemberupdated",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Chat the user belongs to"
+  },
+  {
+   "name": "from",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Performer of the action, which resulted in the change"
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date the change was done in Unix time"
+  },
+  {
+   "name": "old_chat_member",
+   "type": "ChatMember",
+   "types": [
+    {
+     "name": "ChatMember",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Previous information about the chat member"
+  },
+  {
+   "name": "new_chat_member",
+   "type": "ChatMember",
+   "types": [
+    {
+     "name": "ChatMember",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "New information about the chat member"
+  },
+  {
+   "name": "invite_link",
+   "type": "ChatInviteLink",
+   "types": [
+    {
+     "name": "ChatInviteLink",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Chat invite link, which was used by the user to join the chat; for joining by invite link events only"
+  },
+  {
+   "name": "via_join_request",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the user joined the chat after sending a direct join request without using an invite link and being approved by an administrator"
+  },
+  {
+   "name": "via_chat_folder_invite_link",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the user joined the chat via a chat folder invite link"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents changes in the status of a chat member."
+}

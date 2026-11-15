@@ -1,0 +1,36 @@
+{
+ "name": "RichTextMathematicalExpression",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextmathematicalexpression",
+ "url": "https://core.telegram.org/bots/api#richtextmathematicalexpression",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “mathematical_expression”",
+   "const": "mathematical_expression"
+  },
+  {
+   "name": "expression",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The expression in LaTeX format"
+  }
+ ],
+ "subtypes": [],
+ "description": "A mathematical expression."
+}

@@ -1,0 +1,140 @@
+{
+ "name": "forwardMessage",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "forwardmessage",
+ "url": "https://core.telegram.org/bots/api#forwardmessage",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target bot, supergroup, or channel in the format @username"
+  },
+  {
+   "name": "message_thread_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only"
+  },
+  {
+   "name": "direct_messages_topic_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Identifier of the direct messages topic to which the message will be forwarded; required if the message is forwarded to a direct messages chat",
+   "conditional": true
+  },
+  {
+   "name": "from_chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the chat where the original message was sent (or username of the target bot, supergroup, or channel in the format @username)"
+  },
+  {
+   "name": "video_start_timestamp",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "New start timestamp for the forwarded video in the message"
+  },
+  {
+   "name": "disable_notification",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sends the message silently. Users will receive a notification with no sound."
+  },
+  {
+   "name": "protect_content",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Protects the contents of the forwarded message from forwarding and saving"
+  },
+  {
+   "name": "message_effect_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the message effect to be added to the message; only available when forwarding to private chats"
+  },
+  {
+   "name": "suggested_post_parameters",
+   "type": "SuggestedPostParameters",
+   "types": [
+    {
+     "name": "SuggestedPostParameters",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Message identifier in the chat specified in from_chat_id"
+  }
+ ],
+ "description": "Use this method to forward messages of any kind. Service messages and messages with protected content can't be forwarded. On success, the sent Message is returned.",
+ "returns": "Message"
+}

@@ -1,0 +1,48 @@
+{
+ "name": "InputRichBlockAnimation",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblockanimation",
+ "url": "https://core.telegram.org/bots/api#inputrichblockanimation",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “animation”",
+   "const": "animation"
+  },
+  {
+   "name": "animation",
+   "type": "InputMediaAnimation",
+   "types": [
+    {
+     "name": "InputMediaAnimation",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The animation. Caption is ignored."
+  },
+  {
+   "name": "caption",
+   "type": "RichBlockCaption",
+   "types": [
+    {
+     "name": "RichBlockCaption",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with an animation, corresponding to the HTML tag <video>."
+}

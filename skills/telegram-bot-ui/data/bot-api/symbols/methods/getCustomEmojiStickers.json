@@ -1,0 +1,23 @@
+{
+ "name": "getCustomEmojiStickers",
+ "kind": "method",
+ "section": "Stickers",
+ "anchor": "getcustomemojistickers",
+ "url": "https://core.telegram.org/bots/api#getcustomemojistickers",
+ "parameters": [
+  {
+   "name": "custom_emoji_ids",
+   "type": "Array of String",
+   "types": [
+    {
+     "name": "String",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "A JSON-serialized list of custom emoji identifiers. At most 200 custom emoji identifiers can be specified."
+  }
+ ],
+ "description": "Use this method to get information about custom emoji stickers by their identifiers. Returns an Array of Sticker objects.",
+ "returns": "Array of Sticker"
+}

@@ -1,0 +1,10 @@
+{
+ "name": "removeMyProfilePhoto",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "removemyprofilephoto",
+ "url": "https://core.telegram.org/bots/api#removemyprofilephoto",
+ "parameters": [],
+ "description": "Removes the profile photo of the bot. Requires no parameters. Returns True on success.",
+ "returns": "True"
+}

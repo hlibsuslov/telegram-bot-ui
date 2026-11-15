@@ -1,0 +1,48 @@
+{
+ "name": "RichBlockDocument",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockdocument",
+ "url": "https://core.telegram.org/bots/api#richblockdocument",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “document”",
+   "const": "document"
+  },
+  {
+   "name": "document",
+   "type": "Document",
+   "types": [
+    {
+     "name": "Document",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The document"
+  },
+  {
+   "name": "caption",
+   "type": "RichBlockCaption",
+   "types": [
+    {
+     "name": "RichBlockCaption",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with a general file, corresponding to the custom HTML tag <tg-document>."
+}

@@ -1,0 +1,71 @@
+{
+ "name": "StickerSet",
+ "kind": "type",
+ "section": "Stickers",
+ "anchor": "stickerset",
+ "url": "https://core.telegram.org/bots/api#stickerset",
+ "fields": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sticker set name"
+  },
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sticker set title"
+  },
+  {
+   "name": "sticker_type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of stickers in the set, currently one of “regular”, “mask”, “custom_emoji”"
+  },
+  {
+   "name": "stickers",
+   "type": "Array of Sticker",
+   "types": [
+    {
+     "name": "Sticker",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "List of all set stickers"
+  },
+  {
+   "name": "thumbnail",
+   "type": "PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sticker set thumbnail in the .WEBP, .TGS, or .WEBM format"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a sticker set."
+}

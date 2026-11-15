@@ -1,0 +1,47 @@
+{
+ "name": "editSharedWidgetData",
+ "kind": "method",
+ "section": "Updating messages",
+ "anchor": "editsharedwidgetdata",
+ "url": "https://core.telegram.org/bots/api#editsharedwidgetdata",
+ "parameters": [
+  {
+   "name": "widget_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the shared widget"
+  },
+  {
+   "name": "public_data",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "New public data of the widget, 0-1024 bytes; pass an empty string to remove the public data"
+  },
+  {
+   "name": "cache_time",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The maximum amount of time in seconds that the public data of the widget may be cached client-side; 5-3600. If omitted, then the current value is kept, which is 30 by default."
+  }
+ ],
+ "description": "Use this method to edit public data of a shared widget created by the bot. A shared widget can be edited at most once per second. On success, True is returned.",
+ "returns": "True"
+}

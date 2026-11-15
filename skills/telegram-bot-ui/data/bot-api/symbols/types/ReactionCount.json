@@ -1,0 +1,35 @@
+{
+ "name": "ReactionCount",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "reactioncount",
+ "url": "https://core.telegram.org/bots/api#reactioncount",
+ "fields": [
+  {
+   "name": "type",
+   "type": "ReactionType",
+   "types": [
+    {
+     "name": "ReactionType",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the reaction"
+  },
+  {
+   "name": "total_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Number of times the reaction was added"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents a reaction added to a message along with the number of times it was added."
+}

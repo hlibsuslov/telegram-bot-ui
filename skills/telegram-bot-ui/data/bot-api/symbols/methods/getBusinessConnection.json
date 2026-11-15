@@ -1,0 +1,23 @@
+{
+ "name": "getBusinessConnection",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getbusinessconnection",
+ "url": "https://core.telegram.org/bots/api#getbusinessconnection",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection"
+  }
+ ],
+ "description": "Use this method to get information about the connection of the bot with a business account. Returns a BusinessConnection object on success.",
+ "returns": "BusinessConnection"
+}

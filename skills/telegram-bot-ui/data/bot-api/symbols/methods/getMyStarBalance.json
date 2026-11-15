@@ -1,0 +1,10 @@
+{
+ "name": "getMyStarBalance",
+ "kind": "method",
+ "section": "Payments",
+ "anchor": "getmystarbalance",
+ "url": "https://core.telegram.org/bots/api#getmystarbalance",
+ "parameters": [],
+ "description": "A method to get the current Telegram Stars balance of the bot. Requires no parameters. On success, returns a StarAmount object.",
+ "returns": "StarAmount"
+}

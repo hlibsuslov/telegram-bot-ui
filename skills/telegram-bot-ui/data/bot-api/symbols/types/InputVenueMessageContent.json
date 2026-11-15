@@ -1,0 +1,107 @@
+{
+ "name": "InputVenueMessageContent",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inputvenuemessagecontent",
+ "url": "https://core.telegram.org/bots/api#inputvenuemessagecontent",
+ "fields": [
+  {
+   "name": "latitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Latitude of the venue in degrees"
+  },
+  {
+   "name": "longitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Longitude of the venue in degrees"
+  },
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the venue"
+  },
+  {
+   "name": "address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Address of the venue"
+  },
+  {
+   "name": "foursquare_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Foursquare identifier of the venue, if known"
+  },
+  {
+   "name": "foursquare_type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Foursquare type of the venue, if known. (For example, “arts_entertainment/default”, “arts_entertainment/aquarium” or “food/icecream”.)"
+  },
+  {
+   "name": "google_place_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Google Places identifier of the venue"
+  },
+  {
+   "name": "google_place_type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Google Places type of the venue. (See supported types.)"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the content of a venue message to be sent as the result of an inline query."
+}

@@ -1,0 +1,24 @@
+{
+ "name": "BotCommandScopeAllChatAdministrators",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "botcommandscopeallchatadministrators",
+ "url": "https://core.telegram.org/bots/api#botcommandscopeallchatadministrators",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Scope type, must be all_chat_administrators",
+   "const": "all_chat_administrators"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the scope of bot commands, covering all group and supergroup chat administrators."
+}

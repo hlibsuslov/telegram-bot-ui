@@ -1,0 +1,119 @@
+{
+ "name": "postStory",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "poststory",
+ "url": "https://core.telegram.org/bots/api#poststory",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection"
+  },
+  {
+   "name": "content",
+   "type": "InputStoryContent",
+   "types": [
+    {
+     "name": "InputStoryContent",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Content of the story"
+  },
+  {
+   "name": "active_period",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Period after which the story is moved to the archive, in seconds; must be one of 6 * 3600, 12 * 3600, 86400, or 2 * 86400"
+  },
+  {
+   "name": "caption",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the story, 0-2048 characters after entities parsing"
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the story caption. See formatting options for more details."
+  },
+  {
+   "name": "caption_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized list of special entities that appear in the caption, which can be specified instead of parse_mode"
+  },
+  {
+   "name": "areas",
+   "type": "Array of StoryArea",
+   "types": [
+    {
+     "name": "StoryArea",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized list of clickable areas to be shown on the story"
+  },
+  {
+   "name": "post_to_chat_page",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to keep the story accessible after it expires"
+  },
+  {
+   "name": "protect_content",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the content of the story must be protected from forwarding and screenshotting"
+  }
+ ],
+ "description": "Posts a story on behalf of a managed business account. Requires the can_manage_stories business bot right. Returns Story on success.",
+ "returns": "Story"
+}

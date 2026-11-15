@@ -1,0 +1,35 @@
+{
+ "name": "PaidMediaPurchased",
+ "kind": "type",
+ "section": "Payments",
+ "anchor": "paidmediapurchased",
+ "url": "https://core.telegram.org/bots/api#paidmediapurchased",
+ "fields": [
+  {
+   "name": "from",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User who purchased the media"
+  },
+  {
+   "name": "paid_media_payload",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Bot-specified paid media payload"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object contains information about a paid media purchase."
+}

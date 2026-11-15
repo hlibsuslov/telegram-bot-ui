@@ -1,0 +1,23 @@
+{
+ "name": "Gifts",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "gifts",
+ "url": "https://core.telegram.org/bots/api#gifts",
+ "fields": [
+  {
+   "name": "gifts",
+   "type": "Array of Gift",
+   "types": [
+    {
+     "name": "Gift",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "The list of gifts"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represent a list of gifts."
+}

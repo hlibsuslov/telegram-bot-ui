@@ -1,0 +1,52 @@
+{
+ "name": "BotCommandScopeChatMember",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "botcommandscopechatmember",
+ "url": "https://core.telegram.org/bots/api#botcommandscopechatmember",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Scope type, must be chat_member",
+   "const": "chat_member"
+  },
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target supergroup in the format @username. Channel direct messages chats and channel chats aren't supported."
+  },
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the target user"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the scope of bot commands, covering a specific member of a group or supergroup chat."
+}

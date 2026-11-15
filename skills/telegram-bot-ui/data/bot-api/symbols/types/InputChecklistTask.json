@@ -1,0 +1,59 @@
+{
+ "name": "InputChecklistTask",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inputchecklisttask",
+ "url": "https://core.telegram.org/bots/api#inputchecklisttask",
+ "fields": [
+  {
+   "name": "id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the task; must be positive and unique among all task identifiers currently present in the checklist"
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text of the task; 1-100 characters after entities parsing"
+  },
+  {
+   "name": "parse_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode for parsing entities in the text. See formatting options for more details."
+  },
+  {
+   "name": "text_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "List of special entities that appear in the text, which can be specified instead of parse_mode. Currently, only bold, italic, underline, strikethrough, spoiler, custom_emoji, and date_time entities are allowed."
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a task to add to a checklist."
+}

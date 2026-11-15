@@ -1,0 +1,84 @@
+{
+ "name": "RichBlockMap",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockmap",
+ "url": "https://core.telegram.org/bots/api#richblockmap",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “map”",
+   "const": "map"
+  },
+  {
+   "name": "location",
+   "type": "Location",
+   "types": [
+    {
+     "name": "Location",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Location of the center of the map"
+  },
+  {
+   "name": "zoom",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Map zoom level"
+  },
+  {
+   "name": "width",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Expected width of the map"
+  },
+  {
+   "name": "height",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Expected height of the map"
+  },
+  {
+   "name": "caption",
+   "type": "RichBlockCaption",
+   "types": [
+    {
+     "name": "RichBlockCaption",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with a map, corresponding to the custom HTML tag <tg-map>."
+}

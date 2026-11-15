@@ -1,0 +1,23 @@
+{
+ "name": "ChatOwnerLeft",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatownerleft",
+ "url": "https://core.telegram.org/bots/api#chatownerleft",
+ "fields": [
+  {
+   "name": "new_owner",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The user who will become the new owner of the chat if the previous owner does not return to the chat"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about the chat owner leaving the chat."
+}

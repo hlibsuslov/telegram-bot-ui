@@ -1,0 +1,131 @@
+{
+ "name": "UniqueGiftInfo",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "uniquegiftinfo",
+ "url": "https://core.telegram.org/bots/api#uniquegiftinfo",
+ "fields": [
+  {
+   "name": "gift",
+   "type": "UniqueGift",
+   "types": [
+    {
+     "name": "UniqueGift",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the gift"
+  },
+  {
+   "name": "origin",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Origin of the gift. Currently, either “upgrade” for gifts upgraded from regular gifts, “transfer” for gifts transferred from other users or channels, “resale” for gifts bought from other users, “gifted_upgrade” for upgrades purchased after the gift was sent, or “offer” for gifts bought or sold through gift purchase offers."
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Text of the message that was added to the gift"
+  },
+  {
+   "name": "entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Special entities that appear in the text"
+  },
+  {
+   "name": "is_private",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the sender and gift text are shown only to the gift receiver; otherwise, everyone will be able to see them"
+  },
+  {
+   "name": "last_resale_currency",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For gifts bought from other users, the currency in which the payment for the gift was done. Currently, one of “XTR” for Telegram Stars or “TON” for TON grams."
+  },
+  {
+   "name": "last_resale_amount",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For gifts bought from other users, the price paid for the gift in either Telegram Stars or nanograms"
+  },
+  {
+   "name": "owned_gift_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the received gift for the bot; only present for gifts received on behalf of business accounts"
+  },
+  {
+   "name": "transfer_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Number of Telegram Stars that must be paid to transfer the gift; omitted if the bot cannot transfer the gift"
+  },
+  {
+   "name": "next_transfer_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Point in time (Unix timestamp) when the gift can be transferred. If it is in the past, then the gift can be transferred now."
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about a unique gift that was sent or received."
+}

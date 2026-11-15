@@ -1,0 +1,36 @@
+{
+ "name": "StoryAreaTypeUniqueGift",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "storyareatypeuniquegift",
+ "url": "https://core.telegram.org/bots/api#storyareatypeuniquegift",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the area, always “unique_gift”",
+   "const": "unique_gift"
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique name of the gift"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a story area pointing to a unique gift. Currently, a story can have at most 1 unique gift area."
+}

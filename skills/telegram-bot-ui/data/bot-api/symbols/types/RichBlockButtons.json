@@ -1,0 +1,48 @@
+{
+ "name": "RichBlockButtons",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockbuttons",
+ "url": "https://core.telegram.org/bots/api#richblockbuttons",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “buttons”",
+   "const": "buttons"
+  },
+  {
+   "name": "buttons",
+   "type": "Array of RichMessageButton",
+   "types": [
+    {
+     "name": "RichMessageButton",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "The buttons"
+  },
+  {
+   "name": "align",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Horizontal alignment of the buttons. Currently, must be one of “left”, “center”, or “right”."
+  }
+ ],
+ "subtypes": [],
+ "description": "A block containing a list of buttons that are shown in one row, corresponding to the custom HTML tag <tg-button-row>."
+}

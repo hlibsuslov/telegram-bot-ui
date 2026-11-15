@@ -1,0 +1,47 @@
+{
+ "name": "InaccessibleMessage",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "inaccessiblemessage",
+ "url": "https://core.telegram.org/bots/api#inaccessiblemessage",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Chat the message belonged to"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique message identifier inside the chat"
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Always 0. The field can be used to differentiate regular and inaccessible messages."
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes a message that was deleted or is otherwise inaccessible to the bot."
+}

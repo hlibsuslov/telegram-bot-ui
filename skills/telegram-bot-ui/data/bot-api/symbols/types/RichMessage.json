@@ -1,0 +1,35 @@
+{
+ "name": "RichMessage",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richmessage",
+ "url": "https://core.telegram.org/bots/api#richmessage",
+ "fields": [
+  {
+   "name": "blocks",
+   "type": "Array of RichBlock",
+   "types": [
+    {
+     "name": "RichBlock",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Content of the message"
+  },
+  {
+   "name": "is_rtl",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the rich message must be shown right-to-left"
+  }
+ ],
+ "subtypes": [],
+ "description": "Rich formatted message."
+}

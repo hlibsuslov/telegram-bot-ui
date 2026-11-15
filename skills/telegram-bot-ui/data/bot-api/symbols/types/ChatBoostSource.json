@@ -1,0 +1,14 @@
+{
+ "name": "ChatBoostSource",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatboostsource",
+ "url": "https://core.telegram.org/bots/api#chatboostsource",
+ "fields": [],
+ "subtypes": [
+  "ChatBoostSourcePremium",
+  "ChatBoostSourceGiftCode",
+  "ChatBoostSourceGiveaway"
+ ],
+ "description": "This object describes the source of a chat boost. It can be one of"
+}

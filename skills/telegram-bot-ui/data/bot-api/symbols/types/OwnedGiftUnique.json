@@ -1,0 +1,120 @@
+{
+ "name": "OwnedGiftUnique",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "ownedgiftunique",
+ "url": "https://core.telegram.org/bots/api#ownedgiftunique",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the gift, always “unique”",
+   "const": "unique"
+  },
+  {
+   "name": "gift",
+   "type": "UniqueGift",
+   "types": [
+    {
+     "name": "UniqueGift",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about the unique gift"
+  },
+  {
+   "name": "owned_gift_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the received gift for the bot; for gifts received on behalf of business accounts only"
+  },
+  {
+   "name": "sender_user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sender of the gift if it is a known user"
+  },
+  {
+   "name": "send_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date the gift was sent in Unix time"
+  },
+  {
+   "name": "is_saved",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the gift is displayed on the account's profile page; for gifts received on behalf of business accounts only"
+  },
+  {
+   "name": "can_be_transferred",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the gift can be transferred to another owner; for gifts received on behalf of business accounts only"
+  },
+  {
+   "name": "transfer_star_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Number of Telegram Stars that must be paid to transfer the gift; omitted if the bot cannot transfer the gift"
+  },
+  {
+   "name": "next_transfer_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Point in time (Unix timestamp) when the gift can be transferred. If it is in the past, then the gift can be transferred now."
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a unique gift received and owned by a user or a chat."
+}

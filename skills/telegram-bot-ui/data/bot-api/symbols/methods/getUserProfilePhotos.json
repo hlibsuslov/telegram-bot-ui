@@ -1,0 +1,47 @@
+{
+ "name": "getUserProfilePhotos",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getuserprofilephotos",
+ "url": "https://core.telegram.org/bots/api#getuserprofilephotos",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the target user"
+  },
+  {
+   "name": "offset",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sequential number of the first photo to be returned. By default, all photos are returned."
+  },
+  {
+   "name": "limit",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Limits the number of photos to be retrieved. Values between 1-100 are accepted. Defaults to 100."
+  }
+ ],
+ "description": "Use this method to get a list of profile pictures for a user. Returns a UserProfilePhotos object.",
+ "returns": "UserProfilePhotos"
+}

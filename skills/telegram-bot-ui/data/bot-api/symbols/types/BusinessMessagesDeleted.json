@@ -1,0 +1,47 @@
+{
+ "name": "BusinessMessagesDeleted",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "businessmessagesdeleted",
+ "url": "https://core.telegram.org/bots/api#businessmessagesdeleted",
+ "fields": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection"
+  },
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Information about a chat in the business account. The bot may not have access to the chat or the corresponding user."
+  },
+  {
+   "name": "message_ids",
+   "type": "Array of Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "The list of identifiers of deleted messages in the chat of the business account"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object is received when messages are deleted from a connected business account."
+}

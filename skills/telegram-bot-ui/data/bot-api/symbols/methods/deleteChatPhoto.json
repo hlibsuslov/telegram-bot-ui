@@ -1,0 +1,27 @@
+{
+ "name": "deleteChatPhoto",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "deletechatphoto",
+ "url": "https://core.telegram.org/bots/api#deletechatphoto",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target channel in the format @username"
+  }
+ ],
+ "description": "Use this method to delete a chat photo. Photos can't be changed for private chats. The bot must be an administrator in the chat for this to work and must have the appropriate administrator rights. Returns True on success.",
+ "returns": "True"
+}

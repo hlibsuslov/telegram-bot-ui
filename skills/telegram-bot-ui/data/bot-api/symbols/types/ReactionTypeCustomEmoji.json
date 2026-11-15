@@ -1,0 +1,36 @@
+{
+ "name": "ReactionTypeCustomEmoji",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "reactiontypecustomemoji",
+ "url": "https://core.telegram.org/bots/api#reactiontypecustomemoji",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the reaction, always “custom_emoji”",
+   "const": "custom_emoji"
+  },
+  {
+   "name": "custom_emoji_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Custom emoji identifier"
+  }
+ ],
+ "subtypes": [],
+ "description": "The reaction is based on a custom emoji."
+}

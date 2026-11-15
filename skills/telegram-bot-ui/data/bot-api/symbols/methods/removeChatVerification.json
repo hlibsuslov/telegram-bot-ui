@@ -1,0 +1,27 @@
+{
+ "name": "removeChatVerification",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "removechatverification",
+ "url": "https://core.telegram.org/bots/api#removechatverification",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target bot or channel in the format @username"
+  }
+ ],
+ "description": "Removes verification from a chat that is currently verified on behalf of the organization represented by the bot. Returns True on success.",
+ "returns": "True"
+}

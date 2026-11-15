@@ -1,0 +1,35 @@
+{
+ "name": "UsersShared",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "usersshared",
+ "url": "https://core.telegram.org/bots/api#usersshared",
+ "fields": [
+  {
+   "name": "request_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the request"
+  },
+  {
+   "name": "users",
+   "type": "Array of SharedUser",
+   "types": [
+    {
+     "name": "SharedUser",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Information about users shared with the bot"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object contains information about the users whose identifiers were shared with the bot using a KeyboardButtonRequestUsers button."
+}

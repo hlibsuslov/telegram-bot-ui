@@ -1,0 +1,36 @@
+{
+ "name": "InputRichBlockParagraph",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblockparagraph",
+ "url": "https://core.telegram.org/bots/api#inputrichblockparagraph",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “paragraph”",
+   "const": "paragraph"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A text paragraph, corresponding to the HTML tag <p>."
+}

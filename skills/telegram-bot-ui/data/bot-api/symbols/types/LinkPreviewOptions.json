@@ -1,0 +1,71 @@
+{
+ "name": "LinkPreviewOptions",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "linkpreviewoptions",
+ "url": "https://core.telegram.org/bots/api#linkpreviewoptions",
+ "fields": [
+  {
+   "name": "is_disabled",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the link preview is disabled"
+  },
+  {
+   "name": "url",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "URL to use for the link preview. If empty, then the first URL found in the message text will be used."
+  },
+  {
+   "name": "prefer_small_media",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the media in the link preview is supposed to be shrunk; ignored if the URL isn't explicitly specified or media size change isn't supported for the preview"
+  },
+  {
+   "name": "prefer_large_media",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the media in the link preview is supposed to be enlarged; ignored if the URL isn't explicitly specified or media size change isn't supported for the preview"
+  },
+  {
+   "name": "show_above_text",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the link preview must be shown above the message text; otherwise, the link preview will be shown below the message text"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes the options used for link preview generation."
+}

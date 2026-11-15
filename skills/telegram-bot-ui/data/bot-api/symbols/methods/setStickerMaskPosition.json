@@ -1,0 +1,35 @@
+{
+ "name": "setStickerMaskPosition",
+ "kind": "method",
+ "section": "Stickers",
+ "anchor": "setstickermaskposition",
+ "url": "https://core.telegram.org/bots/api#setstickermaskposition",
+ "parameters": [
+  {
+   "name": "sticker",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "File identifier of the sticker"
+  },
+  {
+   "name": "mask_position",
+   "type": "MaskPosition",
+   "types": [
+    {
+     "name": "MaskPosition",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object with the position where the mask should be placed on faces. Omit the parameter to remove the mask position."
+  }
+ ],
+ "description": "Use this method to change the mask position of a mask sticker. The sticker must belong to a sticker set that was created by the bot. Returns True on success.",
+ "returns": "True"
+}

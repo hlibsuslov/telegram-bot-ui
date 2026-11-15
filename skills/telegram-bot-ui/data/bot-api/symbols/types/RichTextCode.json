@@ -1,0 +1,36 @@
+{
+ "name": "RichTextCode",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextcode",
+ "url": "https://core.telegram.org/bots/api#richtextcode",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “code”",
+   "const": "code"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  }
+ ],
+ "subtypes": [],
+ "description": "A monowidth text."
+}

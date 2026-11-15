@@ -1,0 +1,35 @@
+{
+ "name": "TonWalletCardSticker",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "tonwalletcardsticker",
+ "url": "https://core.telegram.org/bots/api#tonwalletcardsticker",
+ "fields": [
+  {
+   "name": "position",
+   "type": "AreaPosition",
+   "types": [
+    {
+     "name": "AreaPosition",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Position of the sticker on the card"
+  },
+  {
+   "name": "nft",
+   "type": "TonNft",
+   "types": [
+    {
+     "name": "TonNft",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The NFT shown as the sticker"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes a sticker on a TON wallet card."
+}

@@ -1,0 +1,59 @@
+{
+ "name": "InputContactMessageContent",
+ "kind": "type",
+ "section": "Inline mode",
+ "anchor": "inputcontactmessagecontent",
+ "url": "https://core.telegram.org/bots/api#inputcontactmessagecontent",
+ "fields": [
+  {
+   "name": "phone_number",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Contact's phone number"
+  },
+  {
+   "name": "first_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Contact's first name"
+  },
+  {
+   "name": "last_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Contact's last name"
+  },
+  {
+   "name": "vcard",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Additional data about the contact in the form of a vCard, 0-2048 bytes"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the content of a contact message to be sent as the result of an inline query."
+}

@@ -1,0 +1,48 @@
+{
+ "name": "RichBlockPreformatted",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockpreformatted",
+ "url": "https://core.telegram.org/bots/api#richblockpreformatted",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “pre”",
+   "const": "pre"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text of the block"
+  },
+  {
+   "name": "language",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The programming language of the text"
+  }
+ ],
+ "subtypes": [],
+ "description": "A preformatted text block, corresponding to the nested HTML tags <pre> and <code>."
+}

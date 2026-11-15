@@ -1,0 +1,35 @@
+{
+ "name": "ChecklistTasksAdded",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "checklisttasksadded",
+ "url": "https://core.telegram.org/bots/api#checklisttasksadded",
+ "fields": [
+  {
+   "name": "checklist_message",
+   "type": "Message",
+   "types": [
+    {
+     "name": "Message",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message containing the checklist to which the tasks were added. Note that the Message object in this field will not contain the reply_to_message field even if it itself is a reply."
+  },
+  {
+   "name": "tasks",
+   "type": "Array of ChecklistTask",
+   "types": [
+    {
+     "name": "ChecklistTask",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "List of tasks added to the checklist"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about tasks added to a checklist."
+}

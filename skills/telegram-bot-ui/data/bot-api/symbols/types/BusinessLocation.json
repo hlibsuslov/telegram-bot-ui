@@ -1,0 +1,35 @@
+{
+ "name": "BusinessLocation",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "businesslocation",
+ "url": "https://core.telegram.org/bots/api#businesslocation",
+ "fields": [
+  {
+   "name": "address",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Address of the business"
+  },
+  {
+   "name": "location",
+   "type": "Location",
+   "types": [
+    {
+     "name": "Location",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Location of the business"
+  }
+ ],
+ "subtypes": [],
+ "description": "Contains information about the location of a Telegram Business account."
+}

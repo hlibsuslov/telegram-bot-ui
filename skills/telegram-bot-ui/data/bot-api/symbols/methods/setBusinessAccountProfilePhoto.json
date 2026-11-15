@@ -1,0 +1,47 @@
+{
+ "name": "setBusinessAccountProfilePhoto",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "setbusinessaccountprofilephoto",
+ "url": "https://core.telegram.org/bots/api#setbusinessaccountprofilephoto",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the business connection"
+  },
+  {
+   "name": "photo",
+   "type": "InputProfilePhoto",
+   "types": [
+    {
+     "name": "InputProfilePhoto",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The new profile photo to set"
+  },
+  {
+   "name": "is_public",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to set the public photo, which will be visible even if the main photo is hidden by the business account's privacy settings. An account can have only one public photo."
+  }
+ ],
+ "description": "Changes the profile photo of a managed business account. Requires the can_edit_profile_photo business bot right. Returns True on success.",
+ "returns": "True"
+}

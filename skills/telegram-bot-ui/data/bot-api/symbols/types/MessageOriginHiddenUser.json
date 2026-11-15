@@ -1,0 +1,48 @@
+{
+ "name": "MessageOriginHiddenUser",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "messageoriginhiddenuser",
+ "url": "https://core.telegram.org/bots/api#messageoriginhiddenuser",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the message origin, always “hidden_user”",
+   "const": "hidden_user"
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date the message was sent originally in Unix time"
+  },
+  {
+   "name": "sender_user_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the user that sent the message originally"
+  }
+ ],
+ "subtypes": [],
+ "description": "The message was originally sent by an unknown user."
+}

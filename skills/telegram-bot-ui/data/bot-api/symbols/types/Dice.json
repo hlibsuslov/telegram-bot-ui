@@ -1,0 +1,35 @@
+{
+ "name": "Dice",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "dice",
+ "url": "https://core.telegram.org/bots/api#dice",
+ "fields": [
+  {
+   "name": "emoji",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Emoji on which the dice throw animation is based"
+  },
+  {
+   "name": "value",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Value of the dice, 1-6 for “🎲”, “🎯” and “🎳” base emoji, 1-5 for “🏀” and “⚽” base emoji, 1-64 for “🎰” base emoji"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents an animated emoji that displays a random value."
+}

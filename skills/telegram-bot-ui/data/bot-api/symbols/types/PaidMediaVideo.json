@@ -1,0 +1,36 @@
+{
+ "name": "PaidMediaVideo",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "paidmediavideo",
+ "url": "https://core.telegram.org/bots/api#paidmediavideo",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the paid media, always “video”",
+   "const": "video"
+  },
+  {
+   "name": "video",
+   "type": "Video",
+   "types": [
+    {
+     "name": "Video",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The video"
+  }
+ ],
+ "subtypes": [],
+ "description": "The paid media is a video."
+}

@@ -1,0 +1,59 @@
+{
+ "name": "PollOptionAdded",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "polloptionadded",
+ "url": "https://core.telegram.org/bots/api#polloptionadded",
+ "fields": [
+  {
+   "name": "poll_message",
+   "type": "MaybeInaccessibleMessage",
+   "types": [
+    {
+     "name": "MaybeInaccessibleMessage",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Message containing the poll to which the option was added, if known. Note that the Message object in this field will not contain the reply_to_message field even if it itself is a reply."
+  },
+  {
+   "name": "option_persistent_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the added option"
+  },
+  {
+   "name": "option_text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Option text"
+  },
+  {
+   "name": "option_text_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Special entities that appear in the option_text"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a service message about an option added to a poll."
+}

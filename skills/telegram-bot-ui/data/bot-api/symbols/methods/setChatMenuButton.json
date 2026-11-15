@@ -1,0 +1,35 @@
+{
+ "name": "setChatMenuButton",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "setchatmenubutton",
+ "url": "https://core.telegram.org/bots/api#setchatmenubutton",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier for the target private chat. If not specified, the bot's default menu button will be changed."
+  },
+  {
+   "name": "menu_button",
+   "type": "MenuButton",
+   "types": [
+    {
+     "name": "MenuButton",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object for the bot's new menu button. Defaults to MenuButtonDefault."
+  }
+ ],
+ "description": "Use this method to change the bot's menu button in a private chat, or the default menu button. Returns True on success.",
+ "returns": "True"
+}

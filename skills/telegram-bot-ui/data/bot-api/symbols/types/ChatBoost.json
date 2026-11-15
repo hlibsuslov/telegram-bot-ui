@@ -1,0 +1,59 @@
+{
+ "name": "ChatBoost",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "chatboost",
+ "url": "https://core.telegram.org/bots/api#chatboost",
+ "fields": [
+  {
+   "name": "boost_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the boost"
+  },
+  {
+   "name": "add_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Point in time (Unix timestamp) when the chat was boosted"
+  },
+  {
+   "name": "expiration_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Point in time (Unix timestamp) when the boost will automatically expire, unless the booster's Telegram Premium subscription is prolonged"
+  },
+  {
+   "name": "source",
+   "type": "ChatBoostSource",
+   "types": [
+    {
+     "name": "ChatBoostSource",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Source of the added boost"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object contains information about a chat boost."
+}

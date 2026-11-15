@@ -1,0 +1,48 @@
+{
+ "name": "RichBlockAudio",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockaudio",
+ "url": "https://core.telegram.org/bots/api#richblockaudio",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “audio”",
+   "const": "audio"
+  },
+  {
+   "name": "audio",
+   "type": "Audio",
+   "types": [
+    {
+     "name": "Audio",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The audio"
+  },
+  {
+   "name": "caption",
+   "type": "RichBlockCaption",
+   "types": [
+    {
+     "name": "RichBlockCaption",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with a music file, corresponding to the HTML tag <audio>."
+}

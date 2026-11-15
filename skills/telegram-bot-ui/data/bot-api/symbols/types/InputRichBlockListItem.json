@@ -1,0 +1,71 @@
+{
+ "name": "InputRichBlockListItem",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblocklistitem",
+ "url": "https://core.telegram.org/bots/api#inputrichblocklistitem",
+ "fields": [
+  {
+   "name": "blocks",
+   "type": "Array of InputRichBlock",
+   "types": [
+    {
+     "name": "InputRichBlock",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "The content of the item"
+  },
+  {
+   "name": "has_checkbox",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the item has a checkbox"
+  },
+  {
+   "name": "is_checked",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the item has a checked checkbox"
+  },
+  {
+   "name": "value",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For ordered lists, the numeric value of the item label"
+  },
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For ordered lists, the type of the item label; must be one of “a” for lowercase letters, “A” for uppercase letters, “i” for lowercase Roman numerals, “I” for uppercase Roman numerals, or “1” for decimal numbers"
+  }
+ ],
+ "subtypes": [],
+ "description": "An item of a list to be sent."
+}

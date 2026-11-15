@@ -1,0 +1,191 @@
+{
+ "name": "Sticker",
+ "kind": "type",
+ "section": "Stickers",
+ "anchor": "sticker",
+ "url": "https://core.telegram.org/bots/api#sticker",
+ "fields": [
+  {
+   "name": "file_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier for this file, which can be used to download or reuse the file"
+  },
+  {
+   "name": "file_unique_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this file, which is supposed to be the same over time and for different bots. Can't be used to download or reuse the file."
+  },
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the sticker, currently one of “regular”, “mask”, “custom_emoji”. The type of the sticker is independent from its format, which is determined by the fields is_animated and is_video."
+  },
+  {
+   "name": "width",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sticker width"
+  },
+  {
+   "name": "height",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sticker height"
+  },
+  {
+   "name": "is_animated",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the sticker is animated"
+  },
+  {
+   "name": "is_video",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the sticker is a video sticker"
+  },
+  {
+   "name": "thumbnail",
+   "type": "PhotoSize",
+   "types": [
+    {
+     "name": "PhotoSize",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sticker thumbnail in the .WEBP or .JPG format"
+  },
+  {
+   "name": "emoji",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Emoji associated with the sticker"
+  },
+  {
+   "name": "set_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Name of the sticker set to which the sticker belongs"
+  },
+  {
+   "name": "premium_animation",
+   "type": "File",
+   "types": [
+    {
+     "name": "File",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For premium regular stickers, premium animation for the sticker"
+  },
+  {
+   "name": "mask_position",
+   "type": "MaskPosition",
+   "types": [
+    {
+     "name": "MaskPosition",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For mask stickers, the position where the mask should be placed"
+  },
+  {
+   "name": "custom_emoji_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For custom emoji stickers, unique identifier of the custom emoji"
+  },
+  {
+   "name": "needs_repainting",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the sticker must be repainted to a text color in messages, the color of the Telegram Premium badge in emoji status, white color on chat photos, or another appropriate color in other places"
+  },
+  {
+   "name": "file_size",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "File size in bytes"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a sticker."
+}

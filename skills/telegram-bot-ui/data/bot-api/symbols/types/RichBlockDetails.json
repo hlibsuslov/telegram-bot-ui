@@ -1,0 +1,60 @@
+{
+ "name": "RichBlockDetails",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockdetails",
+ "url": "https://core.telegram.org/bots/api#richblockdetails",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “details”",
+   "const": "details"
+  },
+  {
+   "name": "summary",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Always shown summary of the block"
+  },
+  {
+   "name": "blocks",
+   "type": "Array of RichBlock",
+   "types": [
+    {
+     "name": "RichBlock",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Content of the block"
+  },
+  {
+   "name": "is_open",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the content of the block is visible by default"
+  }
+ ],
+ "subtypes": [],
+ "description": "An expandable block for details disclosure, corresponding to the HTML tag <details>."
+}

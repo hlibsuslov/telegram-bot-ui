@@ -1,0 +1,15 @@
+{
+ "name": "MessageOrigin",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "messageorigin",
+ "url": "https://core.telegram.org/bots/api#messageorigin",
+ "fields": [],
+ "subtypes": [
+  "MessageOriginUser",
+  "MessageOriginHiddenUser",
+  "MessageOriginChat",
+  "MessageOriginChannel"
+ ],
+ "description": "This object describes the origin of a message. It can be one of"
+}

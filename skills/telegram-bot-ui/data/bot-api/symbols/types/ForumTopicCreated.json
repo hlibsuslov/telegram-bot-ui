@@ -1,0 +1,59 @@
+{
+ "name": "ForumTopicCreated",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "forumtopiccreated",
+ "url": "https://core.telegram.org/bots/api#forumtopiccreated",
+ "fields": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the topic"
+  },
+  {
+   "name": "icon_color",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Color of the topic icon in RGB format"
+  },
+  {
+   "name": "icon_custom_emoji_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the custom emoji shown as the topic icon"
+  },
+  {
+   "name": "is_name_implicit",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if the name of the topic wasn't specified explicitly by its creator and likely needs to be changed by the bot"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a service message about a new forum topic created in the chat."
+}

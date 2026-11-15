@@ -1,0 +1,48 @@
+{
+ "name": "RichTextCustomEmoji",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextcustomemoji",
+ "url": "https://core.telegram.org/bots/api#richtextcustomemoji",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “custom_emoji”",
+   "const": "custom_emoji"
+  },
+  {
+   "name": "custom_emoji_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the custom emoji. Use getCustomEmojiStickers to get full information about the sticker."
+  },
+  {
+   "name": "alternative_text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Alternative emoji for the custom emoji"
+  }
+ ],
+ "subtypes": [],
+ "description": "A custom emoji."
+}

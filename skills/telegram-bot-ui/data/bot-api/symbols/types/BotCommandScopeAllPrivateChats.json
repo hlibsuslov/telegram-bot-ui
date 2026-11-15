@@ -1,0 +1,24 @@
+{
+ "name": "BotCommandScopeAllPrivateChats",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "botcommandscopeallprivatechats",
+ "url": "https://core.telegram.org/bots/api#botcommandscopeallprivatechats",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Scope type, must be all_private_chats",
+   "const": "all_private_chats"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents the scope of bot commands, covering all private chats."
+}

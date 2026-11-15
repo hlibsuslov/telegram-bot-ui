@@ -1,0 +1,23 @@
+{
+ "name": "setMyProfilePhoto",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "setmyprofilephoto",
+ "url": "https://core.telegram.org/bots/api#setmyprofilephoto",
+ "parameters": [
+  {
+   "name": "photo",
+   "type": "InputProfilePhoto",
+   "types": [
+    {
+     "name": "InputProfilePhoto",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The new profile photo to set"
+  }
+ ],
+ "description": "Changes the profile photo of the bot. Returns True on success.",
+ "returns": "True"
+}

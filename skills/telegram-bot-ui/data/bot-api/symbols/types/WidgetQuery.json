@@ -1,0 +1,131 @@
+{
+ "name": "WidgetQuery",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "widgetquery",
+ "url": "https://core.telegram.org/bots/api#widgetquery",
+ "fields": [
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this query"
+  },
+  {
+   "name": "from",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sender"
+  },
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Chat with the message containing the widget; omitted if the widget is in an inline message"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Identifier of the message containing the widget; omitted if the widget is in an inline message"
+  },
+  {
+   "name": "inline_message_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Identifier of the inline message containing the widget"
+  },
+  {
+   "name": "chat_instance",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Global identifier, uniquely corresponding to the chat to which the message with the widget was sent"
+  },
+  {
+   "name": "chat_type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For widgets in inline messages, type of the chat to which the message was sent. Can be either “sender” for a private chat with the inline query sender, “private”, “group”, “supergroup”, or “channel”."
+  },
+  {
+   "name": "type",
+   "type": "WidgetQueryType",
+   "types": [
+    {
+     "name": "WidgetQueryType",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the query"
+  },
+  {
+   "name": "data",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Data of the query, 1-64 bytes"
+  },
+  {
+   "name": "widget_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the shared widget, which sent the query; omitted if the widget isn't shared"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents an incoming query from a widget in a message sent by the bot or via the bot. Use answerWidgetQuery to answer the query. Each user can send at most 5 queries per 5 seconds to the bot from all its widgets."
+}

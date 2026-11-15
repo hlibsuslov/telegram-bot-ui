@@ -1,0 +1,83 @@
+{
+ "name": "savePreparedInlineMessage",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "savepreparedinlinemessage",
+ "url": "https://core.telegram.org/bots/api#savepreparedinlinemessage",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the target user that can use the prepared message"
+  },
+  {
+   "name": "result",
+   "type": "InlineQueryResult",
+   "types": [
+    {
+     "name": "InlineQueryResult",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "A JSON-serialized object describing the message to be sent"
+  },
+  {
+   "name": "allow_user_chats",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the message can be sent to private chats with users"
+  },
+  {
+   "name": "allow_bot_chats",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the message can be sent to private chats with bots"
+  },
+  {
+   "name": "allow_group_chats",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the message can be sent to group and supergroup chats"
+  },
+  {
+   "name": "allow_channel_chats",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True if the message can be sent to channel chats"
+  }
+ ],
+ "description": "Stores a message that can be sent by a user of a Mini App. Returns a PreparedInlineMessage object.",
+ "returns": "PreparedInlineMessage"
+}

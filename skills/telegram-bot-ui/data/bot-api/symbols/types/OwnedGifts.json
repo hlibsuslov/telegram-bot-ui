@@ -1,0 +1,47 @@
+{
+ "name": "OwnedGifts",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "ownedgifts",
+ "url": "https://core.telegram.org/bots/api#ownedgifts",
+ "fields": [
+  {
+   "name": "total_count",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The total number of gifts owned by the user or the chat"
+  },
+  {
+   "name": "gifts",
+   "type": "Array of OwnedGift",
+   "types": [
+    {
+     "name": "OwnedGift",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "The list of gifts"
+  },
+  {
+   "name": "next_offset",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Offset for the next request. If empty, then there are no more results."
+  }
+ ],
+ "subtypes": [],
+ "description": "Contains the list of gifts received and owned by a user or a chat."
+}

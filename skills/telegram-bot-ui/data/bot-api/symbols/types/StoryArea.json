@@ -1,0 +1,35 @@
+{
+ "name": "StoryArea",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "storyarea",
+ "url": "https://core.telegram.org/bots/api#storyarea",
+ "fields": [
+  {
+   "name": "position",
+   "type": "AreaPosition",
+   "types": [
+    {
+     "name": "AreaPosition",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Position of the area"
+  },
+  {
+   "name": "type",
+   "type": "StoryAreaType",
+   "types": [
+    {
+     "name": "StoryAreaType",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the area"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a clickable area on a story media."
+}

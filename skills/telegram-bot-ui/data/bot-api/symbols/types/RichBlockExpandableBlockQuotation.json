@@ -1,0 +1,48 @@
+{
+ "name": "RichBlockExpandableBlockQuotation",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockexpandableblockquotation",
+ "url": "https://core.telegram.org/bots/api#richblockexpandableblockquotation",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “expandable_blockquote”",
+   "const": "expandable_blockquote"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Content of the block"
+  },
+  {
+   "name": "credit",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Credit of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A block quotation, corresponding to the HTML tag <blockquote> with custom attribute \"expandable\"."
+}

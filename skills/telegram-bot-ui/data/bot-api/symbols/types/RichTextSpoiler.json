@@ -1,0 +1,36 @@
+{
+ "name": "RichTextSpoiler",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richtextspoiler",
+ "url": "https://core.telegram.org/bots/api#richtextspoiler",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the rich text, always “spoiler”",
+   "const": "spoiler"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The text"
+  }
+ ],
+ "subtypes": [],
+ "description": "A text covered by a spoiler."
+}

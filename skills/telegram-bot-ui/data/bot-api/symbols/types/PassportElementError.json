@@ -1,0 +1,20 @@
+{
+ "name": "PassportElementError",
+ "kind": "type",
+ "section": "Telegram Passport",
+ "anchor": "passportelementerror",
+ "url": "https://core.telegram.org/bots/api#passportelementerror",
+ "fields": [],
+ "subtypes": [
+  "PassportElementErrorDataField",
+  "PassportElementErrorFrontSide",
+  "PassportElementErrorReverseSide",
+  "PassportElementErrorSelfie",
+  "PassportElementErrorFile",
+  "PassportElementErrorFiles",
+  "PassportElementErrorTranslationFile",
+  "PassportElementErrorTranslationFiles",
+  "PassportElementErrorUnspecified"
+ ],
+ "description": "This object represents an error in the Telegram Passport element which was submitted that should be resolved by the user. It should be one of:"
+}

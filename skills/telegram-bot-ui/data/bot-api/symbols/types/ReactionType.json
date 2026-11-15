@@ -1,0 +1,14 @@
+{
+ "name": "ReactionType",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "reactiontype",
+ "url": "https://core.telegram.org/bots/api#reactiontype",
+ "fields": [],
+ "subtypes": [
+  "ReactionTypeEmoji",
+  "ReactionTypeCustomEmoji",
+  "ReactionTypePaid"
+ ],
+ "description": "This object describes the type of a reaction. Currently, it can be one of"
+}

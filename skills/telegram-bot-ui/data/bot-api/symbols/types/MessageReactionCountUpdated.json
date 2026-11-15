@@ -1,0 +1,59 @@
+{
+ "name": "MessageReactionCountUpdated",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "messagereactioncountupdated",
+ "url": "https://core.telegram.org/bots/api#messagereactioncountupdated",
+ "fields": [
+  {
+   "name": "chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The chat containing the message"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique message identifier inside the chat"
+  },
+  {
+   "name": "date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Date of the change in Unix time"
+  },
+  {
+   "name": "reactions",
+   "type": "Array of ReactionCount",
+   "types": [
+    {
+     "name": "ReactionCount",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "List of reactions that are present on the message"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents reaction changes on a message with anonymous reactions."
+}

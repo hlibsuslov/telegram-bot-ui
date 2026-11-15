@@ -1,0 +1,35 @@
+{
+ "name": "savePreparedKeyboardButton",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "savepreparedkeyboardbutton",
+ "url": "https://core.telegram.org/bots/api#savepreparedkeyboardbutton",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the target user that can use the button"
+  },
+  {
+   "name": "button",
+   "type": "KeyboardButton",
+   "types": [
+    {
+     "name": "KeyboardButton",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "A JSON-serialized object describing the button to be saved. The button must be of the type request_users, request_chat, or request_managed_bot."
+  }
+ ],
+ "description": "Stores a keyboard button that can be used by a user within a Mini App. Returns a PreparedKeyboardButton object.",
+ "returns": "PreparedKeyboardButton"
+}

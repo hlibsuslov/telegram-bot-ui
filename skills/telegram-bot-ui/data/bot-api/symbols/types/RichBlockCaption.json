@@ -1,0 +1,35 @@
+{
+ "name": "RichBlockCaption",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockcaption",
+ "url": "https://core.telegram.org/bots/api#richblockcaption",
+ "fields": [
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Block caption"
+  },
+  {
+   "name": "credit",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Block credit which corresponds to the HTML tag <cite>"
+  }
+ ],
+ "subtypes": [],
+ "description": "Caption of a rich formatted block."
+}

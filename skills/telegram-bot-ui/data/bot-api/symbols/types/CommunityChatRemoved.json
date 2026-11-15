@@ -1,0 +1,10 @@
+{
+ "name": "CommunityChatRemoved",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "communitychatremoved",
+ "url": "https://core.telegram.org/bots/api#communitychatremoved",
+ "fields": [],
+ "subtypes": [],
+ "description": "Describes a service message about a chat or a bot being removed from a community. Currently holds no information."
+}

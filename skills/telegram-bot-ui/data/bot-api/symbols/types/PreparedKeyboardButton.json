@@ -1,0 +1,23 @@
+{
+ "name": "PreparedKeyboardButton",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "preparedkeyboardbutton",
+ "url": "https://core.telegram.org/bots/api#preparedkeyboardbutton",
+ "fields": [
+  {
+   "name": "id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the keyboard button"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a keyboard button to be used by a user of a Mini App."
+}

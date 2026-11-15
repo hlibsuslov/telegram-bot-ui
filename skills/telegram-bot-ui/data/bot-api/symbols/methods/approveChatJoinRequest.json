@@ -1,0 +1,39 @@
+{
+ "name": "approveChatJoinRequest",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "approvechatjoinrequest",
+ "url": "https://core.telegram.org/bots/api#approvechatjoinrequest",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target channel in the format @username"
+  },
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the target user"
+  }
+ ],
+ "description": "Use this method to approve a chat join request. The bot must be an administrator in the chat for this to work and must have the can_invite_users administrator right. Returns True on success.",
+ "returns": "True"
+}

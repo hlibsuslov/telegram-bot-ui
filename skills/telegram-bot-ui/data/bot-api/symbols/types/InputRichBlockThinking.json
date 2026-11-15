@@ -1,0 +1,36 @@
+{
+ "name": "InputRichBlockThinking",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "inputrichblockthinking",
+ "url": "https://core.telegram.org/bots/api#inputrichblockthinking",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “thinking”",
+   "const": "thinking"
+  },
+  {
+   "name": "text",
+   "type": "RichText",
+   "types": [
+    {
+     "name": "RichText",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text of the block. See https://t.me/addemoji/AIActions for examples of custom emoji that are recommended for usage in the block."
+  }
+ ],
+ "subtypes": [],
+ "description": "A block with a “Thinking…” placeholder, corresponding to the custom HTML tag <tg-thinking>. The block may be used only in sendRichMessageDraft, therefore it can't be received in messages. See https://t.me/addemoji/AIActions for examples of custom emoji that are recommended for usage in the block."
+}

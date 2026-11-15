@@ -1,0 +1,63 @@
+{
+ "name": "stopPoll",
+ "kind": "method",
+ "section": "Updating messages",
+ "anchor": "stoppoll",
+ "url": "https://core.telegram.org/bots/api#stoppoll",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the business connection on behalf of which the message to be edited was sent"
+  },
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target bot, supergroup, or channel in the format @username"
+  },
+  {
+   "name": "message_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Identifier of the original message with the poll"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object for a new message inline keyboard"
+  }
+ ],
+ "description": "Use this method to stop a poll which was sent by the bot. On success, the stopped Poll is returned.",
+ "returns": "Poll"
+}

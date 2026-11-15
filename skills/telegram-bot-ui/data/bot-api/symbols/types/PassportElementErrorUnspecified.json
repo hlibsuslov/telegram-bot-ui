@@ -1,0 +1,60 @@
+{
+ "name": "PassportElementErrorUnspecified",
+ "kind": "type",
+ "section": "Telegram Passport",
+ "anchor": "passportelementerrorunspecified",
+ "url": "https://core.telegram.org/bots/api#passportelementerrorunspecified",
+ "fields": [
+  {
+   "name": "source",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Error source, must be unspecified",
+   "const": "unspecified"
+  },
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of element of the user's Telegram Passport which has the issue"
+  },
+  {
+   "name": "element_hash",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Base64-encoded element hash"
+  },
+  {
+   "name": "message",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Error message"
+  }
+ ],
+ "subtypes": [],
+ "description": "Represents an issue in an unspecified place. The error is considered resolved when new data is added."
+}

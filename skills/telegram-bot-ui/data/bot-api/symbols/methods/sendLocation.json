@@ -1,0 +1,245 @@
+{
+ "name": "sendLocation",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "sendlocation",
+ "url": "https://core.telegram.org/bots/api#sendlocation",
+ "parameters": [
+  {
+   "name": "business_connection_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the business connection on behalf of which the message will be sent"
+  },
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier for the target chat or username of the target bot, supergroup, or channel in the format @username; required unless the message is sent as an ephemeral reply to a callback query",
+   "conditional": true
+  },
+  {
+   "name": "message_thread_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier for the target message thread (topic) of a forum; for forum supergroups and private chats of bots with forum topic mode enabled only"
+  },
+  {
+   "name": "direct_messages_topic_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Identifier of the direct messages topic to which the message will be sent; required if the message is sent to a direct messages chat",
+   "conditional": true
+  },
+  {
+   "name": "ephemeral_message_parameters",
+   "type": "EphemeralMessageParameters",
+   "types": [
+    {
+     "name": "EphemeralMessageParameters",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object containing the parameters of the ephemeral message to send"
+  },
+  {
+   "name": "latitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Latitude of the location"
+  },
+  {
+   "name": "longitude",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Longitude of the location"
+  },
+  {
+   "name": "horizontal_accuracy",
+   "type": "Float",
+   "types": [
+    {
+     "name": "Float",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "The radius of uncertainty for the location, measured in meters; 0-1500"
+  },
+  {
+   "name": "live_period",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Period in seconds during which the location will be updated (see Live Locations), must be between 60 and 86400, or 0x7FFFFFFF for live locations that can be edited indefinitely. Must be 0 for ephemeral messages."
+  },
+  {
+   "name": "heading",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For live locations, a direction in which the user is moving, in degrees. Must be between 1 and 360 if specified."
+  },
+  {
+   "name": "proximity_alert_radius",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "For live locations, a maximum distance for proximity alerts about approaching another chat member, in meters. Must be between 1 and 100000 if specified."
+  },
+  {
+   "name": "disable_notification",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Sends the message silently. Users will receive a notification with no sound."
+  },
+  {
+   "name": "protect_content",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Protects the contents of the sent message from forwarding and saving"
+  },
+  {
+   "name": "allow_paid_broadcast",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to allow up to 1000 messages per second, ignoring broadcasting limits for a fee of 0.1 Telegram Stars per message. The relevant Stars will be withdrawn from the bot's balance."
+  },
+  {
+   "name": "message_effect_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Unique identifier of the message effect to be added to the message; for private chats only"
+  },
+  {
+   "name": "suggested_post_parameters",
+   "type": "SuggestedPostParameters",
+   "types": [
+    {
+     "name": "SuggestedPostParameters",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "A JSON-serialized object containing the parameters of the suggested post to send; for direct messages chats only. If the message is sent as a reply to another suggested post, then that suggested post is automatically declined."
+  },
+  {
+   "name": "reply_parameters",
+   "type": "ReplyParameters",
+   "types": [
+    {
+     "name": "ReplyParameters",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Description of the message to reply to"
+  },
+  {
+   "name": "reply_markup",
+   "type": "InlineKeyboardMarkup or ReplyKeyboardMarkup or ReplyKeyboardRemove or ForceReply",
+   "types": [
+    {
+     "name": "InlineKeyboardMarkup",
+     "array": 0
+    },
+    {
+     "name": "ReplyKeyboardMarkup",
+     "array": 0
+    },
+    {
+     "name": "ReplyKeyboardRemove",
+     "array": 0
+    },
+    {
+     "name": "ForceReply",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Additional interface options. A JSON-serialized object for an inline keyboard, custom reply keyboard, instructions to remove a reply keyboard or to force a reply from the user."
+  }
+ ],
+ "description": "Use this method to send point on the map. On success, the sent Message is returned.",
+ "returns": "Message"
+}

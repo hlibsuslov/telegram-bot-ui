@@ -1,0 +1,83 @@
+{
+ "name": "ChecklistTask",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "checklisttask",
+ "url": "https://core.telegram.org/bots/api#checklisttask",
+ "fields": [
+  {
+   "name": "id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the task"
+  },
+  {
+   "name": "text",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Text of the task"
+  },
+  {
+   "name": "text_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Special entities that appear in the task text"
+  },
+  {
+   "name": "completed_by_user",
+   "type": "User",
+   "types": [
+    {
+     "name": "User",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "User that completed the task; omitted if the task wasn't completed by a user"
+  },
+  {
+   "name": "completed_by_chat",
+   "type": "Chat",
+   "types": [
+    {
+     "name": "Chat",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Chat that completed the task; omitted if the task wasn't completed by a chat"
+  },
+  {
+   "name": "completion_date",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Point in time (Unix timestamp) when the task was completed; 0 if the task wasn't completed"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a task in a checklist."
+}

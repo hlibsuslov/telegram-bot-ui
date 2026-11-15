@@ -1,0 +1,47 @@
+{
+ "name": "UniqueGiftBackdrop",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "uniquegiftbackdrop",
+ "url": "https://core.telegram.org/bots/api#uniquegiftbackdrop",
+ "fields": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Name of the backdrop"
+  },
+  {
+   "name": "colors",
+   "type": "UniqueGiftBackdropColors",
+   "types": [
+    {
+     "name": "UniqueGiftBackdropColors",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Colors of the backdrop"
+  },
+  {
+   "name": "rarity_per_mille",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The number of unique gifts that receive this backdrop for every 1000 gifts upgraded"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object describes the backdrop of a unique gift."
+}

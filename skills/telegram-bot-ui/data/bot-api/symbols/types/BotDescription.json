@@ -1,0 +1,23 @@
+{
+ "name": "BotDescription",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "botdescription",
+ "url": "https://core.telegram.org/bots/api#botdescription",
+ "fields": [
+  {
+   "name": "description",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "The bot's description"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents the bot's description."
+}

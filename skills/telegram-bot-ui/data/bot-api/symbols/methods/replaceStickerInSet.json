@@ -1,0 +1,59 @@
+{
+ "name": "replaceStickerInSet",
+ "kind": "method",
+ "section": "Stickers",
+ "anchor": "replacestickerinset",
+ "url": "https://core.telegram.org/bots/api#replacestickerinset",
+ "parameters": [
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "User identifier of the sticker set owner"
+  },
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sticker set name"
+  },
+  {
+   "name": "old_sticker",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "File identifier of the replaced sticker"
+  },
+  {
+   "name": "sticker",
+   "type": "InputSticker",
+   "types": [
+    {
+     "name": "InputSticker",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "A JSON-serialized object with information about the added sticker. If exactly the same sticker had already been added to the set, then the set remains unchanged."
+  }
+ ],
+ "description": "Use this method to replace an existing sticker in a sticker set with a new one. The method is equivalent to calling deleteStickerFromSet, then addStickerToSet, then setStickerPositionInSet. Returns True on success.",
+ "returns": "True"
+}

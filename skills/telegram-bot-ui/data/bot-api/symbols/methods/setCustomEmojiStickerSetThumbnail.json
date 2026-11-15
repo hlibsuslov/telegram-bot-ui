@@ -1,0 +1,35 @@
+{
+ "name": "setCustomEmojiStickerSetThumbnail",
+ "kind": "method",
+ "section": "Stickers",
+ "anchor": "setcustomemojistickersetthumbnail",
+ "url": "https://core.telegram.org/bots/api#setcustomemojistickersetthumbnail",
+ "parameters": [
+  {
+   "name": "name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Sticker set name"
+  },
+  {
+   "name": "custom_emoji_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Custom emoji identifier of a sticker from the sticker set; pass an empty string to drop the thumbnail and use the first sticker as the thumbnail"
+  }
+ ],
+ "description": "Use this method to set the thumbnail of a custom emoji sticker set. Returns True on success.",
+ "returns": "True"
+}

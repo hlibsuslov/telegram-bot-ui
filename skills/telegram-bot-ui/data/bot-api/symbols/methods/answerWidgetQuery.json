@@ -1,0 +1,35 @@
+{
+ "name": "answerWidgetQuery",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "answerwidgetquery",
+ "url": "https://core.telegram.org/bots/api#answerwidgetquery",
+ "parameters": [
+  {
+   "name": "widget_query_id",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the query to be answered"
+  },
+  {
+   "name": "data",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Data to be returned to the widget, 0-1024 bytes"
+  }
+ ],
+ "description": "Use this method to send an answer to a query from a widget. The query must be answered within 15 seconds. The answer is received only by the widget that sent the query and doesn't change data of the widget; use editMessageWidgetData or editSharedWidgetData to change it. On success, True is returned.",
+ "returns": "True"
+}

@@ -1,0 +1,47 @@
+{
+ "name": "Birthdate",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "birthdate",
+ "url": "https://core.telegram.org/bots/api#birthdate",
+ "fields": [
+  {
+   "name": "day",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Day of the user's birth; 1-31"
+  },
+  {
+   "name": "month",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Month of the user's birth; 1-12"
+  },
+  {
+   "name": "year",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Year of the user's birth"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes the birthdate of a user."
+}

@@ -1,0 +1,48 @@
+{
+ "name": "RichBlockSlideshow",
+ "kind": "type",
+ "section": "Rich messages",
+ "anchor": "richblockslideshow",
+ "url": "https://core.telegram.org/bots/api#richblockslideshow",
+ "fields": [
+  {
+   "name": "type",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Type of the block, always “slideshow”",
+   "const": "slideshow"
+  },
+  {
+   "name": "blocks",
+   "type": "Array of RichBlock",
+   "types": [
+    {
+     "name": "RichBlock",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "Elements of the slideshow"
+  },
+  {
+   "name": "caption",
+   "type": "RichBlockCaption",
+   "types": [
+    {
+     "name": "RichBlockCaption",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Caption of the block"
+  }
+ ],
+ "subtypes": [],
+ "description": "A slideshow, corresponding to the custom HTML tag <tg-slideshow>."
+}

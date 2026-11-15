@@ -1,0 +1,71 @@
+{
+ "name": "Checklist",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "checklist",
+ "url": "https://core.telegram.org/bots/api#checklist",
+ "fields": [
+  {
+   "name": "title",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Title of the checklist"
+  },
+  {
+   "name": "title_entities",
+   "type": "Array of MessageEntity",
+   "types": [
+    {
+     "name": "MessageEntity",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "Special entities that appear in the checklist title"
+  },
+  {
+   "name": "tasks",
+   "type": "Array of ChecklistTask",
+   "types": [
+    {
+     "name": "ChecklistTask",
+     "array": 1
+    }
+   ],
+   "required": true,
+   "description": "List of tasks in the checklist"
+  },
+  {
+   "name": "others_can_add_tasks",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if users other than the creator of the list can add tasks to the list"
+  },
+  {
+   "name": "others_can_mark_tasks_as_done",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "True, if users other than the creator of the list can mark tasks as done or not done"
+  }
+ ],
+ "subtypes": [],
+ "description": "Describes a checklist."
+}

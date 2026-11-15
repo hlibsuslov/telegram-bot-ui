@@ -1,0 +1,23 @@
+{
+ "name": "MessageAutoDeleteTimerChanged",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "messageautodeletetimerchanged",
+ "url": "https://core.telegram.org/bots/api#messageautodeletetimerchanged",
+ "fields": [
+  {
+   "name": "message_auto_delete_time",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "New auto-delete time for messages in the chat; in seconds"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object represents a service message about a change in auto-delete timer settings."
+}

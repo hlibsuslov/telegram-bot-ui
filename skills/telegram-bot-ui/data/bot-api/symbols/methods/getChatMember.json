@@ -1,0 +1,39 @@
+{
+ "name": "getChatMember",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "getchatmember",
+ "url": "https://core.telegram.org/bots/api#getchatmember",
+ "parameters": [
+  {
+   "name": "chat_id",
+   "type": "Integer or String",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    },
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for the target chat or username of the target supergroup or channel in the format @username"
+  },
+  {
+   "name": "user_id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier of the target user"
+  }
+ ],
+ "description": "Use this method to get information about a member of a chat. The method is only guaranteed to work for other users if the bot is an administrator in the chat. Returns a ChatMember object on success.",
+ "returns": "ChatMember"
+}
