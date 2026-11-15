@@ -72,14 +72,43 @@ none, so a message never mixes custom icons and Unicode stand-ins.
 - **Quotes:** custom_emoji entities are kept in quotes and `quote_rich_texts`.
 - **Not:** legacy `Markdown`; inside `code`, `pre` or links (nesting rules).
 
-## Runtime errors and the kill switch
+## An ineligible bot fails silently — verify by reading the message back
 
-Telegram does not document the exact error text for a refused custom emoji. `IconSystem.send`
-treats a **400 on a request that carried custom emoji** whose description matches
-`CUSTOM_EMOJI_ERROR_HINTS` as a refusal: it flips a shared kill switch, logs once, and
-retries **once** with every custom emoji stripped (Unicode fallbacks on buttons). A second
-failure is raised; unrelated 400s are not retried; later messages go out plain at the first
-attempt until `reset_kill_switch()` after the owner confirms the route is back. Recipe 74.
+**Result of a live test against the Bot API (2026-08-05)** on a bot with no Fragment
+username whose owner had no active Premium: Telegram **returned `ok: true` and stripped the
+custom emoji**, leaving only the alternative characters. No error, through every input path:
+
+| How the emoji were sent | What came back |
+|---|---|
+| `parse_mode=HTML` with `<tg-emoji emoji-id="…">😀</tg-emoji>` | `entities: []` |
+| explicit `custom_emoji` `MessageEntity` (correct UTF-16 offset) | `entities: []` |
+| `sendRichMessage` with `RichTextCustomEmoji` in a table cell and a paragraph | the cell came back as the plain string `"😀"` |
+
+After Premium was activated on the owner's account, the same code returned the entities
+intact on all three paths — the cause was entitlement and nothing else.
+
+Consequences:
+
+- **A `try/except` proves nothing.** There is no exception, so an error-keyed fallback never
+  fires and the bot ships plain emoji while the logs look clean.
+- **The only reliable check is the round trip:** every send method returns the `Message`;
+  compare it with what you sent. `IconSystem.send` does this (`silently_stripped(params,
+  message)`): when the request carried custom emoji and the full echo has none, it flips the
+  shared kill switch and logs once, so later messages go out with clean Unicode fallbacks
+  instead of half-decorated text. The message already delivered is left as is (it reads fine
+  with the alternative characters).
+- **Premium-only profile fields are not proof of entitlement** (`emoji_status_custom_emoji_id`,
+  `background_custom_emoji_id` survive an expired subscription). Only the round trip settles it.
+- **When custom emoji "don't work", ask first:** *does the account that created this bot have
+  Telegram Premium active right now, or does the bot own a Fragment username?* If neither,
+  stop debugging markup; ship the Unicode fallback and say why.
+
+**Errors still happen** on other paths. Telegram does not document the error text for a
+refused custom emoji; `IconSystem.send` treats a **400 on a request that carried custom emoji**
+whose description matches `CUSTOM_EMOJI_ERROR_HINTS` as a refusal: kill switch, one log line,
+**one** retry with every custom emoji stripped (Unicode fallbacks on buttons). A second
+failure is raised; unrelated 400s are not retried. Later messages go out plain at the first
+attempt until `reset_kill_switch()` after the owner confirms the route is back (recipe 74).
 
 ## Automation
 
