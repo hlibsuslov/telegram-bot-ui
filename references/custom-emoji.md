@@ -18,7 +18,7 @@ chats if the owner of the bot has a Telegram Premium subscription."*
 So a bot may use custom emoji when **either**:
 
 1. it **purchased additional usernames on Fragment** (the long-standing 6.2-era
-   route, which also covers messages the bot sends anywhere it can post); **or**
+   route; the API text sets no chat-type restriction on it); **or**
 2. the **bot owner has Telegram Premium** *and* the message is sent **directly
    by the bot** to a **private, group, or supergroup** chat — the relaxation
    introduced by Bot API 9.4.
@@ -31,10 +31,61 @@ Consequences to state out loud when you propose custom emoji:
   lets Premium lapse, the calls that rely on route 2 start failing — design the
   fallback now, not later.
 - **"Directly sent by the bot"** excludes messages sent on behalf of someone
-  else (e.g. business-account sending). Verify against current docs for the
-  specific send path you use.
+  else (e.g. business-account sending) — this skill's conservative reading; the
+  table below lists each send path.
 - Before recommending this feature, **ask which route the project qualifies
   for.** If neither, use Unicode emoji and say why.
+
+## Eligibility per send context
+
+Checked 2026-11-15 against Bot API 10.4. The same sentence governs button icons
+(`KeyboardButton`, `InlineKeyboardButton`) and custom emoji entities (MarkdownV2 and HTML
+sections); the 9.4 changelog adds that button icons work "if they are able to use custom
+emoji in the message". `Eligibility.route(SendContext(...))` in
+`examples/python/tgkit/icons.py` encodes this table.
+
+| Send context | Fragment usernames | Owner Premium only | Basis |
+|---|---|---|---|
+| Private / group / supergroup, sent by the bot (incl. edits of its own messages, ephemeral replies) | yes | yes | **API** |
+| Channel post | yes | **no** | **API** (channels not listed) |
+| Business send (`business_connection_id`, on behalf of a user) | yes | no | conservative reading of "directly sent by the bot" |
+| Inline result / `inline_message_id` edit (sent by the user via the bot) | yes | no | conservative reading |
+| Checklists (`sendChecklist` is business-only) | yes | no | **API** method scope + reading above |
+
+Decide once per message: the view from `IconSystem.for_context(ctx)` is either all icons or
+none, so a message never mixes custom icons and Unicode stand-ins.
+
+## Other surfaces that accept custom emoji (API)
+
+- **Rich Messages (10.3+):** `RichTextCustomEmoji` = `{"type": "custom_emoji",
+  "custom_emoji_id", "alternative_text"}` in any RichText field; rich HTML accepts
+  `<tg-emoji emoji-id="…">👍</tg-emoji>` and `<img src="tg://emoji?id=…" alt="👍"/>`; rich
+  Markdown `![👍](tg://emoji?id=…)`. `RichMessageButton.text` may contain only plain text,
+  `RichTextCustomEmoji` and `RichTextDateTime`. Alternative text counts toward the 32768
+  character limit. The rich section repeats no eligibility sentence; apply the rule above.
+  `<tg-thinking>` blocks: the docs point to `https://t.me/addemoji/AIActions` (**Official**).
+- **Captions:** `caption_entities` / `parse_mode` like text.
+- **Polls:** question and option entities — "only custom emoji entities are allowed".
+- **Checklists:** title/task entities allow `custom_emoji` (business sends only).
+- **Gift texts:** entities other than bold, italic, underline, strikethrough, spoiler,
+  custom_emoji and date_time are ignored.
+- **Quotes:** custom_emoji entities are kept in quotes and `quote_rich_texts`.
+- **Not:** legacy `Markdown`; inside `code`, `pre` or links (nesting rules).
+
+## Runtime errors and the kill switch
+
+Telegram does not document the exact error text for a refused custom emoji. `IconSystem.send`
+treats a **400 on a request that carried custom emoji** whose description matches
+`CUSTOM_EMOJI_ERROR_HINTS` as a refusal: it flips a shared kill switch, logs once, and
+retries **once** with every custom emoji stripped (Unicode fallbacks on buttons). A second
+failure is raised; unrelated 400s are not retried; later messages go out plain at the first
+attempt until `reset_kill_switch()` after the owner confirms the route is back. Recipe 74.
+
+## Automation
+
+`scripts/emoji_packs.py` resolves packs to slot maps, suggests packs, verifies stored ids
+(≤ 200 per call), prints the capture steps, and applies or strips custom emoji in payloads.
+The workflow an agent follows is in `emoji-packs.md`; posts in `emoji-in-posts.md`.
 
 ## Getting a real `custom_emoji_id` — never invent one
 

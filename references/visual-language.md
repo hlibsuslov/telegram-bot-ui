@@ -51,6 +51,30 @@ Rules:
 6. **Check meaning, not just looks:** one id = one meaning; `delete` and `close` must not share
    an id; the warning symbol is never a decoration.
 
+Automated version of this process (slot vocabulary of 240 meanings, verified pack catalog,
+resolve/suggest/verify/apply CLI, agent decision path): `emoji-packs.md`. Posts and long
+texts: `emoji-in-posts.md`.
+
+### IconSystem v2 in one paragraph
+
+`IconSystem(icons, vocabulary=load_vocabulary(), eligibility=Eligibility(...))` — handlers
+call `button`, `title`/`text` (HTML), `md2`, `rich`/`rich_label` (Rich Messages) and
+`composer()` (entities with UTF-16 offsets) by **slot**; `send(transport, method, params,
+SendContext(...))` decides per message, converts any Unicode emoji the handler wrote, and
+strips everything when the message is not eligible or Telegram refuses it (one retry, kill
+switch). While icons are on, a slot without an id renders **label-only**, so a keyboard never
+mixes custom icons with Unicode stand-ins.
+
+### Density and discipline (Heuristic)
+
+- Buttons: one icon per button, a whole group or none; static only.
+- Screen text: ≤ 3 custom emoji, ≤ 1 per line; posts ≤ 8, ≤ 1 per line
+  (`density_warnings`, `audit_icons.py --payload`).
+- Adaptive (`needs_repainting`) icons follow the text colour; do not mix them with
+  fixed-colour icons on one bot (`audit_icons.py` warns).
+- Widgets cannot show custom emoji by id (Widgets guide): draw the same family in inline SVG
+  (`emoji-packs.md#widgets-and-custom-emoji`).
+
 ## 3. Unicode emoji discipline (applies to fallbacks too)
 
 - **Signal, not ornament:** an emoji earns its place when it lets the eye find something —
@@ -98,7 +122,8 @@ slot's icon — don't swap icons to encode state.
 
 ## 6. Audit checklist
 
-- [ ] `audit_icons.py`: one family, static, no shared ids, fallbacks present.
+- [ ] `audit_icons.py`: one family, static, no shared ids, fallbacks present, no fixture ids;
+      `audit_icons.py --payload`: no double icons, no mixed keyboards, density in budget.
 - [ ] `audit_copy.py`: placeholders and leading symbols equal across languages; no over-long labels.
 - [ ] `validate_keyboard.py`: one action per button, ≤ 1 primary, no emoji-only labels.
 - [ ] Screens follow the anatomy; status symbols used only for status.
