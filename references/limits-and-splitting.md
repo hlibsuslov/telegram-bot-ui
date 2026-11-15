@@ -12,7 +12,7 @@
 | Media caption | 1024 chars | stable, historical |
 | Rich message text | 32,768 UTF-8 chars (incl. custom emoji alt text, formula source) | official: Rich Message Limits (2026-11-12) |
 | Rich "Show More" cutoff | ~8,000 chars shown, rest collapsed | official blog |
-| Blocks per rich message | 500 | official: Bot API "Rich Message Limits" (2026-11-12) |
+| Blocks per rich message (nested blocks, list items, **table rows**, quotations and details count) | 500 | official: Bot API "Rich Message Limits" (2026-11-12) |
 | Nesting depth | 16 levels | official: Bot API "Rich Message Limits" (2026-11-12) |
 | Media attachments per rich message | 50 | official: Bot API "Rich Message Limits" (2026-11-12) |
 | Table columns | 20 | official: Bot API "Rich Message Limits" (2026-11-12) |

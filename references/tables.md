@@ -7,10 +7,10 @@
 > output: whenever data has rows and columns — comparisons, schedules, prices,
 > scores, key/value facts, status lists — reach for a table before anything else.
 >
-> **Last verified against official docs: 2026-07-15** (Bot API 10.2, 14 Jul
-> 2026). Exact nested field names of `InputRichBlockTable` are marked *(verify)* —
-> confirm them on the official object page for the project's Bot API version
-> before relying on them. See `official-sources.md`.
+> **Last verified against official docs: 2026-11-15** (Bot API 10.4, 9 Nov
+> 2026). Field names of `InputRichBlockTable` and `RichBlockTableCell` are checked
+> against the local catalog (`py -3 scripts/tg_api_lookup.py show RichBlockTableCell`).
+> See `official-sources.md`.
 
 ## When a table is the right call
 
@@ -69,20 +69,25 @@ bold `<td>`. Whitelist tags/attributes exactly as for regular HTML
 (`security-and-escaping.md`); escape `< > &` in every dynamic cell value.
 
 ```html
-<table>
-  <thead>
-    <tr><th>Team</th><th>Played</th><th>Won</th><th>Points</th></tr>
-  </thead>
-  <tbody>
-    <tr><td>Alpha</td><td align="right">10</td><td align="right">7</td><td align="right">21</td></tr>
-    <tr><td>Bravo</td><td align="right">10</td><td align="right">6</td><td align="right">19</td></tr>
-  </tbody>
+<table compact>
+  <caption>Standings after round 10</caption>
+  <tr><th>Team</th><th>Played</th><th>Won</th><th>Points</th></tr>
+  <tr><td>Alpha</td><td align="right">10</td><td align="right">7</td><td align="right">21</td></tr>
+  <tr><td>Bravo</td><td align="right">10</td><td align="right">6</td><td align="right">19</td></tr>
 </table>
 ```
 
-Put the string in `InputRichMessage.html`. Confirm the supported table tag set
-(`table`/`thead`/`tbody`/`tr`/`th`/`td` and which cell attributes) on the
-official **Rich message formatting options** page before shipping.
+Put the string in `InputRichMessage.html`. Official tag set (Bot API page, *Rich HTML
+style*, checked 2026-11-15) **[API]**: `<table>` with the flags `bordered`, `striped`,
+`compact`; an optional `<caption>`; `<tr>` **directly inside `<table>`** — there is no
+`<thead>` or `<tbody>`; `<th>` / `<td>` with `colspan`, `rowspan`, `align`
+(`left|center|right`) and `valign` (`top|middle|bottom`).
+
+**Budget:** every table row counts toward the **500-block** Rich Message limit
+(together with nested blocks, list items, quotations and details blocks), and a table
+has at most **20 columns** **[API]**. A 400-row table leaves almost nothing for the
+rest of the message: split long tables or page them, long before the 32,768-character
+limit is in sight.
 
 ### 3. Explicit `InputRichBlockTable` blocks (programmatic — preferred for data)
 
@@ -90,34 +95,41 @@ Build the table as typed objects — no string escaping, no parser ambiguity. Th
 is the safest path when rows come from a database, API, or CMS.
 
 ```python
-# Shape is illustrative — VERIFY exact field/type names against the official
-# InputRichBlockTable object for your Bot API version (see official-sources.md).
+# Shape checked against the Bot API 10.4 catalog (2026-11-15):
+# InputRichBlockTable{type, cells: Array of Array of RichBlockTableCell,
+#   is_bordered?, is_striped?, is_compact?, caption?}
+# RichBlockTableCell{text?: RichText, is_header?, colspan?, rowspan?, align, valign}
 def cell(text, header=False, align="left"):
-    return {"is_header": header, "align": align,
-            "blocks": [{"type": "paragraph", "text": text}]}
+    c = {"text": text, "align": align, "valign": "middle"}
+    if header:
+        c["is_header"] = True    # type True: send true or omit it, never false
+    return c
 
 table_block = {
     "type": "table",
-    "rows": [
-        {"cells": [cell("Team", header=True),
-                   cell("Played", header=True, align="right"),
-                   cell("Points", header=True, align="right")]},
+    "is_compact": True,                      # 10.3: tighter cells, better on phones
+    "cells": [                               # rows are plain arrays of cells
+        [cell("Team", header=True),
+         cell("Played", header=True, align="right"),
+         cell("Points", header=True, align="right")],
         *[
-            {"cells": [cell(t["name"]),
-                       cell(str(t["played"]), align="right"),
-                       cell(str(t["points"]), align="right")]}
+            [cell(t["name"]),
+             cell(str(t["played"]), align="right"),
+             cell(str(t["points"]), align="right")]
             for t in standings
         ],
     ],
 }
-bot.send_rich_message(chat_id=chat_id, blocks=[table_block])
+params = {"chat_id": chat_id, "rich_message": {"blocks": [table_block]}}
+# send with sendRichMessage; check it offline first:
+#   py -3 scripts/validate_payload.py --method sendRichMessage params.json
 ```
 
-- **`is_header: true`** marks header cells; clients render them bold and repeat
-  them when the table is scrolled/exported. This is the *semantic* header — always
-  use it instead of manual bold.
-- Cell content is itself a list of inline/rich blocks, so a cell can hold a link,
-  code, or custom emoji — not just plain text.
+- **`is_header: true`** marks header cells; clients render them bold. This is the
+  *semantic* header — always use it instead of manual bold.
+- **`align` and `valign` are required** on every cell.
+- Cell `text` is `RichText`: a plain string, or rich nodes (bold, link, code,
+  custom emoji…) — not a list of blocks.
 
 ## Cross-cutting table rules (apply in all three paths)
 
