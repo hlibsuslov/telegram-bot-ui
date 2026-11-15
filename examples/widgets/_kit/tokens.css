@@ -28,7 +28,7 @@ body { margin: 0; padding: 0 }
 .mt { color: var(--k-hint); font-size: .87em }
 .rw { display: flex; align-items: center; gap: 8px }
 .gr { flex: 1; min-width: 0 }
-.el { white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.el { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
 .sf { background: var(--k-sec); border-radius: var(--k-r); padding: 8px 10px }
 .ls > * + * { border-top: 1px solid var(--k-sep) }
 .wd { width: 100%; margin-top: 8px }

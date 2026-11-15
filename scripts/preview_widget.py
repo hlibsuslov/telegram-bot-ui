@@ -69,6 +69,8 @@ MOCK_JS = r"""
 (function(){
 var cfg = window.__cfg, P = parent, ev = {}, lastBg = 0, inFlight = false, stamps = [], tapUntil = 0;
 function fire(t){ (ev[t]||[]).forEach(function(f){ try{ f.call(W); }catch(e){ P.postMessage({k:"log", f:cfg.f, t:"error", m:t+": "+e.message},"*"); } }); }
+addEventListener("error", function(e){ P.postMessage({k:"log", f:cfg.f, t:"error", m:"uncaught: "+e.message},"*"); });
+addEventListener("unhandledrejection", function(e){ P.postMessage({k:"log", f:cfg.f, t:"error", m:"unhandled rejection: "+(e.reason&&e.reason.message)},"*"); });
 addEventListener("click", function(){ tapUntil = Date.now() + 50; }, true);
 addEventListener("pointerup", function(){ tapUntil = Date.now() + 50; }, true);
 try { Object.defineProperty(navigator, "language", {get:function(){ return cfg.lang; }}); } catch(e){}
