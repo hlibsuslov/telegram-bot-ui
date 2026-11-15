@@ -49,6 +49,9 @@ of degrading (e.g. a payment receipt must not silently become plain text).
 ## Rules
 
 - **Differentiate** the classes above — never treat all failures the same.
+- **Some failures are not errors.** Telegram silently drops content a bot may not send —
+  custom emoji are the known case. Read the returned object back and compare it with what
+  was sent; a clean `try` block is not evidence that anything arrived as intended.
 - **No infinite retries.** Bound retries and honor `retry_after`.
 - **No silent fallback.** Log that a fallback happened and why (without dumping
   bot token or full personal text).
@@ -63,7 +66,8 @@ of degrading (e.g. a payment receipt must not silently become plain text).
 |---|---|---|
 | Buttons render but have no color | SDK dropped `style` before the request, or the client predates 9.4 | Inspect the outgoing payload; see `sdk-compatibility.md` |
 | 400 on a button payload | Two action fields on one inline button, or an invalid `style` value | `style` ∈ {`primary`,`success`,`danger`}; exactly one action field |
-| 400 mentioning custom emoji | Bot not eligible (no Fragment usernames, owner not Premium), or a bogus ID | Verify eligibility; verify the ID with `getCustomEmojiStickers`; drop the icon |
+| 400 mentioning custom emoji | A bogus ID, or a malformed entity offset | Verify the ID with `getCustomEmojiStickers`; recount offsets in UTF-16 |
+| Custom emoji missing, **no error at all** | Bot not eligible: Telegram strips the entities and returns `ok: true` (live test, 2026-08-05) | Read the sent `Message` back (`silently_stripped`); degrade explicitly and say why (`custom-emoji.md`) |
 | `callback_data` rejected | Over **64 bytes** (bytes, not characters) | Shorten the payload; move state server-side |
 | `message is not modified` | Edit with identical text *and* markup | Compare before editing; skip the no-op |
 | Spinner never stops on a button | `answerCallbackQuery` not called | Answer first, then work |

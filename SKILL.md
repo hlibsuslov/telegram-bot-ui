@@ -124,8 +124,9 @@ Do **not** write implementation code before steps 1-6 for the affected screens.
   code or `public_data`; always a caption and a text/button path.
 - **Custom emoji:** never invent a `custom_emoji_id`. Eligibility = Fragment usernames,
   or owner Premium for messages the bot sends directly to private, group and
-  supergroup chats (so **channels need Fragment**). All icons of a message or none;
-  one pack family per bot (`references/custom-emoji.md`).
+  supergroup chats (so **channels need Fragment**). An ineligible bot gets **no error**:
+  Telegram strips them silently, so verify by reading the sent message back. All icons
+  of a message or none; one pack family per bot (`references/custom-emoji.md`).
 - **Wallet:** `sent_transaction` is a notice, not proof of payment.
 - **Update delivery:** new update types must be in `allowed_updates` (sticky) and
   routed by the SDK (`references/updates-and-delivery.md`).
@@ -198,6 +199,9 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 
 **Interface**
 - Labels, wording, tone → `references/microcopy-and-labels.md`
+- Spotting when text should be a table, list, heading or collapsible block, and when to
+  act, offer or ask → `references/content-shape-detection.md`
+- Auditing an existing bot: inventory, diagnose, rank, propose → `references/auditing-existing-bots.md`
 - Colors, emphasis, layout and grouping → `references/buttons-and-styles.md`
 - Inline keyboards, `callback_data`, pagination → `references/inline-keyboards.md`
 - Reply keyboards, `ForceReply`, placeholders → `references/reply-keyboards.md`

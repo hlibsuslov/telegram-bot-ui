@@ -575,6 +575,23 @@ def uses_custom_emoji(params: Any) -> bool:
     return ('"icon_custom_emoji_id"' in s or '"custom_emoji"' in s or "tg://emoji?id=" in s or "<tg-emoji" in s)
 
 
+def message_has_custom_emoji(message: dict[str, Any]) -> bool:
+    """True if a returned Message still carries custom emoji (entities, rich nodes, buttons)."""
+    s = json.dumps(message, ensure_ascii=False)
+    return '"custom_emoji"' in s or '"icon_custom_emoji_id"' in s
+
+
+def silently_stripped(params: dict[str, Any], message: Any) -> bool:
+    """The request carried custom emoji, the returned Message is a full echo (has its text,
+    caption, rich message or keyboard) and none survived: Telegram stripped them without an
+    error, which is what it does for an ineligible bot (live Bot API, 2026-08-05)."""
+    if not (isinstance(message, dict) and uses_custom_emoji(params)):
+        return False
+    if not any(k in message for k in ("text", "caption", "rich_message", "reply_markup")):
+        return False                       # bare ack (test doubles, some edits): can't tell
+    return not message_has_custom_emoji(message)
+
+
 def _text_fields(params: dict[str, Any]) -> Iterable[tuple[str, str, str]]:
     """(text key, parse_mode key, entities key) triples present in a send/edit request."""
     for t, pm, ent in (("text", "parse_mode", "entities"), ("caption", "parse_mode", "caption_entities"),
@@ -829,12 +846,17 @@ class IconSystem:
         else:
             p = params if view.active else strip_request(params, self.emap, unicode_fallback=self.unicode_fallback)
         try:
-            return transport.call(method, p)
+            sent = transport.call(method, p)
         except TelegramError as err:
             if not (uses_custom_emoji(p) and is_custom_emoji_rejection(err)):
                 raise
             self.kill(f"{method}: {err.error_code} {err.description}")
             return transport.call(method, strip_request(p, self.emap, unicode_fallback=self.unicode_fallback))
+        # An ineligible bot gets NO error: Telegram answers ok and strips the custom emoji
+        # (live Bot API, 2026-08-05). Read the message back; a strip means the route is gone.
+        if silently_stripped(p, sent):
+            self.kill(f"{method}: custom emoji silently removed (owner Premium / Fragment missing?)")
+        return sent
 
 
 class TextComposer:
@@ -1046,5 +1068,6 @@ __all__ = ["IconSystem", "TextComposer", "Eligibility", "SendContext", "EmojiMap
            "apply_html", "strip_html", "apply_markdown", "strip_markdown", "apply_markdown_v2", "strip_markdown_v2",
            "apply_entities", "strip_entities", "apply_rich_message", "strip_rich_message", "apply_keyboard",
            "strip_keyboard", "apply_request", "strip_request", "uses_custom_emoji", "is_custom_emoji_rejection",
+           "message_has_custom_emoji", "silently_stripped",
            "CUSTOM_EMOJI_ERROR_HINTS", "resolve_icon_map", "verify_ids", "batched", "load_vocabulary",
            "decorate_post", "density_warnings", "slots_in", "ids_from_message", "count_custom_emoji", "DENSITY", "GET_CUSTOM_EMOJI_MAX"]
