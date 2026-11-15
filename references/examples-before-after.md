@@ -1,6 +1,8 @@
 # Worked scenarios (before → after)
 
-Seven situations that cover most real UI requests. Code is illustrative — adapt
+Sixteen situations that cover most real UI requests: 1-7 are single-screen fixes, 8-16 come
+from the product playbooks (recipes 20-29 and 60-69, `use-case-playbooks.md`, verified 2026-11-15
+against Bot API 10.4). Code is illustrative — adapt
 to the project's actual SDK and style; never paste a framework the project
 doesn't use.
 
@@ -260,3 +262,197 @@ tells you where you are, a search entry point
 **Report line:** *"Left the option list unstyled deliberately — `style` is
 semantic (primary/success/danger only) and coloring equal options removes
 hierarchy. Added pagination context and search instead."*
+
+---
+
+## 8. Hidden sold-out items → disabled, with the reason (shop, recipe 20)
+
+**Request:** "People ask whether we still sell the Colombia. It's sold out, so we removed it."
+
+**Before** — the item disappears; the `+` button is hidden at the stock limit, so the row jumps:
+
+```json
+{"inline_keyboard": [[{"text": "Ethiopia · ⭐ 250", "callback_data": "item:eth"}],
+                     [{"text": "Kenya · ⭐ 300", "callback_data": "item:ken"}]]}
+```
+
+**After** — visible but unavailable (Bot API 10.3 `DisabledButton`), same row shape:
+
+```json
+{"inline_keyboard": [[{"text": "Ethiopia Yirgacheffe · ⭐ 250", "callback_data": "sh:1:item:eth"}],
+                     [{"text": "Colombia Huila · ⭐ 220", "disabled": {}}],
+                     [{"text": "Kenya Nyeri AA · ⭐ 300", "callback_data": "sh:1:item:ken"}]]}
+```
+
+`disabled` is the button's only action field **[API]**. The server still refuses a crafted or
+stale "add" for a sold-out item **[API: the button "does nothing"; your check does the rest]**.
+
+**Report line:** *"Sold-out items are shown disabled instead of hidden; stock is re-checked on
+every add and again at pre-checkout."*
+
+---
+
+## 9. "Pay" sends a new invoice every tap → one invoice per cart revision (shop, recipe 20)
+
+**Request:** "Customers tap Pay three times and get three invoices; some paid twice."
+
+**Before**
+
+```python
+async def on_pay(cq):
+    await bot.send_invoice(cq.from_user.id, "Order", "Coffee", payload=str(uuid4()),
+                           currency="XTR", prices=[LabeledPrice("Coffee", total)])
+```
+
+**After** — the order belongs to the cart revision; the invoice is sent once per order and method;
+`pre_checkout_query` compares currency, amount and stock with the stored order; fulfilment is
+keyed by `telegram_payment_charge_id`:
+
+```python
+order = order_for_cart(session)                      # same cart revision -> same order
+_, first = invoices.run(f"{order.id}:xtr", lambda: send_invoice(order, "xtr"))
+if not first:
+    answer(cq, "Your invoice is below ↓")            # no second invoice
+```
+
+**Report line:** *"Pay is idempotent per cart revision; an invoice for a changed cart is refused
+at pre-checkout with a reason; a redelivered successful_payment is applied once."*
+
+---
+
+## 10. Four onboarding messages → three skippable steps and a useful empty state (recipe 23)
+
+**Request:** "New users get four messages after /start and leave."
+
+**Before** — welcome text, rules, a phone request and a menu at once; the phone keyboard never
+goes away; returning users see it all again.
+
+**After** — the empty chat already explains the bot (`setMyDescription`, per language); `/start`
+shows *Language → Updates (Notify me / Not now) → Phone (Share / Skip)*; then:
+
+```
+All set, Bogdan
+You have no orders yet. Start with the catalog — fresh roast every Monday.
+[ Open the catalog ]          (primary)
+[ My orders ] [ Settings ]
+```
+
+The reply keyboard is one-time and removed afterwards; a returning `/start` says "Welcome back"
+with the latest order.
+
+**Report line:** *"Onboarding cut to 3 skippable steps; descriptions and commands set per
+language; returning users skip it; empty states name one next action."*
+
+---
+
+## 11. A delete button on the settings root → confirm + undo window (recipe 24)
+
+**Request:** "Someone deleted their account with one accidental tap."
+
+**Before**
+
+```json
+{"inline_keyboard": [[{"text": "Language", "callback_data": "lang"}],
+                     [{"text": "Delete account", "callback_data": "delete_now"}]]}
+```
+
+**After** — the root only opens a confirmation; the red button is not the first under the thumb;
+deletion runs after a 30-second Undo window:
+
+```json
+{"inline_keyboard": [[{"text": "Cancel", "callback_data": "st:e:back"}],
+                     [{"text": "Delete everything", "callback_data": "st:e:delete", "style": "danger"}]]}
+```
+
+**Report line:** *"Destructive action moved behind a confirmation with `style: danger` and a
+30 s undo; a double confirm schedules one deletion; a late Undo is refused."*
+
+---
+
+## 12. Toggle labels that state the action → labels that state the state (recipe 24)
+
+**Request:** "Users can't tell whether notifications are on."
+
+**Before:** `[Turn off shipping updates]` `[Turn on offers]` — the label flips meaning after each
+tap, and a double tap turns it back.
+
+**After:** `[✓ Shipping updates]` `[✗ Offers and news]` — one message edited in place; each render
+carries a version in `callback_data`, so the second tap of a double tap is refused as stale and
+can't flip the value back.
+
+**Report line:** *"Toggles show state (✓/✗), edit in place, and ignore double taps."*
+
+---
+
+## 13. A typed date → date and slot pickers with taken slots disabled (booking, recipe 22)
+
+**Request:** "Clients type dates in ten formats and book taken slots."
+
+**Before:** "Send the date and time (DD.MM HH:MM)".
+
+**After:** a 7-day picker (past and full days disabled), then slots with taken ones disabled, then
+a confirmation that shows the time with `<tg-time unix="…" format="wDT">…</tg-time>`, so every
+reader sees their own time zone. Two clients racing for one slot: the second gets "just taken" and
+a refreshed list; reminders are keyed jobs that a reschedule replaces.
+
+**Report line:** *"Free-text dates replaced by pickers; taken slots disabled, not hidden; the
+confirmation shows a date-time entity; a double confirm creates one booking."*
+
+---
+
+## 14. Personal balances posted in the group → shared card + ephemeral panels (recipe 28)
+
+**Request:** "When someone taps 'My balance', the bot posts everyone's debts in the chat."
+
+**Before:** `sendMessage(chat_id=group, text="Alice owes Bogdan ₴450 …")` for every tap.
+
+**After:** the shared card shows only totals; "My balance" answers with an ephemeral message to
+the presser (10.4: `ephemeral_message_parameters: {"callback_query_id": …}`), falling back to an
+alert (≤ 200 chars) or a deep link to the private chat — never to the group.
+
+**Report line:** *"Personal data moved to ephemeral panels; the group card shows totals only;
+fallbacks keep the audience."*
+
+---
+
+## 15. A silent 20-second wait → a streamed answer with Stop, then feedback (AI, recipe 27)
+
+**Request:** "Our assistant is silent while it thinks and people tap 'Regenerate' blindly."
+
+**Before:** `sendChatAction(typing)` … then one long message.
+
+**After:** `sendRichMessageDraft` with real stage labels and `can_stop: true` (10.3); a Stop
+(`stopped_message_generation`) cancels the model and keeps the partial answer marked incomplete;
+the final answer carries `👍 / 👎 / Regenerate`; 👎 asks for a reason with an inline keyboard of
+reasons **plus** the reply field (`force_reply: true` on the keyboard, 10.3).
+
+**Report line:** *"Answers stream with Stop; one finalization per answer; feedback once per
+answer; regenerate retires the old buttons."*
+
+---
+
+## 16. "No results." → why, and the one tap that fixes it (search, recipe 63)
+
+**Request:** "Search often says 'No results' and people give up."
+
+**Before**
+
+```
+No results.
+```
+
+**After**
+
+```
+Nothing matches “дизайнер” with Remote + Senior.
+Try without a filter:
+[ Remove filter: Remote ] [ Remove filter: Senior ]
+[ Change the query ]
+```
+
+Pagination keeps its shape with `← 2/5 →`: the arrows are disabled at the ends (10.3) and the
+counter is a disabled button. The query itself is stored on the server and only its id travels in
+`callback_data` (a Cyrillic query exceeds 64 bytes quickly: 2 bytes per letter).
+
+**Report line:** *"Empty results explain the cause and offer one-tap filter removal; pagination
+shows position; callback data carries ids, not queries."*
