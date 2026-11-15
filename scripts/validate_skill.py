@@ -12,6 +12,15 @@ Checks:
   * Required operational sections exist in the body.
   * Body is reasonably compact (progressive disclosure).
   * No bot token / obvious secret is embedded.
+  * Packaging (formats verified in docs/hosts.md):
+    - generated adapters are in sync with SKILL.md + adapters/routing.json;
+    - Claude Code subagents (agents/claude/*.md): front matter, name = file name,
+      known tools and colors, description length;
+    - Codex custom agents (agents/codex/*.toml): name, description,
+      developer_instructions (parsed with tomllib on Python >= 3.11);
+    - agents/openai.yaml uses only the documented interface/policy/dependencies keys;
+    - .claude-plugin/plugin.json and marketplace.json: names, version, agent paths,
+      relative source, and that the root SKILL.md still loads as the plugin's skill.
 
 Exit code 0 on success, 1 on any error. Warnings do not fail the run.
 
@@ -19,6 +28,7 @@ Usage:  python scripts/validate_skill.py
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
@@ -92,6 +102,169 @@ def parse_front_matter(fm: str) -> dict:
     return result
 
 
+# ---------------------------------------------------------------- packaging checks
+
+CLAUDE_TOOLS = {"Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill", "WebFetch",
+                "WebSearch", "NotebookEdit", "Agent"}
+CLAUDE_COLORS = {"red", "blue", "green", "yellow", "purple", "orange", "pink", "cyan"}
+OPENAI_YAML_KEYS = {
+    "interface": {"display_name", "short_description", "icon_small", "icon_large",
+                  "brand_color", "default_prompt"},
+    "policy": {"allow_implicit_invocation"},
+    "dependencies": {"tools"},
+}
+PLUGIN_ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
+
+
+def _load_json(root: str, rel: str, errors: list[str]):
+    try:
+        with open(os.path.join(root, rel), encoding="utf-8") as fh:
+            return json.load(fh)
+    except FileNotFoundError:
+        errors.append(f"{rel} missing.")
+    except ValueError as exc:
+        errors.append(f"{rel}: invalid JSON ({exc}).")
+    return None
+
+
+def check_adapters(root: str, errors: list[str]) -> None:
+    sys.path.insert(0, os.path.join(root, "scripts"))
+    try:
+        import build_adapters  # noqa: PLC0415
+
+        bad = build_adapters.stale(build_adapters.build())
+    except Exception as exc:  # report, don't crash the validator
+        errors.append(f"adapters: generator failed ({exc}).")
+        return
+    for rel in bad:
+        errors.append(f"adapters: {rel} is stale; run `python scripts/build_adapters.py`.")
+
+
+def check_claude_agents(root: str, errors: list[str], warnings: list[str]) -> list[str]:
+    folder = os.path.join(root, "agents", "claude")
+    names = []
+    for fname in sorted(os.listdir(folder)) if os.path.isdir(folder) else []:
+        if not fname.endswith(".md"):
+            continue
+        rel = f"agents/claude/{fname}"
+        with open(os.path.join(folder, fname), encoding="utf-8") as fh:
+            fm, body = split_front_matter(fh.read())
+        if fm is None:
+            errors.append(f"{rel}: front matter missing.")
+            continue
+        meta = parse_front_matter(fm)
+        name = str(meta.get("name", ""))
+        names.append(name)
+        if name != fname[:-3] or not NAME_RE.match(name):
+            errors.append(f"{rel}: name '{name}' must be kebab-case and equal the file name.")
+        desc = str(meta.get("description", "")).strip()
+        if len(desc) < MIN_DESCRIPTION_LEN or len(desc) > MAX_DESCRIPTION_LEN:
+            errors.append(f"{rel}: description length {len(desc)} outside "
+                          f"{MIN_DESCRIPTION_LEN}..{MAX_DESCRIPTION_LEN}.")
+        tools = [t.strip() for t in str(meta.get("tools", "")).split(",") if t.strip()]
+        unknown = sorted(set(tools) - CLAUDE_TOOLS)
+        if not tools or unknown:
+            errors.append(f"{rel}: tools must be a non-empty subset of known tools; unknown: {unknown}.")
+        if meta.get("color") and meta["color"] not in CLAUDE_COLORS:
+            errors.append(f"{rel}: color '{meta['color']}' is not a documented value.")
+        if "telegram-bot-ui" not in body:
+            warnings.append(f"{rel}: body does not route into the telegram-bot-ui skill.")
+        if TOKEN_RE.search(body):
+            errors.append(f"{rel}: possible bot token embedded.")
+    if not names:
+        errors.append("agents/claude: no subagents found.")
+    return names
+
+
+def check_codex_agents(root: str, errors: list[str], warnings: list[str]) -> None:
+    folder = os.path.join(root, "agents", "codex")
+    try:
+        import tomllib  # noqa: PLC0415
+    except ImportError:
+        warnings.append("agents/codex: tomllib unavailable (Python < 3.11); TOML not parsed.")
+        return
+    files = sorted(f for f in os.listdir(folder) if f.endswith(".toml")) if os.path.isdir(folder) else []
+    if not files:
+        errors.append("agents/codex: no custom agents found.")
+    for fname in files:
+        rel = f"agents/codex/{fname}"
+        try:
+            with open(os.path.join(folder, fname), "rb") as fh:
+                data = tomllib.load(fh)
+        except tomllib.TOMLDecodeError as exc:
+            errors.append(f"{rel}: invalid TOML ({exc}).")
+            continue
+        for key in ("name", "description", "developer_instructions"):
+            if not str(data.get(key, "")).strip():
+                errors.append(f"{rel}: required key '{key}' missing or empty.")
+        if not re.match(r"^[a-z][a-z0-9_]*$", str(data.get("name", ""))):
+            errors.append(f"{rel}: name should be snake_case.")
+        if "$telegram-bot-ui" not in str(data.get("developer_instructions", "")):
+            warnings.append(f"{rel}: instructions do not route into $telegram-bot-ui.")
+
+
+def check_openai_yaml(root: str, errors: list[str]) -> None:
+    path = os.path.join(root, "agents", "openai.yaml")
+    if not os.path.isfile(path):
+        return
+    section = None
+    with open(path, encoding="utf-8") as fh:
+        for line in fh:
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            m = re.match(r"^(\s*)([A-Za-z_]+):", line)
+            if not m:
+                continue
+            indent, key = len(m.group(1)), m.group(2)
+            if indent == 0:
+                section = key
+                if key not in OPENAI_YAML_KEYS:
+                    errors.append(f"agents/openai.yaml: unknown top-level key '{key}'.")
+            elif indent == 2 and section in OPENAI_YAML_KEYS and key not in OPENAI_YAML_KEYS[section]:
+                errors.append(f"agents/openai.yaml: unknown key '{section}.{key}'.")
+
+
+def check_plugin(root: str, skill_name: str, agent_names: list[str],
+                 errors: list[str], warnings: list[str]) -> None:
+    plugin = _load_json(root, ".claude-plugin/plugin.json", errors)
+    market = _load_json(root, ".claude-plugin/marketplace.json", errors)
+    if plugin:
+        if plugin.get("name") != skill_name:
+            errors.append("plugin.json: name must equal the skill name.")
+        if not plugin.get("version"):
+            warnings.append("plugin.json: no version; users are not pinned to releases.")
+        agents = plugin.get("agents", [])
+        for rel in agents:
+            if not rel.startswith("./") or not rel.endswith(".md") or ".." in rel:
+                errors.append(f"plugin.json: agent path '{rel}' must be ./relative .md.")
+            elif not os.path.isfile(os.path.join(root, rel[2:])):
+                errors.append(f"plugin.json: agent path '{rel}' does not exist.")
+        listed = sorted(os.path.basename(a)[:-3] for a in agents)
+        if listed != sorted(agent_names):
+            errors.append("plugin.json: agents list differs from agents/claude/*.md.")
+        # The root SKILL.md loads as the plugin's single skill only without skills/ or a skills key.
+        if "skills" in plugin or os.path.isdir(os.path.join(root, "skills")):
+            errors.append("plugin: a skills/ folder or 'skills' key stops the root SKILL.md loading.")
+        if os.path.isfile(os.path.join(root, "CLAUDE.md")):
+            warnings.append("plugin: a root CLAUDE.md is not loaded by plugins.")
+    if market:
+        if not PLUGIN_ID_RE.match(str(market.get("name", ""))):
+            errors.append("marketplace.json: invalid marketplace name.")
+        if not str((market.get("owner") or {}).get("name", "")).strip():
+            errors.append("marketplace.json: owner.name is required.")
+        entries = market.get("plugins") or []
+        if not any(p.get("name") == skill_name and p.get("source") in ("./", ".") for p in entries):
+            errors.append("marketplace.json: needs an entry for the plugin with source './'.")
+
+
+def check_packaging(root: str, skill_name: str, errors: list[str], warnings: list[str]) -> None:
+    check_adapters(root, errors)
+    names = check_claude_agents(root, errors, warnings)
+    check_codex_agents(root, errors, warnings)
+    check_openai_yaml(root, errors)
+    check_plugin(root, skill_name, names, errors, warnings)
+
+
 def main() -> int:
     root = skill_dir()
     path = os.path.join(root, "SKILL.md")
@@ -158,6 +331,8 @@ def main() -> int:
     # secrets
     if TOKEN_RE.search(text):
         errors.append("possible bot token / secret embedded in SKILL.md.")
+
+    check_packaging(root, name, errors, warnings)
 
     for w in warnings:
         print(f"WARN: {w}")
