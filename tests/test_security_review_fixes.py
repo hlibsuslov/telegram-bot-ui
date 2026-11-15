@@ -1,4 +1,5 @@
 """Regressions for the pre-PR security review of the agent bridge and the installer."""
+import json
 import os
 import sys
 import tempfile
@@ -7,7 +8,7 @@ import unittest
 import _paths
 from agent_bridge import hooks
 from agent_bridge.redact import MASK, Redactor
-from test_agent_bridge import GROUP, MEMBER, OP, make
+from test_agent_bridge import GROUP, MEMBER, OP, make, reply
 
 sys.path.insert(0, os.path.join(_paths.ROOT, "scripts"))
 import install  # noqa: E402
@@ -38,6 +39,23 @@ class Redaction(unittest.TestCase):
             self.assertTrue(r.findings(line), line)
         self.assertNotIn("s3cretpw", r.text("postgres://app:s3cretpw@db:5432/x"))
 
+    def test_unregistered_token_inside_an_api_url(self):
+        token = "123456789:" + "A" * 35
+        out = Redactor().text(f"GET https://api.telegram.org/bot{token}/getMe failed")
+        self.assertNotIn(token, out)
+        self.assertIn(MASK, out)
+
+
+class TypedAnswersAreRedacted(unittest.TestCase):
+    def test_pasted_secret_is_not_returned_or_persisted(self):
+        b, _, _ = make()
+        rec = b.request_answer("Which database?", timeout=120)
+        b.source.queue.append(reply(rec, "use DB_PASSWORD=hunter2hunter please"))
+        res = b.wait(rec["rid"])
+        self.assertEqual(res["status"], "answered")
+        self.assertNotIn("hunter2hunter", res["answer"])
+        self.assertNotIn("hunter2hunter", json.dumps(b.store.data))
+
 
 class FilesStayWithTheOperator(unittest.TestCase):
     def setUp(self):
@@ -64,6 +82,12 @@ class FilesStayWithTheOperator(unittest.TestCase):
             b.send_file(self.file("report.txt"), chat_id=MEMBER)
         with self.assertRaises(PermissionError):
             b.send_file(self.file("report.txt"), chat_id=GROUP)
+
+    def test_uploaded_bytes_are_the_scanned_bytes(self):
+        b, t, _ = make()
+        path = self.file("report.txt", "all clean")
+        b.send_file(path)
+        self.assertEqual(t.uploads[-1]["document"]["size"], len("all clean"))
 
     def test_binary_files_are_still_scanned(self):
         b, _, _ = make()

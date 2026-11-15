@@ -39,6 +39,7 @@ import json
 import os
 import re
 import sys
+import tempfile
 import urllib.request
 from html.parser import HTMLParser
 
@@ -579,8 +580,8 @@ def load_json(path: str):
 
 def write_json(path: str, obj) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+    fd, tmp = tempfile.mkstemp(prefix=".snapshot-", suffix=".tmp", dir=os.path.dirname(os.path.abspath(path)))
+    with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(obj, fh, ensure_ascii=False, indent=1)
         fh.write("\n")
     os.replace(tmp, path)

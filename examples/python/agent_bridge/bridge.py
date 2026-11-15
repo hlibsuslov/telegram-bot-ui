@@ -29,7 +29,7 @@ from .intake import FixtureSource, Intake
 from .redact import Redactor
 from .security import Allowlist, injection_signals
 from .store import JsonStore
-from .transport import UPLOAD_LIMIT, file_meta
+from .transport import UPLOAD_LIMIT, file_meta, read_file
 
 # Files that hold credentials by convention; refused even when the content scan is skipped.
 SECRET_FILE_NAMES = re.compile(
@@ -387,7 +387,7 @@ class AgentBridge:
         if kind == "reply" and not event.get("forwarded"):     # forwarded text never answers
             rec = self.book.find_by_message(event["chat"], event["reply_to_message_id"])
             if rec is not None:
-                res = self.book.resolve_text(rec, event["from"], event["text"])
+                res = self.book.resolve_text(rec, event["from"], self.redactor.text(event["text"]))  # never persist a pasted secret
                 if res.accepted:
                     self._close_card(res.record)
                     return
@@ -488,14 +488,16 @@ class AgentBridge:
         chat = chat_id or self.cfg.chat_id
         if chat != self.cfg.chat_id and not allow_group:
             raise PermissionError("files go to the operator's private chat; pass allow_group for another chat")
-        meta = file_meta(path)
+        if os.path.getsize(path) > UPLOAD_LIMIT:
+            raise ValueError("file exceeds the 50 MB bot upload limit; send a link or split it")
+        source = read_file(path)          # read once: the scanned bytes are the uploaded bytes
+        meta = file_meta(source)
         if meta["size"] > UPLOAD_LIMIT:
             raise ValueError("file exceeds the 50 MB bot upload limit; send a link or split it")
         if SECRET_FILE_NAMES.search(meta["name"]):   # applies even with scan=False
             raise PermissionError(f"refusing to upload {meta['name']}: secret-bearing file name")
         if scan:
-            with open(path, encoding="utf-8", errors="ignore") as fh:   # binary files are scanned too
-                findings = self.redactor.findings(fh.read())
+            findings = self.redactor.findings(source[1].decode("utf-8", errors="ignore"))  # binary too
             if findings:
                 raise PermissionError(f"refusing to upload {meta['name']}: possible secrets ({', '.join(findings)})")
         params: dict[str, Any] = {**self._addr(chat, thread_id), "document": "attach://document"}
@@ -507,7 +509,7 @@ class AgentBridge:
         if upload is None:
             msg = call_with_policy(self.transport, "sendDocument", params, sleep=self.sleep, log=self._log)
         else:
-            msg = upload("sendDocument", params, {"document": path})
+            msg = upload("sendDocument", params, {"document": source})
         return {"ok": True, "message_id": msg["message_id"], **meta}
 
     def report(self, *, data: dict[str, Any] | None = None, markdown: str | None = None,

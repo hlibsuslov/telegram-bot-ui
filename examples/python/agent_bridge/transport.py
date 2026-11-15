@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import socket
 import urllib.error
 import urllib.request
@@ -25,10 +26,18 @@ from tgkit.transport import FakeTransport, HttpTransport
 UPLOAD_LIMIT = 50 * 1024 * 1024      # sendDocument: "files of any type of up to 50 MB" (Bot API, 2026-11-15)
 
 
-def file_meta(path: str) -> dict[str, Any]:
-    with open(path, "rb") as fh:
-        data = fh.read()
-    return {"name": os.path.basename(path), "size": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+def read_file(source: "str | tuple[str, bytes]") -> tuple[str, bytes]:
+    """A path, or (name, bytes) already read once by the caller (scan and upload
+    must use the same bytes, or a swapped file could be sent unscanned)."""
+    if isinstance(source, tuple):
+        return source
+    with open(source, "rb") as fh:
+        return os.path.basename(source), fh.read()
+
+
+def file_meta(source: "str | tuple[str, bytes]") -> dict[str, Any]:
+    name, data = read_file(source)
+    return {"name": name, "size": len(data), "sha256": hashlib.sha256(data).hexdigest()}
 
 
 class DryRunTransport(FakeTransport):
@@ -36,7 +45,7 @@ class DryRunTransport(FakeTransport):
         super().__init__()
         self.uploads: list[dict[str, Any]] = []
 
-    def upload(self, method: str, params: dict[str, Any], files: dict[str, str]) -> Any:
+    def upload(self, method: str, params: dict[str, Any], files: dict[str, Any]) -> Any:
         self.uploads.append({"method": method, **{k: file_meta(p) for k, p in files.items()}})
         return self.call(method, params)
 
@@ -45,16 +54,15 @@ class LiveTransport(HttpTransport):
     def __repr__(self) -> str:
         return "LiveTransport(<token hidden>)"
 
-    def upload(self, method: str, params: dict[str, Any], files: dict[str, str]) -> Any:
+    def upload(self, method: str, params: dict[str, Any], files: dict[str, Any]) -> Any:
         boundary = uuid.uuid4().hex
         parts: list[bytes] = []
         for k, v in params.items():
             value = v if isinstance(v, str) else json.dumps(v, ensure_ascii=False)
             parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{value}\r\n'.encode())
-        for field, path in files.items():
-            with open(path, "rb") as fh:
-                data = fh.read()
-            name = os.path.basename(path).replace('"', "_")
+        for field, source in files.items():
+            name, data = read_file(source)
+            name = re.sub(r'["\r\n]', "_", name)    # no header injection through the file name
             parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{field}"; filename="{name}"\r\n'
                          f"Content-Type: application/octet-stream\r\n\r\n".encode() + data + b"\r\n")
         body = b"".join(parts) + f"--{boundary}--\r\n".encode()

@@ -250,7 +250,7 @@ python scripts/emoji_packs.py capture                # how to collect real custo
 - Host entry files are generated from `SKILL.md` and one routing table by
   `scripts/build_adapters.py`; CI fails when they drift.
 - Offline Python and TypeScript test suites run on Linux and Windows in CI, plus contract tests
-  against the real aiogram and grammY packages: 390 Python and 31 TypeScript tests.
+  against the real aiogram and grammY packages: 393 Python and 31 TypeScript tests.
 - **Agent evals are prepared, not yet run.** [`evals/`](evals/) holds activation prompts (English
   and Russian, with and without API names) and behavioural tasks with pass criteria for every
   capability; `scripts/run_evals.py` validates them and can execute the activation set against

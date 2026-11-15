@@ -17,7 +17,8 @@ from typing import Any, Iterable
 MASK = "[REDACTED]"
 
 PATTERNS: list[tuple[str, re.Pattern[str]]] = [
-    ("bot_token", re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b")),
+    # no leading \b: the token also hides inside api.telegram.org/bot<id>:<secret> URLs
+    ("bot_token", re.compile(r"(?<!\d)\d{6,12}:[A-Za-z0-9_-]{30,}")),
     ("private_key", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----.*?-----END [A-Z ]*PRIVATE KEY-----", re.S)),
     ("api_key", re.compile(r"\b(?:sk|pk|rk)-[A-Za-z0-9_-]{16,}\b")),
     ("github_token", re.compile(r"\bgh[pousr]_[A-Za-z0-9]{20,}\b")),

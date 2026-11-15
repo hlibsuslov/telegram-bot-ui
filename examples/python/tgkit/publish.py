@@ -25,6 +25,7 @@ import hashlib
 import json
 import os
 import re
+import tempfile
 import time
 from dataclasses import dataclass, field
 from typing import Any, Callable
@@ -1139,8 +1140,10 @@ class Ledger:
     def _save(self) -> None:
         if not self.path:
             return
-        tmp = self.path + ".tmp"
-        with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
+        # exclusive random temp file: a planted `<ledger>.tmp` link can't redirect the write
+        fd, tmp = tempfile.mkstemp(prefix=".ledger-", suffix=".tmp",
+                                   dir=os.path.dirname(os.path.abspath(self.path)))
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(self.records, fh, ensure_ascii=False, indent=1, sort_keys=True)
         os.replace(tmp, self.path)
 

@@ -78,6 +78,10 @@ class ToolHost:
         self.root = os.path.realpath(files_root)
 
     def call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
+        """Every tool result is redacted before it reaches the MCP host."""
+        return self.b.redactor.obj(self._call(name, args))
+
+    def _call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         a = args or {}
         if name == "telegram_notify":
             return self.b.notify(str(a["text"]), silent=bool(a.get("silent")))

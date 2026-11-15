@@ -169,7 +169,12 @@ def _stderr_log(event: dict[str, Any]) -> None:
     print(json.dumps({"log": event}, ensure_ascii=False), file=sys.stderr)
 
 
+_OUTPUT_REDACTOR: Redactor | None = None    # set once the bridge exists; every result passes it
+
+
 def _out(obj: Any) -> None:
+    if _OUTPUT_REDACTOR is not None:
+        obj = _OUTPUT_REDACTOR.obj(obj)
     print(json.dumps(obj, ensure_ascii=False))
 
 
@@ -188,6 +193,8 @@ def run(argv: list[str] | None = None, *, environ: dict[str, str] | None = None,
         from .payloads import main as export_main
         return export_main(check=args.check)
     bridge, tr = build(args, environ, transport)
+    global _OUTPUT_REDACTOR
+    _OUTPUT_REDACTOR = bridge.redactor
     try:
         code = _dispatch(args, bridge)
     except (PermissionError, ValueError, KeyError, FileNotFoundError) as err:
