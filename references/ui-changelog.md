@@ -5,6 +5,11 @@ was read from the official changelog
 (https://core.telegram.org/bots/api-changelog) and the object pages on
 2026-08-05 (≤ 10.2) and 2026-11-12 (10.3, 10.4). Verification dates and quotes: `official-sources.md`.
 
+Re-checked 2026-11-15: 10.4 is still the newest release. The non-UI history of
+every release from 9.0 (business accounts, payments, polls, gifts, chat management)
+is in `api-catalog.md#what-each-release-added-90--104`; any symbol's history:
+`py -3 scripts/tg_api_lookup.py since <name>`.
+
 **Before using anything here, confirm two things:** (1) Telegram hasn't shipped a
 newer version — re-read the changelog; (2) the project's SDK actually exposes
 the field (`sdk-compatibility.md`). A feature existing in the Bot API is not the

@@ -137,3 +137,34 @@ Adapters: `examples/python/sdk_aiogram/adapter.py`, `examples/ts/sdk-grammy/adap
 each with a REMOVE WHEN condition. SDK status changes quickly: re-run the checks before relying on
 this table.
 
+## Release-note check (2026-11-15)
+
+Read from each project's GitHub releases / README and the package registries on
+2026-11-15 (Bot API 10.4 was released 2026-11-09). "Declared" = what the project says
+it supports; it was **not** re-tested here unless the table above has a test.
+
+| SDK | Latest release (date) | Declared Bot API | 10.3 | 10.4 | Source |
+|---|---|---|---|---|---|
+| aiogram (Python) | 3.31.0 (2026-08-25) | 10.3 | yes | **no release yet** | GitHub release notes, PyPI |
+| python-telegram-bot (Python) | 22.8 (2026-06-12) | 10.0 | no | no | README badge, PyPI |
+| pyTelegramBotAPI (Python) | 4.37.1 (2026-10-17); 4.37.0 notes "Bot API support bumped up to v.10.3" | 10.3 | yes (declared) | no | GitHub release notes, PyPI |
+| grammY (TypeScript) | 1.46.0 (2026-08-26) | 10.3 | yes | **no release yet** | GitHub release notes, npm |
+| Telegraf (TypeScript) | 4.16.3 (2024-02-29) | 7.1 | no | no | README, npm — unmaintained for new API versions |
+| go-telegram/bot (Go) | 1.28.0 (2026-11-09) | 10.4 | yes (declared) | yes (declared) | README, GitHub release notes; not tested here |
+| tdlib/telegram-bot-api (server) | commit "Update version to 10.4." (2026-11-09) | 10.4 | yes | yes | GitHub commits |
+
+Consequences:
+
+- On every Python/TypeScript SDK above, 10.4 features (widgets, `widget_query`,
+  `getUniqueGift`, chat share themes, TON wallet types, ephemeral callback replies
+  without `receiver_user_id`) need the raw-call adapters
+  (`examples/python/sdk_aiogram/adapter.py`, `examples/ts/sdk-grammy/adapter.ts`) and
+  an explicit `allowed_updates` list.
+- python-telegram-bot and Telegraf also lack 10.1-10.3 (rich messages, ephemeral
+  messages, Stop for drafts): use raw requests for them and check payloads with
+  `py -3 scripts/validate_payload.py`.
+- A self-hosted Bot API server built from tdlib/telegram-bot-api after 2026-11-09
+  speaks 10.4; older builds reject the new methods.
+- To find exactly which methods/fields a given SDK version lacks, compare its
+  generated types with `data/bot-api/catalog.json` (`py -3 scripts/tg_api_lookup.py
+  version 10.4` lists the new symbols).
