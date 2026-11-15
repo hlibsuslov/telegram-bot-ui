@@ -6,6 +6,7 @@ getStickerSet(name) through scripts/emoji_packs.py resolve.
 """
 from __future__ import annotations
 
+import importlib.util
 import json
 import os
 
@@ -33,3 +34,12 @@ def sticker_lookup(names: list[str]):
         assert len(params["custom_emoji_ids"]) <= 200
         return [by_id[i] for i in params["custom_emoji_ids"] if i in by_id]
     return respond
+
+
+def audit_map(doc: dict, **kw):
+    """scripts/audit_icons.py audit() without putting scripts/ on sys.path."""
+    path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(HERE))), "scripts", "audit_icons.py")
+    spec = importlib.util.spec_from_file_location("_audit_icons", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.audit(doc, **kw)
