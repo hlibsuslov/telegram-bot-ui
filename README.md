@@ -221,7 +221,21 @@ telegram-bot-ui skill."*
 
 ## 🍳 Recipes and examples
 
-57 end-to-end recipes plus mini-recipes, ready to adapt and runnable offline — no bot token.
+65 numbered recipes plus mini-recipes. The eight new product journeys (R80–R87) are
+Python offline models with callback demos; their production integrations are explicitly pending.
+
+Agents search a catalog of 40 product families (`recipes/use-cases.json`), reuse or compose
+existing helpers, and write only the missing behavior in the user's project
+([extension guide](references/example-library.md), [contributing](CONTRIBUTING.md)).
+
+```bash
+python scripts/example_library.py --query "event waitlist" --json
+python examples/python/recipes/r80_87_product_journeys.py --scenario R81
+```
+
+New journeys cover lead intake, events/waitlists, reminders, file jobs, moderation review,
+feedback, loyalty points and service queues. The catalog marks each family as an existing
+example, a composition or planned work.
 
 | Recipe | You get |
 |---|---|
@@ -282,7 +296,7 @@ All offline, standard library, and none of them needs a bot token.
 |---|---|
 | **Bot API** | verified against the official **Bot API 10.4** docs on **2026-11-15** — sources and dates in [`references/official-sources.md`](references/official-sources.md) |
 | **Hosts** | skill paths, subagent and plugin manifests and rule files verified against each host's docs on **2026-11-15** ([`docs/hosts.md`](docs/hosts.md)); the Claude Code plugin passes `claude plugin validate --strict` |
-| **Tests** | **393 Python** and **31 TypeScript** tests run offline on Linux and Windows in CI, plus contract tests against the real aiogram and grammY packages |
+| **Tests** | **410 Python** and **31 TypeScript** tests run offline on Linux and Windows in CI, plus contract tests against the real aiogram and grammY packages |
 | **Drift** | host entry files are generated from `SKILL.md` and one routing table by `scripts/build_adapters.py`; CI fails when they drift |
 
 What is **not** verified yet, said plainly:

@@ -1550,6 +1550,198 @@
       ]
     },
     {
+      "id": "R80",
+      "title": "Lead intake with review and contact consent",
+      "doc": "recipes/80-lead-intake.md",
+      "registry": [],
+      "symbols": [
+        "sendMessage",
+        "editMessageText",
+        "answerCallbackQuery"
+      ],
+      "versions": [],
+      "contexts": "Private chat callback UI; domain models offline only; backend integration not implemented.",
+      "payload": "examples/payloads/r80-journey.json",
+      "fixture": null,
+      "python": "examples/python/recipes/r80_87_product_journeys.py",
+      "typescript": null,
+      "tasks": [
+        "бот заявки в CRM с согласием",
+        "Collect sales leads with a review screen"
+      ],
+      "evidence": "offline-model",
+      "command": "python examples/python/recipes/r80_87_product_journeys.py --scenario R80",
+      "check": "tests/test_journey_library.py::test_lead_consent_snapshot_and_owner"
+    },
+    {
+      "id": "R81",
+      "title": "Event registration, waitlist and staff check-in",
+      "doc": "recipes/81-event-waitlist.md",
+      "registry": [],
+      "symbols": [
+        "sendMessage",
+        "editMessageText",
+        "answerCallbackQuery"
+      ],
+      "versions": [],
+      "contexts": "Private chat callback UI; domain models offline only; backend integration not implemented.",
+      "payload": "examples/payloads/r81-journey.json",
+      "fixture": null,
+      "python": "examples/python/recipes/r80_87_product_journeys.py",
+      "typescript": null,
+      "tasks": [
+        "регистрация на мероприятие с листом ожидания",
+        "An event bot with capacity and check-in"
+      ],
+      "evidence": "offline-model",
+      "command": "python examples/python/recipes/r80_87_product_journeys.py --scenario R81",
+      "check": "tests/test_journey_library.py::test_event_capacity_promotion_and_checkin"
+    },
+    {
+      "id": "R82",
+      "title": "Personal reminders with rescheduling and cancellation",
+      "doc": "recipes/82-personal-reminders.md",
+      "registry": [],
+      "symbols": [
+        "sendMessage",
+        "editMessageText",
+        "answerCallbackQuery"
+      ],
+      "versions": [],
+      "contexts": "Private chat callback UI; domain models offline only; backend integration not implemented.",
+      "payload": "examples/payloads/r82-journey.json",
+      "fixture": null,
+      "python": "examples/python/recipes/r80_87_product_journeys.py",
+      "typescript": null,
+      "tasks": [
+        "личные напоминания отложить отменить",
+        "Reschedule a reminder without duplicate delivery"
+      ],
+      "evidence": "offline-model",
+      "command": "python examples/python/recipes/r80_87_product_journeys.py --scenario R82",
+      "check": "tests/test_journey_library.py::test_reminder_timezone_cancel_and_lease"
+    },
+    {
+      "id": "R83",
+      "title": "File processing with cancellation and late-result protection",
+      "doc": "recipes/83-file-processing.md",
+      "registry": [],
+      "symbols": [
+        "sendMessage",
+        "editMessageText",
+        "answerCallbackQuery"
+      ],
+      "versions": [],
+      "contexts": "Private chat callback UI; domain models offline only; backend integration not implemented.",
+      "payload": "examples/payloads/r83-journey.json",
+      "fixture": null,
+      "python": "examples/python/recipes/r80_87_product_journeys.py",
+      "typescript": null,
+      "tasks": [
+        "PDF конвертация с отменой",
+        "File processing bot with worker cancellation"
+      ],
+      "evidence": "offline-model",
+      "command": "python examples/python/recipes/r80_87_product_journeys.py --scenario R83",
+      "check": "tests/test_journey_library.py::test_file_job_late_completion_and_failure"
+    },
+    {
+      "id": "R84",
+      "title": "Moderation report review with scoped staff decisions",
+      "doc": "recipes/84-moderation-review.md",
+      "registry": [],
+      "symbols": [
+        "sendMessage",
+        "editMessageText",
+        "answerCallbackQuery"
+      ],
+      "versions": [],
+      "contexts": "Private chat callback UI; domain models offline only; backend integration not implemented.",
+      "payload": "examples/payloads/r84-journey.json",
+      "fixture": null,
+      "python": "examples/python/recipes/r80_87_product_journeys.py",
+      "typescript": null,
+      "tasks": [
+        "модерация жалобы очередь проверки",
+        "Moderators review reported messages"
+      ],
+      "evidence": "offline-model",
+      "command": "python examples/python/recipes/r80_87_product_journeys.py --scenario R84",
+      "check": "tests/test_journey_library.py::test_moderation_scope_and_revision"
+    },
+    {
+      "id": "R85",
+      "title": "Identified feedback with required answers and withdrawal",
+      "doc": "recipes/85-feedback-survey.md",
+      "registry": [],
+      "symbols": [
+        "sendMessage",
+        "editMessageText",
+        "answerCallbackQuery"
+      ],
+      "versions": [],
+      "contexts": "Private chat callback UI; domain models offline only; backend integration not implemented.",
+      "payload": "examples/payloads/r85-journey.json",
+      "fixture": null,
+      "python": "examples/python/recipes/r80_87_product_journeys.py",
+      "typescript": null,
+      "tasks": [
+        "опрос отзывы с удалением ответа",
+        "Feedback survey with optional comment and withdrawal"
+      ],
+      "evidence": "offline-model",
+      "command": "python examples/python/recipes/r80_87_product_journeys.py --scenario R85",
+      "check": "tests/test_journey_library.py::test_survey_optional_comment_and_withdrawal"
+    },
+    {
+      "id": "R86",
+      "title": "Custom loyalty points with replay-safe earning and redemption",
+      "doc": "recipes/86-loyalty-points.md",
+      "registry": [],
+      "symbols": [
+        "sendMessage",
+        "editMessageText",
+        "answerCallbackQuery"
+      ],
+      "versions": [],
+      "contexts": "Private chat callback UI; domain models offline only; backend integration not implemented.",
+      "payload": "examples/payloads/r86-journey.json",
+      "fixture": null,
+      "python": "examples/python/recipes/r80_87_product_journeys.py",
+      "typescript": null,
+      "tasks": [
+        "бонусная программа баллы за заказ",
+        "Loyalty points without duplicate credits"
+      ],
+      "evidence": "offline-model",
+      "command": "python examples/python/recipes/r80_87_product_journeys.py --scenario R86",
+      "check": "tests/test_journey_library.py::test_loyalty_replay_conflict_and_balance"
+    },
+    {
+      "id": "R87",
+      "title": "Service queue with private tickets and staff advancement",
+      "doc": "recipes/87-service-queue.md",
+      "registry": [],
+      "symbols": [
+        "sendMessage",
+        "editMessageText",
+        "answerCallbackQuery"
+      ],
+      "versions": [],
+      "contexts": "Private chat callback UI; domain models offline only; backend integration not implemented.",
+      "payload": "examples/payloads/r87-journey.json",
+      "fixture": null,
+      "python": "examples/python/recipes/r80_87_product_journeys.py",
+      "typescript": null,
+      "tasks": [
+        "электронная очередь талон",
+        "Service queue with staff call-next"
+      ],
+      "evidence": "offline-model",
+      "command": "python examples/python/recipes/r80_87_product_journeys.py --scenario R87",
+      "check": "tests/test_journey_library.py::test_queue_identity_and_staff_advancement"
+    },
+    {
       "id": "MINI",
       "title": "Specialized modules",
       "doc": "recipes/mini-recipes.md",

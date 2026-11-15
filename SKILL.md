@@ -56,7 +56,7 @@ pipelines, Mini App front-end internals. Microsoft `.rtf` files.
 | The user wants | Start here | Recipes |
 |---|---|---|
 | Better screens, keyboards, wording, feedback in an existing bot | core workflow below, `references/navigation-and-flows.md` | 01-09 |
-| "Build me a bot for X" (shop, support, booking, learning, community…) | `references/use-case-playbooks.md` | 20-29, 60-64 |
+| "Build me a bot for X" (shop, support, booking, learning, community…) | `references/example-library.md`, `recipes/use-cases.json`, `references/use-case-playbooks.md` | 20-29, 60-64, 80-87 |
 | Posts in a channel, digests, mailings, editorial approval | `references/publishing-pipeline.md`, `references/channel-post-design.md` | 30-39 |
 | The agent itself reports, asks, waits for approval over Telegram | `references/agent-operated-bots.md`, `references/agent-bot-security.md` | 40-49 |
 | An interactive card / mini page inside a message | `references/widget-patterns.md`, `references/widget-design-system.md` | 05-07, 50-56 |
@@ -68,6 +68,13 @@ Index of all recipes by task, symbol, version and context: `recipes/README.md`
 `recipes/registry.json`, `references/bot-api-10.3-10.4.md`.
 
 ## Initiative rule
+
+For a new feature or product, **search the example library before writing new flow
+code** (`scripts/example_library.py --query "user intent" --json`, from the skill
+root). Read the closest recipe and its failure paths; reuse, compose, or add only the
+missing behavior in the user's project, preferring the project's own helpers. Gaps are
+listed in `recipes/use-cases.json`; R80–R87 are offline Python models, not production
+integrations. Details: `references/example-library.md`.
 
 When building or seriously reworking a bot, a post pipeline or an agent's bot,
 check which current capabilities improve the requested scenarios and implement the

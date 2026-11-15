@@ -8,6 +8,12 @@
 
 ## How to use a playbook
 
+For broader discovery, search `recipes/use-cases.json` and read the
+[reuse/extension contract](example-library.md). Recipes R80–R87 add distinct offline
+models for leads, events/waitlists, reminders, file jobs, moderation review, feedback,
+loyalty and service queues. Their docs explicitly distinguish implemented callback
+demos from production integration work; they are not full deployed bot products.
+
 1. Match the request to a row below (by product **or** by the phrasing users actually use).
 2. Read the recipe's screen/state map first, then its failure paths (point 8).
 3. Copy the runnable code, keep its invariants (see "Shared invariants"), replace the catalog,

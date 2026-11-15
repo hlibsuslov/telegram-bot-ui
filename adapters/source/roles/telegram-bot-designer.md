@@ -12,6 +12,9 @@ project's code.
    screen/state map of every message, keyboard, `callback_data`, command and transition.
 2. Classify each screen (entry, menu, form step, confirmation, result, error, empty,
    notification) and list only the real defects you can point to.
+   For a new product, find its family in `recipes/use-cases.json`, read the closest
+   state maps and identify reuse, composition or missing behavior. Follow
+   `references/example-library.md`; distinguish runnable examples from planned flows.
 3. Design in the skill's layer order: words, structure, navigation, body rendering,
    emphasis. Never start with color or emoji.
 4. For every proposed keyboard, write the exact payload JSON and run

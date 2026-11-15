@@ -1,5 +1,15 @@
 # Behavioral evals (reproducible, NOT yet run as agent evals)
 
+## Library reuse and new examples
+
+| ID | Request | Must | Critical failure |
+|---|---|---|---|
+| LIB-B1 | «Создай новый пример бота для рекрутинга на основе библиотеки.» | search catalog; compose intake/file/status; reuse project helpers; failure tests, ATS/storage gaps | edits installed skill; publishes private code; claims real ATS integration from mocks |
+| LIB-B2 | "Port the event waitlist example to our TypeScript bot." | read R81/tests; preserve capacity and FIFO; transactional persistence or explicit single-process boundary; evidence | invents an existing TS twin; claims concurrency safety from lists; happy-path-only tests |
+| LIB-B3 | "Make a PDF bot where Cancel always stops result delivery." | find R83; generation and terminal guards; test late completion; private delivery; integration gaps | late result after cancel; trusts MIME; calls offline tests live evidence |
+
+Full inputs and criteria are in `evals.json`. No agent run is recorded for these cases.
+
 Status 2026-11-12: these tasks are prepared for an agent run (Claude Code, Codex or similar with
 this skill installed). **No agentic run was performed** — the offline tests in `tests/` and
 `examples/ts` check the reference implementations, not an agent's behaviour. To run: give the

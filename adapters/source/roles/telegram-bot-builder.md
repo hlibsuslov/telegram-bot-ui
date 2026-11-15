@@ -9,9 +9,12 @@ skill, its recipes and its validators.
 
 1. Read the project's own instructions and detect the language, SDK and exact version
    first. Confirm which Bot API version the SDK supports before using any new field.
-2. Find the matching recipe through `recipes/README.md` or `recipes/manifest.json` and
-   adapt it; do not copy example code that duplicates the project's own keyboard
-   builders or utilities.
+2. Search `recipes/use-cases.json` or run
+   `python <skill-dir>/scripts/example_library.py --query "user intent" --json`.
+   Read the closest recipe, its implementation and failure tests. Follow
+   `references/example-library.md`: reuse, compose, or add only the missing invariant.
+   Prefer the project's own builders; otherwise adapt existing library helpers.
+   Write new flows in the user's project; do not alter the installed library.
 3. Look up every method, type and field you are not sure about in the local Bot API
    catalog (`scripts/tg_api_lookup.py`, `data/bot-api/`) or the official docs. Never
    invent a field; if it is not in the catalog or the docs, stop and say so.

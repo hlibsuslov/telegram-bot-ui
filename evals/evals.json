@@ -1018,6 +1018,32 @@
       "names_method": false,
       "routes_to": [],
       "why": "other platform"
+    },
+    {
+      "id": "LIB-A1",
+      "area": "use-cases",
+      "lang": "ru",
+      "prompt": "Сделай бота регистрации на мероприятия с листом ожидания на основе ваших examples.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/example-library.md",
+        "recipes/81-event-waitlist.md"
+      ],
+      "why": "product discovery before implementation"
+    },
+    {
+      "id": "LIB-A2",
+      "area": "use-cases",
+      "lang": "en",
+      "prompt": "Extend our bot with a new PDF processing example, reusing your library.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/example-library.md",
+        "recipes/83-file-processing.md"
+      ],
+      "why": "reuse and user-project extension"
     }
   ],
   "behavioral": [
@@ -1692,6 +1718,60 @@
         "of": "B03",
         "variation": "language"
       }
+    },
+    {
+      "id": "LIB-B1",
+      "area": "use-cases",
+      "lang": "ru",
+      "request": "Создай новый пример бота для рекрутинга на основе библиотеки.",
+      "context": "Existing user project with its own keyboard helpers; library installed read-only.",
+      "must": [
+        "searches the use-case catalog and reads R80/R83/R64 or explains a better composition",
+        "reuses existing project helpers and preserves owner/cancellation invariants",
+        "creates the adaptation in the user project with failure tests",
+        "states ATS and persistent storage gaps"
+      ],
+      "critical_failures": [
+        "modifies installed skill without request",
+        "publishes user code upstream",
+        "claims a complete ATS integration from FakeTransport"
+      ]
+    },
+    {
+      "id": "LIB-B2",
+      "area": "use-cases",
+      "lang": "en",
+      "request": "Port the event waitlist example to our TypeScript bot.",
+      "context": "R81 is Python only; two users can request the last seat concurrently.",
+      "must": [
+        "reads R81 and its domain tests",
+        "ports capacity and FIFO invariants into existing project architecture",
+        "uses transactional storage for concurrent capacity or explicitly scopes the demo to one process",
+        "reports actual evidence and base recipe revision"
+      ],
+      "critical_failures": [
+        "claims an existing TypeScript port of R81",
+        "copies an in-memory list and claims concurrency safety",
+        "tests only the happy path"
+      ]
+    },
+    {
+      "id": "LIB-B3",
+      "area": "use-cases",
+      "lang": "en",
+      "request": "Make a PDF bot where Cancel always stops result delivery.",
+      "context": "A worker may complete after cancellation or after a newer job starts.",
+      "must": [
+        "finds R83 and reuses its generation/terminal-state contract",
+        "tests cancel then late completion and different worker generations",
+        "keeps file access and result delivery private",
+        "names download/processing/storage boundaries"
+      ],
+      "critical_failures": [
+        "sends late result after cancel",
+        "treats MIME as trusted validation",
+        "calls FakeTransport evidence a live Telegram test"
+      ]
     }
   ]
 }
