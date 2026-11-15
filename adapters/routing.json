@@ -1,0 +1,107 @@
+{
+  "$comment": "Single source of truth for scripts/build_adapters.py. Edit this file and adapters/source/roles/*.md, then run `python scripts/build_adapters.py`. Paths that do not exist yet are skipped in indexes (llms.txt) but kept in role bodies, which tell the agent to say so instead of guessing.",
+  "skill": "telegram-bot-ui",
+  "display_name": "Telegram Bot UI",
+  "repository": "https://github.com/hlibsuslov/telegram-bot-ui",
+  "plugin": {
+    "version": "2.0.0",
+    "description": "Design, build, review and operate Telegram bots with the newest Bot API: bot screens and keyboards, streaming AI replies, HTML widgets, channel publishing, agent-operated bots and Bot API lookups. Bundles the telegram-bot-ui skill and five subagents.",
+    "author": "hlibsuslov",
+    "license": "MIT",
+    "keywords": ["telegram", "telegram-bot", "bot-api", "ui", "ux", "widgets", "channels", "agent-skills"],
+    "marketplace": "telegram-bot-ui",
+    "marketplace_description": "Marketplace for the telegram-bot-ui plugin."
+  },
+  "codex": {
+    "short_description": "Design, build and operate Telegram bots with the newest Bot API: screens, keyboards, streaming AI replies with Stop, private panels in groups, Rich Messages, HTML widgets and TON wallet flows, channel publishing with approval, agent-operated bots and Bot API lookups. Preserves callback_data, deep links, handlers and translations.",
+    "default_prompt": "Use $telegram-bot-ui to audit this Telegram bot's screens and propose fixes.",
+    "allow_implicit_invocation": true
+  },
+  "capabilities": [
+    {
+      "id": "ui",
+      "title": "Build and audit bot interfaces",
+      "summary": "texts, inline and reply keyboards, colored and disabled buttons, navigation, forms, streaming AI replies with Stop, ephemeral replies in groups, Rich Messages, tables, formatting, localization",
+      "docs": ["SKILL.md", "references/navigation-and-flows.md", "references/buttons-and-styles.md", "references/microcopy-and-labels.md", "references/format-selection.md", "recipes/README.md"]
+    },
+    {
+      "id": "use-cases",
+      "title": "Product flows and use cases",
+      "summary": "shops, support, AI assistants, trackers, communities: stale buttons, double submit, audience leaks",
+      "docs": ["references/use-case-playbooks.md", "references/bot-archetypes.md", "recipes/manifest.json"]
+    },
+    {
+      "id": "publishing",
+      "title": "Publish to Telegram channels",
+      "summary": "compose, validate, preview, approve, schedule and publish channel posts without double posting",
+      "docs": ["references/channel-post-design.md", "references/publishing-pipeline.md", "references/channels-and-broadcasting.md", "scripts/tg_post.py"]
+    },
+    {
+      "id": "agent-ops",
+      "title": "Operate as an agent through a bot",
+      "summary": "allowlisted operators, approval-bound actions, prompt injection in inbound messages, MCP bridge",
+      "docs": ["references/agent-operated-bots.md", "examples/python/agent_bridge/", "examples/mcp/telegram-bridge/"]
+    },
+    {
+      "id": "widgets",
+      "title": "Build HTML widgets",
+      "summary": "Bot API 10.4 widgets: size limit, production context, caption and text fallback, widget_query, shared widgets, TON wallet",
+      "docs": ["references/widgets.md", "references/widget-design-system.md", "references/widget-patterns.md", "scripts/build_widget.py", "scripts/preview_widget.py", "scripts/validate_widget.py"]
+    },
+    {
+      "id": "api-lookup",
+      "title": "Look up the whole Bot API",
+      "summary": "methods, types and fields from a local catalog; validate a payload before sending; never invent a field",
+      "docs": ["data/bot-api/", "scripts/tg_api_lookup.py", "scripts/validate_payload.py", "references/bot-api-10.3-10.4.md", "references/official-sources.md"]
+    }
+  ],
+  "portable": {
+    "exclude_sections": ["Which reference to read"]
+  },
+  "llms": {
+    "sections": [
+      {"title": "Entry point", "globs": ["SKILL.md"]},
+      {"title": "References", "globs": ["references/*.md"]},
+      {"title": "Recipes", "globs": ["recipes/*.md", "recipes/manifest.json", "recipes/registry.json"]},
+      {"title": "Tools", "globs": ["scripts/*.py"]},
+      {"title": "Optional", "globs": ["evals/*.md", "docs/*.md", "adapters/portable/*.md"]}
+    ]
+  },
+  "roles": [
+    {
+      "name": "telegram-bot-designer",
+      "capabilities": ["ui", "use-cases"],
+      "description": "Audits and designs Telegram bot screens: builds the screen/state map, finds real UX defects, and proposes exact texts, keyboards and navigation using the telegram-bot-ui skill. Use for \"review this bot's menu\", \"redesign the onboarding\", \"why does the bot feel confusing\". Read-only: proposes, never edits code.",
+      "tools": ["Read", "Grep", "Glob", "Bash", "Skill"],
+      "color": "blue"
+    },
+    {
+      "name": "telegram-bot-builder",
+      "capabilities": ["ui", "use-cases", "api-lookup", "widgets"],
+      "description": "Implements Telegram bot features from the telegram-bot-ui recipes and validators: menus, forms, streaming replies with Stop, ephemeral panels, Rich Messages, widgets, SDK adapters for missing Bot API methods. Use when the design is agreed and code must change, with tests.",
+      "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill"],
+      "color": "green"
+    },
+    {
+      "name": "telegram-publisher",
+      "capabilities": ["publishing", "api-lookup"],
+      "description": "Composes, validates, previews and publishes Telegram channel posts through the telegram-bot-ui publishing pipeline and scripts/tg_post.py, with explicit human approval before every publish and no double posts. Use for \"post this to our channel\", \"schedule the weekly digest\", \"fix how our channel posts look\".",
+      "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill"],
+      "color": "orange"
+    },
+    {
+      "name": "telegram-widget-builder",
+      "capabilities": ["widgets"],
+      "description": "Designs and builds Bot API 10.4 HTML widgets with the telegram-bot-ui widget design system, build and preview tools and the size validator: live cards, shared polls, tickers, wallet flows. Use for \"make the order status an interactive card\" or \"build a widget\".",
+      "tools": ["Read", "Grep", "Glob", "Edit", "Write", "Bash", "Skill"],
+      "color": "purple"
+    },
+    {
+      "name": "telegram-bot-reviewer",
+      "capabilities": ["ui", "publishing", "agent-ops", "widgets", "api-lookup"],
+      "description": "Reviews a diff of a Telegram bot against the telegram-bot-ui invariants: one action per button, preserved callback_data, audience safety, single finalization, widget limits, publishing approval, agent allowlists and injection handling, invented Bot API fields. Read-only; reports findings with file:line and the invariant broken.",
+      "tools": ["Read", "Grep", "Glob", "Bash", "Skill"],
+      "color": "red"
+    }
+  ]
+}
