@@ -37,9 +37,17 @@ Codex (https://learn.chatgpt.com/docs/hooks, config reference)
 from __future__ import annotations
 
 import os
+import unicodedata
 from typing import Any
 
 MAX_SUMMARY = 600
+MAX_DETAILS = 3000
+
+
+def _visible(text: str) -> str:
+    """Show invisible format characters (bidi overrides, zero-width) as escapes so the
+    operator sees what will actually run, not a reordered or hidden version."""
+    return "".join(f"\\u{ord(ch):04x}" if unicodedata.category(ch) == "Cf" else ch for ch in str(text))
 
 
 def _project(payload: dict[str, Any]) -> str:
@@ -68,11 +76,18 @@ def stop_text(payload: dict[str, Any]) -> str | None:
 def permission_summary(payload: dict[str, Any]) -> tuple[str, str]:
     tool = str(payload.get("tool_name") or "tool")
     inp = payload.get("tool_input") or {}
-    what = inp.get("command") or inp.get("file_path") or inp.get("url") or ""
-    desc = inp.get("description") or ""
+    what = _visible(inp.get("command") or inp.get("file_path") or inp.get("url") or "")
+    desc = _visible(inp.get("description") or "")
     summary = f"{tool} in {_project(payload)}: {_clip(what, 300)}" + (f"\n{_clip(desc, 200)}" if desc else "")
-    details = _clip(str(inp), 3000)
+    details = _clip(_visible(str(inp)), MAX_DETAILS)
     return summary, details
+
+
+def permission_reviewable(payload: dict[str, Any]) -> bool:
+    """False when the full request does not fit the Details view: approving a request
+    whose tail the operator never saw is not an approval, so it goes back to the
+    host's local prompt instead of Telegram."""
+    return len(_visible(str(payload.get("tool_input") or {}))) <= MAX_DETAILS
 
 
 def permission_output(decision: str | None, reason: str | None = None) -> dict[str, Any]:
@@ -92,4 +107,5 @@ def codex_notify_text(payload: dict[str, Any]) -> str:
     return f"Codex: {kind}\n{_clip(last)}".strip()
 
 
-__all__ = ["notification_text", "stop_text", "permission_summary", "permission_output", "codex_notify_text"]
+__all__ = ["notification_text", "stop_text", "permission_summary", "permission_reviewable",
+           "permission_output", "codex_notify_text"]

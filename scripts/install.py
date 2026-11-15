@@ -124,7 +124,21 @@ class Installer:
             os.rmdir(folder)
             folder = os.path.dirname(folder)
 
+    def check_target(self, path: str) -> None:
+        """Refuse to write through links: a cloned project could ship
+        `AGENTS.md -> ~/.bashrc` or a linked `.claude/` folder to make the installer
+        overwrite files outside it. Project paths must resolve inside the project;
+        no target file may itself be a link."""
+        if os.path.islink(path):
+            raise SystemExit(f"refusing to write through a link: {path}")
+        project = os.path.realpath(self.project)
+        if os.path.abspath(path).startswith(os.path.abspath(self.project) + os.sep):
+            real = os.path.realpath(path)
+            if os.path.commonpath([real, project]) != project:
+                raise SystemExit(f"refusing to write outside the project: {path} -> {real}")
+
     def write_text(self, path: str, content: str) -> None:
+        self.check_target(path)
         if not self.dry_run:
             os.makedirs(os.path.dirname(path), exist_ok=True)
             with open(path, "w", encoding="utf-8", newline="\n") as fh:

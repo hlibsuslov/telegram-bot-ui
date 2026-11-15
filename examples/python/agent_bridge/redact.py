@@ -24,7 +24,10 @@ PATTERNS: list[tuple[str, re.Pattern[str]]] = [
     ("aws_key", re.compile(r"\bAKIA[0-9A-Z]{16}\b")),
     ("slack_token", re.compile(r"\bxox[abprs]-[A-Za-z0-9-]{10,}\b")),
     ("jwt", re.compile(r"\beyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\b")),
-    ("assignment", re.compile(r"(?i)\b(password|passwd|secret|token|api[_-]?key)\b(\s*[:=]\s*)(['\"]?)[^\s'\"]{4,}\3")),
+    # `\w*` around the keyword so `.env` names such as OPENAI_API_KEY or DB_PASSWORD match too
+    ("assignment", re.compile(
+        r"(?i)\b(\w*(?:password|passwd|secret|token|api[_-]?key)\w*)(\s*[:=]\s*)(['\"]?)[^\s'\"]{4,}\3")),
+    ("url_credentials", re.compile(r"(?i)\b([a-z][a-z0-9+.-]*://[^\s:/@]+:)([^\s@/]{3,})(@)")),
 ]
 
 
@@ -45,6 +48,8 @@ class Redactor:
         for name, rx in PATTERNS:
             if name == "assignment":
                 value = rx.sub(lambda m: f"{m.group(1)}{m.group(2)}{MASK}", value)
+            elif name == "url_credentials":
+                value = rx.sub(lambda m: f"{m.group(1)}{MASK}{m.group(3)}", value)
             else:
                 value = rx.sub(MASK, value)
         return value

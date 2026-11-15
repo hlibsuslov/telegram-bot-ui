@@ -13,6 +13,7 @@ updates come from fixtures, so a 15-minute timeout takes microseconds.
 from __future__ import annotations
 
 import os
+import re
 import tempfile
 import time
 from dataclasses import dataclass, field
@@ -29,6 +30,11 @@ from .redact import Redactor
 from .security import Allowlist, injection_signals
 from .store import JsonStore
 from .transport import UPLOAD_LIMIT, file_meta
+
+# Files that hold credentials by convention; refused even when the content scan is skipped.
+SECRET_FILE_NAMES = re.compile(
+    r"(?i)^(\.env(\..*)?|.*\.pem|.*\.key|.*\.p12|.*\.pfx|id_(rsa|dsa|ecdsa|ed25519)(\.pub)?|"
+    r"\.netrc|\.npmrc|\.pypirc|credentials(\.json)?|auth\.json)$")
 
 TEXTS = {
     "approval_title": "Approval needed",
@@ -480,17 +486,16 @@ class AgentBridge:
     def send_file(self, path: str, *, caption: str | None = None, chat_id: int | None = None,
                   thread_id: int | None = None, scan: bool = True, allow_group: bool = False) -> dict[str, Any]:
         chat = chat_id or self.cfg.chat_id
-        if chat != self.cfg.chat_id and chat < 0 and not allow_group:
-            raise PermissionError("files go to the operator's private chat; pass allow_group for a group")
+        if chat != self.cfg.chat_id and not allow_group:
+            raise PermissionError("files go to the operator's private chat; pass allow_group for another chat")
         meta = file_meta(path)
         if meta["size"] > UPLOAD_LIMIT:
             raise ValueError("file exceeds the 50 MB bot upload limit; send a link or split it")
+        if SECRET_FILE_NAMES.search(meta["name"]):   # applies even with scan=False
+            raise PermissionError(f"refusing to upload {meta['name']}: secret-bearing file name")
         if scan:
-            try:
-                with open(path, encoding="utf-8") as fh:
-                    findings = self.redactor.findings(fh.read())
-            except UnicodeDecodeError:
-                findings = []
+            with open(path, encoding="utf-8", errors="ignore") as fh:   # binary files are scanned too
+                findings = self.redactor.findings(fh.read())
             if findings:
                 raise PermissionError(f"refusing to upload {meta['name']}: possible secrets ({', '.join(findings)})")
         params: dict[str, Any] = {**self._addr(chat, thread_id), "document": "attach://document"}

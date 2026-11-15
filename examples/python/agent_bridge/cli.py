@@ -277,6 +277,10 @@ def _hook(args: argparse.Namespace, b: AgentBridge) -> int:
             _out({})                       # Codex Stop expects JSON on stdout when it exits 0
         return 0
     summary, details = hooks.permission_summary(payload)
+    if not hooks.permission_reviewable(payload):
+        b.notify(summary + "\nToo long to review here: answer it at the computer.")
+        _out(hooks.permission_output(None))   # no decision -> the host's local prompt
+        return 0
     res = b.approve(summary, details=details, ttl=args.ttl)
     decision = {"approved": "allow", "rejected": "deny"}.get(res["decision"])
     if decision is None and args.on_timeout == "deny":
