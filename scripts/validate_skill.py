@@ -9,6 +9,7 @@ Checks:
   * YAML front matter present and parseable.
   * `name` present, kebab-case, <= 64 chars, matches the directory name.
   * `description` present, non-empty, <= 1024 chars, not trivially short.
+  * `metadata.version`, when present, equals the plugin.json version.
   * Required operational sections exist in the body.
   * Body is reasonably compact (progressive disclosure).
   * No bot token / obvious secret is embedded.
@@ -257,6 +258,18 @@ def check_plugin(root: str, skill_name: str, agent_names: list[str],
             errors.append("marketplace.json: needs an entry for the plugin with source './'.")
 
 
+def check_metadata_version(root: str, fm: str, errors: list[str]) -> None:
+    """SKILL.md `metadata.version` (read by skill directories) must equal plugin.json `version`."""
+    block = re.search(r"(?m)^metadata:[ \t]*\n((?:[ \t]+\S.*(?:\n|$))*)", fm)
+    found = re.search(r"(?m)^[ \t]+version:[ \t]*[\"']?([^\"'\s]+)", block.group(1)) if block else None
+    if not found:
+        return
+    plugin = _load_json(root, ".claude-plugin/plugin.json", errors) or {}
+    if found.group(1) != plugin.get("version"):
+        errors.append(f"SKILL.md metadata.version {found.group(1)} != plugin.json version "
+                      f"{plugin.get('version')}; change both (adapters/routing.json drives plugin.json).")
+
+
 def check_packaging(root: str, skill_name: str, errors: list[str], warnings: list[str]) -> None:
     check_adapters(root, errors)
     names = check_claude_agents(root, errors, warnings)
@@ -333,6 +346,7 @@ def main() -> int:
         errors.append("possible bot token / secret embedded in SKILL.md.")
 
     check_packaging(root, name, errors, warnings)
+    check_metadata_version(root, fm or "", errors)
 
     for w in warnings:
         print(f"WARN: {w}")

@@ -1,20 +1,10 @@
 ---
 name: telegram-bot-ui
-description: >-
-  Design, build, publish with and operate Telegram bots on the newest Bot API:
-  texts, inline/reply keyboards, colored and disabled buttons, premium custom
-  emoji, force_reply forms, navigation, streaming AI replies with Stop, private
-  replies in groups, Rich Messages, HTML widgets with server handlers, TON
-  wallet, topics, formatting, localization; whole products (shop with Stars,
-  support, booking, onboarding, subscriptions, inline mode, business); channel
-  posts (approve, publish once, edit, cross-post, mailings); an agent working
-  through its own bot (notify, ask, approve, progress, hooks, MCP); offline
-  lookup of every Bot API method and field, plus the server side these need.
-  Use for "improve this bot's menu", "add a Stop button", "post this to our
-  channel", "message me in Telegram when the build finishes", "make a widget",
-  "use premium emoji", "can't parse entities", "does the Bot API have X".
-  Do NOT use for webhook hosting, databases or auth unrelated to Telegram
-  features, or Microsoft .rtf files.
+description: "Telegram bot UI/UX skill, updated for every Bot API release. Design, build, publish with and operate bots: texts, inline/reply keyboards, colored and disabled buttons, premium custom emoji, force_reply forms, navigation, streaming AI replies with Stop, private replies in groups, Rich Messages, HTML widgets with server handlers, TON wallet, topics, formatting, localization; whole products (shop with Stars, support, booking, onboarding, subscriptions, inline mode, business); channel posts (approve, publish once, edit, cross-post, mailings); an agent working via its own bot (notify, ask, approve, progress, hooks, MCP); offline lookup of every Bot API method and field, plus their server side. Use for 'improve this bot's menu', 'add a Stop button', 'post this to our channel', 'message me when the build is done', 'make a widget', 'use premium emoji', 'can't parse entities', 'does the Bot API have X'. Do NOT use for webhook hosting, databases or auth unrelated to Telegram, or Microsoft .rtf files."
+license: MIT
+metadata:
+  author: hlibsuslov
+  version: "2.0.0"
 ---
 
 # Telegram Bot UI
@@ -141,8 +131,9 @@ Do **not** write implementation code before steps 1-6 for the affected screens.
   code or `public_data`; always a caption and a text/button path.
 - **Custom emoji:** never invent a `custom_emoji_id`. Eligibility = Fragment usernames,
   or owner Premium for messages the bot sends directly to private, group and
-  supergroup chats (so **channels need Fragment**). All icons of a message or none;
-  one pack family per bot (`references/custom-emoji.md`).
+  supergroup chats (so **channels need Fragment**). An ineligible bot gets **no error**:
+  Telegram strips them silently, so verify by reading the sent message back. All icons
+  of a message or none; one pack family per bot (`references/custom-emoji.md`).
 - **Wallet:** `sent_transaction` is a notice, not proof of payment.
 - **Update delivery:** new update types must be in `allowed_updates` (sticky) and
   routed by the SDK (`references/updates-and-delivery.md`).
@@ -215,6 +206,9 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 
 **Interface**
 - Labels, wording, tone → `references/microcopy-and-labels.md`
+- Spotting when text should be a table, list, heading or collapsible block, and when to
+  act, offer or ask → `references/content-shape-detection.md`
+- Auditing an existing bot: inventory, diagnose, rank, propose → `references/auditing-existing-bots.md`
 - Colors, emphasis, layout and grouping → `references/buttons-and-styles.md`
 - Inline keyboards, `callback_data`, pagination → `references/inline-keyboards.md`
 - Reply keyboards, `ForceReply`, placeholders → `references/reply-keyboards.md`

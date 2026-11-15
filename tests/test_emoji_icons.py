@@ -186,6 +186,32 @@ class KillSwitch(unittest.TestCase):
         self.assertFalse(uses_custom_emoji(t.calls[2][1]))
         self.assertEqual(len(log), 1)
 
+    def test_silent_strip_is_detected_from_the_returned_message(self):
+        """Live behaviour (2026-08-05): an ineligible bot gets ok:true and no custom_emoji entity."""
+        log = []
+        ic = IconSystem(ICONS, vocabulary=VOCAB, log=log.append)
+        stripped = {"message_id": 7, "date": 0, "chat": {"id": 1}, "text": "✅ ok", "entities": []}
+        t = FakeTransport().script("sendMessage", stripped)
+        ic.send(t, "sendMessage", {"chat_id": 1, "text": "✅ ok", "parse_mode": "HTML"})
+        self.assertTrue(uses_custom_emoji(t.calls[0][1]), "the request did carry custom emoji")
+        self.assertTrue(ic.killed)
+        self.assertEqual(len(t.calls), 1, "no resend: the delivered message reads fine")
+        ic.send(t, "sendMessage", {"chat_id": 1, "text": "✅ next", "parse_mode": "HTML"})
+        self.assertFalse(uses_custom_emoji(t.calls[1][1]), "later messages go out plain")
+        self.assertEqual(len(log), 1)
+
+    def test_echo_with_entities_or_bare_ack_keeps_icons(self):
+        ic = IconSystem(ICONS, vocabulary=VOCAB)
+        kept = {"message_id": 7, "date": 0, "chat": {"id": 1}, "text": "✅ ok",
+                "entities": [{"type": "custom_emoji", "offset": 0, "length": 1,
+                              "custom_emoji_id": "0300000000000003"}]}
+        t = FakeTransport().script("sendMessage", kept)
+        ic.send(t, "sendMessage", {"chat_id": 1, "text": "✅ ok", "parse_mode": "HTML"})
+        self.assertFalse(ic.killed)
+        t2 = FakeTransport()      # default reply has no text: nothing to judge
+        ic.send(t2, "sendMessage", {"chat_id": 1, "text": "✅ ok", "parse_mode": "HTML"})
+        self.assertFalse(ic.killed)
+
     def test_views_share_the_switch_and_unrelated_errors_are_raised(self):
         ic = IconSystem(ICONS, vocabulary=VOCAB, eligibility=Eligibility(owner_premium=True))
         t = FakeTransport().script("sendMessage", self.REFUSED)
