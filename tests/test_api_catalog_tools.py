@@ -67,9 +67,16 @@ class Lookup(unittest.TestCase):
         self.assertIsNone(API.version("1.0.0"))
         self.assertEqual(API.releases()[0]["version"], API.cat["meta"]["bot_api_version"])
 
+    def test_since_gives_history_oldest_first(self):
+        h = API.history("sendPaidMedia")
+        self.assertEqual(h[0]["version"], "7.6")
+        self.assertTrue(all(a["date"] <= b["date"] for a, b in zip(h, h[1:])))
+        self.assertEqual(API.history("BotSubscriptionUpdated")[0]["version"], "10.2")
+        self.assertEqual(API.history("noSuchThingAnywhere"), [])
+
     def test_cli_runs(self):
         for argv in (["show", "answerPreCheckoutQuery"], ["search", "refund"], ["version", "10.3"],
-                     ["accepts", "reply_markup"], ["skeleton", "sendPaidMedia"], ["meta"], ["versions"],
+                     ["accepts", "reply_markup"], ["skeleton", "sendPaidMedia"], ["meta"], ["versions"], ["since", "allowed_updates"],
                      ["--json", "show", "Update"], ["diff"]):
             buf = io.StringIO()
             with contextlib.redirect_stdout(buf):

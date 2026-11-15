@@ -7,6 +7,7 @@ Standard library only; reads local JSON, never touches the network.
   py -3 scripts/tg_api_lookup.py search refund              # names, fields, descriptions
   py -3 scripts/tg_api_lookup.py version 10.4               # what a release changed (changelog)
   py -3 scripts/tg_api_lookup.py versions                   # list releases
+  py -3 scripts/tg_api_lookup.py since allowed_updates      # changelog history of a symbol/field
   py -3 scripts/tg_api_lookup.py accepts reply_markup       # methods taking a parameter...
   py -3 scripts/tg_api_lookup.py accepts InputMedia         # ...or a type (incl. its union members)
   py -3 scripts/tg_api_lookup.py used-by LabeledPrice       # methods AND types that reference a type
@@ -25,6 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -161,6 +163,20 @@ class Api:
                 return {**r, "symbols_mentioned_in_added_items": added}
         return None
 
+    def history(self, name: str) -> list[dict]:
+        """Every changelog item that links to `name` or mentions it as a word,
+        oldest first: when a symbol (or a field such as `allowed_updates`) appeared
+        and how it changed."""
+        out = []
+        rel = self.changelog.get("releases", []) if isinstance(self.changelog, dict) else []
+        word = re.compile(r"(?<![A-Za-z0-9_])" + re.escape(name) + r"(?![A-Za-z0-9_])", re.I)
+        for r in rel:
+            for g in r["groups"]:
+                for it in g["items"]:
+                    if name in it["symbols"] or word.search(it["text"]):
+                        out.append({"version": r["version"], "date": r["date"], "text": it["text"], "url": r["url"]})
+        return list(reversed(out))
+
     def releases(self) -> list:
         return [{"version": r["version"], "date": r["date"], "url": r["url"]}
                 for r in (self.changelog.get("releases", []) if isinstance(self.changelog, dict) else [])
@@ -211,7 +227,7 @@ def main(argv=None) -> int:
     ap.add_argument("--data", default=DATA_DIR)
     ap.add_argument("--json", action="store_true")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("show", "search", "version", "accepts", "used-by", "skeleton"):
+    for name in ("show", "search", "version", "accepts", "used-by", "skeleton", "since"):
         sp = sub.add_parser(name)
         sp.add_argument("query")
     sub.add_parser("versions")
@@ -248,6 +264,10 @@ def main(argv=None) -> int:
             text += [f"  - {it['text']}" for it in g["items"]]
         text.append("\nSymbols in 'Added ...' items: " + ", ".join(r["symbols_mentioned_in_added_items"]))
         out(r, "\n".join(text))
+    elif args.cmd == "since":
+        h = api.history(args.query)
+        out(h, "\n".join(f"{x['version'] or '?':<6} {x['date']}  {x['text']}" for x in h)
+            or f"{args.query} is not mentioned in the changelog (older than the changelog, or a typo)")
     elif args.cmd == "versions":
         rs = api.releases()
         out(rs, "\n".join(f"{r['version']:<6} {r['date']}  {r['url']}" for r in rs))
