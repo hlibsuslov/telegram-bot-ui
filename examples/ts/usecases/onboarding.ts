@@ -67,7 +67,7 @@ export class Onboarding {
     this.flow.owners.delete(`${s.chatId}:${s.messageId}`);
     s.data.step = "phone";
     await this.t.call("sendMessage", { chat_id: s.chatId, parse_mode: "HTML", text: this.flow.tr(s, "phone"), reply_markup: {
-      keyboard: [[{ text: this.flow.tr(s, "btn_share_phone"), request_contact: true }], [this.flow.tr(s, "btn_skip")]],
+      keyboard: [[{ text: this.flow.tr(s, "btn_share_phone"), request_contact: true }], [{ text: this.flow.tr(s, "btn_skip") }]],
       one_time_keyboard: true, resize_keyboard: true, input_field_placeholder: this.flow.tr(s, "phone_kb_hint").slice(0, 64) } });
   }
   async finish(s: Session, note: string) {

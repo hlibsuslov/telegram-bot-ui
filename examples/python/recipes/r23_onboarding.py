@@ -179,7 +179,7 @@ class Onboarding:
         self.t.call("sendMessage", {"chat_id": s.chat_id, "parse_mode": "HTML", "text": self.flow.tr(s, "phone"),
                                     "reply_markup": {"keyboard": [[
                                         {"text": self.flow.tr(s, "btn_share_phone"), "request_contact": True}],
-                                        [self.flow.tr(s, "btn_skip")]],
+                                        [{"text": self.flow.tr(s, "btn_skip")}]],
                                         "one_time_keyboard": True, "resize_keyboard": True,
                                         "input_field_placeholder": self.flow.tr(s, "phone_kb_hint")[:64]}})
 

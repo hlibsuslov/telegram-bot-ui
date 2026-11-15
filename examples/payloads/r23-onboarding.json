@@ -140,7 +140,9 @@
               }
             ],
             [
-              "Пропустити"
+              {
+                "text": "Пропустити"
+              }
             ]
           ],
           "one_time_keyboard": true,
@@ -307,7 +309,9 @@
               }
             ],
             [
-              "Skip"
+              {
+                "text": "Skip"
+              }
             ]
           ],
           "one_time_keyboard": true,
