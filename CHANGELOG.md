@@ -17,6 +17,12 @@ Each release is tagged `v<version>`.
 - Widget docs: bot-side lifecycle for long jobs, editor with autostart, image shrink loop,
   canvas cut-outs, UI strings in `public_data`, the two-crash rule; raw exception text and
   loguru `diagnose` as bot-token leaks in `errors-and-fallbacks.md`.
+- Widget checks also flag removed form elements (`datalist`, `output`, …), `meta`, `ruby`,
+  `math`, legacy presentational tags and attributes, editing/focus attributes, `popover` and
+  `data:` AVIF/BMP/ICO images; the `disabled-pseudo` warning is gone (profile 1 maps
+  `:disabled` to `[disabled]` on `<button>`).
+- SDK status: aiogram 3.32.0 and node-telegram-bot-api 2.4.0 ship the widget methods;
+  Telegram's widget-sandbox listed as an official source.
 
 ## 2.1.0 - 2026-11-15
 

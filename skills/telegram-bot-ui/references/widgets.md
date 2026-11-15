@@ -174,7 +174,11 @@ treat code and `public_data` as public; respect `prefers-reduced-motion`. Heuris
 
 Offline: `validate_widget.py --strict`, `build_widget.py --all --check`, `tests/test_widgets.py`,
 `tests/test_widget_*.py`, and `preview_widget.py` — an extended version of the Guide's browser
-stand-in (a browser is **not** a Telegram client — it renders things apps remove). Live: production
+stand-in (a browser is **not** a Telegram client — it renders things apps remove). Closest to a
+client without a phone: Telegram's own harness in [widget-sandbox](https://github.com/TelegramMessenger/widget-sandbox)
+(`corepack pnpm tsx packages/core/scripts/sandbox-node.ts widget.html --width 360`) runs the real
+validator and renderer and prints what the profile removed, gesture claims and heavy-element
+counts; it is the user's checkout, not part of this skill. Live: production
 private chat; groups/inline/forwards on the test server; both color schemes, largest text, a
 narrow phone, desktop with mouse, RTL, an old phone. Report which of these were actually done.
 

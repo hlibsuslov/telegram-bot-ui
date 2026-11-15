@@ -80,14 +80,19 @@ class Gates(unittest.TestCase):
                     "<script>c.globalCompositeOperation='xor'</script>", '<svg><clipPath id="a"/></svg>',
                     '<svg><animate attributeName="x"/></svg>', "<style>p{margin-inline-start:4px}</style>",
                     "<style>p{columns:2}</style>", "<style>p{display:contents}</style>",
-                    "<style>p{background-clip:text}</style>"):
+                    "<style>p{background-clip:text}</style>", "<datalist></datalist>", "<ruby>a</ruby>",
+                    "<center>x</center>", "<font>x</font>", '<div tabindex="0">x</div>',
+                    "<div contenteditable>x</div>", '<table border="1"></table>', '<p align="center">x</p>',
+                    "<div popover>x</div>", '<img src="data:image/avif;base64,AA">'):
             with self.subTest(bad=bad):
                 self.assertFalse(bw.build_text(bad, caption="c").ok)
 
     def test_runtime_gaps_leave_allowed_lookalikes_alone(self):
         for good in ("<style>.g{display:grid;grid-template-columns:1fr 1fr}</style>",
                      "<style>p{margin-left:4px;border-radius:3px}</style>", '<img src="data:image/png;base64,AA">',
-                     "<script>c.arc(5,5,4,0,Math.PI*2)</script>"):
+                     "<script>c.arc(5,5,4,0,Math.PI*2)</script>", "<strong>a</strong><footer>b</footer>",
+                     '<table><tr><td colspan="2">x</td></tr></table>', "<button disabled>x</button>",
+                     '<svg><stop stop-color="#000"/></svg>', "<style>button:disabled{color:var(--k-hint)}</style>"):
             with self.subTest(good=good):
                 self.assertTrue(bw.build_text(good, caption="c").ok, bw.build_text(good, caption="c").errors)
 
