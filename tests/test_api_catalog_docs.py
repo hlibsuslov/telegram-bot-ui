@@ -51,14 +51,12 @@ class ReferenceExamples(unittest.TestCase):
     def test_init_data_snippet_verifies_and_rejects(self):
         import hashlib, hmac, time, urllib.parse
         with open(os.path.join(_paths.ROOT, "references", "mini-apps-bridge.md"), encoding="utf-8") as fh:
-            code = re.search(r"```python
-(.*?)```", fh.read(), re.S).group(1)
+            code = re.search(r"```python\n(.*?)```", fh.read(), re.S).group(1)
         ns = {}
         exec(code, ns)
         token = "123:TEST-ONLY"
         fields = {"auth_date": str(int(time.time())), "query_id": "q1", "user": '{"id":1}', "signature": "sig"}
-        check = "
-".join(f"{k}={v}" for k, v in sorted(fields.items()))
+        check = "\n".join(f"{k}={v}" for k, v in sorted(fields.items()))
         secret = hmac.new(b"WebAppData", token.encode(), hashlib.sha256).digest()
         fields["hash"] = hmac.new(secret, check.encode(), hashlib.sha256).hexdigest()
         data = urllib.parse.urlencode(fields)
