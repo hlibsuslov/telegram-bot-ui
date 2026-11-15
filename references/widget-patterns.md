@@ -206,3 +206,89 @@ on `(widget_id, from.id)` (Guide). Writes coalesced to ≤ 1 per second (`Shared
 voter gets the new state in the answer, everyone else through the refresh period (`cache_time`
 5–3600 s, default 30 s) while their widget called `watchPublicData()` (Guide). Forwards and
 inline results that ask are test-server only today.
+
+## 11. Widget as the front end of a backend
+
+A widget **cannot reach any service**: `fetch`, `XMLHttpRequest`, `WebSocket`, `EventSource`,
+`sendBeacon`, `Worker` throw `NetworkDisabledError`, nothing external loads, and the widget cannot
+navigate (Guide "What a widget is", "JavaScript", checked 2026-11-15). The **bot server is the only
+bridge**. Gallery widget `api-browser` + [recipe 56](../recipes/56-api-data-browser.md)
+(`examples/python/widget_gallery/h_api_browser.py`: a mock REST backend, and `RestTicketsApi` to
+copy for a real endpoint).
+
+```
+tap -> request("f:mine") -> widget_query -> handler -> REST/DB call (timeout <= 6 s)
+                                              |            ok | fail: cached page, stale:1, msg
+                                              v
+                    editMessageWidgetData(view state, r+1) -> answerWidgetQuery({ok,s,r[,msg]})
+backend webhook / job -> bot -> editMessageWidgetData (push) -> chatDataChanged in the open widget
+```
+
+| Concern | Rule | Status |
+|---|---|---|
+| Contract | Queries are commands, not URLs: `f:<filter>`, `pg:<n>`, `o:<id>`, `b`, `x:<id>:<action>`, `sync` (≤ 64 bytes). The handler maps them to endpoints; the widget never knows the API's shape. | API (64 B) / Heuristic |
+| Projection | The state is the **view**: ≤ 5 rows of `[id, title, status, meta]` plus the open detail, ≤ ~900 bytes. Full records stay on the server. | API (1024 B) / Heuristic |
+| Pagination, filtering | Through queries; the answer carries the new view (`s`). A lookup that does not change the view can be answer-only (≤ 1024 B). | API / Heuristic |
+| Answer window | Call upstream with a timeout well inside 15 s (e.g. 6 s), then edit and answer. On timeout answer cached data marked `stale`, or `{err:"upstream", msg}` — never let the widget reach `TIMEOUT`. Slow jobs: answer "Started", push results later. | API (15 s) / Guide ("do slow work after answering") |
+| Caching | Cache reads per (backend user, filter, page) for a short TTL (30 s); invalidate on writes; show "Cached data from 10:12" when stale. | Heuristic |
+| Refresh cadence | Open widget: background `sync` on appear and on `activated` (private original, ≤ 1 per 5 s — Guide). Server side: push on real changes (webhooks), not on a timer; `editMessageWidgetData` counts as a sent message (Guide). Same-for-everyone data: a shared widget with `cache_time` instead of requests. | Guide |
+| Auth | Telegram authenticates `from` (Guide: cannot be forged). Map `from.id` to the backend account on the server and call the API with the **bot's** credentials on the user's behalf. Never put API keys, tokens, sessions or backend ids in widget code, `chat_data` or `public_data`: code and state are readable by the user, and public state travels with forwards. | Guide / Heuristic |
+| Authorization | Re-check every action against the backend (the ticket may be closed already: `{err:"conflict", msg}`); `data` is untrusted input. | Guide |
+| Rate limits | Widget side: 5 requests per 5 s per user and bot, one in flight (Guide). Backend side: your API's limits — coalesce, cache, and answer `busy` rather than queue past 15 s. | Guide / Heuristic |
+| States in the widget | sending (`K.busy` + "Sending…"), the error sentence from `msg`, a stale banner from `stale` + `at`, an empty-list sentence, disabled actions in copies that cannot ask. | Guide / Heuristic |
+
+An answer that reports a failure keeps the envelope `{"ok":true,"err":…}` in the gallery core
+(`tgkit.widgets.handle_widget_query` wraps decisions as `ok`); the kit treats **any `err`** as not done.
+
+## 12. Widget vs Mini App hand-off
+
+Keep the widget a **summary card** and open a Mini App for real network, uploads, long forms,
+text input, routing, or anything taller than ~560 px.
+
+* From the widget, on a tap: `TelegramWidget.openTelegramLink("https://t.me/<bot>?startapp=<param>")`
+  opens the bot's main Mini App in the current chat; `startapp` reaches the app as `start_param` and
+  `tgWebAppStartParam` (Mini Apps docs "Direct link Mini Apps", checked 2026-11-15). A named app:
+  `https://t.me/<bot>/<app>?startapp=<param>`. URLs ≤ 256 characters, one link per tap (Guide).
+* From the message: the inline keyboard under the widget can carry a `web_app` button
+  (`sendWidget` accepts an `InlineKeyboardMarkup` in `reply_markup` — API).
+* **What crosses the boundary**: only an opaque reference (`t_4104`, an order id) in `startapp`.
+  The Mini App authenticates the user with its signed `initData` and loads everything from your
+  backend. Never pass tokens, prices to trust or personal data in the link: it is visible and
+  replayable.
+* **Coming back**: the Mini App changes data in your backend, the backend tells the bot, the bot
+  pushes the widget's state (`editMessageWidgetData`). The widget reflects; the Mini App edits.
+* A Mini App opened by a direct link cannot send messages to the chat (Mini Apps docs): the widget
+  is how the result stays visible in the conversation.
+
+## 13. Where widgets can be sent, and channel-safe variants
+
+Checked 2026-11-15 against the Widgets guide ("Where widgets live", "Availability") and `sendWidget`:
+
+| Place | Production | Test server | Source |
+|---|:-:|:-:|---|
+| private chat with the bot | **yes** (protected content: cannot be forwarded) | yes | Guide; `sendWidget` description |
+| groups / supergroups (`can_send_other_messages`) | no | yes | Guide |
+| inline mode (any chat **except channels**) | no | yes | Guide |
+| forwards by users, **channels included** | no | yes | Guide |
+| **channels, posted by the bot directly or via the bot** | **no** | **no** | Guide: "Widgets cannot be posted in channels, directly or via the bot" |
+
+A bot **cannot post a widget to a channel** in any environment today; a channel can only show a
+user's forward (test server). `TelegramWidget.chatType` lists `channel` as a value (Guide), which
+only matters for such forwards. Do not present channel widgets as available.
+
+**Channel-safe variant path** — every gallery widget can degrade to this:
+
+| Property | Channel-safe rule |
+|---|---|
+| state | `public_data` only; no `chat_data` (forwards never get it — Guide); no per-user fields |
+| interaction | read-only by default; if live, a shared widget with `watchPublicData()` and a `cache_time`; votes keyed on `(widget_id, from.id)` via `shared_widget_query` |
+| viewer | assume `viewer = null` and `chatType = null` (forwards — Guide); never personalize |
+| caption | carries the **full meaning** (headline, numbers, call to action): notifications and the chat list show only it |
+| snapshot | a static widget's forward is frozen: draw "as of 19:40" from a timestamp in the state |
+| fallback | a Rich Message or text post with a URL/`startapp` button is the real channel content today |
+
+The kit supports this already: `K.can()` is false without a viewer, every gallery widget draws a
+read-only view from its data alone, and the demo captions mirror the main fact. If Telegram ever
+allows channel widgets, expect to change: a send path for channels (refused today), a rights check
+for channel admins, channel posting limits, and how queries from anonymous channel readers arrive.
+Re-check the changelog and this table before building on it.

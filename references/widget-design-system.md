@@ -182,7 +182,16 @@ Widgets have **no accessibility semantics** in profile 1: `aria-*` is kept but d
   `editMessageWidgetData` does not update the chat list.
 * Use `show_caption_above_media` only when you want the time drawn on the widget (Guide).
 
-## 12. Checklist
+## 12. Icons and custom emoji
+
+Telegram custom emoji (`custom_emoji_id`) are **not documented** for widget HTML: the Widgets guide
+(checked 2026-11-15) lists colour emoji in text and `data:` PNG/JPEG/GIF/WebP images, and no way to
+render a custom emoji inside a widget. Use inline SVG icons (`.ic`, `<symbol>` + `<use>`) or plain
+emoji text there. Custom emoji belong to message text, captions and buttons — see `emoji-packs.md`
+and `examples/python/tgkit/icons.py` (owned by the emoji stream). The widget's caption is an
+ordinary media caption, so it may carry custom emoji entities (API: `caption_entities`).
+
+## 13. Checklist
 
 `py -3 scripts/build_widget.py SRC --strict --lang <each>` (size ≤ 3800 working budget, hard
 4096; runtime gaps; lint) → `py -3 scripts/preview_widget.py SRC` (light, dark, outgoing, RTL,
