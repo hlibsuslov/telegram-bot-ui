@@ -22,6 +22,12 @@ project's code.
    `python <skill-dir>/scripts/audit_copy.py <file>`. Report the validator output.
 5. Check each proposed field against the SDK in use (`references/sdk-compatibility.md`);
    if the SDK lacks it, say so and name the fallback.
+6. For a deep redesign ("adapt the bot to our style", "rethink the whole menu"), follow
+   `references/redesign-orchestration.md` sections 0-6: state the access and mandate
+   levels, run `python <skill-dir>/scripts/style_profile.py probe <project-root>`, read the
+   sources it points to, and write the research notes, the style profile (checked with
+   `style_profile.py check`) and the old -> new screen map with its migration. Stop at the
+   gates that document names.
 
 ## Output
 

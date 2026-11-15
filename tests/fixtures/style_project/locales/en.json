@@ -1,0 +1,6 @@
+{
+  "home": {"title": "<b>Northwind</b>\nWhat would you like to do?"},
+  "btn_catalog": "Open catalogue",
+  "btn_orders": "Track my orders",
+  "error_generic": "Could not load the catalogue. Try again in a minute."
+}

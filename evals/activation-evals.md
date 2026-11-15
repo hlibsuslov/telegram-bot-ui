@@ -106,6 +106,8 @@ description is updated.
 |---|---|---|---|---|
 | UI1 | ru | "Улучши меню бота, кнопки выглядят одинаково и непонятно, что главное." | no | `references/buttons-and-styles.md` |
 | UI2 | ru | "Бот как будто завис, пока думает над ответом." | no | `references/dynamic-feedback-and-streaming.md` |
+| UI3 | ru | "Переосмысли всё меню нашего бота и адаптируй его под стилистику проекта, если сможешь — изучи сам проект." | no | `references/redesign-orchestration.md`, `references/bot-style-profile.md` |
+| UI4 | en | "Make our Telegram bot feel like the rest of our product, then let me tune how chatty it is." | no | `references/redesign-orchestration.md`, `references/bot-style-profile.md` |
 
 ## Positive — Channel publishing (should activate)
 

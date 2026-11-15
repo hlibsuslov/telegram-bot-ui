@@ -1,0 +1,6 @@
+:root {
+  --color-primary: #2F6FEB;
+  --color-muted: #6B7280;
+  --radius-card: 12px;
+  font-family: "Inter", system-ui, sans-serif;
+}

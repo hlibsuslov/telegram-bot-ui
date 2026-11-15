@@ -26,7 +26,10 @@ You report; you do not edit.
    - publishing: explicit approval bound to the exact content, idempotent publish;
    - agent-operated bots: operator allowlist, inbound text treated as data (prompt
      injection), approvals bound to one action and expiring;
-   - every Bot API method, type and field exists in the catalog or the official docs.
+   - every Bot API method, type and field exists in the catalog or the official docs;
+   - with a style profile in the project: `scripts/style_profile.py check` passes, the
+     changed screens follow its knobs, and every old payload in the redesign plan still
+     gets an answer.
 4. Rank findings by impact. Do not report style preferences as defects.
    For an adapted example, inspect its declared base recipes and verify their
    invariants survived the changes. Flag in-memory demos presented as durable
