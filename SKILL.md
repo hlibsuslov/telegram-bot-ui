@@ -208,6 +208,9 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 
 **Interface**
 - Labels, wording, tone → `references/microcopy-and-labels.md`
+- Spotting when text should be a table, list, heading or collapsible block, and when to
+  act, offer or ask → `references/content-shape-detection.md`
+- Auditing an existing bot: inventory, diagnose, rank, propose → `references/auditing-existing-bots.md`
 - Colors, emphasis, layout and grouping → `references/buttons-and-styles.md`
 - Inline keyboards, `callback_data`, pagination → `references/inline-keyboards.md`
 - Reply keyboards, `ForceReply`, placeholders → `references/reply-keyboards.md`
