@@ -298,9 +298,7 @@ def to_html(blocks: list[dict[str, Any]]) -> str:
         elif t == "paragraph":
             parts.append(_html_inline(b["text"]))
         elif t == "list":
-            parts.append("\n".join(("☑ " if i["done"] else "☐ ") + _html_inline(i["text"])
-                                   if isinstance(i, dict) and "done" in i else "• " + _html_inline(i)
-                                   for i in b["items"]))
+            parts.append("\n".join(_list_mark(i) + _html_inline(_item_text(i)) for i in b["items"]))
         elif t == "quote":
             body = _html_inline(b["text"]) + (f"\n— {escape_html(b['credit'])}" if b.get("credit") else "")
             parts.append(f"<blockquote{' expandable' if b.get('expandable') else ''}>{body}</blockquote>")
@@ -1089,6 +1087,9 @@ class FanOut:
                 continue
             if rec and rec["state"] == "unknown":
                 report.unknown.append(rid)
+                continue
+            if rec and rec["state"] == "failed" and rec.get("error") == "permission":
+                report.blocked.append(rid)         # blocked the bot / left: don't knock again
                 continue
             self.ledger.put(key, state="pending")
             ids: list[int] = []
