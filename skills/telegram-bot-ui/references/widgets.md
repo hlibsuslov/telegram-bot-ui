@@ -157,7 +157,9 @@ drags/holds, keep the leading 20 px free (back gesture). Palette via `--tg-theme
 `prefers-color-scheme` follows the **chat** theme; test light/dark and outgoing bubbles. RTL:
 `dir`, mirrored safe-area corner. The time badge sits over the bottom corner without a caption
 below: pad with `env(safe-area-inset-bottom)` / `--tg-content-safe-area-corner-*`. 2000 nodes,
-8 MB, 300 ms CPU/s, 16 "heavy" elements (blur/filter/opacity<1). Storage: `localStorage` 4 KB per
+8 MB, 300 ms CPU/s, 16 "heavy" elements (blur/filter/opacity<1). A widget past a limit, or one
+that crashes, is stopped with a "Widget stopped" badge and rebuilt when shown again; **after two
+crashes in a row it stays stopped until the app restarts** (Guide). Storage: `localStorage` 4 KB per
 message per device, never synced. Links only on a tap (`openLink` https ≤256 chars,
 `openTelegramLink`). Full table: the Guide's "Limits".
 
@@ -190,5 +192,8 @@ raw text: https://core.telegram.org/bots/widgets.md). When an agent writes widge
 3. Check the result: `scripts/validate_widget.py` (server size algorithm + profile gaps), then a
    real Telegram client. Notable "out" items an LLM tends to use: CDN libraries (Chart.js, D3 —
    nothing is fetched), `vh`, `input`, `:checked`, `color-mix()`, `text-shadow`, `clip-path`,
-   `-webkit-line-clamp`, `navigator.clipboard`, element ids as globals.
+   `-webkit-line-clamp`, `navigator.clipboard`, element ids as globals, logical properties
+   (`margin-inline-*`), SVG `clipPath`/`mask`/SMIL, canvas `getImageData`/shadows/compositing.
+   The validator flags all of these; `--strict` adds `request` from `pointerdown`, state written
+   with `innerHTML` and canvas arcs past 2π.
 

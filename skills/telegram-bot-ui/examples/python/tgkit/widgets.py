@@ -66,6 +66,16 @@ _RUNTIME_GAPS = [
      "no libraries are bundled or fetched (Chart.js, D3 by CDN do not run) - draw with SVG/canvas"),
     (r"requestFullscreen|navigator\.share|navigator\.vibrate|geolocation|new\s+Worker",
      "browser API not available in widgets"),
+    (r"\b(getImageData|putImageData|toDataURL|toBlob|createPattern|createConicGradient)\s*\(|"
+     r"globalCompositeOperation|\bshadow(Blur|Color|Offset[XY])\s*=",
+     "canvas pixel access, patterns, conic gradients, shadows and compositing are outside profile 1"),
+    (r"<\s*(clipPath|mask|pattern|marker|foreignObject|animate|animateTransform|animateMotion|image)\b",
+     "SVG element outside profile 1 (clipPath, mask, pattern, marker, foreignObject, SMIL, <image>)"),
+    (r"(?<![\w-])(margin|padding|inset|border)-(inline|block)(-(start|end))?\s*:|"
+     r"(?<![\w-])(column-count|columns)\s*:|display\s*:\s*(contents|flow-root)|"
+     r"background-clip\s*:\s*text|writing-mode\s*:",
+     "CSS layout outside profile 1 (logical properties, multi-column, display contents/flow-root, "
+     "background-clip:text, writing-mode)"),
 ]
 _SECRET_HINT = re.compile(r"(api[_-]?key|secret|password|bot\d{6,}:|bearer\s)", re.I)
 

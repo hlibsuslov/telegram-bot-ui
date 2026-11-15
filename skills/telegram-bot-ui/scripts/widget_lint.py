@@ -26,6 +26,10 @@ Rules and their status (W = Widgets guide https://core.telegram.org/bots/widgets
     disabled-pseudo  H  the LLM block lists :disabled as out; style [disabled] instead
     heavy            W  at most 16 heavy elements (blur, filter, opacity < 1) at once
     caption-mirror   H  a caption is required and should name the widget's main fact
+    tap-request      W  request()/K.ask only in a real tap (click/pointerup), not in pointerdown
+    innerhtml-state  W  text from state or answers goes through textContent, never innerHTML
+    canvas-arc       H  an arc past 2*pi, or rect() then arc() in one path, draws a stray stripe in
+                        Telegram (field report); dim, clip and redraw instead
 """
 from __future__ import annotations
 
@@ -141,4 +145,12 @@ def lint(html: str, *, caption: str | None = None, compressed: int | None = None
         rep.add("warn", "heavy", f"{heavy} heavy declarations; at most 16 heavy elements may be on screen")
     if not caption:
         rep.add("warn", "caption-mirror", "no caption: the chat list, notifications and old apps show only it")
+    if re.search(r"pointerdown[\"']?\s*(,|=)[^}]*?(\.request\s*\(|K\.ask\s*\()", js):
+        rep.add("warn", "tap-request", "request from a pointerdown handler; call it from click or pointerup")
+    if re.search(r"\.innerHTML\s*\+?=[^;]*(chatData|publicData|\.result\b|K\.S\b)", js):
+        rep.add("warn", "innerhtml-state", "state or answers rendered with innerHTML; use textContent")
+    if (re.search(r"\.arc\s*\([^)]*,\s*(6\.[3-9]\d*|[7-9](\.\d+)?)\s*[,)]", js)
+            or re.search(r"\.rect\s*\([^)]*\)\s*;?\s*\w+\.arc\s*\(", js)):
+        rep.add("warn", "canvas-arc", "arc end past 2*pi or rect() then arc() in one path; use Math.PI*2, "
+                "moveTo before arc, and dim-clip-redraw for cut-outs")
     return rep

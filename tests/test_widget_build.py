@@ -2,6 +2,7 @@
 forbidden APIs, payload shape), the strict lint, the validator CLI and the preview page."""
 import json
 import os
+import shutil
 import subprocess
 import sys
 import unittest
@@ -74,9 +75,37 @@ class Gates(unittest.TestCase):
     def test_runtime_gaps_fail_the_build(self):
         for bad in ('<script>fetch("/x")</script>', "<input>", '<div style="height:100vh"></div>',
                     '<script src="https://cdn.example/x.js"></script>', '<img src="https://x/y.png">',
-                    '<img src="data:image/svg+xml;base64,AA">', "<style>p{font-family:Helvetica}</style>"):
+                    '<img src="data:image/svg+xml;base64,AA">', "<style>p{font-family:Helvetica}</style>",
+                    "<script>c.getImageData(0,0,1,1)</script>", "<script>c.shadowBlur=4</script>",
+                    "<script>c.globalCompositeOperation='xor'</script>", '<svg><clipPath id="a"/></svg>',
+                    '<svg><animate attributeName="x"/></svg>', "<style>p{margin-inline-start:4px}</style>",
+                    "<style>p{columns:2}</style>", "<style>p{display:contents}</style>",
+                    "<style>p{background-clip:text}</style>"):
             with self.subTest(bad=bad):
                 self.assertFalse(bw.build_text(bad, caption="c").ok)
+
+    def test_runtime_gaps_leave_allowed_lookalikes_alone(self):
+        for good in ("<style>.g{display:grid;grid-template-columns:1fr 1fr}</style>",
+                     "<style>p{margin-left:4px;border-radius:3px}</style>", '<img src="data:image/png;base64,AA">',
+                     "<script>c.arc(5,5,4,0,Math.PI*2)</script>"):
+            with self.subTest(good=good):
+                self.assertTrue(bw.build_text(good, caption="c").ok, bw.build_text(good, caption="c").errors)
+
+    def test_lint_warns_on_tap_request_innerhtml_state_and_canvas_arc(self):
+        cases = {
+            "tap-request": 'el.addEventListener("pointerdown", function () { W.request("x") })',
+            "innerhtml-state": "box.innerHTML = W.chatData",
+            "canvas-arc": "c.rect(0,0,9,9);c.arc(4,4,3,0,7,true)",
+        }
+        for rule, js in cases.items():
+            with self.subTest(rule=rule):
+                rep = widget_lint.lint("<script>var W=window.TelegramWidget;" + js + "</script>", caption="c")
+                self.assertTrue(any(rule in w for w in rep.warnings), rep.warnings)
+        clean = widget_lint.lint('<script>var W=window.TelegramWidget;b.onclick=function(){W.request("x")};'
+                                 "n.textContent=W.chatData;c.moveTo(7,4);c.arc(4,4,3,0,Math.PI*2)</script>",
+                                 caption="c")
+        for rule in cases:
+            self.assertFalse([w for w in clean.warnings if rule in w])
 
     def test_strict_lint_rejects_raw_colours_but_allows_theme_paths(self):
         raw = bw.build_text('<style>body{margin:0;padding:0}p{color:#ff0000}</style><p>x</p>', caption="c", strict=True)
@@ -94,6 +123,41 @@ class Gates(unittest.TestCase):
 
     def test_budget_warning_above_3800(self):
         self.assertTrue(any("budget" in w for w in widget_lint.lint("<p>x</p>", caption="c", compressed=3900).warnings))
+
+
+KIT_ASK_THROW = r"""
+const fs = require("fs"), vm = require("vm");
+const calls = [];
+let mode = "throw";
+const W = { viewer: { id: 1 }, isPreview: false, chatType: "private",
+  request(d) { calls.push(d); if (mode == "throw") throw new TypeError("data must be 1-64 bytes");
+               return Promise.resolve({ result: '{"ok":true}' }); } };
+const ctx = vm.createContext({ window: { TelegramWidget: W }, navigator: { language: "en" },
+  document: { getElementById: () => null, documentElement: {} }, Promise, JSON, Object, String });
+vm.runInContext(fs.readFileSync(process.argv[process.argv.length - 1], "utf8"), ctx);
+const K = ctx.K; K.draw = () => {};
+let failed = null;
+K.ask("x".repeat(65), { fail: e => { failed = e; } });
+setTimeout(() => {
+  mode = "ok";
+  const second = K.ask("ok");
+  console.log(JSON.stringify({ failed: failed && failed.name, busyAfterThrow: K.busy, second, calls }));
+}, 10);
+"""
+
+
+class KitRuntime(unittest.TestCase):
+    def test_synchronous_throw_from_request_does_not_lock_the_widget(self):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("node is not installed")
+        runtime = os.path.join(_paths.EXAMPLES, "widgets", "_kit", "runtime.js")
+        r = subprocess.run([node, "-e", KIT_ASK_THROW, "--", runtime], capture_output=True, text=True, timeout=30)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        out = json.loads(r.stdout)
+        self.assertEqual(out["failed"], "TypeError")      # the throw reached the fail handler
+        self.assertEqual(out["second"], 1)                 # the next tap asks again
+        self.assertEqual(out["calls"], ["x" * 65, "ok"])
 
 
 class Payloads(unittest.TestCase):
