@@ -5,6 +5,12 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## 2.0.1 - 2026-11-15
+
+- Plugin icon: `assets/icon.svg` (Codex `interface.composerIcon`) and a 512 px
+  `assets/icon.png` (Claude Code plugin `icon`, Codex `interface.logo`), wired in by
+  `scripts/build_adapters.py`.
+
 ## 2.0.0 - 2026-11-15
 
 First tagged release of `telegram-bot-ui`, the successor of the `telegram-rich-messages`

@@ -356,11 +356,14 @@ def render_plugin(routing: dict) -> str:
         "repository": routing["repository"],
         "license": p["license"],
         "keywords": p["keywords"],
+        "icon": PLUGIN_ICON_PNG,
         "agents": [f"./agents/claude/{r['name']}.md" for r in routing["roles"]],
     }
     return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
 
 
+PLUGIN_ICON_SVG = "./assets/icon.svg"
+PLUGIN_ICON_PNG = "./assets/icon.png"
 AGENT_PLUGINS_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 
 
@@ -399,6 +402,8 @@ def render_codex_plugin(routing: dict) -> str:
             "capabilities": codex["plugin_capabilities"],
             "websiteURL": routing["repository"],
             "defaultPrompt": [codex["default_prompt"]],
+            "composerIcon": PLUGIN_ICON_SVG,
+            "logo": PLUGIN_ICON_PNG,
         },
     }
     return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
