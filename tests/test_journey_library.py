@@ -228,6 +228,15 @@ class ProductJourneys(unittest.TestCase):
         demos.tap(panel, "redeem", "real")
         self.assertEqual(model.balance, 20)
 
+    def test_moderation_tap_on_screen_older_than_a_new_report_is_stale(self):
+        model, panel, transport, _ = demos.build("R84")
+        model.add_report()  # arrives after the screen was rendered
+        demos.tap(panel, "dismiss", "old-revision")
+        self.assertEqual(model.status, "pending")
+        self.assertIn("state changed", transport.calls[-1][1]["text"])
+        demos.tap(panel, "dismiss", "fresh-revision")  # the refusal re-rendered the case
+        self.assertEqual(model.status, "planned")
+
     def test_refusal_notice_is_shown_once(self):
         model, panel, transport, _ = demos.build("R80")
         demos.tap(panel, "submit", "early")

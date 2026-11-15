@@ -296,7 +296,7 @@ All offline, standard library, and none of them needs a bot token.
 |---|---|
 | **Bot API** | verified against the official **Bot API 10.4** docs on **2026-11-15** — sources and dates in [`references/official-sources.md`](references/official-sources.md) |
 | **Hosts** | skill paths, subagent and plugin manifests and rule files verified against each host's docs on **2026-11-15** ([`docs/hosts.md`](docs/hosts.md)); the Claude Code plugin passes `claude plugin validate --strict` |
-| **Tests** | **410 Python** and **31 TypeScript** tests run offline on Linux and Windows in CI, plus contract tests against the real aiogram and grammY packages |
+| **Tests** | **411 Python** and **31 TypeScript** tests run offline on Linux and Windows in CI, plus contract tests against the real aiogram and grammY packages |
 | **Drift** | host entry files are generated from `SKILL.md` and one routing table by `scripts/build_adapters.py`; CI fails when they drift |
 
 What is **not** verified yet, said plainly:

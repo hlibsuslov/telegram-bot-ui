@@ -92,9 +92,13 @@ def build(scenario: str, lang="en"):
         model = Moderation(-100123, 17)
         model.add_report()  # a second report arrives before review
         title = ("Review reported message", "Проверить жалобу")
+        shown = [model.revision]  # the revision the moderator actually saw
         def body(lang):
+            shown[0] = model.revision
             return choose(lang, f"Case 17 · group -100123. State: {state_label(model.status, lang)}.\nThis demo records a decision; it does not delete messages.", f"Жалоба 17 · группа -100123. Состояние: {state_label(model.status, lang)}.\nПример сохраняет решение, не удаляя сообщения.")
-        actions = {"dismiss": Action(("Dismiss report", "Отклонить жалобу"), lambda: model.decide(OWNER, {OWNER}, -100123, model.revision, "dismiss"), lambda: model.status == "pending")}
+        # Decide against the rendered revision, not the live one: a report that
+        # arrives after the screen was drawn must make this tap stale.
+        actions = {"dismiss": Action(("Dismiss report", "Отклонить жалобу"), lambda: model.decide(OWNER, {OWNER}, -100123, shown[0], "dismiss"), lambda: model.status == "pending")}
         taps = ["dismiss"]
     elif scenario == "R85":
         model = Survey(OWNER)

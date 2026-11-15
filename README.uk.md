@@ -297,7 +297,7 @@ python examples/python/recipes/r01_ai_assistant.py
 |---|---|
 | **Bot API** | звірено з офіційною документацією **Bot API 10.4** станом на **2026-11-15** — джерела й дати в [`references/official-sources.md`](references/official-sources.md) |
 | **Середовища** | шляхи скілів, маніфести субагентів і плагінів та файли правил звірено з документацією кожного середовища станом на **2026-11-15** ([`docs/hosts.md`](docs/hosts.md)); плагін Claude Code проходить `claude plugin validate --strict` |
-| **Тести** | **410 на Python** і **31 на TypeScript** — запускаються офлайн у CI на Linux і Windows, плюс контрактні тести на справжніх пакетах aiogram і grammY |
+| **Тести** | **411 на Python** і **31 на TypeScript** — запускаються офлайн у CI на Linux і Windows, плюс контрактні тести на справжніх пакетах aiogram і grammY |
 | **Розбіжності** | файли входу для середовищ генеруються з `SKILL.md` та єдиної таблиці маршрутизації скриптом `scripts/build_adapters.py`; CI падає, щойно вони розходяться |
 
 Що **поки не** перевірено — кажемо прямо:
