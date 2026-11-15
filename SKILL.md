@@ -1,20 +1,10 @@
 ---
 name: telegram-bot-ui
-description: >-
-  Design, build, publish with and operate Telegram bots on the newest Bot API:
-  texts, inline/reply keyboards, colored and disabled buttons, premium custom
-  emoji, force_reply forms, navigation, streaming AI replies with Stop, private
-  replies in groups, Rich Messages, HTML widgets with server handlers, TON
-  wallet, topics, formatting, localization; whole products (shop with Stars,
-  support, booking, onboarding, subscriptions, inline mode, business); channel
-  posts (approve, publish once, edit, cross-post, mailings); an agent working
-  through its own bot (notify, ask, approve, progress, hooks, MCP); offline
-  lookup of every Bot API method and field, plus the server side these need.
-  Use for "improve this bot's menu", "add a Stop button", "post this to our
-  channel", "message me in Telegram when the build finishes", "make a widget",
-  "use premium emoji", "can't parse entities", "does the Bot API have X".
-  Do NOT use for webhook hosting, databases or auth unrelated to Telegram
-  features, or Microsoft .rtf files.
+description: "Telegram bot UI/UX skill, updated for every Bot API release. Design, build, publish with and operate bots: texts, inline/reply keyboards, colored and disabled buttons, premium custom emoji, force_reply forms, navigation, streaming AI replies with Stop, private replies in groups, Rich Messages, HTML widgets with server handlers, TON wallet, topics, formatting, localization; whole products (shop with Stars, support, booking, onboarding, subscriptions, inline mode, business); channel posts (approve, publish once, edit, cross-post, mailings); an agent working via its own bot (notify, ask, approve, progress, hooks, MCP); offline lookup of every Bot API method and field, plus their server side. Use for 'improve this bot's menu', 'add a Stop button', 'post this to our channel', 'message me when the build is done', 'make a widget', 'use premium emoji', 'can't parse entities', 'does the Bot API have X'. Do NOT use for webhook hosting, databases or auth unrelated to Telegram, or Microsoft .rtf files."
+license: MIT
+metadata:
+  author: hlibsuslov
+  version: "2.0.0"
 ---
 
 # Telegram Bot UI

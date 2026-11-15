@@ -50,7 +50,8 @@ Frontmatter (all optional, `description` recommended): `name`, `description`,
 `license`, `compatibility` (≤ 500 chars). Unknown fields are ignored. Outside Claude Code
 (claude.ai upload, Skills API) only `name`, `description`, `license`, `compatibility`,
 `metadata`, `allowed-tools` are accepted — **other fields are a hard upload error**, so
-the canonical `SKILL.md` keeps to `name` + `description`.
+the canonical `SKILL.md` keeps to `name`, `description`, `license` and `metadata`, with
+`description` as one double-quoted line (some skill directories do not unfold `>-`).
 
 Limits: `description` + `when_to_use` truncated at **1,536 characters** in the listing;
 `SKILL.md` recommended under 500 lines. Invocation: automatic by description, or
