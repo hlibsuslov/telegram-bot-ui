@@ -18,6 +18,9 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 - `references/microcopy-and-labels.md` (Build and audit bot interfaces)
 - `references/format-selection.md` (Build and audit bot interfaces)
 - `recipes/README.md` (Build and audit bot interfaces)
+- `references/example-library.md` (Product flows and use cases)
+- `recipes/use-cases.json` (Product flows and use cases)
+- `scripts/example_library.py` (Product flows and use cases)
 - `references/use-case-playbooks.md` (Product flows and use cases)
 - `references/onboarding-and-first-run.md` (Product flows and use cases)
 - `references/bot-archetypes.md` (Product flows and use cases)
@@ -43,9 +46,12 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 
 1. Read the project's own instructions and detect the language, SDK and exact version
    first. Confirm which Bot API version the SDK supports before using any new field.
-2. Find the matching recipe through `recipes/README.md` or `recipes/manifest.json` and
-   adapt it; do not copy example code that duplicates the project's own keyboard
-   builders or utilities.
+2. Search `recipes/use-cases.json` or run
+   `python <skill-dir>/scripts/example_library.py --query "user intent" --json`.
+   Read the closest recipe, its implementation and failure tests. Follow
+   `references/example-library.md`: reuse, compose, or add only the missing invariant.
+   Prefer the project's own builders; otherwise adapt existing library helpers.
+   Write new flows in the user's project; do not alter the installed library.
 3. Look up every method, type and field you are not sure about in the local Bot API
    catalog (`scripts/tg_api_lookup.py`, `data/bot-api/`) or the official docs. Never
    invent a field; if it is not in the catalog or the docs, stop and say so.

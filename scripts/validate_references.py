@@ -26,7 +26,7 @@ import sys
 TOKEN_RE = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b")
 # Local relative references we care about (in backticks, prose, or md links).
 PATH_RE = re.compile(r"(?:references|evals|scripts|agents|recipes|examples|tests)/[A-Za-z0-9._/-]+")
-SKIP_DIRS = {"node_modules", ".git", "__pycache__", ".venv", "venv"}
+SKIP_DIRS = {"node_modules", ".git", "__pycache__", ".venv", "venv", ".claude"}  # .claude: local agent worktrees
 MD_LINK_RE = re.compile(r"\]\(([^)]+)\)")
 FENCE_RE = re.compile(r"```.*?```", re.DOTALL)
 INLINE_CODE_RE = re.compile(r"`[^`]*`")

@@ -1,5 +1,28 @@
 # Recipe index
 
+Start by user intent: `python scripts/example_library.py --query "заявки CRM" --json`
+(from the skill root; catalog: `use-cases.json`). Read the
+[reuse and extension contract](../references/example-library.md) before adding a new example.
+
+## Product journeys R80–R87
+
+Python offline models and private callback demos, with EN/RU copy and captured payloads.
+No external CRM, worker, scheduler daemon or production storage is included. TypeScript
+ports are planned, not implemented. Run all: `python examples/python/recipes/r80_87_product_journeys.py`.
+
+| Recipe | Distinguishing behavior |
+|---|---|
+| [80 Lead intake](80-lead-intake.md) | review, consent invalidated by edits, stable submission |
+| [81 Event waitlist](81-event-waitlist.md) | capacity, FIFO promotion, staff check-in |
+| [82 Personal reminders](82-personal-reminders.md) | time zones, replace job, invalidate leased work |
+| [83 File processing](83-file-processing.md) | cancellation blocks late completion |
+| [84 Moderation review](84-moderation-review.md) | group/actor/revision-bound decision plan |
+| [85 Feedback survey](85-feedback-survey.md) | required answer, optional comment, withdrawal |
+| [86 Loyalty points](86-loyalty-points.md) | dedup credits, immutable amounts, no overdraft |
+| [87 Service queue](87-service-queue.md) | one position per user, staff call/complete |
+
+## Existing feature and product recipes
+
 Find a recipe by task, API symbol, version or context. Machine-readable: `manifest.json`
 (recipes → registry rows, symbols, files) and `registry.json` (every changelog item).
 All recipes run offline: `py -3 examples/python/recipes/<file>.py`; TypeScript twins:
