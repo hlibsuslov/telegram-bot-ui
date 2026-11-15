@@ -5,7 +5,7 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
-## Unreleased
+## 2.2.0 - 2026-11-15
 
 - Widget kit: `K.ask` no longer locks the widget when `request()` throws `TypeError`
   synchronously (empty or > 64-byte data); regression test runs the kit in Node.

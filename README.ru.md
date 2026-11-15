@@ -195,7 +195,7 @@ gh skill install hlibsuslov/telegram-bot-ui telegram-bot-ui --agent claude-code 
 
 `--agent` принимает `claude-code`, `codex`, `cursor`, `gemini-cli`, `github-copilot`, `antigravity`,
 `cline`, `opencode` и ещё десятки агентов (`gh skill install --help`); без `--scope user` скилл ставится в
-текущий репозиторий. Ставится последний релиз; закрепить версию — `--pin v2.1.0`, обновить —
+текущий репозиторий. Ставится последний релиз; закрепить версию — `--pin v2.2.0`, обновить —
 `gh skill update`. Сабагенты так не ставятся: для них плагин Claude Code или установщик ниже.
 
 </details>
