@@ -25,8 +25,11 @@
   <a href="#-install">Install</a> ·
   <a href="#-recipes-and-examples">Recipes</a> ·
   <a href="#-tools-you-can-use-without-an-agent">Tools</a> ·
-  <a href="#-faq">FAQ</a> ·
-  🇷🇺 🇺🇦 <a href="README.ru.md">По-русски</a>
+  <a href="#-faq">FAQ</a>
+</p>
+
+<p align="center">
+  🌐 <b>English</b> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a>
 </p>
 
 ---
