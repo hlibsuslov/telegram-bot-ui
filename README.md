@@ -147,6 +147,13 @@ You can also call it by name: `/telegram-bot-ui` (Claude Code), `$telegram-bot-u
 The skill is one folder whose entry point is [`SKILL.md`](skills/telegram-bot-ui/SKILL.md). Every path below is checked
 against that host's documentation in [`docs/hosts.md`](docs/hosts.md).
 
+**Two editions.** This repository is the full version: the skill plus validators, a publishing tool, widget kits and
+runnable examples. The Claude plugin directory accepts no scripts from unverified publishers, so it gets a
+documentation-only edition: the skill, references, recipes, subagents and the Bot API catalog split into one JSON file
+per method and type (branch [`claude-directory`](https://github.com/hlibsuslov/telegram-bot-ui/tree/claude-directory),
+built by `scripts/build_directory_edition.py`). It fits the Claude apps, where scripts can't run anyway. In Claude Code
+prefer the full version, and install only one of the two: they share the name `telegram-bot-ui`.
+
 <details open>
 <summary><b>Claude Code — plugin (skill + five subagents)</b></summary>
 

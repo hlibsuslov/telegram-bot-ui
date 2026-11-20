@@ -1,7 +1,7 @@
 {
   "name": "telegram-bot-ui",
   "displayName": "Telegram Bot UI",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Design, build, review and operate Telegram bots with the newest Bot API: bot screens and keyboards, streaming AI replies, HTML widgets, premium emoji, product flows, channel publishing, agent-operated bots and Bot API lookups. Bundles the telegram-bot-ui skill and five subagents.",
   "author": {
     "name": "hlibsuslov"
@@ -20,6 +20,8 @@
     "agent-skills"
   ],
   "icon": "./assets/icon.png",
+  "privacyPolicyUrl": "https://github.com/hlibsuslov/telegram-bot-ui/blob/main/PRIVACY.md",
+  "supportUrl": "https://github.com/hlibsuslov/telegram-bot-ui/issues",
   "agents": [
     "./agents/claude/telegram-bot-designer.md",
     "./agents/claude/telegram-bot-builder.md",

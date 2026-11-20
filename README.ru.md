@@ -149,6 +149,13 @@ python skills/telegram-bot-ui/scripts/preview_widget.py --gallery -o preview.htm
 Скилл — это одна папка, точка входа — [`SKILL.md`](skills/telegram-bot-ui/SKILL.md). Все пути ниже сверены с
 документацией каждой среды в [`docs/hosts.md`](docs/hosts.md).
 
+**Две версии.** Этот репозиторий — полная версия: скилл, валидаторы, инструмент публикации, наборы виджетов и
+исполняемые примеры. Каталог плагинов Claude не принимает скрипты от неверифицированных авторов, поэтому туда идёт
+версия только с документацией: скилл, справочники, рецепты, сабагенты и каталог Bot API, разбитый на отдельный JSON
+на каждый метод и тип (ветка [`claude-directory`](https://github.com/hlibsuslov/telegram-bot-ui/tree/claude-directory),
+собирается `scripts/build_directory_edition.py`). Она подходит для приложений Claude, где скрипты всё равно не
+запускаются. В Claude Code лучше ставить полную версию и только одну из двух: у них одно имя — `telegram-bot-ui`.
+
 <details open>
 <summary><b>Claude Code — плагин (скилл + пять сабагентов)</b></summary>
 
