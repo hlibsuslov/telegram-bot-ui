@@ -5,6 +5,16 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## Unreleased
+
+- Widget docs: field report from a production game bot (`widget-patterns.md` §16) — one shared
+  widget per app with per-user state in answers, versioning by HTML hash with every old
+  `widget_id` routed, hidden information on the server, fractions sent as strings, answer
+  trimming to 1024 bytes, move numbers, lost answers, DOM over canvas, animation only in motion,
+  clock lag in real-time games, kill switch and a pre-deploy fuzz gate.
+- `tgkit.widgets.handle_widget_query` retries a dropped `answerWidgetQuery` (twice, < 1 s) and
+  answers `bad_request` to wallet query types instead of playing them as an action (TS twin too).
+
 ## 2.2.0 - 2026-11-15
 
 - Widget kit: `K.ask` no longer locks the widget when `request()` throws `TypeError`
