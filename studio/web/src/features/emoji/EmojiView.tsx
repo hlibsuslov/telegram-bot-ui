@@ -1,13 +1,13 @@
 // Emoji page: import premium emoji packs by link, give emoji a meaning (the bot's icon map),
 // see where they are used, and hand the placement to the agent.
 import { AlertTriangle, Bot, Check, Copy, Download, FileJson, Library, Link2, Loader2, Plus, Search, Sparkles, Trash2, Wand2, X } from "lucide-react";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { CodeView } from "@/components/code-view";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { api, errorText } from "@/lib/api";
-import { copyText } from "@/lib/model";
+import { copyText, DEMO_SITE } from "@/lib/model";
 import { go, href } from "@/lib/route";
 import { useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
@@ -37,9 +37,10 @@ function Section({ icon: Icon, title, hint, count, children, actions }: { icon: 
   );
 }
 
-function ImportCard() {
+/** `preview`: the demo and the offline artifact show the form without a server behind it. */
+function ImportCard({ preview }: { preview?: boolean }) {
   const { doc, call } = useEmoji();
-  const { notify } = useStudio();
+  const { notify, loaded } = useStudio();
   const [link, setLink] = useState("");
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
@@ -54,13 +55,22 @@ function ImportCard() {
   };
   return (
     <Section icon={Download} title="Add a pack" hint="Paste the link of an emoji pack (Telegram: the pack's menu, Share or Copy link).">
+      {preview && (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-xs">
+          <span className="min-w-0 flex-1">{loaded.features.demo
+            ? "Preview: in the demo nothing is imported. On your own bot the local Studio reads a pack from its link, and every emoji shows up in the editor, the previews and the simulator."
+            : "Preview: this offline file cannot import. Run the local Studio (bot-ui studio) on the project to add packs."}</span>
+          {loaded.features.demo && <a href={DEMO_SITE} target="_top" className="shrink-0 rounded-md border bg-background px-2 py-1 font-medium hover:bg-accent">Run it on your bot</a>}
+        </div>
+      )}
+      <fieldset disabled={preview || busy} className="contents">
       <form className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]" onSubmit={(e) => { e.preventDefault(); if (link.trim()) void run({ link: link.trim(), token: token.trim() || undefined }); }}>
         <div className="relative">
           <Link2 className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
           <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://t.me/addemoji/…" className="pl-8" aria-label="Pack link" disabled={busy} />
         </div>
-        <Button type="submit" disabled={busy || !link.trim()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {busy ? "Reading the pack…" : "Import"}</Button>
-        {doc.tokenEnv ? (
+        <Button type="submit" disabled={preview || busy || !link.trim()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {busy ? "Reading the pack…" : "Import"}</Button>
+        {doc.tokenEnv && !preview ? (
           <p className="text-xs text-muted-foreground sm:col-span-2">Uses the bot token from <span className="font-mono">{doc.tokenEnv}</span> for one read-only call (getStickerSet) and the pictures. Nothing is sent to a chat.</p>
         ) : (
           <div className="space-y-1 sm:col-span-2">
@@ -69,12 +79,13 @@ function ImportCard() {
           </div>
         )}
       </form>
-      <label className="flex cursor-pointer items-center gap-2 text-xs text-muted-foreground">
+      <label className={cn("flex items-center gap-2 text-xs text-muted-foreground", preview ? "opacity-60" : "cursor-pointer")}>
         <FileJson className="size-3.5" aria-hidden />
         <span className="underline">or load a saved getStickerSet response</span> (ids only, no pictures)
         <input type="file" accept="application/json,.json" className="sr-only" disabled={busy}
           onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (!f) return; try { await run({ stickerSet: JSON.parse(await f.text()) }); } catch (err) { notify((err as Error).message, "error"); } }} />
       </label>
+      </fieldset>
     </Section>
   );
 }
@@ -287,7 +298,6 @@ export function EmojiView() {
   const { doc, editable, loading } = useEmoji();
   const [open, setOpen] = useState<Entry | null>(null);
   const route = ROUTES[(loaded.project.capabilities ?? {}).customEmoji ?? "none"] ?? ROUTES.none;
-  const counts = useMemo(() => ({ packs: Object.keys(doc.library.packs ?? {}).length, icons: Object.keys(doc.library.icons ?? {}).length }), [doc]);
   return (
     <div className="mx-auto w-full max-w-5xl space-y-5 p-3 sm:p-5">
       <header className="space-y-1">
@@ -298,7 +308,7 @@ export function EmojiView() {
         </p>
         {doc.error && <p className="text-sm text-destructive">{doc.error.code}: {doc.error.message}</p>}
       </header>
-      {editable ? <ImportCard /> : !counts.packs && !counts.icons && <p className="text-sm text-muted-foreground">This snapshot carries no emoji library. Import packs in the local Studio.</p>}
+      <ImportCard preview={!editable} />
       <Suggestions />
       <IconMap onOpen={setOpen} />
       <Packs onOpen={setOpen} />
