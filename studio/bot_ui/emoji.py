@@ -712,9 +712,10 @@ def client_document(root: str, snap: Snapshot) -> dict:
             "resolver": _Resolver(base).host if base else None, "error": error}
 
 
-def snapshot_block(snap: Snapshot, budget: int = 1_500_000) -> dict | None:
+def snapshot_block(snap: Snapshot, budget: int = 1_500_000, previews_of: str = "used") -> dict | None:
     """The library for the offline artifact: ids, icons, usage, and pictures inlined as data: URLs
-    for the bot's icons and the emoji its screens use (images only, within `budget` bytes)."""
+    (images only, within `budget` bytes). previews_of="used": the bot's icons and the emoji its
+    screens use; "all": every emoji of every imported pack (for a public demo of the packs)."""
     import base64
     if not snap.root or not has_library(snap.root):
         return None
@@ -725,6 +726,9 @@ def snapshot_block(snap: Snapshot, budget: int = 1_500_000) -> dict | None:
     used = usage(snap)
     files = previews(snap.root)
     wanted = list(dict.fromkeys([i.get("id") for i in (lib.get("icons") or {}).values()] + [u["id"] for u in used]))
+    if previews_of == "all":
+        wanted += [e.get("id") for pack in (lib.get("packs") or {}).values() for e in (pack.get("emoji") or [])
+                   if isinstance(e, dict) and e.get("id") not in wanted]
     inlined: dict[str, str] = {}
     mime = {"webp": "image/webp", "png": "image/png", "jpg": "image/jpeg"}
     for cid in wanted:

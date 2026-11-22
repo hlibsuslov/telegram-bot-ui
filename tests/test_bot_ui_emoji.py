@@ -252,6 +252,15 @@ class Library(ProjectCase):
         self.assertEqual(block["previews"]["0100000000000001"], "data:image/webp;base64," + base64.b64encode(WEBP).decode())
         self.assertNotIn("tokenEnv", {k for k, v in block.items() if v})
 
+    def test_public_demo_can_inline_every_pack_picture_within_a_budget(self):
+        emoji.import_pack(self.root, link="demo_line_icons", bot=FakeBot(live_set()))
+        all_ids = set(emoji.previews(self.root))
+        block = snapshot_document(open_snapshot(self.root), emoji_previews="all")["emoji"]
+        self.assertEqual(set(block["previews"]), all_ids)
+        one = len(next(iter(block["previews"].values()))) - len("data:image/webp;base64,")
+        small = snapshot_document(open_snapshot(self.root), emoji_previews="all", emoji_budget=one * 3)["emoji"]
+        self.assertEqual(len(small["previews"]), 3, "the budget stops inlining, nothing breaks")
+
 
 class Server(ProjectCase):
     def setUp(self):

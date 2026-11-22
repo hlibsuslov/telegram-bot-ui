@@ -318,7 +318,8 @@ def cmd_export_snapshot(args) -> int:
     from .artifact import build_artifact, snapshot_document
     snap = open_snapshot(_root(args))
     if args.format == "json":
-        doc = snapshot_document(snap, screens=args.screen)
+        doc = snapshot_document(snap, screens=args.screen, emoji_previews=args.emoji_previews,
+                                emoji_budget=args.emoji_budget)
         with open(args.output, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(doc, fh, ensure_ascii=False, indent=2)
     else:
@@ -475,6 +476,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--output", required=True)
     p.add_argument("--format", choices=("html", "json"), default="html")
     p.add_argument("--screen", action="append", help="only these screens (default: all)")
+    p.add_argument("--emoji-previews", choices=("used", "all"), default="used",
+                   help="json: inline pictures of the used emoji only (default) or of every imported pack")
+    p.add_argument("--emoji-budget", type=int, default=1_500_000, help="json: bytes of inlined emoji pictures")
     p = add("emoji", cmd_emoji, "premium emoji library: import a pack by link, map icons to meanings, the agent's brief")
     p.add_argument("action", choices=("import", "list", "icon", "remove", "brief"))
     p.add_argument("link", nargs="?", help="import: https://t.me/addemoji/<name> or the name; remove: the pack name")

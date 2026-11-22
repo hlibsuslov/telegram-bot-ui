@@ -21,7 +21,8 @@ PROJECT_KEYS = ("schemaVersion", "projectId", "title", "defaultLocale", "locales
                 "fields", "handlers", "messages", "capabilities")
 
 
-def snapshot_document(snap: Snapshot, screens: list[str] | None = None) -> dict:
+def snapshot_document(snap: Snapshot, screens: list[str] | None = None, emoji_previews: str = "used",
+                      emoji_budget: int = 1_500_000) -> dict:
     p = snap.project or {}
     chosen = {sid: doc for sid, doc in snap.screens.items() if not screens or sid in screens}
     return {
@@ -35,7 +36,7 @@ def snapshot_document(snap: Snapshot, screens: list[str] | None = None) -> dict:
         "features": {"map": True, "simulate": True, "editText": True, "editRule": True, "exportPatch": True,
                      "save": False, "widgets": False, "createScreen": False},
         "apply": "py -3 studio/bot-ui.py apply-patch --project <bot-ui folder> --patch-file <exported .json>",
-        **({"emoji": block} if (block := emoji.snapshot_block(snap)) else {}),
+        **({"emoji": block} if (block := emoji.snapshot_block(snap, emoji_budget, emoji_previews)) else {}),
     }
 
 
