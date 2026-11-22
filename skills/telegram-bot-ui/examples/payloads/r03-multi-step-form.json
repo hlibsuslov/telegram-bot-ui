@@ -155,18 +155,18 @@
             ],
             [
               {
+                "text": "Place order",
+                "disabled": {}
+              }
+            ],
+            [
+              {
                 "text": "← Back",
                 "callback_data": "f:F7:2:back"
               },
               {
                 "text": "Cancel",
                 "callback_data": "f:F7:2:cancel"
-              }
-            ],
-            [
-              {
-                "text": "Submit",
-                "disabled": {}
               }
             ]
           ],
@@ -259,18 +259,18 @@
             ],
             [
               {
+                "text": "Place order",
+                "disabled": {}
+              }
+            ],
+            [
+              {
                 "text": "← Back",
                 "callback_data": "f:F7:2:back"
               },
               {
                 "text": "Cancel",
                 "callback_data": "f:F7:2:cancel"
-              }
-            ],
-            [
-              {
-                "text": "Submit",
-                "disabled": {}
               }
             ]
           ],
@@ -323,19 +323,19 @@
             ],
             [
               {
+                "text": "Place order",
+                "callback_data": "f:F7:submit",
+                "style": "success"
+              }
+            ],
+            [
+              {
                 "text": "← Back",
                 "callback_data": "f:F7:2:back"
               },
               {
                 "text": "Cancel",
                 "callback_data": "f:F7:2:cancel"
-              }
-            ],
-            [
-              {
-                "text": "Submit",
-                "callback_data": "f:F7:submit",
-                "style": "success"
               }
             ]
           ],
