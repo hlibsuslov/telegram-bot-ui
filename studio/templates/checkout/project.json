@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "projectId": "demo-shop",
+  "title": "Demo shop",
+  "defaultLocale": "ru",
+  "locales": ["ru", "en"],
+  "entryPoints": [
+    {"id": "start", "type": "command", "command": "start", "screen": "entry.start"},
+    {"id": "status", "type": "command", "command": "status", "screen": "orders.status"},
+    {"id": "order-status-changed", "type": "event", "eventKey": "order.status_changed", "screen": "orders.notification"}
+  ],
+  "contexts": ["private"],
+  "fields": {
+    "order.no": {"type": "string", "source": "data", "example": "4821"},
+    "order.total": {"type": "string", "source": "data", "example": "1 290 ₽"},
+    "order.status_text": {"type": "string", "source": "data", "example": "курьер в пути"},
+    "payment.method": {"type": "enum", "values": ["card", "cash"], "source": "state"},
+    "delivery.method": {"type": "enum", "values": ["pickup", "courier"], "source": "context"},
+    "order.note": {"type": "string", "source": "input", "maxLength": 200}
+  },
+  "handlers": {
+    "checkout.confirm": {"outcomes": ["ok", "retry"], "description": "Charges the order on the server; the demo returns a scripted outcome."}
+  },
+  "messages": {
+    "stale": {"ru": "Эта кнопка устарела — откройте последнее сообщение.", "en": "This button is out of date - use the latest message."},
+    "disabled": {"ru": "Сейчас недоступно.", "en": "Not available right now."}
+  },
+  "capabilities": {"widgets": true, "richMessages": false},
+  "adapter": {"sdk": "aiogram", "sdkVersion": "3.31.0", "source": "read on start and on change"}
+}

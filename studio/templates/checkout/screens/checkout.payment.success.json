@@ -1,0 +1,44 @@
+{
+  "id": "checkout.payment.success",
+  "title": "Оплачено",
+  "kind": "result",
+  "audience": "private",
+  "message": {
+    "id": "main",
+    "format": "regular.html",
+    "text": {
+      "ru": "✅ <b>Заказ #{order.no} оплачен</b>\nМы сообщим, когда курьер выедет.",
+      "en": "✅ <b>Order #{order.no} is paid</b>\nWe will tell you when the courier leaves."
+    }
+  },
+  "keyboard": {
+    "type": "inline",
+    "rows": [
+      [
+        "status"
+      ],
+      [
+        "menu"
+      ]
+    ]
+  },
+  "actions": {
+    "status": {
+      "label": {
+        "ru": "📦 Статус заказа",
+        "en": "📦 Order status"
+      },
+      "type": "navigate",
+      "to": "orders.status",
+      "presentation": "send"
+    },
+    "menu": {
+      "label": {
+        "ru": "В меню",
+        "en": "Menu"
+      },
+      "type": "navigate",
+      "to": "entry.start"
+    }
+  }
+}

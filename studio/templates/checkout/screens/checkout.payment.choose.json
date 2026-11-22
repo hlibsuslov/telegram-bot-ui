@@ -1,0 +1,60 @@
+{
+  "id": "checkout.payment.choose",
+  "title": "Выбор оплаты",
+  "kind": "menu",
+  "audience": "private",
+  "message": {
+    "id": "main",
+    "format": "regular.html",
+    "text": {
+      "ru": "<b>Как оплатить заказ?</b>\nСумма: {order.total}",
+      "en": "<b>How would you like to pay?</b>\nTotal: {order.total}"
+    }
+  },
+  "keyboard": {
+    "type": "inline",
+    "rows": [
+      [
+        "card",
+        "cash"
+      ],
+      [
+        "back"
+      ]
+    ]
+  },
+  "actions": {
+    "card": {
+      "label": {
+        "ru": "Картой",
+        "en": "Card"
+      },
+      "type": "navigate",
+      "to": "checkout.note",
+      "presentation": "send",
+      "set": {
+        "payment.method": "card"
+      }
+    },
+    "cash": {
+      "label": {
+        "ru": "Наличными",
+        "en": "Cash"
+      },
+      "type": "navigate",
+      "to": "checkout.note",
+      "presentation": "send",
+      "set": {
+        "payment.method": "cash"
+      }
+    },
+    "back": {
+      "label": {
+        "ru": "← Назад",
+        "en": "← Back"
+      },
+      "type": "back",
+      "fallback": "entry.start"
+    }
+  }
+}

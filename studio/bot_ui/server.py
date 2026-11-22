@@ -1,0 +1,276 @@
+"""Local Studio server: the built web client plus a small typed JSON API over one project.
+
+Security model (local tool, one user):
+* binds 127.0.0.1 only; the project root is fixed at start, nothing else is served;
+* every request must carry Host 127.0.0.1:<port> or localhost:<port> (DNS-rebinding guard);
+* every /api POST needs Origin http://127.0.0.1:<port> or http://localhost:<port>, a JSON
+  Content-Type and the per-run token from the page (X-Bot-UI-Token) - another web page can
+  neither read nor write; the sandboxed widget preview has an opaque origin and is refused;
+* writes go through store.write_patch (revision check, lock, validation, atomic replace);
+* no request leaves this machine; widget builds run the skill's offline builder.
+"""
+from __future__ import annotations
+
+import json
+import mimetypes
+import os
+import secrets
+import threading
+import webbrowser
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import Any
+
+from . import SCHEMA_VERSION, TOOL_VERSION, widgets
+from .engine import parity_view, run_scenario
+from .project import Snapshot, open_snapshot, parse_files
+from .render import bot_request, render_screen
+from .store import StoreError, screen_patch, write_patch
+from .validate import summary, validate
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+DIST = os.path.join(os.path.dirname(HERE), "web", "dist")
+MAX_BODY = 2 * 1024 * 1024
+
+
+def project_document(snap: Snapshot, *, include_widget_sources: bool = True) -> dict:
+    """What a client needs to draw the map, edit and simulate. No absolute paths."""
+    diags = validate(snap)
+    widgets_doc = {}
+    for wid, w in snap.widgets.items():
+        files = {rel.split("/", 2)[2]: snap.files[rel].decode("utf-8") for rel in snap.files
+                 if rel.startswith(f"widgets/{wid}/")} if include_widget_sources else {}
+        widgets_doc[wid] = {"meta": w, "files": files}
+    return {"schemaVersion": SCHEMA_VERSION, "tool": TOOL_VERSION, "revision": snap.revision,
+            "readOnly": snap.read_only, "project": snap.project, "screens": snap.screens,
+            "screenFiles": snap.screen_files, "scenarios": snap.scenarios, "widgets": widgets_doc,
+            "diagnostics": [d.to_json() for d in diags], "summary": summary(diags)}
+
+
+def _overlay(snap: Snapshot, screens: dict | None) -> Snapshot:
+    """A draft snapshot: the saved files with some screens replaced in memory (never written)."""
+    if not screens:
+        return snap
+    from .project import canonical_json
+    files = dict(snap.files)
+    for sid, doc in screens.items():
+        files[snap.screen_path(sid) if sid in snap.screens else f"screens/{sid}.json"] = canonical_json(doc, "screen")
+    return parse_files(snap.root, files)
+
+
+class Studio:
+    def __init__(self, root: str, port: int) -> None:
+        self.root = root
+        self.port = port
+        self.token = secrets.token_urlsafe(24)
+        self.lock = threading.Lock()
+
+    # ------------------------------------------------------------ API
+    def api(self, path: str, body: dict) -> tuple[int, dict]:
+        snap = open_snapshot(self.root)
+        if path == "/api/project":
+            return 200, project_document(snap)
+        if path == "/api/revision":
+            return 200, {"revision": snap.revision}
+        if path == "/api/validate":
+            draft = _overlay(snap, body.get("screens"))
+            diags = validate(draft)
+            return 200, {"revision": snap.revision, "diagnostics": [d.to_json() for d in diags], "summary": summary(diags)}
+        if path in ("/api/save", "/api/preview-patch"):
+            patch = body.get("patch")
+            if patch is None and "screen" in body:
+                patch = screen_patch(snap, body["screen"]["id"], body["screen"])
+                patch["baseRevision"] = body.get("expectedRevision", snap.revision)
+            try:
+                res = write_patch(self.root, patch, dry_run=path == "/api/preview-patch")
+            except StoreError as err:
+                status = 409 if err.code == "REVISION_CONFLICT" else 422
+                return status, {"ok": False, "error": err.to_json(), "patch": patch}
+            return 200, {**res.to_json(), "patch": patch}
+        if path == "/api/simulate":
+            draft = _overlay(snap, body.get("screens"))
+            sc = body.get("scenario")
+            if isinstance(sc, str):
+                sc = draft.scenarios.get(sc)
+            if not isinstance(sc, dict):
+                return 404, {"ok": False, "error": {"code": "SCENARIO_NOT_FOUND", "message": "no such scenario"}}
+            return 200, parity_view(run_scenario(draft, sc))
+        if path == "/api/render":
+            draft = _overlay(snap, body.get("screens"))
+            sid = body.get("screenId")
+            if sid not in draft.screens:
+                return 404, {"ok": False, "error": {"code": "SCREEN_NOT_FOUND", "message": str(sid)}}
+            logical = render_screen(draft.project or {}, draft.screens[sid], locale=body.get("locale"),
+                                    state=body.get("state"), values=body.get("values"))
+            return 200, {"render": logical, "request": bot_request(logical, 111111111)}
+        if path == "/api/widget/build":
+            wid = body.get("widget")
+            draft = snap
+            if body.get("files"):
+                files = dict(snap.files)
+                for name, text in body["files"].items():
+                    if "/" in name or "\\" in name or name.startswith("."):
+                        return 422, {"ok": False, "error": {"code": "PATH_REFUSED", "message": name}}
+                    files[f"widgets/{wid}/{name}"] = str(text).encode("utf-8")
+                draft = parse_files(self.root, files)
+            if wid not in draft.widgets:
+                return 404, {"ok": False, "error": {"code": "WIDGET_NOT_FOUND", "message": str(wid)}}
+            built = widgets.build(draft, wid, lang=body.get("lang"), values=body.get("values"))
+            if built["ok"]:
+                built["payload"] = widgets.payload(draft, wid, built, state=body.get("state", "default"))
+                built["payload"]["params"]["html"] = f"<{built['rawBytes']} bytes>"
+            built["draft"] = bool(body.get("files"))
+            return 200, built
+        if path == "/api/widget/export":
+            wid = body.get("widget")
+            built = widgets.build(snap, wid, lang=body.get("lang"), values=body.get("values"))
+            try:
+                return 200, widgets.export(snap, wid, built, body.get("sourceHash", ""))
+            except widgets.WidgetError as err:
+                return 409, {"ok": False, "error": {"code": err.code, "message": err.message,
+                                                    "currentHash": built["sourceHash"]}}
+        if path == "/api/widget/runtime":
+            wid = body.get("widget")
+            return 200, {**widgets.preview_runtime(), "answers": widgets.mock_answers(snap, wid) if wid in snap.widgets else {}}
+        return 404, {"ok": False, "error": {"code": "NOT_FOUND", "message": path}}
+
+    # ------------------------------------------------------------ HTTP
+    def handler(self):
+        studio = self
+
+        class H(BaseHTTPRequestHandler):
+            server_version = "bot-ui-studio"
+
+            def log_message(self, *args):
+                pass
+
+            def _host_ok(self) -> bool:
+                return self.headers.get("Host") in (f"127.0.0.1:{studio.port}", f"localhost:{studio.port}")
+
+            def _send(self, status: int, body: bytes, ctype: str, extra: dict | None = None) -> None:
+                self.send_response(status)
+                self.send_header("Content-Type", ctype)
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "no-store")
+                self.send_header("X-Content-Type-Options", "nosniff")
+                self.send_header("Referrer-Policy", "no-referrer")
+                self.send_header("Cross-Origin-Resource-Policy", "same-origin")
+                for k, v in (extra or {}).items():
+                    self.send_header(k, v)
+                self.end_headers()
+                self.wfile.write(body)
+
+            def _json(self, status: int, doc: Any) -> None:
+                self._send(status, json.dumps(doc, ensure_ascii=False).encode("utf-8"), "application/json; charset=utf-8")
+
+            def do_GET(self):
+                if not self._host_ok():
+                    return self._json(421, {"ok": False, "error": {"code": "HOST_REFUSED", "message": "unexpected Host"}})
+                path = self.path.split("?", 1)[0]
+                if path.startswith("/api/"):
+                    return self._json(405, {"ok": False, "error": {"code": "POST_ONLY", "message": "API calls are POST"}})
+                return self._static(path)
+
+            def do_POST(self):
+                if not self._host_ok():
+                    return self._json(421, {"ok": False, "error": {"code": "HOST_REFUSED", "message": "unexpected Host"}})
+                origin = self.headers.get("Origin")
+                if origin not in (f"http://127.0.0.1:{studio.port}", f"http://localhost:{studio.port}"):
+                    return self._json(403, {"ok": False, "error": {"code": "ORIGIN_REFUSED", "message": f"origin {origin!r}"}})
+                if self.headers.get("X-Bot-UI-Token") != studio.token:
+                    return self._json(403, {"ok": False, "error": {"code": "TOKEN_REFUSED", "message": "missing or wrong token"}})
+                if not (self.headers.get("Content-Type") or "").startswith("application/json"):
+                    return self._json(415, {"ok": False, "error": {"code": "JSON_ONLY", "message": "Content-Type: application/json"}})
+                n = int(self.headers.get("Content-Length") or 0)
+                if n > MAX_BODY:
+                    return self._json(413, {"ok": False, "error": {"code": "TOO_LARGE", "message": f"> {MAX_BODY} bytes"}})
+                try:
+                    body = json.loads(self.rfile.read(n) or b"{}")
+                except json.JSONDecodeError:
+                    return self._json(400, {"ok": False, "error": {"code": "JSON_INVALID", "message": "body is not JSON"}})
+                try:
+                    with studio.lock:
+                        status, doc = studio.api(self.path.split("?", 1)[0], body if isinstance(body, dict) else {})
+                except Exception as err:  # report, never crash the server
+                    status, doc = 500, {"ok": False, "error": {"code": "INTERNAL", "message": f"{type(err).__name__}: {err}"}}
+                return self._json(status, doc)
+
+            def _static(self, path: str) -> None:
+                if path == "/preview-frame.html":
+                    return self._send(200, PREVIEW_FRAME.encode("utf-8"), "text/html; charset=utf-8",
+                                      {"Content-Security-Policy": PREVIEW_CSP})
+                if path in ("/", "/index.html") or not os.path.splitext(path)[1]:
+                    index = os.path.join(DIST, "index.html")
+                    if not os.path.isfile(index):
+                        return self._send(503, NOT_BUILT.encode("utf-8"), "text/html; charset=utf-8")
+                    with open(index, encoding="utf-8") as fh:
+                        html = fh.read().replace("__BOT_UI_TOKEN__", studio.token).replace("__BOT_UI_MODE__", "studio")
+                    return self._send(200, html.encode("utf-8"), "text/html; charset=utf-8", {
+                        "Content-Security-Policy": CSP})
+                rel = path.lstrip("/")
+                full = os.path.realpath(os.path.join(DIST, *rel.split("/")))
+                if os.path.commonpath([full, os.path.realpath(DIST)]) != os.path.realpath(DIST) or not os.path.isfile(full):
+                    return self._json(404, {"ok": False, "error": {"code": "NOT_FOUND", "message": path}})
+                with open(full, "rb") as fh:
+                    data = fh.read()
+                ctype = mimetypes.guess_type(full)[0] or "application/octet-stream"
+                if full.endswith(".js"):
+                    ctype = "text/javascript; charset=utf-8"
+                return self._send(200, data, ctype)
+
+        return H
+
+
+# The page may call only itself; the widget preview frame (srcdoc, sandbox without
+# allow-same-origin) carries its own stricter CSP with connect-src 'none'.
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+       "font-src 'self' data:; connect-src 'self'; frame-src 'self' about: data:; child-src 'self' about: data:; "
+       "object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+
+# The widget preview frame. Loaded with <iframe sandbox="allow-scripts"> (opaque origin: no
+# cookies, storage or same-origin access to the Studio, its API refuses Origin: null), and
+# its own CSP: no network at all, inline code only. The parent sends the document to show;
+# the frame accepts it once, from its parent only.
+PREVIEW_CSP = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; "
+               "font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'")
+PREVIEW_FRAME = """<!doctype html><html><head><meta charset="utf-8"></head><body><script>
+addEventListener("message", function once(e) {
+  if (e.source !== parent || !e.data || e.data.k !== "load" || typeof e.data.doc !== "string") return;
+  removeEventListener("message", once);
+  document.open(); document.write(e.data.doc); document.close();
+});
+parent.postMessage({k: "frame-ready"}, "*");
+</script></body></html>"""
+
+NOT_BUILT = """<!doctype html><meta charset="utf-8"><title>bot-ui Studio</title>
+<body style="font:16px system-ui;max-width:40rem;margin:4rem auto">
+<h1>The Studio client is not built</h1>
+<p>Run once, then restart <code>bot-ui studio</code>:</p>
+<pre>cd studio/web
+npm ci
+npm run build</pre>
+<p>The CLI works without it: <code>bot-ui list</code>, <code>show</code>, <code>validate</code>, <code>simulate</code>.</p>"""
+
+
+def serve(root: str, *, host: str = "127.0.0.1", port: int = 0, open_screen: str | None = None,
+          open_browser: bool = False, ready: threading.Event | None = None, holder: dict | None = None) -> int:
+    if host not in ("127.0.0.1", "localhost"):
+        raise ValueError("the Studio binds to loopback only")
+    srv = ThreadingHTTPServer((host, port), BaseHTTPRequestHandler)
+    studio = Studio(root, srv.server_address[1])
+    srv.RequestHandlerClass = studio.handler()
+    url = f"http://127.0.0.1:{studio.port}/" + (f"#/screen/{open_screen}" if open_screen else "")
+    print(f"bot-ui Studio {TOOL_VERSION} for {root}\n  {url}\n  Ctrl+C stops it (local only; nothing is sent to Telegram)",
+          flush=True)
+    if holder is not None:
+        holder.update(server=srv, studio=studio, url=url)
+    if ready is not None:
+        ready.set()
+    if open_browser:
+        webbrowser.open(url)
+    try:
+        srv.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        srv.server_close()
+    return 0

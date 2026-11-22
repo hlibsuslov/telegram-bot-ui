@@ -1,0 +1,25 @@
+{
+  "id": "checkout.note",
+  "title": "Комментарий",
+  "kind": "form",
+  "audience": "private",
+  "message": {
+    "id": "main",
+    "format": "regular.plain",
+    "text": {
+      "ru": "Напишите комментарий для курьера одним сообщением.",
+      "en": "Send one message with a note for the courier."
+    }
+  },
+  "keyboard": {
+    "type": "force_reply",
+    "placeholder": {
+      "ru": "Например: позвоните за 5 минут",
+      "en": "For example: call 5 minutes ahead"
+    }
+  },
+  "input": {
+    "field": "order.note",
+    "to": "checkout.payment.confirm"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "id": "entry.start",
+  "title": "Старт",
+  "kind": "entry",
+  "audience": "private",
+  "message": {
+    "id": "main",
+    "format": "regular.html",
+    "text": {
+      "ru": "<b>Демо-магазин</b>\nСоберите заказ за минуту или проверьте, где он сейчас.",
+      "en": "<b>Demo shop</b>\nPlace an order in a minute or check where it is now."
+    }
+  },
+  "keyboard": {
+    "type": "inline",
+    "rows": [
+      [
+        "order"
+      ],
+      [
+        "status"
+      ]
+    ]
+  },
+  "actions": {
+    "order": {
+      "label": {
+        "ru": "🛒 Оформить заказ",
+        "en": "🛒 Place an order"
+      },
+      "type": "navigate",
+      "to": "checkout.payment.choose",
+      "presentation": "edit",
+      "style": "primary"
+    },
+    "status": {
+      "label": {
+        "ru": "📦 Статус заказа",
+        "en": "📦 Order status"
+      },
+      "type": "navigate",
+      "to": "orders.status",
+      "presentation": "send"
+    }
+  }
+}

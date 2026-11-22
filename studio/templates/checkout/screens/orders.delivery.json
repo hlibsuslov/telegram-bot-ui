@@ -1,0 +1,32 @@
+{
+  "id": "orders.delivery",
+  "title": "Доставка курьером",
+  "kind": "result",
+  "audience": "private",
+  "message": {
+    "id": "main",
+    "format": "regular.html",
+    "text": {
+      "ru": "🛵 <b>Курьер</b>\nКурьер привезёт заказ #{order.no} и позвонит заранее.",
+      "en": "🛵 <b>Courier</b>\nThe courier brings order #{order.no} and calls ahead."
+    }
+  },
+  "keyboard": {
+    "type": "inline",
+    "rows": [
+      [
+        "back"
+      ]
+    ]
+  },
+  "actions": {
+    "back": {
+      "label": {
+        "ru": "← К статусу",
+        "en": "← Status"
+      },
+      "type": "back",
+      "fallback": "orders.status"
+    }
+  }
+}

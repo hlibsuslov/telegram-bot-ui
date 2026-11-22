@@ -1,0 +1,66 @@
+{
+  "id": "orders.status",
+  "title": "Статус заказа",
+  "kind": "status",
+  "audience": "private",
+  "message": {
+    "id": "main",
+    "format": "regular.html",
+    "text": {
+      "ru": "📦 <b>Заказ #{order.no}</b>\nСейчас: {order.status_text}.",
+      "en": "📦 <b>Order #{order.no}</b>\nNow: {order.status_text}."
+    }
+  },
+  "keyboard": {
+    "type": "inline",
+    "rows": [
+      [
+        "route"
+      ],
+      [
+        "refresh",
+        "back"
+      ]
+    ]
+  },
+  "actions": {
+    "route": {
+      "label": {
+        "ru": "Как получить",
+        "en": "How to get it"
+      },
+      "type": "navigate",
+      "rule": {
+        "when": {
+          "field": "delivery.method",
+          "eq": "pickup"
+        },
+        "match": "orders.pickup",
+        "otherwise": "orders.delivery"
+      },
+      "presentation": "send"
+    },
+    "refresh": {
+      "label": {
+        "ru": "Обновить",
+        "en": "Refresh"
+      },
+      "type": "answer",
+      "text": {
+        "ru": "Статус актуален",
+        "en": "The status is up to date"
+      }
+    },
+    "back": {
+      "label": {
+        "ru": "В меню",
+        "en": "Menu"
+      },
+      "type": "back",
+      "fallback": "entry.start"
+    }
+  },
+  "widget": {
+    "ref": "order-status"
+  }
+}
