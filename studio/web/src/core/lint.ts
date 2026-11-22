@@ -1,7 +1,7 @@
 // Client-side checks of the surfaces the Studio and the artifact edit (texts, labels, targets,
 // rules, keyboard references). A subset of studio/bot_ui/validate.py with the same codes and
 // pointers; the CLI and the Studio server run the full validator before any write.
-import { type Doc, keyboardRows, placeholders } from "./render.ts";
+import { type Doc, MEDIA_TYPES, keyboardRows, placeholders } from "./render.ts";
 import type { Snapshot } from "./engine.ts";
 
 export interface Diag { code: string; severity: "error" | "warning" | "info"; file: string; pointer: string; message: string; screenId?: string }
@@ -27,8 +27,9 @@ export function lintScreen(snap: Snapshot, sid: string): Diag[] {
   const def = p.defaultLocale;
   const fields = p.fields ?? {};
   const audience = s.audience ?? "private";
-  const text = (value: any, pointer: string, fmt: string) => {
+  const text = (value: any, pointer: string, fmt: string, optional = false) => {
     if (typeof value === "string") value = { [def]: value };
+    if (optional && (value === undefined || value === null || (typeof value === "object" && !Object.keys(value).length))) return;
     if (!value || typeof value[def] !== "string" || !value[def]) {
       add("DEFAULT_LOCALE_TEXT_MISSING", "error", `${pointer}/${def}`, `text in the default locale '${def}' is required`);
       return;
@@ -46,6 +47,11 @@ export function lintScreen(snap: Snapshot, sid: string): Diag[] {
           else stack.push(tag);
         }
         if (stack.length) add("HTML_UNBALANCED", "error", `${pointer}/${loc}`, `unclosed <${stack[stack.length - 1]}>`);
+        for (const m of t.matchAll(/<tg-emoji([^>]*)>([\s\S]*?)<\/tg-emoji>/g)) {
+          const id = /emoji-id="([^"]*)"/.exec(m[1]);
+          if (!id || !/^\d{1,20}$/.test(id[1])) add("CUSTOM_EMOJI_INVALID", "error", `${pointer}/${loc}`, 'tg-emoji needs emoji-id="<digits>"');
+          if (!m[2].trim() || m[2].length > 16 || m[2].includes("<")) add("CUSTOM_EMOJI_FALLBACK", "error", `${pointer}/${loc}`, "put one ordinary emoji inside <tg-emoji>: users who cannot see the custom emoji see it");
+        }
       }
     }
   };
@@ -56,9 +62,26 @@ export function lintScreen(snap: Snapshot, sid: string): Diag[] {
     if (ta !== audience && ta !== "any" && audience !== "any") add("AUDIENCE_MISMATCH", "error", pointer, `${sid} (${audience}) leads to ${to} (${ta}); a transition keeps one audience`);
   };
   const fmt = s.message?.format ?? "regular.plain";
+  const media = s.message?.media;
+  let mtype: string | null = null;
+  if (media !== undefined && media !== null) {
+    if (typeof media !== "object" || !(media.type in MEDIA_TYPES)) {
+      add("MEDIA_TYPE_UNKNOWN", "error", "/message/media/type", `media type is one of ${Object.keys(MEDIA_TYPES).sort().join(", ")} (documents and uploads are not part of bot-ui)`);
+    } else {
+      mtype = media.type;
+      const keys = ["fileId", "url", "field"].filter((k) => media.file && typeof media.file === "object" && k in media.file);
+      if (keys.length !== 1) add("MEDIA_FILE_SOURCE", "error", "/message/media/file", "file is exactly one of {fileId}, {url} or {field}; local files are never uploaded");
+      else if (keys[0] === "url" && !String(media.file.url).startsWith("https://")) add("MEDIA_URL", "error", "/message/media/file/url", "an https:// URL Telegram can fetch");
+      else if (keys[0] === "fileId" && !/^[A-Za-z0-9_-]{8,}$/.test(String(media.file.fileId))) add("MEDIA_FILE_ID", "error", "/message/media/file/fileId", "a Telegram file_id (letters, digits, _ and -)");
+    }
+  }
   if (fmt === "regular.plain" || fmt === "regular.html") {
-    text(s.message?.text, "/message/text", fmt);
-    for (const [st, v] of Object.entries<any>(s.message?.states ?? {})) if (v && "text" in v) text(v.text, `/message/states/${st}/text`, fmt);
+    if (mtype === "sticker" || mtype === "video_note") {
+      if (s.message?.text) add("MEDIA_NO_CAPTION", "error", "/message/text", `a ${mtype} has no caption; put the text on its own screen or drop it`);
+    } else {
+      text(s.message?.text, "/message/text", fmt, !!mtype);
+      for (const [st, v] of Object.entries<any>(s.message?.states ?? {})) if (v && "text" in v) text(v.text, `/message/states/${st}/text`, fmt);
+    }
   }
   const actions = s.actions ?? {};
   const placed = new Set<string>();
@@ -71,6 +94,7 @@ export function lintScreen(snap: Snapshot, sid: string): Diag[] {
     const ptr = `/actions/${aid}`;
     if (!/^[a-z0-9][a-z0-9_-]*$/.test(aid)) add("ACTION_ID_INVALID", "error", ptr, "action IDs: lowercase letters, digits, _ and -");
     text(a.label, `${ptr}/label`, "regular.plain");
+    if (a.icon !== undefined && (typeof a.icon !== "object" || !/^\d{1,20}$/.test(String(a.icon?.customEmojiId ?? "")))) add("CUSTOM_EMOJI_INVALID", "error", `${ptr}/icon`, 'icon is {"customEmojiId": "<digits>"}');
     if (a.type === "navigate") {
       const hasTo = "to" in a, rule = a.rule;
       if (hasTo === (rule !== undefined && rule !== null)) add("NAVIGATE_TARGET", "error", ptr, "navigate has exactly one of 'to' or 'rule'");

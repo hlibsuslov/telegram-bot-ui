@@ -62,12 +62,13 @@ class Runtime:
             self._widget_cache.clear()
         return self._snap
 
-    def callback_map(self, snap: Snapshot) -> dict[str, tuple[str, str]]:
-        out = {}
+    def callback_map(self, snap: Snapshot) -> dict[str, list[tuple[str, str]]]:
+        """callback_data -> every (screenId, actionId) using it (shared values do the same thing)."""
+        out: dict[str, list[tuple[str, str]]] = {}
         for sid, s in snap.screens.items():
             for aid, a in (s.get("actions") or {}).items():
                 if isinstance(a, dict) and a.get("type") != "url":
-                    out[render.callback_data(sid, aid, a)] = (sid, aid)
+                    out.setdefault(render.callback_data(sid, aid, a), []).append((sid, aid))
         return out
 
     # ------------------------------------------------------------ updates
@@ -102,14 +103,14 @@ class Runtime:
 
         outcome: dict[str, str] = {}
         if cq is not None:
-            hit = self.callback_map(snap).get(cq.get("data") or "")
-            if hit is None:
+            hits = self.callback_map(snap).get(cq.get("data") or "")
+            if not hits:
                 await call("answerCallbackQuery", {"callback_query_id": cq["id"], "text": Engine(snap)._text("stale", s["locale"])})
                 self.sessions.put(key, s)
                 return {"ignored": False, "requests": requests,
                         "trace": {"update": {"type": "callback_query", "data": cq.get("data")}, "action": {"type": "stale"},
                                   "transition": None, "effects": [{"type": "answer", "text": "stale"}], "diagnostics": []}}
-            sid, aid = hit
+            sid, aid = self._pick(s, cq, msg, hits)
             instance = self._instance_for(s, cq, msg, sid)
             event = {"press": aid, "message": instance}
             act = snap.screens[sid]["actions"][aid]
@@ -152,6 +153,15 @@ class Runtime:
         user = (update.get("message") or update.get("callback_query") or {}).get("from") or {}
         code = (user.get("language_code") or "").split("-")[0]
         return code if code in (project.get("locales") or []) else project.get("defaultLocale", "en")
+
+    @staticmethod
+    def _pick(s: dict, cq: dict, msg: dict | None, hits: list[tuple[str, str]]) -> tuple[str, str]:
+        """The screen the pressed message shows, when the session knows it; else the first."""
+        ref = {"chat_id": msg["chat"]["id"], "message_id": msg["message_id"]} if msg else \
+            {"inline_message_id": cq.get("inline_message_id")}
+        inst = next((int(i) for i, known in s.get("tg", {}).items() if known == ref), None)
+        shown = next((m["screen"] for m in s.get("messages", []) if m["instance"] == inst), None)
+        return next(((sid, aid) for sid, aid in hits if sid == shown), hits[0])
 
     @staticmethod
     def _instance_for(s: dict, cq: dict, msg: dict | None, sid: str) -> int:

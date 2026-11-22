@@ -9,9 +9,10 @@ const LOC = "[a-z]{2,3}(?:-[a-z0-9]{2,8})?";
 export const ALLOWED_PATHS = [
   "/title", "/kind", "/audience", "/notes",
   "/message/format", `/message/text(/${LOC})?`, `/message/states/${SEG}(/text(/${LOC})?)?`,
+  "/message/media", "/message/media/(type|file|spoiler|emoji)",
   "/keyboard", "/keyboard/(type|rows|placeholder|resize|oneTime)", `/keyboard/placeholder/${LOC}`,
   `/actions/${SEG}`,
-  `/actions/${SEG}/(label|type|to|rule|presentation|set|handlerId|outcomes|pending|url|text|fallback|style|hidden)`,
+  `/actions/${SEG}/(label|type|to|rule|presentation|set|handlerId|outcomes|pending|url|text|fallback|style|icon|hidden)`,
   `/actions/${SEG}/(label|text|pending)/${LOC}`,
   `/actions/${SEG}/rule/(when|match|otherwise)`, `/actions/${SEG}/rule/when/(field|eq)`,
   `/actions/${SEG}/outcomes/${SEG}`, `/actions/${SEG}/set/[a-z0-9_.-]+`,

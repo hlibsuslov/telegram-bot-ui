@@ -346,6 +346,23 @@ def cmd_inventory(args) -> int:
     return 0
 
 
+def cmd_import(args) -> int:
+    from .importer import import_bot, report_markdown
+    from .store import StoreError
+    if not os.path.isdir(args.source):
+        return _fail(args, "SOURCE_NOT_FOUND", f"{args.source} is not a folder", 2)
+    into = args.into or os.path.join(args.source, "bot-ui")
+    try:
+        res = import_bot(args.source, into, project_id=args.project_id, dry_run=args.dry_run)
+    except StoreError as err:
+        return _fail(args, err.code, err.message, **err.extra)
+    if args.report:
+        with open(args.report, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(report_markdown(res) + "\n")
+    _emit(args, res, report_markdown(res) + ("" if args.dry_run else f"\nproject: {res['project']}"))
+    return 1 if res.get("errors") else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="bot-ui", description=f"bot-ui {TOOL_VERSION} (project schemaVersion {SCHEMA_VERSION})")
     ap.add_argument("--version", action="version", version=f"bot-ui {TOOL_VERSION} schema {SCHEMA_VERSION}")
@@ -407,6 +424,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--output", required=True)
     p.add_argument("--format", choices=("html", "json"), default="html")
     p.add_argument("--screen", action="append", help="only these screens (default: all)")
+    p = sub.add_parser("import", help="build a bot-ui project from an existing aiogram bot (the bot's code is not changed)")
+    p.add_argument("--source", required=True, help="the bot's source folder")
+    p.add_argument("--into", help="project folder to create (default: <source>/bot-ui); an existing project is re-imported")
+    p.add_argument("--project-id")
+    p.add_argument("--report", help="also write the review list as Markdown here")
+    p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_import, project=None)
     p = sub.add_parser("inventory", help="read-only inventory of an existing aiogram bot (proposed screens)")
     p.add_argument("--source", required=True)
     p.add_argument("--json", action="store_true")

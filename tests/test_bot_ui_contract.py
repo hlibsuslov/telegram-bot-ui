@@ -102,7 +102,7 @@ class Validation(ProjectCase):
 
     def test_callback_collision_and_limit(self):
         doc = self.read("screens/orders.pickup.json")
-        doc["actions"]["back"]["callbackData"] = "orders.delivery:back"
+        doc["actions"]["back"]["callbackData"] = "orders.status:route"  # same value, another effect
         doc["actions"]["extra"] = {"label": {"ru": "x", "en": "x"}, "type": "answer", "text": {"ru": "x", "en": "x"},
                                    "callbackData": "x" * 65}
         doc["keyboard"]["rows"].append(["extra"])
@@ -111,6 +111,15 @@ class Validation(ProjectCase):
         found = codes(open_snapshot(self.root))
         self.assertIn("CALLBACK_COLLISION", found)
         self.assertIn("CALLBACK_DATA_INVALID", found)
+
+    def test_shared_callback_with_the_same_effect_is_allowed(self):
+        doc = self.read("screens/orders.pickup.json")
+        doc["actions"]["back"]["callbackData"] = "orders.delivery:back"  # both go back to orders.status
+        with open(os.path.join(self.root, "screens", "orders.pickup.json"), "w", encoding="utf-8") as fh:
+            json.dump(doc, fh, ensure_ascii=False)
+        snap = open_snapshot(self.root)
+        self.assertNotIn("CALLBACK_COLLISION", codes(snap))
+        self.assertIn("CALLBACK_SHARED", codes(snap, "info"))
 
     def test_long_ids_get_a_hashed_callback_within_64_bytes(self):
         sid, aid = "a" * 30 + "." + "b" * 30, "confirm_and_continue"

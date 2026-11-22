@@ -67,7 +67,9 @@ class Engine:
     def _view(self, logical: dict) -> dict:
         """The parity projection of a rendered message."""
         kb = logical["keyboard"]
+        media = logical.get("media")
         return {"screenId": logical["screenId"], "state": logical["state"], "text": logical["text"],
+                "media": media["type"] if media else None,
                 "keyboard": {"type": kb["type"],
                              "rows": [[{"actionId": b["actionId"], "text": b["text"]} for b in row] for row in kb["rows"]]}}
 
@@ -92,14 +94,17 @@ class Engine:
             effects.append({"type": "fallback", "reason": "widget_unsupported", "screenId": sid})
             is_widget = False
         ktype = (screen.get("keyboard") or {}).get("type", "none")
+        target_media = (logical.get("media") or {}).get("type")
         if want_edit and msg is not None and (not msg["accessible"] or msg["kind"] != "message" or is_widget
+                                              or not _edit_ok(msg.get("media"), target_media)
                                               or ktype not in ("inline", "none")):
             reason = ("edit_unavailable" if not msg["accessible"] else
-                      "edit_kind" if msg["kind"] != "message" or is_widget else "edit_keyboard")
+                      "edit_kind" if msg["kind"] != "message" or is_widget or not _edit_ok(msg.get("media"), target_media)
+                      else "edit_keyboard")
             effects.append({"type": "fallback", "reason": reason, "instance": instance})
             want_edit = False
         if want_edit and msg is not None:
-            msg["screen"], msg["state"] = sid, state
+            msg["screen"], msg["state"], msg["media"] = sid, state, target_media
             effects.append({"type": "edit", "instance": instance, "render": logical, "view": self._view(logical)})
             target_instance = instance
         else:
@@ -107,7 +112,7 @@ class Engine:
             s["next"] += 1
             kind = "widget" if is_widget else "message"
             s["messages"].append({"instance": target_instance, "screen": sid, "state": state, "kind": kind,
-                                  "accessible": True})
+                                  "media": None if is_widget else target_media, "accessible": True})
             eff = {"type": "send", "instance": target_instance, "kind": kind, "render": logical,
                    "view": self._view(logical)}
             if is_widget:
@@ -297,6 +302,15 @@ class Engine:
             if exp["contains"] not in text:
                 entry["diagnostics"].append({"code": "EXPECT_TEXT", "severity": "error",
                                              "message": f"text of {s['screen']} does not contain {exp['contains']!r}"})
+
+
+def _edit_ok(current: str | None, target: str | None) -> bool:
+    """What Telegram can edit in place: text -> text (editMessageText); text or an editable media
+    kind -> an editable media kind (editMessageMedia). Never media -> text, never voice, video
+    notes or stickers."""
+    if target is None:
+        return current is None
+    return target in render.EDITABLE_MEDIA and (current is None or current in render.EDITABLE_MEDIA)
 
 
 def _summary(event: dict) -> dict:

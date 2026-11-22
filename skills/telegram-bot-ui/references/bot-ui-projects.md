@@ -69,6 +69,26 @@ Desktop or Web clients render. Widgets run in QuickJS with the host's renderer, 
 
 ## Route 2: existing bot
 
+**Import first, then review the report; do not read the whole codebase.** For an aiogram 3
+bot run `bot-ui import --source <bot> --report import-report.md`. It parses the code (no
+model calls, about a second for 40 handlers), never changes the bot, and writes `bot-ui/`:
+screens from handlers, commands and deep links as entry points, keyboards (literal markups,
+helper functions, `InlineKeyboardBuilder` with `adjust`, reply keyboards, ForceReply), arrows
+from `callback_data` to the matching filter (`F.data == ...`, `startswith`, `CallbackData`
+factories, `F.text` for reply buttons) with the old value kept in `callbackData`, FSM states
+as inputs, `if/else` branches as handler outcomes (happy path first), toasts as `answer`
+actions, every media kind by file_id or URL, custom emoji, gettext/JSON/Fluent catalogs as
+locales. The report lists only what needs a decision, each with file:line and the default
+taken (computed texts or keyboards, unmatched callbacks, extra messages, local uploads ->
+a `media.*` field to fill with the file_id, custom emoji eligibility, untranslated texts).
+
+Then: open only the reported lines, fix all of it in **one** patch file (`apply-patch`), run
+`validate` and `simulate --all`. Hand mechanical items (labels, missing translations) to a
+cheaper model if the host has one; keep ambiguous mappings and public callbacks for the user.
+Re-run `import` after the bot's code changes: it keeps every screen already in `bot-ui/`
+(`import-map.json`) and adds only new handlers. For grammY or another SDK, do the steps below
+by hand.
+
 1. Inventory from the real code (`references/project-adaptation.md`): command and callback
    handlers, keyboard builders, deep links and `/start` payloads, locale catalogs, templates,
    places that send notifications. For each screen write the source file and symbol and a
@@ -124,6 +144,20 @@ Desktop or Web clients render. Widgets run in QuickJS with the host's renderer, 
   `bot-ui-patch/v1` file; apply it with `bot-ui apply-patch --patch-file <file> --dry-run`, then
   without `--dry-run`. Until the CLI reports `written`, say the patch is **pending**. A patch
   whose `baseRevision` is older conflicts (exit 3) exactly like Route 3, step 5.
+
+## Media and custom emoji
+
+- A screen's message can be a photo, video, animation, audio, voice, video note or sticker
+  (`message.media`), referenced by file_id, https URL or a data field. Never upload local
+  files from bot-ui: send once, keep the file_id. Documents are out of scope.
+- Captions are the screen text (1024 max); stickers and video notes carry none, so a text that
+  goes with them is its own screen.
+- An edit that Telegram cannot do (photo -> text, anything -> voice / video note / sticker)
+  becomes a new message in the simulator and the adapter; design Back targets with that in mind.
+- Custom emoji: `<tg-emoji emoji-id="…">fallback</tg-emoji>` in HTML text and
+  `icon.customEmojiId` on buttons. Set `capabilities.customEmoji` (`fragment` /
+  `owner_premium` / `none`) from the real eligibility (`references/custom-emoji.md`); while it is
+  `none` every use warns, because Telegram strips them silently.
 
 ## Widgets in a project
 

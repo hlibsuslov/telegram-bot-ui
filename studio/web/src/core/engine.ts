@@ -1,5 +1,5 @@
 // Port of studio/bot_ui/engine.py (see its docstring for events, effects and policies).
-import { type Doc, keyboardRows, localized, renderScreen, type Logical } from "./render.ts";
+import { type Doc, EDITABLE_MEDIA, keyboardRows, localized, renderScreen, type Logical } from "./render.ts";
 
 export const HISTORY_MAX = 20;
 const DEFAULT_TEXTS: Doc = {
@@ -10,7 +10,7 @@ const DEFAULT_TEXTS: Doc = {
 export interface Snapshot { project: Doc; screens: Record<string, Doc>; scenarios?: Record<string, Doc>; revision?: string }
 export interface Session {
   screen: string | null; locale: string; context: Doc; state: Doc; data: Doc; input: Doc; history: string[];
-  messages: { instance: number; screen: string; state: string | null; kind: string; accessible: boolean }[];
+  messages: { instance: number; screen: string; state: string | null; kind: string; media?: string | null; accessible: boolean }[];
   active: number | null; reply: string | null; awaiting: string | null; next: number;
 }
 export type HandlerFn = (handlerId: string, ctx: Doc) => string;
@@ -37,7 +37,7 @@ export class Engine {
     return renderScreen(this.project, this.snap.screens[sid], { locale: s.locale, state, values: this.values(s) });
   }
   view(l: Logical): Doc {
-    return { screenId: l.screenId, state: l.state, text: l.text,
+    return { screenId: l.screenId, state: l.state, text: l.text, media: l.media ? l.media.type : null,
       keyboard: { type: l.keyboard.type, rows: l.keyboard.rows.map((r) => r.map((b) => ({ actionId: b.actionId, text: b.text }))) } };
   }
   private widgetsOk(s: Session): boolean {
@@ -60,20 +60,22 @@ export class Engine {
       isWidget = false;
     }
     const ktype = (screen.keyboard ?? {}).type ?? "none";
-    if (wantEdit && msg && (!msg.accessible || msg.kind !== "message" || isWidget || !["inline", "none"].includes(ktype))) {
-      const reason = !msg.accessible ? "edit_unavailable" : msg.kind !== "message" || isWidget ? "edit_kind" : "edit_keyboard";
+    const targetMedia = logical.media ? logical.media.type : null;
+    const mediaOk = editOk(msg?.media ?? null, targetMedia);
+    if (wantEdit && msg && (!msg.accessible || msg.kind !== "message" || isWidget || !mediaOk || !["inline", "none"].includes(ktype))) {
+      const reason = !msg.accessible ? "edit_unavailable" : msg.kind !== "message" || isWidget || !mediaOk ? "edit_kind" : "edit_keyboard";
       o.effects.push({ type: "fallback", reason, instance: o.instance });
       wantEdit = false;
     }
     let target: number;
     if (wantEdit && msg) {
-      msg.screen = sid; msg.state = state;
+      msg.screen = sid; msg.state = state; msg.media = targetMedia;
       o.effects.push({ type: "edit", instance: o.instance, render: logical, view: this.view(logical) });
       target = o.instance as number;
     } else {
       target = s.next++;
       const kind = isWidget ? "widget" : "message";
-      s.messages.push({ instance: target, screen: sid, state, kind, accessible: true });
+      s.messages.push({ instance: target, screen: sid, state, kind, media: isWidget ? null : targetMedia, accessible: true });
       const eff: Doc = { type: "send", instance: target, kind, render: logical, view: this.view(logical) };
       if (isWidget) eff.widget = screen.widget.ref;
       o.effects.push(eff);
@@ -232,6 +234,12 @@ export class Engine {
       }
     }
   }
+}
+
+/** What Telegram edits in place: text -> text, text or editable media -> editable media. */
+export function editOk(current: string | null, target: string | null): boolean {
+  if (target === null) return current === null;
+  return EDITABLE_MEDIA.has(target) && (current === null || EDITABLE_MEDIA.has(current));
 }
 
 export function summary(event: Doc): Doc {

@@ -34,7 +34,9 @@ source files above. Editor history, mtime, `.bot-ui/` and anything else are igno
 - Actions are addressed by `(screenId, actionId)`; action IDs are one segment.
 - `callback_data` = explicit `callbackData` of the action (keep the old bot's values there),
   else `<screenId>:<actionId>`, else `h:` + 32 hex of SHA-256 when that is over 64 bytes.
-  Collisions across the project are errors.
+  The same value on several screens is fine when every button with it does the same thing
+  (`CALLBACK_SHARED`, info: old bots reuse "menu"); the same value with another effect is an
+  error (`CALLBACK_COLLISION`). The adapter picks the screen the pressed message shows.
 - A message is addressed by `(screenId, message.id)`. Telegram message IDs, row indexes and
   titles are never identity.
 - Renaming or deleting an ID is a migration. v1 has no rename; deleting a screen with
@@ -52,7 +54,7 @@ source files above. Editor history, mtime, `.bot-ui/` and anything else are igno
 | `fields` | `{name: {type: string\|number\|boolean\|enum, values?, source: data\|context\|state\|input, maxLength?, example?}}`. Placeholders `{name}` and rules refer to these. |
 | `handlers` | `{handlerId: {outcomes: [..]}}`: code the bot registers; the UI maps outcomes. |
 | `messages` | `stale`, `disabled` texts used by the engine. |
-| `capabilities` | `widgets`, `richMessages` of the target environment. |
+| `capabilities` | `widgets`, `richMessages` of the target environment; `customEmoji`: `fragment` (the bot bought extra usernames on Fragment), `owner_premium` (the owner has Premium: private, group, supergroup only) or `none` (default). Telegram drops custom emoji from an ineligible bot without an error, so every use warns while it is `none`. |
 | `adapter` | SDK name and version for documentation; never a token. |
 
 `source`: `data` (fixtures, server data), `context` (trusted runtime: chat type, delivery
@@ -90,6 +92,19 @@ method set by the server), `state` (set by an action's `set`), `input` (typed by
   `presentation` (`edit` | `send`), `set` (state fields), `style` (primary/success/danger),
   `callbackData`, `hidden`.
 - Placeholders `{field}` are escaped for the format at render time; `{{` and `}}` are braces.
+- `message.media` (optional): `{type, file, spoiler?, emoji?}`. `type`: `photo`, `video`,
+  `animation`, `audio`, `voice`, `video_note`, `sticker`. `file` is exactly one of
+  `{"fileId": "..."}`, `{"url": "https://..."}` or `{"field": "<declared string field>"}`; bot-ui
+  never uploads local files and has no documents. The text is the caption (at most 1024)
+  for photo, video, animation, audio and voice; a sticker or video note has no text
+  (`MEDIA_NO_CAPTION`). `spoiler` applies to photo, video, animation. `emoji` lets previews
+  show a sticker. Sends: `sendPhoto` ... `sendSticker`; edits: `editMessageMedia` for photo,
+  video, animation, audio (also text -> media); media -> text, voice, video notes and stickers
+  are never edited: the engine sends a new message (`fallback` `edit_kind`).
+- Custom (premium) emoji: in `regular.html` text `<tg-emoji emoji-id="<digits>">😀</tg-emoji>`
+  with one ordinary emoji inside as the fallback; on a button `"icon": {"customEmojiId": "<digits>"}`
+  (sent as `icon_custom_emoji_id`, inline and reply keyboards). The label must read well
+  without the icon. Stickers are `message.media` of type `sticker`.
 
 ## Transition rule
 

@@ -24,7 +24,8 @@ from typing import Any, Callable
 
 from aiogram import Bot, Router
 from aiogram.client.session.base import BaseSession
-from aiogram.methods import AnswerCallbackQuery, EditMessageText, SendMessage
+from aiogram.methods import (AnswerCallbackQuery, EditMessageMedia, EditMessageText, SendAnimation, SendAudio,
+                             SendMessage, SendPhoto, SendSticker, SendVideo, SendVideoNote, SendVoice)
 from aiogram.types import CallbackQuery, Message
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -33,8 +34,10 @@ from bot_ui.runtime import Runtime  # noqa: E402
 from bot_ui.skill import load  # noqa: E402
 
 SendWidget = load("sdk_aiogram.adapter").SendWidget
-METHODS = {"sendMessage": SendMessage, "editMessageText": EditMessageText,
-           "answerCallbackQuery": AnswerCallbackQuery, "sendWidget": SendWidget}
+METHODS = {"sendMessage": SendMessage, "editMessageText": EditMessageText, "editMessageMedia": EditMessageMedia,
+           "answerCallbackQuery": AnswerCallbackQuery, "sendWidget": SendWidget,
+           "sendPhoto": SendPhoto, "sendVideo": SendVideo, "sendAnimation": SendAnimation, "sendAudio": SendAudio,
+           "sendVoice": SendVoice, "sendVideoNote": SendVideoNote, "sendSticker": SendSticker}
 
 
 def _dump(obj) -> dict:
@@ -97,12 +100,12 @@ class RecordingSession(BaseSession):
                 wire[k] = int(wire[k])
         name = method.__api_method__
         self.calls.append((name, wire))
-        if name in ("sendMessage", "sendWidget"):
+        if name.startswith("send"):
             self._mid += 1
             return Message.model_validate({"message_id": self._mid, "date": 1794736800,
                                            "chat": {"id": int(wire["chat_id"]), "type": "private"},
                                            "text": wire.get("text", "")}, context={"bot": bot})
-        if name == "editMessageText":
+        if name in ("editMessageText", "editMessageMedia"):
             return Message.model_validate({"message_id": int(wire.get("message_id", 0)), "date": 1794736800,
                                            "chat": {"id": int(wire.get("chat_id", 0) or 0), "type": "private"},
                                            "text": wire.get("text", "")}, context={"bot": bot})

@@ -10,6 +10,14 @@ export const FORMATS: Record<string, string | null> = {
 };
 export const EDITABLE_FORMATS = new Set(["regular.plain", "regular.html"]);
 export const CALLBACK_MAX = 64;
+export const CAPTION_MAX = 1024;
+export const MEDIA_TYPES: Record<string, string> = {
+  photo: "sendPhoto", video: "sendVideo", animation: "sendAnimation", audio: "sendAudio",
+  voice: "sendVoice", video_note: "sendVideoNote", sticker: "sendSticker",
+};
+export const CAPTION_MEDIA = new Set(["photo", "video", "animation", "audio", "voice"]);
+export const EDITABLE_MEDIA = new Set(["photo", "video", "animation", "audio"]);
+export const SPOILER_MEDIA = new Set(["photo", "video", "animation"]);
 const PLACEHOLDER = /\{\{|\}\}|\{([a-z0-9_.-]+)\}/g;
 const MD2 = /([_*\[\]()~`>#+\-=|{}.!\\])/g;
 
@@ -57,16 +65,33 @@ export function callbackData(screenId: string, actionId: string, action?: Doc): 
   return "h:" + plain; // hashed form is computed by the Python core; the client never needs it for display
 }
 
+export function mediaOf(screen: Doc): Doc | null {
+  const m = screen?.message?.media;
+  return m && typeof m === "object" && m.type in MEDIA_TYPES ? m : null;
+}
+
+export function resolveFile(media: Doc, values: Doc): [string | null, string] {
+  const f = media.file ?? {};
+  if (typeof f.fileId === "string") return [f.fileId, "fileId"];
+  if (typeof f.url === "string") return [f.url, "url"];
+  if (typeof f.field === "string") {
+    const v = values[f.field];
+    return [v === undefined || v === null || v === "" ? null : String(v), "field"];
+  }
+  return [null, "missing"];
+}
+
 export function keyboardRows(screen: Doc): string[][] {
   const rows = screen?.keyboard?.rows ?? [];
   return rows.filter((r: any) => Array.isArray(r)).map((r: any[]) => r.filter((a) => typeof a === "string"));
 }
 
-export interface Button { actionId: string; text: string; type: string; url?: string; callbackData?: string; style?: string }
+export interface Button { actionId: string; text: string; type: string; url?: string; callbackData?: string; style?: string; icon?: string }
+export interface Media { type: string; file: string | null; source: string; spoiler: boolean; emoji: string | null }
 export interface Logical {
   screenId: string; messageId: string; locale: string; state: string | null; format: string; text: string;
   parseMode: string | null; keyboard: { type: string; rows: Button[][]; placeholder: string | null };
-  widget: string | null; diagnostics: Doc[];
+  media: Media | null; widget: string | null; diagnostics: Doc[];
 }
 
 export function renderScreen(project: Doc, screen: Doc, opts: { locale?: string | null; state?: string | null; values?: Doc } = {}): Logical {
@@ -89,6 +114,13 @@ export function renderScreen(project: Doc, screen: Doc, opts: { locale?: string 
     diagnostics.push({ code: "FORMAT_NOT_RENDERED", severity: "warning", pointer: "/message/format",
       message: `${fmt} is kept as is but not rendered by this version; the fallback text is used` });
   }
+  let media: Media | null = null;
+  const m = mediaOf(screen);
+  if (m) {
+    const [value, kind] = resolveFile(m, values);
+    if (value === null) diagnostics.push({ code: "MEDIA_VALUE_MISSING", severity: "warning", pointer: "/message/media/file", message: `no ${m.type} file for this run (${kind})` });
+    media = { type: m.type, file: value, source: kind, spoiler: !!m.spoiler && SPOILER_MEDIA.has(m.type), emoji: typeof m.emoji === "string" ? m.emoji : null };
+  }
   const kb = screen.keyboard ?? {};
   const ktype = screen.keyboard ? (kb.type ?? "none") : "none";
   const actions = screen.actions ?? {};
@@ -105,6 +137,8 @@ export function renderScreen(project: Doc, screen: Doc, opts: { locale?: string 
         else btn.callbackData = callbackData(screen.id, aid, act);
         if (["primary", "success", "danger"].includes(act.style)) btn.style = act.style;
       }
+      const icon = act.icon && typeof act.icon === "object" ? act.icon.customEmojiId : null;
+      if (typeof icon === "string" && (ktype === "inline" || ktype === "reply")) btn.icon = icon;
       outRow.push(btn);
     }
     if (outRow.length) rows.push(outRow);
@@ -113,7 +147,7 @@ export function renderScreen(project: Doc, screen: Doc, opts: { locale?: string 
     screenId: screen.id, messageId: msg.id ?? "main", locale, state, format: fmt, text,
     parseMode: FORMATS[fmt] ?? null,
     keyboard: { type: ktype, rows, placeholder: localized(kb.placeholder, locale, def) },
-    widget: screen.widget?.ref ?? null, diagnostics,
+    media, widget: screen.widget?.ref ?? null, diagnostics,
   };
 }
 

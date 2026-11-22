@@ -38,9 +38,10 @@ _LOC = r"[a-z]{2,3}(?:-[a-z0-9]{2,8})?"
 ALLOWED_PATHS = [re.compile("^" + p + "$") for p in (
     r"/title", r"/kind", r"/audience", r"/notes",
     r"/message/format", rf"/message/text(/{_LOC})?", rf"/message/states/{_SEG}(/text(/{_LOC})?)?",
+    r"/message/media", r"/message/media/(type|file|spoiler|emoji)",
     r"/keyboard", r"/keyboard/(type|rows|placeholder|resize|oneTime)", rf"/keyboard/placeholder/{_LOC}",
     rf"/actions/{_SEG}",
-    rf"/actions/{_SEG}/(label|type|to|rule|presentation|set|handlerId|outcomes|pending|url|text|fallback|style|hidden)",
+    rf"/actions/{_SEG}/(label|type|to|rule|presentation|set|handlerId|outcomes|pending|url|text|fallback|style|icon|hidden)",
     rf"/actions/{_SEG}/(label|text|pending)/{_LOC}",
     rf"/actions/{_SEG}/rule/(when|match|otherwise)", rf"/actions/{_SEG}/rule/when/(field|eq)",
     rf"/actions/{_SEG}/outcomes/{_SEG}", rf"/actions/{_SEG}/set/[a-z0-9_.-]+",

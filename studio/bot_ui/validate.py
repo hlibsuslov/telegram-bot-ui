@@ -17,6 +17,8 @@ FIELD_SOURCES = {"data", "context", "state", "input"}
 RULE_SOURCES = {"context", "state"}  # values typed by a user or sent by a widget are not trusted context
 ENTRY_TYPES = {"command", "event", "deeplink"}
 INLINE_ROW_MAX = 8
+CUSTOM_EMOJI_ID = re.compile(r"^\d{1,20}$")
+CUSTOM_EMOJI_ROUTES = {"fragment", "owner_premium", "none"}
 URL_RE = re.compile(r"^(https?://|tg://)\S+$")
 COMMAND_RE = re.compile(r"^[a-z0-9_]{1,32}$")
 
@@ -24,6 +26,7 @@ COMMAND_RE = re.compile(r"^[a-z0-9_]{1,32}$")
 class _Out:
     def __init__(self) -> None:
         self.items: list[Diagnostic] = []
+        self.custom_emoji: list[tuple[str, str, str]] = []  # (file, pointer, screenId) of every use
 
     def add(self, code: str, sev: str, file: str, pointer: str, message: str, sid: str | None = None) -> None:
         self.items.append(Diagnostic(code, sev, file, pointer, message, sid))
@@ -69,6 +72,7 @@ def validate(snap: Snapshot) -> list[Diagnostic]:
     for sid, screen in snap.screens.items():
         _screen(project, snap, sid, screen, out)
     _callbacks(snap, out)
+    _custom_emoji(project, snap, out)
     _reachability(project, snap, out)
     for wid, w in snap.widgets.items():
         _widget(project, snap, wid, w, out)
@@ -121,12 +125,14 @@ def _project(p: dict, snap: Snapshot, out: _Out) -> None:
 
 
 def _text_checks(p: dict, file: str, pointer: str, value: Any, fmt: str, sid: str, out: _Out,
-                 *, label: bool = False) -> None:
+                 *, label: bool = False, limit: int | None = None, optional: bool = False) -> None:
     default = p.get("defaultLocale")
     locales = p.get("locales") or []
     fields = p.get("fields") or {}
     if isinstance(value, str):
         value = {default: value}
+    if optional and (value is None or value == {}):
+        return
     if not isinstance(value, dict) or not isinstance(value.get(default), str) or not value.get(default):
         out.add("DEFAULT_LOCALE_TEXT_MISSING", "error", file, f"{pointer}/{default}",
                 f"text in the default locale '{default}' is required", sid)
@@ -147,10 +153,10 @@ def _text_checks(p: dict, file: str, pointer: str, value: Any, fmt: str, sid: st
         if fmt == "regular.html":
             _html_check(text, file, f"{pointer}/{loc}", sid, out)
         n = render.utf16_len(render.visible_text(text, fmt))
-        limit = 64 if label else render.TEXT_MAX
-        if n > limit:
+        cap = limit or (64 if label else render.TEXT_MAX)
+        if n > cap:
             out.add("TEXT_TOO_LONG", "error" if not label else "warning", file, f"{pointer}/{loc}",
-                    f"{n} UTF-16 units > {limit}", sid)
+                    f"{n} UTF-16 units > {cap}", sid)
     ph = {loc: sorted(set(render.placeholders(t))) for loc, t in value.items() if isinstance(t, str)}
     if len({tuple(v) for v in ph.values()}) > 1:
         out.add("PLACEHOLDERS_DIFFER", "warning", file, pointer, f"placeholders differ between locales: {ph}", sid)
@@ -173,6 +179,14 @@ def _html_check(text: str, file: str, pointer: str, sid: str, out: _Out) -> None
         out.add("HTML_UNBALANCED", "error", file, pointer, f"unclosed <{stack[-1]}>", sid)
     if re.search(r"&(?![a-zA-Z]+;|#\d+;|#x[0-9a-fA-F]+;)", text) or re.search(r"<(?![a-zA-Z/])", text):
         out.add("HTML_UNESCAPED", "error", file, pointer, "escape a bare '&' or '<' as &amp; or &lt;", sid)
+    for m in re.finditer(r"<tg-emoji([^>]*)>(.*?)</tg-emoji>", text, re.S):
+        out.custom_emoji.append((file, pointer, sid))
+        eid = re.search(r'emoji-id="([^"]*)"', m.group(1))
+        if not eid or not CUSTOM_EMOJI_ID.match(eid.group(1)):
+            out.add("CUSTOM_EMOJI_INVALID", "error", file, pointer, 'tg-emoji needs emoji-id="<digits>"', sid)
+        if not m.group(2).strip() or len(m.group(2)) > 16 or "<" in m.group(2):
+            out.add("CUSTOM_EMOJI_FALLBACK", "error", file, pointer,
+                    "put one ordinary emoji inside <tg-emoji>: users who cannot see the custom emoji see it", sid)
 
 
 def _screen(p: dict, snap: Snapshot, sid: str, s: dict, out: _Out) -> None:
@@ -200,11 +214,21 @@ def _screen(p: dict, snap: Snapshot, sid: str, s: dict, out: _Out) -> None:
     elif fmt not in render.EDITABLE_FORMATS:
         out.add("FORMAT_READ_ONLY", "info", f, "/message/format",
                 f"{fmt} opens read-only in the Studio; edit the file or patch it with the CLI", sid)
+    media = msg.get("media")
+    if media is not None:
+        _media(p, f, sid, media, out)
+    mtype = media.get("type") if isinstance(media, dict) else None
     if fmt in render.FORMATS:
-        _text_checks(p, f, "/message/text", msg.get("text"), fmt, sid, out)
-        for st, var in (msg.get("states") or {}).items():
-            if isinstance(var, dict) and "text" in var:
-                _text_checks(p, f, f"/message/states/{st}/text", var["text"], fmt, sid, out)
+        if mtype in ("sticker", "video_note"):
+            if msg.get("text"):
+                out.add("MEDIA_NO_CAPTION", "error", f, "/message/text",
+                        f"a {mtype} has no caption; put the text on its own screen or drop it", sid)
+        else:
+            cap = render.CAPTION_MAX if mtype else None
+            _text_checks(p, f, "/message/text", msg.get("text"), fmt, sid, out, limit=cap, optional=bool(mtype))
+            for st, var in (msg.get("states") or {}).items():
+                if isinstance(var, dict) and "text" in var:
+                    _text_checks(p, f, f"/message/states/{st}/text", var["text"], fmt, sid, out, limit=cap)
     kb = s.get("keyboard") or {"type": "none"}
     ktype = kb.get("type", "none")
     if ktype not in KEYBOARD_TYPES:
@@ -268,6 +292,33 @@ def _screen(p: dict, snap: Snapshot, sid: str, s: dict, out: _Out) -> None:
         if st not in ("loading", "empty", "error", "stale"):
             out.add("STATE_UNKNOWN", "info", f, f"/message/states/{st}", f"state '{st}' is kept; the simulator uses loading", sid)
     _rendered_markup(p, s, sid, f, out)
+
+
+def _media(p: dict, f: str, sid: str, media: Any, out: _Out) -> None:
+    if not isinstance(media, dict) or media.get("type") not in render.MEDIA_TYPES:
+        out.add("MEDIA_TYPE_UNKNOWN", "error", f, "/message/media/type",
+                f"media type is one of {sorted(render.MEDIA_TYPES)} (documents and uploads are not part of bot-ui)", sid)
+        return
+    src = media.get("file")
+    keys = [k for k in ("fileId", "url", "field") if isinstance(src, dict) and k in src]
+    if len(keys) != 1:
+        out.add("MEDIA_FILE_SOURCE", "error", f, "/message/media/file",
+                "file is exactly one of {fileId}, {url} or {field}; local files are never uploaded", sid)
+        return
+    k, v = keys[0], src[keys[0]]
+    if k == "fileId" and not (isinstance(v, str) and re.match(r"^[A-Za-z0-9_-]{8,}$", v)):
+        out.add("MEDIA_FILE_ID", "error", f, "/message/media/file/fileId", "a Telegram file_id (letters, digits, _ and -)", sid)
+    elif k == "url" and not (isinstance(v, str) and v.startswith("https://")):
+        out.add("MEDIA_URL", "error", f, "/message/media/file/url", "an https:// URL Telegram can fetch", sid)
+    elif k == "field":
+        fd = (p.get("fields") or {}).get(v)
+        if not fd or fd.get("type") != "string" or fd.get("source") not in ("data", "context"):
+            out.add("MEDIA_FIELD", "error", f, "/message/media/file/field",
+                    "a declared string field from data or context (a file_id or https URL at run time)", sid)
+    if media.get("spoiler") and media["type"] not in render.SPOILER_MEDIA:
+        out.add("MEDIA_SPOILER", "warning", f, "/message/media/spoiler", f"a {media['type']} cannot be hidden as a spoiler", sid)
+    if media["type"] == "sticker" and not isinstance(media.get("emoji"), str):
+        out.add("STICKER_EMOJI", "info", f, "/message/media/emoji", "an emoji for the sticker lets previews show it", sid)
 
 
 def _action(p: dict, snap: Snapshot, sid: str, s: dict, aid: str, a: dict, f: str, ptr: str, out: _Out) -> None:
@@ -343,6 +394,13 @@ def _action(p: dict, snap: Snapshot, sid: str, s: dict, aid: str, a: dict, f: st
             out.add("SET_FIELD_INVALID", "error", f, f"{ptr}/set/{name}", "set writes declared state fields only", sid)
         elif not _type_ok(fd, value):
             out.add("SET_VALUE_TYPE", "error", f, f"{ptr}/set/{name}", f"value must be a {fd.get('type')}", sid)
+    icon = a.get("icon")
+    if icon is not None:
+        eid = icon.get("customEmojiId") if isinstance(icon, dict) else None
+        if not isinstance(eid, str) or not CUSTOM_EMOJI_ID.match(eid):
+            out.add("CUSTOM_EMOJI_INVALID", "error", f, ptr + "/icon", 'icon is {"customEmojiId": "<digits>"}', sid)
+        else:
+            out.custom_emoji.append((f, ptr + "/icon", sid))
     if a.get("presentation") not in (None, "edit", "send"):
         out.add("PRESENTATION_INVALID", "error", f, ptr + "/presentation", "presentation is edit or send", sid)
     cb = a.get("callbackData")
@@ -367,8 +425,36 @@ def _rendered_markup(p: dict, s: dict, sid: str, f: str, out: _Out) -> None:
             out.add("KEYBOARD_TELEGRAM", "error", f, "/keyboard", f"[{loc}] {e}", sid)
 
 
+def _custom_emoji(p: dict, snap: Snapshot, out: _Out) -> None:
+    """Telegram drops custom emoji from an ineligible bot without an error: say so here."""
+    route = (p.get("capabilities") or {}).get("customEmoji", "none")
+    if route not in CUSTOM_EMOJI_ROUTES:
+        out.add("CUSTOM_EMOJI_ROUTE", "error", "project.json", "/capabilities/customEmoji",
+                f"customEmoji is one of {sorted(CUSTOM_EMOJI_ROUTES)}")
+        return
+    for file, pointer, sid in out.custom_emoji:
+        audience = (snap.screens.get(sid) or {}).get("audience", "private")
+        if route == "none":
+            out.add("CUSTOM_EMOJI_INELIGIBLE", "warning", file, pointer,
+                    "capabilities.customEmoji is 'none': Telegram drops custom emoji without an error, users see the "
+                    "fallback emoji (text) or no icon (button); set 'fragment' or 'owner_premium' when the bot qualifies",
+                    sid)
+        elif route == "owner_premium" and audience in ("channel", "inline", "business", "channel_dm"):
+            out.add("CUSTOM_EMOJI_CONTEXT", "warning", file, pointer,
+                    f"the owner-Premium route covers private, group and supergroup chats, not {audience}", sid)
+
+
+_EFFECT_KEYS = ("type", "to", "rule", "handlerId", "outcomes", "url", "text", "fallback", "set")
+
+
+def _same_effect(a: dict, b: dict) -> bool:
+    """Old bots reuse one callback_data (\"menu\") on many screens; that is fine when every
+    button with it does the same thing."""
+    return all(a.get(k) == b.get(k) for k in _EFFECT_KEYS)
+
+
 def _callbacks(snap: Snapshot, out: _Out) -> None:
-    seen: dict[str, str] = {}
+    seen: dict[str, tuple[str, str, dict]] = {}
     for sid, s in snap.screens.items():
         if (s.get("keyboard") or {}).get("type") != "inline":
             continue
@@ -377,9 +463,15 @@ def _callbacks(snap: Snapshot, out: _Out) -> None:
                 continue
             cb = render.callback_data(sid, aid, a)
             if cb in seen:
-                out.add("CALLBACK_COLLISION", "error", snap.screen_path(sid), f"/actions/{aid}",
-                        f"callback_data {cb!r} is also used by {seen[cb]}", sid)
-            seen[cb] = f"{sid}/{aid}"
+                other_sid, other_aid, other = seen[cb]
+                if _same_effect(a, other):
+                    out.add("CALLBACK_SHARED", "info", snap.screen_path(sid), f"/actions/{aid}",
+                            f"callback_data {cb!r} is shared with {other_sid}/{other_aid}; both do the same", sid)
+                else:
+                    out.add("CALLBACK_COLLISION", "error", snap.screen_path(sid), f"/actions/{aid}",
+                            f"callback_data {cb!r} is also used by {other_sid}/{other_aid} with another effect", sid)
+                continue
+            seen[cb] = (sid, aid, a)
 
 
 def _reachability(p: dict, snap: Snapshot, out: _Out) -> None:

@@ -163,6 +163,119 @@
         "code": "NAVIGATE_TARGET",
         "pointer": "/actions/order"
       }
+    },
+    {
+      "name": "media-unknown-type",
+      "screenId": "orders.pickup",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/message/media",
+          "value": {
+            "type": "document",
+            "file": {
+              "fileId": "BQACAgIAAxkBAAIF"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "code": "MEDIA_TYPE_UNKNOWN",
+        "pointer": "/message/media/type"
+      }
+    },
+    {
+      "name": "media-local-file",
+      "screenId": "orders.pickup",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/message/media",
+          "value": {
+            "type": "photo",
+            "file": {
+              "path": "C:/shop/map.png"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "code": "MEDIA_FILE_SOURCE",
+        "pointer": "/message/media/file"
+      }
+    },
+    {
+      "name": "media-http-url",
+      "screenId": "orders.pickup",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/message/media",
+          "value": {
+            "type": "photo",
+            "file": {
+              "url": "http://example.com/map.png"
+            }
+          }
+        }
+      ],
+      "expect": {
+        "code": "MEDIA_URL",
+        "pointer": "/message/media/file/url"
+      }
+    },
+    {
+      "name": "sticker-with-caption",
+      "screenId": "orders.pickup",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/message/media",
+          "value": {
+            "type": "sticker",
+            "file": {
+              "fileId": "CAACAgIAAxkBAAIG"
+            },
+            "emoji": "🎉"
+          }
+        }
+      ],
+      "expect": {
+        "code": "MEDIA_NO_CAPTION",
+        "pointer": "/message/text"
+      }
+    },
+    {
+      "name": "custom-emoji-no-fallback",
+      "screenId": "entry.start",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/message/text/en",
+          "value": "<tg-emoji emoji-id=\"5368324170671202286\"></tg-emoji> Demo shop"
+        }
+      ],
+      "expect": {
+        "code": "CUSTOM_EMOJI_FALLBACK",
+        "pointer": "/message/text/en"
+      }
+    },
+    {
+      "name": "custom-emoji-bad-id",
+      "screenId": "entry.start",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/actions/order/icon",
+          "value": {
+            "customEmojiId": "coffee"
+          }
+        }
+      ],
+      "expect": {
+        "code": "CUSTOM_EMOJI_INVALID",
+        "pointer": "/actions/order/icon"
+      }
     }
   ]
 }

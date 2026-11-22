@@ -19,9 +19,10 @@ KEY_ORDER = {
                 "fields", "handlers", "messages", "capabilities", "adapter"],
     "screen": ["id", "title", "kind", "audience", "notes", "message", "keyboard", "actions", "input", "widget",
                "fallback"],
-    "message": ["id", "format", "text", "states", "media"],
+    "message": ["id", "format", "media", "text", "states"],
+    "media": ["type", "file", "spoiler", "emoji"],
     "action": ["label", "type", "to", "rule", "presentation", "set", "handlerId", "outcomes", "pending", "url",
-               "text", "fallback", "style", "callbackData", "hidden"],
+               "text", "fallback", "style", "icon", "callbackData", "hidden"],
     "rule": ["when", "match", "otherwise"],
     "when": ["field", "eq"],
     "keyboard": ["type", "rows", "placeholder", "resize", "oneTime"],
@@ -99,7 +100,7 @@ def _ordered(obj: Any, kind: str | None) -> Any:
 
 _CHILD = {("screen", "message"): "message", ("screen", "keyboard"): "keyboard", ("screen", "actions"): "action*",
           ("screen", "input"): "input", ("screen", "widget"): "widget", ("action", "rule"): "rule",
-          ("rule", "when"): "when"}
+          ("rule", "when"): "when", ("message", "media"): "media"}
 
 
 def canonical_json(doc: Any, kind: str | None = None) -> bytes:

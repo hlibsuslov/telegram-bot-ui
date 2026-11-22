@@ -13,6 +13,13 @@ KNOWN_FORMATS = set(FORMATS) | {"regular.entities", "rich", "media.photo"}
 PLACEHOLDER = re.compile(r"\{\{|\}\}|\{([a-z0-9_.-]+)\}")
 CALLBACK_MAX = 64
 TEXT_MAX = 4096
+CAPTION_MAX = 1024
+# Every Telegram media kind a screen can show, by file_id, URL or a data field. No uploads.
+MEDIA_TYPES = {"photo": "sendPhoto", "video": "sendVideo", "animation": "sendAnimation", "audio": "sendAudio",
+               "voice": "sendVoice", "video_note": "sendVideoNote", "sticker": "sendSticker"}
+CAPTION_MEDIA = {"photo", "video", "animation", "audio", "voice"}
+EDITABLE_MEDIA = {"photo", "video", "animation", "audio"}  # editMessageMedia targets
+SPOILER_MEDIA = {"photo", "video", "animation"}
 _MD2 = re.compile(r"([_*\[\]()~`>#+\-=|{}.!\\])")
 
 
@@ -75,6 +82,24 @@ def utf16_len(s: str) -> int:
     return len(s.encode("utf-16-le")) // 2
 
 
+def media_of(screen: dict) -> dict | None:
+    m = (screen.get("message") or {}).get("media")
+    return m if isinstance(m, dict) and m.get("type") in MEDIA_TYPES else None
+
+
+def resolve_file(media: dict, values: dict[str, Any]) -> tuple[str | None, str]:
+    """(value sent to Telegram, source kind). A field that has no value in this run gives None."""
+    f = media.get("file") or {}
+    if isinstance(f.get("fileId"), str):
+        return f["fileId"], "fileId"
+    if isinstance(f.get("url"), str):
+        return f["url"], "url"
+    if isinstance(f.get("field"), str):
+        v = values.get(f["field"])
+        return (str(v) if v not in (None, "") else None), "field"
+    return None, "missing"
+
+
 def keyboard_rows(screen: dict) -> list[list[str]]:
     kb = screen.get("keyboard") or {}
     rows = kb.get("rows") or []
@@ -99,6 +124,16 @@ def render_screen(project: dict, screen: dict, *, locale: str | None = None, sta
     if fmt not in FORMATS:
         diags.append({"code": "FORMAT_NOT_RENDERED", "severity": "warning", "pointer": "/message/format",
                       "message": f"{fmt} is kept as is but not rendered by this version; the fallback text is used"})
+    media_out = None
+    media = media_of(screen)
+    if media is not None:
+        value, kind = resolve_file(media, values)
+        if value is None:
+            diags.append({"code": "MEDIA_VALUE_MISSING", "severity": "warning", "pointer": "/message/media/file",
+                          "message": f"no {media['type']} file for this run ({kind})"})
+        media_out = {"type": media["type"], "file": value, "source": kind,
+                     "spoiler": bool(media.get("spoiler")) and media["type"] in SPOILER_MEDIA,
+                     "emoji": media.get("emoji") if isinstance(media.get("emoji"), str) else None}
     kb = screen.get("keyboard") or {}
     ktype = kb.get("type", "none") if kb else "none"
     actions = screen.get("actions") or {}
@@ -118,13 +153,16 @@ def render_screen(project: dict, screen: dict, *, locale: str | None = None, sta
                     btn["callbackData"] = callback_data(screen["id"], aid, act)
                 if act.get("style") in ("primary", "success", "danger"):
                     btn["style"] = act["style"]
+            icon = (act.get("icon") or {}).get("customEmojiId") if isinstance(act.get("icon"), dict) else None
+            if isinstance(icon, str) and ktype in ("inline", "reply"):
+                btn["icon"] = icon
             out_row.append(btn)
         if out_row:
             rows_out.append(out_row)
     return {"screenId": screen.get("id"), "messageId": msg.get("id", "main"), "locale": locale, "state": state,
             "format": fmt, "text": text, "parseMode": FORMATS.get(fmt),
             "keyboard": {"type": ktype, "rows": rows_out, "placeholder": localized(kb.get("placeholder"), locale, default)},
-            "widget": (screen.get("widget") or {}).get("ref"), "diagnostics": diags}
+            "media": media_out, "widget": (screen.get("widget") or {}).get("ref"), "diagnostics": diags}
 
 
 def reply_markup(logical: dict) -> dict | None:
@@ -142,11 +180,14 @@ def reply_markup(logical: dict) -> dict | None:
                     btn["callback_data"] = b["callbackData"]
                 if "style" in b:
                     btn["style"] = b["style"]
+                if "icon" in b:
+                    btn["icon_custom_emoji_id"] = b["icon"]
                 r.append(btn)
             out.append(r)
         return {"inline_keyboard": out}
     if t == "reply" and rows:
-        markup: dict[str, Any] = {"keyboard": [[{"text": b["text"]} for b in row] for row in rows],
+        markup: dict[str, Any] = {"keyboard": [[{"text": b["text"], **({"icon_custom_emoji_id": b["icon"]} if "icon" in b else {})}
+                                                for b in row] for row in rows],
                                   "resize_keyboard": True}
         if kb.get("placeholder"):
             markup["input_field_placeholder"] = kb["placeholder"]
@@ -163,21 +204,46 @@ def reply_markup(logical: dict) -> dict | None:
 
 def bot_request(logical: dict, chat_id: int | str, *, edit_message_id: int | None = None,
                 inline_message_id: str | None = None) -> dict[str, Any]:
-    """sendMessage, or editMessageText when an existing message is edited in place."""
-    params: dict[str, Any] = {"chat_id": chat_id, "text": logical["text"]}
-    if logical["parseMode"]:
-        params["parse_mode"] = logical["parseMode"]
+    """sendMessage / send<Media>, or an edit in place: editMessageText for text, editMessageMedia
+    for an editable media kind (it also turns a text message into media). The engine never asks
+    for an edit Telegram cannot do (media -> text, voice, video note, sticker)."""
+    media = logical.get("media")
     markup = reply_markup(logical)
-    method = "sendMessage"
-    if edit_message_id is not None or inline_message_id is not None:
-        method = "editMessageText"
+    editing = edit_message_id is not None or inline_message_id is not None
+    params: dict[str, Any] = {"chat_id": chat_id}
+    if editing:
         if inline_message_id is not None:
-            params.pop("chat_id")
-            params["inline_message_id"] = inline_message_id
+            params = {"inline_message_id": inline_message_id}
         else:
             params["message_id"] = edit_message_id
         if markup is not None and "inline_keyboard" not in markup:
             markup = None  # only an inline keyboard can be attached by an edit
+    if media is None:
+        params["text"] = logical["text"]
+        if logical["parseMode"]:
+            params["parse_mode"] = logical["parseMode"]
+        method = "editMessageText" if editing else "sendMessage"
+    else:
+        t = media["type"]
+        caption: dict[str, Any] = {}
+        if t in CAPTION_MEDIA and logical["text"]:
+            caption["caption"] = logical["text"]
+            if logical["parseMode"]:
+                caption["parse_mode"] = logical["parseMode"]
+        if editing:
+            if t not in EDITABLE_MEDIA:
+                raise ValueError(f"a {t} message cannot be edited in place")
+            im: dict[str, Any] = {"type": t, "media": media["file"], **caption}
+            if media["spoiler"]:
+                im["has_spoiler"] = True
+            params["media"] = im
+            method = "editMessageMedia"
+        else:
+            params[t] = media["file"]
+            params.update(caption)
+            if media["spoiler"]:
+                params["has_spoiler"] = True
+            method = MEDIA_TYPES[t]
     if markup is not None:
         params["reply_markup"] = markup
     return {"method": method, "params": params}
