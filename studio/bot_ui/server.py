@@ -7,7 +7,10 @@ Security model (local tool, one user):
   Content-Type and the per-run token from the page (X-Bot-UI-Token) - another web page can
   neither read nor write; the sandboxed widget preview has an opaque origin and is refused;
 * writes go through store.write_patch (revision check, lock, validation, atomic replace);
-* no request leaves this machine; widget builds run the skill's offline builder.
+* no request leaves this machine, with one exception the user starts by hand: importing a premium
+  emoji pack by link calls the read-only getStickerSet/getFile on api.telegram.org (emoji.py);
+  the bot token for it comes from the environment or the request and is never stored or returned;
+* widget builds run the skill's offline builder.
 """
 from __future__ import annotations
 
@@ -21,7 +24,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-from . import SCHEMA_VERSION, TOOL_VERSION, builder, widgets
+from . import SCHEMA_VERSION, TOOL_VERSION, builder, emoji, widgets
 from .engine import parity_view, run_scenario
 from .project import Snapshot, open_snapshot, parse_files
 from .render import bot_request, render_screen
@@ -214,9 +217,35 @@ class Studio:
             except StoreError as err:
                 return (409 if err.code == "REVISION_CONFLICT" else 422), {"ok": False, "error": err.to_json()}
             return 200, res.to_json()
+        if path.startswith("/api/emoji"):
+            return self.emoji_api(path, body, snap)
         if path == "/api/widget/runtime":
             wid = body.get("widget")
             return 200, {**widgets.preview_runtime(), "answers": widgets.mock_answers(snap, wid) if wid in snap.widgets else {}}
+        return 404, {"ok": False, "error": {"code": "NOT_FOUND", "message": path}}
+
+    def emoji_api(self, path: str, body: dict, snap: Snapshot) -> tuple[int, dict]:
+        try:
+            if path == "/api/emoji":
+                return 200, emoji.client_document(self.root, snap)
+            if path == "/api/emoji/import":
+                token = body.get("token") if isinstance(body.get("token"), str) else None
+                res = emoji.import_pack(self.root, link=body.get("link"), token=(token or "").strip() or None,
+                                        sticker_set=body.get("stickerSet"))
+                return 200, {**res, **emoji.client_document(self.root, open_snapshot(self.root))}
+            if path == "/api/emoji/icon":
+                emoji.set_icon(self.root, str(body.get("slot", "")), body.get("id"), note=body.get("note"),
+                               fallback=body.get("fallback"))
+                return 200, {"ok": True, **emoji.client_document(self.root, snap)}
+            if path == "/api/emoji/remove-pack":
+                res = emoji.remove_pack(self.root, str(body.get("pack", "")))
+                return 200, {**res, **emoji.client_document(self.root, snap)}
+            if path == "/api/emoji/brief":
+                b = emoji.brief(_overlay(snap, body.get("screens")))
+                return 200, {**b, "markdown": emoji.brief_markdown(b)}
+        except emoji.EmojiError as err:
+            status = 502 if err.code.startswith("TELEGRAM_") else 404 if err.code.endswith("NOT_FOUND") else 422
+            return status, {"ok": False, "error": err.to_json()}
         return 404, {"ok": False, "error": {"code": "NOT_FOUND", "message": path}}
 
     # ------------------------------------------------------------ HTTP
@@ -273,14 +302,26 @@ class Studio:
                     body = json.loads(self.rfile.read(n) or b"{}")
                 except json.JSONDecodeError:
                     return self._json(400, {"ok": False, "error": {"code": "JSON_INVALID", "message": "body is not JSON"}})
+                api_path = self.path.split("?", 1)[0]
                 try:
-                    with studio.lock:
-                        status, doc = studio.api(self.path.split("?", 1)[0], body if isinstance(body, dict) else {})
+                    if api_path == "/api/emoji/import":  # waits on Telegram; takes the project write lock itself
+                        status, doc = studio.api(api_path, body if isinstance(body, dict) else {})
+                    else:
+                        with studio.lock:
+                            status, doc = studio.api(api_path, body if isinstance(body, dict) else {})
                 except Exception as err:  # report, never crash the server
                     status, doc = 500, {"ok": False, "error": {"code": "INTERNAL", "message": f"{type(err).__name__}: {err}"}}
                 return self._json(status, doc)
 
             def _static(self, path: str) -> None:
+                if path.startswith("/emoji-preview/"):
+                    full = emoji.preview_file(studio.root, path.rsplit("/", 1)[-1])
+                    if not full:
+                        return self._json(404, {"ok": False, "error": {"code": "NOT_FOUND", "message": path}})
+                    with open(full, "rb") as fh:
+                        data = fh.read()
+                    ext = full.rsplit(".", 1)[-1]
+                    return self._send(200, data, {"webm": "video/webm", "jpg": "image/jpeg"}.get(ext, f"image/{ext}"))
                 if path == "/preview-frame.html":
                     return self._send(200, PREVIEW_FRAME.encode("utf-8"), "text/html; charset=utf-8",
                                       {"Content-Security-Policy": PREVIEW_CSP})
@@ -308,7 +349,7 @@ class Studio:
 
 # The page may call only itself; the widget preview frame (srcdoc, sandbox without
 # allow-same-origin) carries its own stricter CSP with connect-src 'none'.
-CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; "
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self'; "
        "font-src 'self' data:; connect-src 'self'; frame-src 'self' about: data:; child-src 'self' about: data:; "
        "object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
 

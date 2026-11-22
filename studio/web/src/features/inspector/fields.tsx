@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { AlertCircle, AlertTriangle, Check, ChevronsUpDown, Info, Languages } from "lucide-react";
 import type { Diag } from "@/core/lint.ts";
 import type { Doc } from "@/core/render.ts";
@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { defaultLocale, fieldDomId, locales } from "@/lib/model";
 import { type Highlight, useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
+import { EmojiPicker } from "@/features/emoji/EmojiPicker";
+import { tgEmojiHtml } from "@/features/emoji/context";
 
 export function useScreenDiags(sid: string): Diag[] {
   const { diags } = useStudio();
@@ -80,10 +82,13 @@ export function missingLocales(project: Doc, value: any): string[] {
 }
 
 /** One localized text in the current editing language, with a "missing" badge and a way to fill it. */
-export function LocaleText({ sid, pointer, value, onChange, disabled, label, multiline = true, diags, hl, hint, max }: {
+export function LocaleText({ sid, pointer, value, onChange, disabled, label, multiline = true, diags, hl, hint, max, emoji }: {
   sid: string; pointer: string; value: any; onChange: (loc: string, text: string) => void; disabled?: boolean;
   label: string; multiline?: boolean; diags: Diag[]; hl?: Omit<Highlight, "sid">; hint?: ReactNode; max?: number;
+  /** regular.html text: offer the premium emoji picker, which inserts <tg-emoji> at the cursor. */
+  emoji?: boolean;
 }) {
+  const fieldRef = useRef<HTMLTextAreaElement & HTMLInputElement>(null);
   const { loaded, editLocale, setHighlight } = useStudio();
   const def = defaultLocale(loaded.project);
   const ls = locales(loaded.project);
@@ -98,8 +103,17 @@ export function LocaleText({ sid, pointer, value, onChange, disabled, label, mul
   const others = ls.filter((l) => l !== loc && (typeof obj[l] !== "string" || !obj[l]));
   const sourceLoc = loc !== def ? def : ls.find((l) => l !== def && typeof obj[l] === "string" && obj[l]);
   const source = sourceLoc ? obj[sourceLoc] : undefined;
+  const insertEmoji = (id: string, fallback: string) => {
+    const el = fieldRef.current;
+    const at = el && document.activeElement !== null && el.selectionStart !== null ? el.selectionStart : current.length;
+    const end = el?.selectionEnd ?? at;
+    const next = current.slice(end);
+    const tag = tgEmojiHtml(id, fallback) + (next && !/^\s/.test(next) ? " " : "");
+    onChange(loc, current.slice(0, at) + tag + next);
+    requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(at + tag.length, at + tag.length); });
+  };
   const common = {
-    id, value: current, disabled,
+    id, value: current, disabled, ref: fieldRef,
     "aria-invalid": err || undefined, "aria-describedby": here.length ? `${id}-d` : undefined,
     onChange: (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => onChange(loc, e.target.value),
     onFocus: () => hl && setHighlight({ sid, ...hl }),
@@ -116,6 +130,7 @@ export function LocaleText({ sid, pointer, value, onChange, disabled, label, mul
           </Button>
         )}
         {!missing && others.length > 0 && <span className="text-[10px] text-muted-foreground">missing in {others.join(", ")}</span>}
+        {emoji && !disabled && <EmojiPicker label="Emoji" onPick={(p) => insertEmoji(p.id, p.fallback)} />}
         {max && <span className={cn("font-mono text-[10.5px] tabular-nums", [...current].length > max ? "font-semibold text-destructive" : "text-muted-foreground")}>{[...current].length}/{max}</span>}
       </>
     }>

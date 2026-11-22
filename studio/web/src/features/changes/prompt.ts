@@ -12,6 +12,8 @@ export interface PromptInput {
   requests: { sid: string | null; text: string }[];
   patchFile?: string;
   draftScreens?: string[];
+  /** The project's premium emoji library (emoji/library.json), when it has icons or packs. */
+  emoji?: { route: string; packs: string[]; icons: { slot: string; id: string; fallback: string }[]; unknown: number };
 }
 
 const T = {
@@ -35,6 +37,9 @@ const T = {
     ],
     diff: "Diff of the saved changes (bot-ui folder vs HEAD):",
     empty: "Nothing to hand off yet: save a change or queue a request first.",
+    emoji: (n: number, packs: string, route: string) => `Premium emoji: the bot's icon map is in \`emoji/library.json\` (${n} meanings; packs: ${packs}; capabilities.customEmoji = ${route}). Before placing custom emoji run \`bot-ui emoji brief\` and follow it: only these ids, chosen by meaning; \`<tg-emoji emoji-id="ID">FALLBACK</tg-emoji>\` in texts with the map's fallback, \`"icon": {"customEmojiId": "ID"}\` on buttons (no emoji at the label start); then \`audit_icons.py emoji/library.json\` from the skill.`,
+    emojiNone: "capabilities.customEmoji is none: Telegram drops custom emoji from this bot silently; do not rely on them until the owner confirms Fragment usernames or Premium.",
+    emojiUnknown: (n: number) => `${n} custom emoji in the screens are not in the library: check or replace them (listed by \`bot-ui emoji brief\`).`,
   },
   ru: {
     task: (t: string, p: string) => `Задача: обновить интерфейс Telegram-бота «${t}» (проект bot-ui \`${p}\`, контракт: studio/docs/contract.md).`,
@@ -56,6 +61,9 @@ const T = {
     ],
     diff: "Diff сохранённых изменений (папка bot-ui относительно HEAD):",
     empty: "Пока нечего передавать: сохрани изменение или добавь запрос.",
+    emoji: (n: number, packs: string, route: string) => `Премиум-эмодзи: карта иконок бота в \`emoji/library.json\` (${n} значений; паки: ${packs}; capabilities.customEmoji = ${route}). Перед расстановкой custom emoji выполни \`bot-ui emoji brief\` и следуй ему: только эти ID, по смыслу; в тексте \`<tg-emoji emoji-id="ID">FALLBACK</tg-emoji>\` с fallback из карты, на кнопках \`"icon": {"customEmojiId": "ID"}\` (без эмодзи в начале подписи); затем \`audit_icons.py emoji/library.json\` из скилла.`,
+    emojiNone: "capabilities.customEmoji = none: Telegram молча убирает custom emoji у этого бота; не полагайся на них, пока владелец не подтвердит Fragment-юзернеймы или Premium.",
+    emojiUnknown: (n: number) => `${n} custom emoji в экранах нет в библиотеке: проверь или замени их (список в \`bot-ui emoji brief\`).`,
   },
   uk: {
     task: (t: string, p: string) => `Завдання: оновити інтерфейс Telegram-бота «${t}» (проєкт bot-ui \`${p}\`, контракт: studio/docs/contract.md).`,
@@ -77,6 +85,9 @@ const T = {
     ],
     diff: "Diff збережених змін (папка bot-ui відносно HEAD):",
     empty: "Поки нічого передавати: збережи зміну або додай запит.",
+    emoji: (n: number, packs: string, route: string) => `Преміум-емодзі: карта іконок бота в \`emoji/library.json\` (${n} значень; паки: ${packs}; capabilities.customEmoji = ${route}). Перед розстановкою custom emoji виконай \`bot-ui emoji brief\` і дотримуйся його: лише ці ID, за змістом; у тексті \`<tg-emoji emoji-id="ID">FALLBACK</tg-emoji>\` з fallback із карти, на кнопках \`"icon": {"customEmojiId": "ID"}\` (без емодзі на початку підпису); потім \`audit_icons.py emoji/library.json\` зі скіла.`,
+    emojiNone: "capabilities.customEmoji = none: Telegram мовчки прибирає custom emoji у цього бота; не покладайся на них, доки власник не підтвердить Fragment-юзернейми або Premium.",
+    emojiUnknown: (n: number) => `${n} custom emoji в екранах немає в бібліотеці: перевір або заміни їх (список у \`bot-ui emoji brief\`).`,
   },
 };
 
@@ -101,6 +112,13 @@ export function buildPrompt(i: PromptInput): string {
   if (i.requests.length) {
     out.push(`${n++}. ${t.requests}`);
     for (const r of i.requests) out.push(`   - ${r.sid ?? t.general}: ${r.text.replace(/\s*\n\s*/g, " ")}`);
+    out.push("");
+  }
+  if (i.emoji && (i.emoji.icons.length || i.emoji.packs.length)) {
+    out.push(`${n++}. ${t.emoji(i.emoji.icons.length, i.emoji.packs.join(", ") || "-", i.emoji.route)}`);
+    for (const ic of i.emoji.icons) out.push(`   - ${ic.slot}: ${ic.id} (${ic.fallback || "-"})`);
+    if (i.emoji.route === "none") out.push(`   ${t.emojiNone}`);
+    if (i.emoji.unknown) out.push(`   ${t.emojiUnknown(i.emoji.unknown)}`);
     out.push("");
   }
   out.push(t.rules);

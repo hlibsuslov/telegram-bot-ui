@@ -1,4 +1,4 @@
-import { ArrowUpRight, GitCompareArrows, Sprout, Wrench, Info, LayoutGrid, Loader2, Map as MapIcon, MessagesSquare, Puzzle, Redo2, Undo2 } from "lucide-react";
+import { ArrowUpRight, GitCompareArrows, Sprout, Wrench, Info, LayoutGrid, Loader2, Map as MapIcon, MessagesSquare, Puzzle, Redo2, Smile, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApplicationShell1, type Crumb, type NavGroup } from "@/components/application-shell1";
 import { Button } from "@/components/ui/button";
@@ -17,8 +17,10 @@ import { MapView } from "@/features/map/MapView";
 import { ScreensView } from "@/features/screens/ScreensView";
 import { SimulatorView } from "@/features/simulator/SimulatorView";
 import { WidgetsView } from "@/features/widgets/WidgetsView";
+import { EmojiProvider } from "@/features/emoji/context";
+import { EmojiView } from "@/features/emoji/EmojiView";
 
-const TITLES: Record<Section, string> = { map: "Map", screens: "Screens", simulator: "Simulator", widgets: "Widgets", changes: "Changes", task: "Task for the agent", about: "What works here" };
+const TITLES: Record<Section, string> = { map: "Map", screens: "Screens", simulator: "Simulator", widgets: "Widgets", emoji: "Premium emoji", changes: "Changes", task: "Task for the agent", about: "What works here" };
 
 function Brand() {
   const { loaded, store } = useStudio();
@@ -124,6 +126,7 @@ function Shell() {
       { key: "simulator", label: "Simulator", icon: MessagesSquare, href: href("simulator") },
       // The demo carries no widget sources; the site shows the demo bot's widgets live next to it.
       ...(demo ? [] : [{ key: "widgets", label: "Widgets", icon: Puzzle, href: href("widgets"), children: caps.widgets && widgetIds.length > 1 ? widgetIds.map((w) => ({ key: w, label: w, href: href("widgets", w) })) : undefined }]),
+      { key: "emoji", label: "Emoji", icon: Smile, href: href("emoji") },
       { key: "changes", label: "Changes", icon: GitCompareArrows, href: href("changes"), badge: n + requests.length || undefined },
       ...(loaded.mode === "artifact" ? [{ key: "about", label: demo ? "About this demo" : "What works here", icon: Info, href: href("about") }] : []),
     ],
@@ -149,6 +152,7 @@ function Shell() {
     case "screens": body = <ScreensView id={route.id} />; break;
     case "simulator": body = <SimulatorView />; break;
     case "widgets": body = <WidgetsView id={route.id} />; break;
+    case "emoji": body = <EmojiView />; break;
     case "changes": case "task": body = <ChangesView anchor={route.section === "task" ? "prompt" : route.id} />; break;
     case "about": body = <AboutView />; break;
     default: body = <MapView id={route.id} />;
@@ -164,6 +168,12 @@ function Shell() {
       <Toasts />
     </ApplicationShell1>
   );
+}
+
+/** The emoji library follows the loaded project (a reload after a save refreshes it). */
+function WithEmoji({ children }: { children: React.ReactNode }) {
+  const { loaded } = useStudio();
+  return <EmojiProvider loaded={loaded}>{children}</EmojiProvider>;
 }
 
 function Failure({ message, onLoad }: { message: string; onLoad: (l: Loaded) => void }) {
@@ -197,7 +207,7 @@ export default function App() {
   return (
     <TooltipProvider delayDuration={300}>
       <StudioProvider initial={loaded}>
-        <Shell />
+        <WithEmoji><Shell /></WithEmoji>
       </StudioProvider>
     </TooltipProvider>
   );

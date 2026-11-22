@@ -129,9 +129,9 @@ export function ScreenInspector({ sid, compact, selectedAction }: { sid: string;
         {media && !CAPTION_MEDIA.has(media.type) ? (
           <p className="text-xs text-muted-foreground">A {media.type === "video_note" ? "round video message" : "sticker"} is sent without text; put any text on its own screen.</p>
         ) : <LocaleText sid={sid} pointer="/message/text" label={media ? "Caption" : "Message"} value={msg.text} disabled={!caps.text || !editableFormat} diags={diags}
-          max={media ? CAPTION_MAX : 4096}
+          max={media ? CAPTION_MAX : 4096} emoji={fmt === "regular.html"}
           hl={{ part: "text" }} onChange={setText((doc) => (doc.message ??= {}))}
-          hint={fmt === "regular.html" ? "Bold: <b>…</b>, italic: <i>…</i>, link: <a href=\"…\">…</a>, custom emoji: <tg-emoji emoji-id=\"…\">☕</tg-emoji>. {field} is filled in when sent." : "{field} is filled in when sent."} />}
+          hint={fmt === "regular.html" ? "Bold: <b>…</b>, italic: <i>…</i>, link: <a href=\"…\">…</a>, premium emoji: the Emoji button, or <tg-emoji emoji-id=\"…\">☕</tg-emoji>. {field} is filled in when sent." : "{field} is filled in when sent."} />}
         {!editableFormat && <p className="text-xs text-muted-foreground"><span className="font-mono">{fmt}</span> is read-only here; edit <span className="font-mono">{file}</span> in your editor.</p>}
       </Group>
 

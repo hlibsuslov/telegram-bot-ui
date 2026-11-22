@@ -3,7 +3,9 @@
 A local editor and toolchain for a bot interface kept as files in the bot's repository
 (`bot-ui/`). The skill (`skills/telegram-bot-ui`) works without it; installing the skill does
 not copy this folder. Everything here runs offline after dependencies are prepared: no
-account, no token, no Telegram connection is needed to edit, simulate or build.
+account, no token, no Telegram connection is needed to edit, simulate or build. The one
+exception is opt-in: importing a premium emoji pack by its link reads it with any bot token
+(read-only `getStickerSet`), see [docs/contract.md](docs/contract.md#premium-emoji-library-optional).
 
 Format and rules: [docs/contract.md](docs/contract.md).
 
@@ -57,6 +59,7 @@ revision is refused with `REVISION_CONFLICT` (exit 3): export a fresh snapshot
 | `render <id>` | the Bot API request of a screen, structurally checked (`static`) |
 | `build [--output D]` | widget builds per language + sendWidget payloads (default `<project>/.bot-ui/build`) |
 | `studio`, `export-snapshot` | the two editors |
+| `emoji import <t.me/addemoji/name> [--from-json F]`, `emoji icon --slot S --id ID`, `emoji list`, `emoji remove <pack>`, `emoji brief` | premium emoji library (`emoji/library.json`): import a pack by link (read-only Bot API call, token from `TELEGRAM_TEST_BOT_TOKEN` / `BOT_TOKEN`), give emoji meanings, the agent's brief |
 | `inventory --source <bot>` | read-only inventory of an existing aiogram bot: commands, callbacks, buttons, texts, proposed screens |
 
 `--json` gives a stable object on stdout; messages for people go to stderr. Exit codes: 0 ok,
@@ -92,6 +95,7 @@ keyboard whose action was removed is answered as stale.
 | MarkdownV2 | render | read-only | read-only | render |
 | Rich Messages, entities, media | kept, read-only | read-only with reason | read-only | not rendered (fallback text) |
 | Streaming answer with Stop | not in v1 | not in v1 | not in v1 | not in v1 |
+| Premium emoji packs and icon map | emoji | Emoji page: import by link, pickers in text and buttons, real pictures in previews and the simulator | read-only, pictures inlined | - |
 | Import an existing bot | inventory (aiogram, read-only) | - | - | - |
 
 Levels: `static` (structure and limits checked offline), `simulated` (engine and test

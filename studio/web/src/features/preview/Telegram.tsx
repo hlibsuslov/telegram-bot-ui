@@ -2,10 +2,11 @@
 // React elements, never into innerHTML. Links are shown, not followed.
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import {
-  CheckCheck, Clapperboard, CornerUpLeft, ExternalLink, EyeOff, Film, Image as ImageIcon, Mic, Music, Play, Puzzle, Send, Sparkle, SquareSlash, Sticker, Video,
+  CheckCheck, Clapperboard, CornerUpLeft, ExternalLink, EyeOff, Film, Image as ImageIcon, Mic, Music, Play, Puzzle, Send, SquareSlash, Sticker, Video,
 } from "lucide-react";
 import { type Logical, type Media, telegramHtmlToSafe } from "@/core/render.ts";
 import { cn } from "@/lib/utils";
+import { CustomEmoji } from "@/features/emoji/CustomEmoji";
 
 type SafeNode = ReturnType<typeof telegramHtmlToSafe>[number];
 
@@ -34,7 +35,9 @@ function renderNodes(nodes: SafeNode[] | undefined, key = "n"): ReactNode[] {
       case "pre": return <pre key={k}>{kids}</pre>;
       case "blockquote": return <blockquote key={k}>{kids}</blockquote>;
       case "tg-spoiler": return <Spoiler key={k}>{kids}</Spoiler>;
-      case "tg-emoji": return <span key={k} className="relative" title="Custom emoji: users who cannot see it get this emoji">{kids}<span className="absolute -top-0.5 -right-1 size-1.5 rounded-full bg-violet-500" aria-hidden /></span>;
+      case "tg-emoji": return n.emojiId
+        ? <CustomEmoji key={k} id={n.emojiId} fallback={(n.children ?? []).map((c) => c.text ?? "").join("")} />
+        : <span key={k} className="relative" title="Custom emoji without a valid emoji-id: users see this emoji">{kids}<span className="absolute -top-0.5 -right-1 size-1.5 rounded-full bg-violet-500" aria-hidden /></span>;
       case "a": return <span key={k} className="tg-link" title={n.href ? `Link: ${n.href} (not followed in the preview)` : undefined}>{kids}</span>;
       default: return <span key={k}>{kids}</span>;
     }
@@ -74,7 +77,7 @@ export function InlineKeyboard({ logical, onPress, hl, buttonSlot }: Pick<Bubble
               data-style={b.style} data-hl={hl?.actionId === b.actionId || undefined}
               onClick={onPress ? (e) => { e.stopPropagation(); onPress(b.actionId); } : undefined}
               title={b.url ? `Opens ${b.url} (not followed)` : b.callbackData ? `callback_data ${b.callbackData}` : undefined}>
-              {b.icon && <Sparkle className="size-3 shrink-0" aria-label="custom emoji icon" />}
+              {b.icon && <CustomEmoji id={b.icon} className="size-[1.15em]" />}
               <span className="truncate">{b.text}</span>
               {b.url && <ExternalLink className="absolute top-1 right-1 size-2.5 shrink-0" aria-hidden />}
               {buttonSlot?.(b.actionId)}
@@ -224,6 +227,7 @@ export function ReplyKeyboard({ logical, onKey, hl, buttonSlot }: { logical: Log
             <button key={b.actionId} type="button" className="tg-key relative min-h-10 min-w-0 flex-1 truncate px-2 text-[14px]"
               data-hl={hl?.actionId === b.actionId || undefined}
               onClick={onKey ? (e) => { e.stopPropagation(); onKey(b.text); } : undefined}>
+              {b.icon && <CustomEmoji id={b.icon} className="mr-1 size-[1.15em]" />}
               {b.text}
               {buttonSlot?.(b.actionId)}
             </button>

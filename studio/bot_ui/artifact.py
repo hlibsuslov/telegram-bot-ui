@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import os
 
-from . import SCHEMA_VERSION, SNAPSHOT_FORMAT, TOOL_VERSION
+from . import SCHEMA_VERSION, SNAPSHOT_FORMAT, TOOL_VERSION, emoji
 from .project import Snapshot
 from .validate import validate
 
@@ -35,6 +35,7 @@ def snapshot_document(snap: Snapshot, screens: list[str] | None = None) -> dict:
         "features": {"map": True, "simulate": True, "editText": True, "editRule": True, "exportPatch": True,
                      "save": False, "widgets": False, "createScreen": False},
         "apply": "py -3 studio/bot-ui.py apply-patch --project <bot-ui folder> --patch-file <exported .json>",
+        **({"emoji": block} if (block := emoji.snapshot_block(snap)) else {}),
     }
 
 

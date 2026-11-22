@@ -106,6 +106,29 @@ method set by the server), `state` (set by an action's `set`), `input` (typed by
   (sent as `icon_custom_emoji_id`, inline and reply keyboards). The label must read well
   without the icon. Stickers are `message.media` of type `sticker`.
 
+## Premium emoji library (optional)
+
+`emoji/library.json` (`format: bot-ui-emoji/v1`), written by the Studio's Emoji page and
+`bot-ui emoji`, committed with the project:
+
+- `packs.<name>`: `{title, link, importedAt, formats, source, emoji: [{id, fallback, format, adaptive}]}`
+  from `getStickerSet` (`sticker_type` must be `custom_emoji`). `fallback` is the sticker's own
+  emoji, `format` is `static`, `animated` (TGS) or `video` (WEBM), `adaptive` = `needs_repainting`
+  (Telegram paints it in the text colour).
+- `icons.<slot>`: `{id, set, fallback, animated, adaptive, note?}`, the bot's icon map. A slot is a
+  meaning (`data/emoji/slots.json` of the skill, or the user's own lowercase name); one emoji has
+  one meaning. The skill's `scripts/audit_icons.py` reads this file as an icon map.
+
+Pictures live in `.bot-ui/emoji/<id>.<webp|webm|png|jpg>`, a local cache that is never committed;
+without it every surface shows the fallback. Only an import by link reaches Telegram (read-only
+`getStickerSet`, `getFile`, the file download on api.telegram.org) with a token from
+`TELEGRAM_TEST_BOT_TOKEN` / `BOT_TOKEN` or the Studio form; the token is never stored. A saved
+`getStickerSet` response imports offline without pictures. The library is not part of the
+revision. With a library, `validate` adds `CUSTOM_EMOJI_UNKNOWN` (id not in it, info) and
+`CUSTOM_EMOJI_FALLBACK_MISMATCH` (fallback differs from the pack's emoji, info); always,
+`CUSTOM_EMOJI_DOUBLE_ICON` (button icon plus an emoji at the start of the label, warning).
+`bot-ui emoji brief [--json]` is what an agent reads before placing custom emoji.
+
 ## Transition rule
 
 One declarative condition per navigate action: `when.field` (a declared `context` or

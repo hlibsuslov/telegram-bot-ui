@@ -152,7 +152,7 @@ export function renderScreen(project: Doc, screen: Doc, opts: { locale?: string 
 }
 
 /** Telegram regular HTML for the preview: only the allowed tags survive, everything else is text. */
-export function telegramHtmlToSafe(text: string, fmt: string): { tag: string; text?: string; children?: any[]; href?: string }[] {
+export function telegramHtmlToSafe(text: string, fmt: string): { tag: string; text?: string; children?: any[]; href?: string; emojiId?: string }[] {
   // Produces a tiny tree instead of an HTML string, so the Studio never injects bot text as page markup.
   if (fmt !== "regular.html") return [{ tag: "#text", text }];
   const allowed = new Set(["b", "strong", "i", "em", "u", "ins", "s", "strike", "del", "span", "tg-spoiler", "a", "code", "pre", "blockquote", "tg-emoji", "tg-time"]);
@@ -175,6 +175,8 @@ export function telegramHtmlToSafe(text: string, fmt: string): { tag: string; te
     const node: any = { tag, children: [] };
     const href = /href="([^"]*)"/.exec(m[3]);
     if (tag === "a" && href) node.href = decode(href[1]);
+    const eid = tag === "tg-emoji" ? /emoji-id="(\d{1,20})"/.exec(m[3]) : null;
+    if (eid) node.emojiId = eid[1];
     if (tag === "span" && !/tg-spoiler/.test(m[3])) node.tag = "span";
     else if (tag === "span") node.tag = "tg-spoiler";
     top.children.push(node);

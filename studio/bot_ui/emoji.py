@@ -1,0 +1,577 @@
+"""Premium (custom) emoji library of a bot-ui project: packs imported by link, the bot's icon
+map, and the brief an agent reads before it places custom emoji.
+
+Files
+* `emoji/library.json` (in the project, committed with it): every imported pack with its emoji
+  (id, fallback, format, adaptive) and `icons`, the bot's icon map: slot (a meaning from the
+  skill's `data/emoji/slots.json`, or the user's own) -> {id, set, fallback, animated, adaptive,
+  note}. `icons` has the skill's icon-map shape, so `scripts/audit_icons.py emoji/library.json`
+  audits it as is.
+* `.bot-ui/emoji/<id>.<webp|webm|png|jpg>`: local preview cache, never committed. Without it
+  every surface shows the fallback emoji instead of the picture.
+
+Network: only `import_pack` with a token talks to Telegram, and only through the read-only
+methods getStickerSet and getFile plus the file download, on api.telegram.org. The token is used
+for that call and is never stored, logged or returned. A saved getStickerSet response imports
+the ids offline, without previews.
+"""
+from __future__ import annotations
+
+import json
+import os
+import re
+import time
+import urllib.error
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from typing import Any, Callable
+
+from . import skill
+from .project import STATE_DIR, Snapshot, resolve_inside
+
+LIBRARY = "emoji/library.json"
+FORMAT = "bot-ui-emoji/v1"
+CACHE = f"{STATE_DIR}/emoji"
+API_HOST = "https://api.telegram.org"
+TOKEN_ENV = ("TELEGRAM_TEST_BOT_TOKEN", "BOT_TOKEN")
+
+PACK_NAME = re.compile(r"^[A-Za-z0-9_]{1,64}$")
+LINK_RE = re.compile(r"^(?:https?://)?(?:www\.)?(?:t\.me|telegram\.me|telegram\.dog)/(addemoji|addstickers)/([^/?#\s]+)/?(?:[?#].*)?$", re.I)
+TG_LINK_RE = re.compile(r"^tg://(addemoji|addstickers)\?set=([^&#\s]+)", re.I)
+TOKEN_RE = re.compile(r"^\d{5,16}:[A-Za-z0-9_-]{30,64}$")
+EMOJI_ID = re.compile(r"^\d{1,20}$")
+SLOT_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,47}$")
+PREVIEW_RE = re.compile(r"^(\d{1,20})\.(webp|webm|png|jpg)$")
+FILE_PATH_RE = re.compile(r"^[A-Za-z0-9_-]+(/[A-Za-z0-9_.-]+)*$")
+PREVIEW_MAX = 512 * 1024
+PACK_MAX = 200  # Telegram's limit for a custom emoji set
+TG_EMOJI = re.compile(r'<tg-emoji\s+emoji-id="(\d{1,20})"\s*>(.*?)</tg-emoji>', re.S)
+
+
+class EmojiError(Exception):
+    def __init__(self, code: str, message: str) -> None:
+        super().__init__(message)
+        self.code, self.message = code, message
+
+    def to_json(self) -> dict:
+        return {"code": self.code, "message": self.message}
+
+
+# ------------------------------------------------------------------ library file
+
+def empty_library() -> dict:
+    return {"format": FORMAT, "bot": "", "packs": {}, "icons": {}}
+
+
+def load_library(root: str) -> dict:
+    path = os.path.join(root, *LIBRARY.split("/"))
+    if not os.path.isfile(path):
+        return empty_library()
+    try:
+        with open(path, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as err:
+        raise EmojiError("LIBRARY_INVALID", f"{LIBRARY} is not valid UTF-8 JSON: {err}") from None
+    if not isinstance(doc, dict) or doc.get("format") != FORMAT:
+        raise EmojiError("LIBRARY_INVALID", f"{LIBRARY} is not a {FORMAT} document")
+    doc.setdefault("packs", {})
+    doc.setdefault("icons", {})
+    return doc
+
+
+def has_library(root: str) -> bool:
+    return os.path.isfile(os.path.join(root, *LIBRARY.split("/")))
+
+
+def save_library(root: str, lib: dict) -> None:
+    from .store import _atomic_write, write_lock
+    data = (json.dumps(lib, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
+    with write_lock(root):
+        _atomic_write(resolve_inside(root, LIBRARY), data)
+
+
+def same_emoji(a: str, b: str) -> bool:
+    """Equal ignoring variation selectors ('⚙' == '⚙️')."""
+    strip = lambda s: s.replace("️", "").replace("︎", "").strip()  # noqa: E731
+    return strip(a) == strip(b)
+
+
+def emoji_index(lib: dict) -> dict[str, dict]:
+    """id -> {id, fallback, format, adaptive, pack} over every pack (first pack wins)."""
+    out: dict[str, dict] = {}
+    for name, pack in (lib.get("packs") or {}).items():
+        for e in pack.get("emoji") or []:
+            if isinstance(e, dict) and isinstance(e.get("id"), str):
+                out.setdefault(e["id"], {**e, "pack": name})
+    for slot, icon in (lib.get("icons") or {}).items():
+        if isinstance(icon, dict) and isinstance(icon.get("id"), str) and icon["id"] not in out:
+            out[icon["id"]] = {"id": icon["id"], "fallback": icon.get("fallback", ""),
+                               "format": "animated" if icon.get("animated") else "static",
+                               "adaptive": bool(icon.get("adaptive")), "pack": icon.get("set") or ""}
+    return out
+
+
+# ------------------------------------------------------------------ links and packs
+
+def parse_pack_link(text: str) -> str:
+    """Pack name from t.me/addemoji/<name>, tg://addemoji?set=<name> or a bare name."""
+    s = (text or "").strip()
+    m = LINK_RE.match(s) or TG_LINK_RE.match(s)
+    name = m.group(2) if m else s
+    if not PACK_NAME.match(name):
+        raise EmojiError("PACK_LINK", "paste a pack link like https://t.me/addemoji/<name> or the pack name "
+                                      "(letters, digits and _)")
+    return name
+
+
+def pack_from_sticker_set(st: Any, link: str | None = None) -> dict:
+    """A library pack from a getStickerSet result (or the whole {"ok", "result"} response)."""
+    if isinstance(st, dict) and "result" in st and isinstance(st["result"], dict):
+        st = st["result"]
+    if not isinstance(st, dict) or not isinstance(st.get("stickers"), list) or not PACK_NAME.match(str(st.get("name", ""))):
+        raise EmojiError("PACK_INVALID", "not a getStickerSet result: it needs name and stickers")
+    if st.get("sticker_type") != "custom_emoji":
+        raise EmojiError("NOT_EMOJI_PACK", f"{st['name']} is a {st.get('sticker_type', 'regular')} sticker set, not an "
+                                           "emoji pack: use a https://t.me/addemoji/<name> link")
+    emoji = []
+    for s in st["stickers"][:PACK_MAX]:
+        cid = s.get("custom_emoji_id") if isinstance(s, dict) else None
+        if not isinstance(cid, str) or not EMOJI_ID.match(cid):
+            continue
+        fmt = "video" if s.get("is_video") else "animated" if s.get("is_animated") else "static"
+        emoji.append({"id": cid, "fallback": s.get("emoji") or "", "format": fmt,
+                      "adaptive": bool(s.get("needs_repainting"))})
+    formats = sorted({e["format"] for e in emoji})
+    return {"title": st.get("title") or st["name"], "link": link or f"https://t.me/addemoji/{st['name']}",
+            "importedAt": time.strftime("%Y-%m-%d"), "formats": formats, "emoji": emoji}
+
+
+def token_from_env() -> tuple[str | None, str | None]:
+    """(token, env var name) of the first configured token variable."""
+    for name in TOKEN_ENV:
+        value = os.environ.get(name)
+        if value:
+            return value, name
+    return None, None
+
+
+class _Bot:
+    """Read-only Bot API calls with the token kept out of every message."""
+
+    def __init__(self, token: str, timeout: float = 20.0) -> None:
+        if not TOKEN_RE.match(token):
+            raise EmojiError("TOKEN_INVALID", "that does not look like a bot token (digits:letters from @BotFather)")
+        self._token, self._timeout = token, timeout
+
+    def __repr__(self) -> str:
+        return "_Bot(<token hidden>)"
+
+    def _clean(self, text: str) -> str:
+        return str(text).replace(self._token, "<token>")
+
+    def call(self, method: str, params: dict) -> Any:
+        if method not in ("getStickerSet", "getFile"):
+            raise EmojiError("METHOD_REFUSED", method)
+        req = urllib.request.Request(f"{API_HOST}/bot{self._token}/{method}",
+                                     data=json.dumps(params).encode("utf-8"), headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                doc = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as err:
+            try:
+                doc = json.loads(err.read().decode("utf-8"))
+            except ValueError:
+                doc = {"ok": False, "description": f"HTTP {err.code}"}
+        except (urllib.error.URLError, OSError, ValueError) as err:
+            raise EmojiError("TELEGRAM_UNREACHABLE", self._clean(f"Telegram did not answer: {err}")) from None
+        if not doc.get("ok"):
+            raise EmojiError("TELEGRAM_ERROR", self._clean(f"{method}: {doc.get('description', 'error')}"))
+        return doc.get("result")
+
+    def download(self, file_path: str) -> bytes:
+        if not FILE_PATH_RE.match(file_path) or ".." in file_path:
+            raise EmojiError("FILE_PATH", "unexpected file path")
+        try:
+            with urllib.request.urlopen(f"{API_HOST}/file/bot{self._token}/{file_path}", timeout=self._timeout) as resp:
+                data = resp.read(PREVIEW_MAX + 1)
+        except (urllib.error.URLError, OSError) as err:
+            raise EmojiError("TELEGRAM_UNREACHABLE", self._clean(f"download failed: {err}")) from None
+        if len(data) > PREVIEW_MAX:
+            raise EmojiError("FILE_TOO_LARGE", f"> {PREVIEW_MAX} bytes")
+        return data
+
+
+def _preview_source(sticker: dict) -> str | None:
+    """file_id to show in a browser: the sticker itself (WEBP, WEBM) or the thumbnail of a TGS."""
+    if sticker.get("is_animated"):
+        thumb = sticker.get("thumbnail") or sticker.get("thumb")
+        return thumb.get("file_id") if isinstance(thumb, dict) else None
+    return sticker.get("file_id")
+
+
+def _cache_dir(root: str) -> str:
+    from .store import _state_dir
+    path = os.path.join(_state_dir(root), "emoji")
+    os.makedirs(path, exist_ok=True)
+    return path
+
+
+def fetch_previews(root: str, stickers: list[dict], bot: Any, workers: int = 6) -> tuple[int, int]:
+    """Download a preview per sticker into the cache. Returns (saved, failed)."""
+    cache = _cache_dir(root)
+
+    def one(s: dict) -> bool:
+        cid, fid = s.get("custom_emoji_id"), _preview_source(s)
+        if not isinstance(cid, str) or not EMOJI_ID.match(cid) or not fid:
+            return False
+        try:
+            path = (bot.call("getFile", {"file_id": fid}) or {}).get("file_path") or ""
+            ext = path.rsplit(".", 1)[-1].lower() if "." in path else ""
+            ext = "jpg" if ext == "jpeg" else ext
+            if ext not in ("webp", "webm", "png", "jpg"):
+                return False
+            data = bot.download(path)
+        except EmojiError:
+            return False
+        for old in os.listdir(cache):
+            if old.split(".", 1)[0] == cid:
+                os.remove(os.path.join(cache, old))
+        tmp = os.path.join(cache, f"{cid}.{ext}.tmp")
+        with open(tmp, "wb") as fh:
+            fh.write(data)
+        os.replace(tmp, os.path.join(cache, f"{cid}.{ext}"))
+        return True
+
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        results = list(pool.map(one, stickers[:PACK_MAX]))
+    return sum(results), sum(1 for r in results if not r)
+
+
+def import_pack(root: str, *, link: str | None = None, token: str | None = None, sticker_set: Any = None,
+                bot: Any = None) -> dict:
+    """Add (or refresh) a pack in the library. `sticker_set` = a saved getStickerSet response
+    (offline, no previews); otherwise the pack is read live with `token` (or `bot`, for tests)."""
+    lib = load_library(root)
+    source = "file"
+    if sticker_set is None:
+        name = parse_pack_link(link or "")
+        if bot is None:
+            token = token or token_from_env()[0]
+            if not token:
+                raise EmojiError("TOKEN_NEEDED", "reading a pack needs any bot token (read-only getStickerSet): set "
+                                                 f"{' or '.join(TOKEN_ENV)}, or paste it in the Studio's import form; "
+                                                 "it is never saved")
+            bot = _Bot(token)
+        sticker_set = bot.call("getStickerSet", {"name": name})
+        source = "getStickerSet"
+    pack = pack_from_sticker_set(sticker_set, link if link and LINK_RE.match(link.strip()) else None)
+    raw = sticker_set.get("result", sticker_set) if isinstance(sticker_set, dict) else {}
+    name = raw["name"]
+    pack["source"] = source
+    saved = failed = 0
+    if bot is not None and source == "getStickerSet":
+        saved, failed = fetch_previews(root, raw.get("stickers") or [], bot)
+    packs = dict(lib.get("packs") or {})
+    packs[name] = pack
+    lib["packs"] = packs
+    # Icons keep their slot; a refreshed pack updates their fallback and format.
+    idx = {e["id"]: e for e in pack["emoji"]}
+    for icon in (lib.get("icons") or {}).values():
+        e = idx.get(icon.get("id"))
+        if e and icon.get("set") == name:
+            icon.update(fallback=e["fallback"], animated=e["format"] != "static", adaptive=e["adaptive"])
+    save_library(root, lib)
+    return {"ok": True, "pack": name, "title": pack["title"], "count": len(pack["emoji"]), "source": source,
+            "previews": saved, "previewsFailed": failed}
+
+
+def remove_pack(root: str, name: str) -> dict:
+    lib = load_library(root)
+    if name not in (lib.get("packs") or {}):
+        raise EmojiError("PACK_NOT_FOUND", name)
+    del lib["packs"][name]
+    save_library(root, lib)
+    kept = [s for s, i in (lib.get("icons") or {}).items() if i.get("set") == name]
+    return {"ok": True, "removed": name, "iconsKept": kept}
+
+
+def set_icon(root: str, slot: str, emoji_id: str | None, *, note: str | None = None, fallback: str | None = None) -> dict:
+    """Put an emoji on a slot of the icon map (or clear the slot with emoji_id None)."""
+    if not isinstance(slot, str) or not SLOT_RE.match(slot):
+        raise EmojiError("SLOT_INVALID", "a slot is a short meaning in lowercase: home, back, cart, paid, ...")
+    lib = load_library(root)
+    icons = dict(lib.get("icons") or {})
+    if emoji_id is None:
+        icons.pop(slot, None)
+    else:
+        if not isinstance(emoji_id, str) or not EMOJI_ID.match(emoji_id):
+            raise EmojiError("EMOJI_INVALID", "a custom emoji id is digits")
+        other = next((s for s, i in icons.items() if i.get("id") == emoji_id and s != slot), None)
+        if other:
+            raise EmojiError("ICON_DUPLICATE", f"this emoji already means '{other}': one emoji, one meaning")
+        e = emoji_index({**lib, "icons": {}}).get(emoji_id)
+        if e is None and not fallback:
+            raise EmojiError("EMOJI_UNKNOWN", "import its pack first, or give the fallback emoji")
+        icon = {"id": emoji_id, "set": e["pack"] if e else "", "fallback": (e or {}).get("fallback") or fallback or "",
+                "animated": bool(e and e["format"] != "static"), "adaptive": bool(e and e["adaptive"])}
+        prev = icons.get(slot) or {}
+        if note is not None or prev.get("note"):
+            icon["note"] = (note if note is not None else prev.get("note", "")).strip()[:200]
+            if not icon["note"]:
+                icon.pop("note")
+        icons[slot] = icon
+    lib["icons"] = icons
+    save_library(root, lib)
+    return {"ok": True, "icons": icons}
+
+
+def previews(root: str) -> dict[str, str]:
+    """id -> cached preview file name."""
+    path = os.path.join(root, *CACHE.split("/"))
+    if not os.path.isdir(path):
+        return {}
+    out = {}
+    for name in sorted(os.listdir(path)):
+        m = PREVIEW_RE.match(name)
+        if m:
+            out[m.group(1)] = name
+    return out
+
+
+def preview_file(root: str, name: str) -> str | None:
+    if not PREVIEW_RE.match(name):
+        return None
+    full = os.path.join(root, *CACHE.split("/"), name)
+    return full if os.path.isfile(full) else None
+
+
+# ------------------------------------------------------------------ usage, vocabulary, brief
+
+def _walk(node: Any, pointer: str, visit: Callable[[str, str], None]) -> None:
+    if isinstance(node, str):
+        visit(pointer, node)
+    elif isinstance(node, dict):
+        for k, v in node.items():
+            _walk(v, f"{pointer}/{str(k).replace('~', '~0').replace('/', '~1')}", visit)
+    elif isinstance(node, list):
+        for i, v in enumerate(node):
+            _walk(v, f"{pointer}/{i}", visit)
+
+
+def usage(snap: Snapshot) -> list[dict]:
+    """Every custom emoji in the screens: {screenId, pointer, id, fallback, where: text|button}."""
+    out: list[dict] = []
+    for sid, screen in sorted(snap.screens.items()):
+        for part in ("message",):
+            def text(pointer: str, value: str, sid=sid) -> None:
+                for m in TG_EMOJI.finditer(value):
+                    out.append({"screenId": sid, "pointer": pointer, "id": m.group(1), "fallback": m.group(2), "where": "text"})
+            _walk(screen.get(part), f"/{part}", text)
+        for aid, act in (screen.get("actions") or {}).items():
+            icon = act.get("icon") if isinstance(act, dict) else None
+            if isinstance(icon, dict) and isinstance(icon.get("customEmojiId"), str):
+                out.append({"screenId": sid, "pointer": f"/actions/{aid}/icon", "id": icon["customEmojiId"],
+                            "fallback": None, "where": "button"})
+    return out
+
+
+def leading_emoji(label: str) -> str | None:
+    """The emoji a button label starts with ('🛒' for '🛒 Cart'), if any."""
+    mod = _icons_mod()
+    hit = mod._leading_cluster(label) if mod is not None and isinstance(label, str) else None
+    return hit[0] if hit else None
+
+
+def vocabulary() -> list[dict]:
+    """The skill's slot vocabulary for the slot picker: [{slot, group, label, unicode, use, note}]."""
+    try:
+        vocab = skill.load("tgkit.icons").load_vocabulary()
+    except (RuntimeError, OSError, ImportError):
+        return []
+    return [{"slot": s, **{k: v.get(k) for k in ("group", "label", "unicode", "use", "note")}} for s, v in vocab.items()]
+
+
+def _icons_mod():
+    try:
+        return skill.load("tgkit.icons")
+    except (RuntimeError, ImportError):
+        return None
+
+
+def candidates(snap: Snapshot, lib: dict) -> list[dict]:
+    """Ordinary emoji in texts and labels that an icon of the map could replace."""
+    icons = {s: i for s, i in (lib.get("icons") or {}).items() if isinstance(i, dict) and i.get("id")}
+    mod = _icons_mod()
+    if not icons or mod is None:
+        return []
+    emap = mod.EmojiMap(icons, mod.load_vocabulary())
+    out: list[dict] = []
+    seen: set[tuple[str, str, str]] = set()
+
+    def visit(sid: str, pointer: str, value: str) -> None:
+        plain = TG_EMOJI.sub("", value)
+        for _, _, cl in mod.iter_clusters(plain):
+            slot = emap.slot_for(cl)
+            if slot and (sid, pointer, slot) not in seen:
+                seen.add((sid, pointer, slot))
+                out.append({"screenId": sid, "pointer": pointer, "emoji": cl, "slot": slot, "id": icons[slot]["id"]})
+
+    for sid, screen in sorted(snap.screens.items()):
+        _walk(screen.get("message"), "/message", lambda p, v, sid=sid: visit(sid, p, v))
+        for aid, act in (screen.get("actions") or {}).items():
+            if isinstance(act, dict):
+                _walk(act.get("label"), f"/actions/{aid}/label", lambda p, v, sid=sid: visit(sid, p, v))
+    return out
+
+
+def suggest_icons(snap: Snapshot, lib: dict) -> list[dict]:
+    """Slots the screens imply (their ordinary emoji) matched to emoji of the imported packs."""
+    mod = _icons_mod()
+    packs = lib.get("packs") or {}
+    if mod is None or not packs:
+        return []
+    vocab = mod.load_vocabulary()
+    taken = {s for s, i in (lib.get("icons") or {}).items() if i.get("id")}
+    texts = [{"m": s.get("message"), "a": [a.get("label") for a in (s.get("actions") or {}).values() if isinstance(a, dict)]}
+             for s in snap.screens.values()]
+    wanted = [s for s in mod.slots_in(texts, vocab) if s not in taken]
+    if not wanted:
+        return []
+    sets = [{"name": n, "sticker_type": "custom_emoji",
+             "stickers": [{"custom_emoji_id": e["id"], "emoji": e["fallback"]} for e in p.get("emoji") or []]}
+            for n, p in packs.items()]
+    used = {i.get("id") for i in (lib.get("icons") or {}).values()}
+    icon_map, _ = mod.resolve_icon_map(sets, vocab, wanted)
+    return [{"slot": s, "id": i["id"], "set": i.get("set"), "fallback": i.get("fallback")}
+            for s, i in (icon_map.get("icons") or {}).items() if i.get("id") and i["id"] not in used]
+
+
+ROUTE_TEXT = {
+    "fragment": "fragment: the bot bought extra usernames on Fragment; custom emoji work in every chat type",
+    "owner_premium": "owner_premium: private, group and supergroup chats only (not channels, inline or business sends); "
+                     "if the owner's Premium lapses Telegram drops them silently",
+    "none": "none: Telegram drops custom emoji from this bot without an error; set capabilities.customEmoji first, "
+            "or keep ordinary emoji",
+}
+
+RULES = [
+    "Use only ids from the icon map below (or from an imported pack); never invent or guess an id.",
+    "Choose by meaning (slot), not by look: the same meaning always gets the same icon; one icon never means two things.",
+    "Text: `<tg-emoji emoji-id=\"ID\">FALLBACK</tg-emoji>` in regular.html, with the map's fallback (the sticker's own emoji) inside.",
+    "Button: `\"icon\": {\"customEmojiId\": \"ID\"}`; do not also start the label with an emoji; the label must read well without the icon.",
+    "One family: keep icons from one pack (a sibling pack only fills gaps); static icons on buttons, animated ones only as a rare accent in text.",
+    "Restraint: one accent per title or line, not every button of a keyboard; a keyboard is either all icons or none.",
+    "Every locale gets the same icons; only the words change.",
+    "Check: `bot-ui validate`, `bot-ui emoji brief` (no unknown ids), and the skill's `scripts/audit_icons.py emoji/library.json`.",
+]
+
+
+def brief(snap: Snapshot, lib: dict | None = None) -> dict:
+    """Everything an agent needs to place custom emoji in this project, as one object."""
+    lib = lib if lib is not None else load_library(snap.root)
+    p = snap.project or {}
+    route = (p.get("capabilities") or {}).get("customEmoji", "none")
+    vocab = {v["slot"]: v for v in vocabulary()}
+    idx = emoji_index(lib)
+    used = usage(snap)
+    by_id: dict[str, list[dict]] = {}
+    for u in used:
+        by_id.setdefault(u["id"], []).append(u)
+    slot_of = {i.get("id"): s for s, i in (lib.get("icons") or {}).items()}
+    icons = []
+    for slot, i in (lib.get("icons") or {}).items():
+        e = idx.get(i.get("id")) or {}
+        v = vocab.get(slot) or {}
+        icons.append({"slot": slot, "id": i.get("id"), "fallback": i.get("fallback", ""), "set": i.get("set", ""),
+                      "format": e.get("format", "animated" if i.get("animated") else "static"),
+                      "use": v.get("use") or [], "label": v.get("label") or "", "note": i.get("note") or v.get("note") or "",
+                      "placed": [f"{u['screenId']}{u['pointer']}" for u in by_id.get(i.get("id"), [])]})
+    unknown = [u for u in used if u["id"] not in idx]
+    mismatched = [{**u, "expected": idx[u["id"]]["fallback"]} for u in used
+                  if u["where"] == "text" and u["id"] in idx and idx[u["id"]]["fallback"]
+                  and not same_emoji(u["fallback"], idx[u["id"]]["fallback"])]
+    return {
+        "project": p.get("projectId"), "title": p.get("title"), "library": LIBRARY, "route": route,
+        "routeText": ROUTE_TEXT.get(route, route),
+        "packs": [{"name": n, "title": pk.get("title"), "link": pk.get("link"), "count": len(pk.get("emoji") or []),
+                   "formats": pk.get("formats") or []} for n, pk in (lib.get("packs") or {}).items()],
+        "icons": icons,
+        "placed": [{**u, "slot": slot_of.get(u["id"])} for u in used],
+        "unknown": unknown, "fallbackMismatch": mismatched,
+        "candidates": candidates(snap, lib),
+        "rules": RULES,
+    }
+
+
+def brief_markdown(b: dict) -> str:
+    out = [f"# Premium emoji for {b.get('title') or b.get('project')}", "",
+           f"Library: `{b['library']}` (bot-ui project). Eligibility: `capabilities.customEmoji` = {b['routeText']}.", ""]
+    if b["packs"]:
+        out.append("Packs: " + "; ".join(f"{pk['title']} ({pk['link']}, {pk['count']} emoji, {'/'.join(pk['formats']) or '-'})"
+                                         for pk in b["packs"]) + ".")
+        out.append("")
+    if b["icons"]:
+        out += ["## Icon map: place these, by meaning", "", "| slot | id | fallback | use | format | note | placed |",
+                "| --- | --- | --- | --- | --- | --- | --- |"]
+        for i in b["icons"]:
+            out.append(f"| {i['slot']} | {i['id']} | {i['fallback']} | {', '.join(i['use']) or '-'} | {i['format']} | "
+                       f"{i['note'] or '-'} | {', '.join(i['placed']) or '-'} |")
+        out.append("")
+    else:
+        out += ["No icon map yet: pick emoji for meanings in the Studio (Emoji page) before placing them.", ""]
+    if b["candidates"]:
+        out += ["## Candidates: ordinary emoji an icon of the map can replace", ""]
+        out += [f"- {c['screenId']} `{c['pointer']}`: {c['emoji']} -> {c['slot']} ({c['id']})" for c in b["candidates"]]
+        out.append("")
+    if b["unknown"]:
+        out += ["## Ids not in the library (check or replace)", ""]
+        out += [f"- {u['screenId']} `{u['pointer']}`: {u['id']}" for u in b["unknown"]]
+        out.append("")
+    if b["fallbackMismatch"]:
+        out += ["## Fallback differs from the pack's emoji", ""]
+        out += [f"- {u['screenId']} `{u['pointer']}`: {u['fallback']} (pack: {u['expected']})" for u in b["fallbackMismatch"]]
+        out.append("")
+    out += ["## Rules", ""] + [f"- {r}" for r in b["rules"]]
+    return "\n".join(out) + "\n"
+
+
+def client_document(root: str, snap: Snapshot) -> dict:
+    """What the Studio client needs: the library, cached previews, usage and the slot vocabulary."""
+    try:
+        lib = load_library(root)
+        error = None
+    except EmojiError as err:
+        lib, error = empty_library(), err.to_json()
+    token, env = token_from_env()
+    return {"library": lib, "previews": previews(root), "usage": usage(snap), "vocabulary": vocabulary(),
+            "suggestions": suggest_icons(snap, lib) if not error else [], "tokenEnv": env if token else None,
+            "error": error}
+
+
+def snapshot_block(snap: Snapshot, budget: int = 1_500_000) -> dict | None:
+    """The library for the offline artifact: ids, icons, usage, and pictures inlined as data: URLs
+    for the bot's icons and the emoji its screens use (images only, within `budget` bytes)."""
+    import base64
+    if not snap.root or not has_library(snap.root):
+        return None
+    try:
+        lib = load_library(snap.root)
+    except EmojiError:
+        return None
+    used = usage(snap)
+    files = previews(snap.root)
+    wanted = list(dict.fromkeys([i.get("id") for i in (lib.get("icons") or {}).values()] + [u["id"] for u in used]))
+    inlined: dict[str, str] = {}
+    mime = {"webp": "image/webp", "png": "image/png", "jpg": "image/jpeg"}
+    for cid in wanted:
+        name = files.get(cid)
+        ext = name.rsplit(".", 1)[-1] if name else ""
+        if ext not in mime:
+            continue
+        with open(os.path.join(snap.root, *CACHE.split("/"), name), "rb") as fh:
+            data = base64.b64encode(fh.read()).decode("ascii")
+        if len(data) > budget:
+            break
+        budget -= len(data)
+        inlined[cid] = f"data:{mime[ext]};base64,{data}"
+    return {"library": lib, "previews": inlined, "usage": used, "vocabulary": [], "suggestions": [], "tokenEnv": None}

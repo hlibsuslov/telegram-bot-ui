@@ -13,6 +13,7 @@ import { go, href } from "@/lib/route";
 import { useStudio } from "@/lib/studio";
 import { DiagLine, EnumSelect } from "../inspector/fields";
 import { buildPrompt, type PromptLang } from "./prompt";
+import { useEmoji } from "@/features/emoji/context";
 import { RequestChange } from "./Tray";
 
 const show = (v: any) => (v === undefined ? "∅" : JSON.stringify(v));
@@ -217,12 +218,19 @@ export function ChangesView({ anchor }: { anchor?: string | null }) {
 
   const fileDiffs = preview ? splitDiff(preview.diff) : {};
   const projectPath = git?.projectPath || loaded.cliProject || "<bot-ui folder>";
+  const { doc: emojiDoc, index: emojiIndex } = useEmoji();
+  const emoji = useMemo(() => ({
+    route: (loaded.project.capabilities ?? {}).customEmoji ?? "none",
+    packs: Object.values(emojiDoc.library.packs ?? {}).map((p) => p.link.replace(/^https?:\/\//, "")),
+    icons: Object.entries(emojiDoc.library.icons ?? {}).map(([slot, ic]) => ({ slot, id: ic.id, fallback: ic.fallback })),
+    unknown: emojiDoc.usage.filter((u) => !emojiIndex.has(u.id)).length,
+  }), [emojiDoc, emojiIndex, loaded.project]);
   const prompt = useMemo(() => buildPrompt({
     lang, title: loaded.title, projectPath, locales: locales(loaded.project),
     saved: git?.files ?? [], diff: withDiff ? git?.diff : undefined,
     requests: requests.map((r) => ({ sid: r.sid, text: r.text })),
-    patchFile: exported ?? undefined, draftScreens: exported ? Object.keys(store.data.screens) : undefined,
-  }), [lang, loaded, projectPath, git, withDiff, requests, exported, store.version]);
+    patchFile: exported ?? undefined, draftScreens: exported ? Object.keys(store.data.screens) : undefined, emoji,
+  }), [lang, loaded, projectPath, git, withDiff, requests, exported, store.version, emoji]);
   const link = (kind: "screen" | "widget", id: string) => (kind === "screen" ? href("map", id) : href("widgets", id));
 
   return (

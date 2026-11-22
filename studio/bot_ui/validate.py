@@ -27,6 +27,7 @@ class _Out:
     def __init__(self) -> None:
         self.items: list[Diagnostic] = []
         self.custom_emoji: list[tuple[str, str, str]] = []  # (file, pointer, screenId) of every use
+        self.custom_emoji_ids: list[tuple[str, str, str, str, str | None]] = []  # + (id, fallback or None)
 
     def add(self, code: str, sev: str, file: str, pointer: str, message: str, sid: str | None = None) -> None:
         self.items.append(Diagnostic(code, sev, file, pointer, message, sid))
@@ -184,6 +185,8 @@ def _html_check(text: str, file: str, pointer: str, sid: str, out: _Out) -> None
         eid = re.search(r'emoji-id="([^"]*)"', m.group(1))
         if not eid or not CUSTOM_EMOJI_ID.match(eid.group(1)):
             out.add("CUSTOM_EMOJI_INVALID", "error", file, pointer, 'tg-emoji needs emoji-id="<digits>"', sid)
+        else:
+            out.custom_emoji_ids.append((file, pointer, sid, eid.group(1), m.group(2)))
         if not m.group(2).strip() or len(m.group(2)) > 16 or "<" in m.group(2):
             out.add("CUSTOM_EMOJI_FALLBACK", "error", file, pointer,
                     "put one ordinary emoji inside <tg-emoji>: users who cannot see the custom emoji see it", sid)
@@ -401,6 +404,16 @@ def _action(p: dict, snap: Snapshot, sid: str, s: dict, aid: str, a: dict, f: st
             out.add("CUSTOM_EMOJI_INVALID", "error", f, ptr + "/icon", 'icon is {"customEmojiId": "<digits>"}', sid)
         else:
             out.custom_emoji.append((f, ptr + "/icon", sid))
+            out.custom_emoji_ids.append((f, ptr + "/icon", sid, eid, None))
+            from .emoji import leading_emoji
+            labels = a.get("label") if isinstance(a.get("label"), dict) else {"": a.get("label")}
+            for loc, text in labels.items():
+                lead = leading_emoji(text)
+                if lead:
+                    out.add("CUSTOM_EMOJI_DOUBLE_ICON", "warning", f, f"{ptr}/label" + (f"/{loc}" if loc else ""),
+                            f"the button has a premium emoji icon and its label also starts with {lead}: users see two "
+                            "icons; remove the emoji from the label", sid)
+                    break
     if a.get("presentation") not in (None, "edit", "send"):
         out.add("PRESENTATION_INVALID", "error", f, ptr + "/presentation", "presentation is edit or send", sid)
     cb = a.get("callbackData")
@@ -442,6 +455,29 @@ def _custom_emoji(p: dict, snap: Snapshot, out: _Out) -> None:
         elif route == "owner_premium" and audience in ("channel", "inline", "business", "channel_dm"):
             out.add("CUSTOM_EMOJI_CONTEXT", "warning", file, pointer,
                     f"the owner-Premium route covers private, group and supergroup chats, not {audience}", sid)
+    _emoji_library(snap, out)
+
+
+def _emoji_library(snap: Snapshot, out: _Out) -> None:
+    """With an emoji library in the project, every custom emoji should come from it."""
+    from . import emoji
+    if not snap.root or not emoji.has_library(snap.root):
+        return
+    try:
+        idx = emoji.emoji_index(emoji.load_library(snap.root))
+    except emoji.EmojiError as err:
+        out.add("EMOJI_LIBRARY_INVALID", "error", emoji.LIBRARY, "", err.message)
+        return
+    for file, pointer, sid, eid, fallback in out.custom_emoji_ids:
+        e = idx.get(eid)
+        if e is None:
+            out.add("CUSTOM_EMOJI_UNKNOWN", "info", file, pointer,
+                    f"custom emoji {eid} is not in {emoji.LIBRARY}: nobody checked it exists and the preview cannot draw "
+                    "it; import its pack or pick one from the library", sid)
+        elif fallback is not None and e["fallback"] and not emoji.same_emoji(fallback, e["fallback"]):
+            out.add("CUSTOM_EMOJI_FALLBACK_MISMATCH", "info", file, pointer,
+                    f"the fallback {fallback} differs from the pack's emoji {e['fallback']}: users without the custom "
+                    "emoji see a different picture", sid)
 
 
 _EFFECT_KEYS = ("type", "to", "rule", "handlerId", "outcomes", "url", "text", "fallback", "set")

@@ -5,6 +5,19 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## Unreleased
+
+- bot-ui Studio: premium emoji library. The Emoji page imports a pack from its
+  `t.me/addemoji/...` link (read-only `getStickerSet` with any bot token, never stored; or a
+  saved response offline), shows every emoji with its picture, suggests icons for the ordinary
+  emoji the screens already use, and keeps the bot's icon map (one meaning per emoji) in
+  `emoji/library.json`. Text fields and button icons get an emoji picker; previews, the map and
+  the simulator draw the real pictures (adaptive emoji in the text colour); the offline artifact
+  inlines the pictures it needs.
+- Agent handoff: `bot-ui emoji brief [--json]` (icon map, placements, replaceable emoji, unknown
+  ids, rules) and a premium emoji section in the Changes prompt. `validate` adds
+  `CUSTOM_EMOJI_UNKNOWN`, `CUSTOM_EMOJI_FALLBACK_MISMATCH` and `CUSTOM_EMOJI_DOUBLE_ICON`.
+
 ## 2.4.0 - 2026-11-22
 
 bot-ui projects and the optional local Studio (`studio/`, not part of the skill install).

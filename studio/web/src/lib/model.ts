@@ -1,5 +1,6 @@
 import type { Doc } from "@/core/render.ts";
 import type { Diag } from "@/core/lint.ts";
+import type { EmojiDoc } from "@/features/emoji/context";
 
 export type Mode = "studio" | "artifact";
 
@@ -23,6 +24,8 @@ export interface Loaded {
   readOnly: boolean;
   features: Record<string, boolean>;
   apply?: string;
+  /** Artifact: the premium emoji library with inlined previews (the Studio loads /api/emoji). */
+  emoji?: EmojiDoc;
 }
 
 export const SNAPSHOT_FORMAT = "bot-ui-snapshot/v1";
@@ -77,6 +80,7 @@ export function fromSnapshot(doc: Doc): Loaded {
     readOnly: false,
     features: { editStructure: false, ...(doc.features ?? {}) },
     apply: doc.apply,
+    emoji: doc.emoji && typeof doc.emoji === "object" ? doc.emoji : undefined,
   };
 }
 

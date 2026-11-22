@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-export type Section = "map" | "screens" | "simulator" | "widgets" | "changes" | "task" | "about";
+export type Section = "map" | "screens" | "simulator" | "widgets" | "emoji" | "changes" | "task" | "about";
 export interface Route { section: Section; id: string | null }
 
 // #/screen/<id> (printed by the CLI) opens the map centred on that screen with its editor;
@@ -12,7 +12,7 @@ export function parseHash(hash: string): Route {
   if (head === "screens") return { section: "screens", id: id || null };
   if (head === "widgets" || head === "widget") return { section: "widgets", id: id || null };
   if (head === "task") return { section: "changes", id: "prompt" };
-  if (head === "simulator" || head === "changes" || head === "about" || head === "map") return { section: head, id: id || null };
+  if (head === "simulator" || head === "emoji" || head === "changes" || head === "about" || head === "map") return { section: head, id: id || null };
   return { section: "map", id: null };
 }
 

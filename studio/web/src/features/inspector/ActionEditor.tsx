@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { ACTION_TYPES, defaultLocale, fieldDomId, STYLE_LABELS, STYLES } from "@/lib/model";
 import { useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
+import { CustomEmoji } from "@/features/emoji/CustomEmoji";
+import { EmojiPicker } from "@/features/emoji/EmojiPicker";
+import { useEmoji } from "@/features/emoji/context";
 import { diagsAt, EnumSelect, Field, FieldDiags, LocaleText, Segmented, SelectField, TargetSelect } from "./fields";
 
 const TYPE_KEYS = ["to", "rule", "fallback", "url", "text", "handlerId", "outcomes", "pending"];
@@ -173,10 +176,10 @@ export function ButtonCard({ sid, aid, action, placed, diags, selected }: { sid:
           options={STYLES.map((s) => ({ value: s, label: STYLE_LABELS[s] ?? s }))} diags={diagsAt(diags, `${ptr}/style`)}
           onChange={(v) => update((a) => { if (v) a.style = v; else delete a.style; })} />
       </div>
-      <Field label="Custom emoji icon (optional)" htmlFor={fieldDomId(sid, `${ptr}/icon`)}
-        hint="Digits of a custom emoji, e.g. from a sticker set link. Telegram shows it only if your bot may use custom emoji (Fragment username or a Premium owner).">
-        <Input id={fieldDomId(sid, `${ptr}/icon`)} value={action.icon?.customEmojiId ?? ""} disabled={!caps.structure} inputMode="numeric" placeholder="5368324170671202286" className="font-mono text-[13px]"
-          onChange={(e) => update((a) => { const v = e.target.value.trim(); if (v) a.icon = { customEmojiId: v }; else delete a.icon; }, "icon")} />
+      <Field label="Premium emoji icon (optional)" htmlFor={fieldDomId(sid, `${ptr}/icon`)}
+        hint="Shown before the label. Pick it from the bot's icons (Emoji page); Telegram shows it only if your bot may use custom emoji (Fragment username or a Premium owner).">
+        <IconField sid={sid} ptr={ptr} value={action.icon?.customEmojiId ?? ""} disabled={!caps.structure}
+          onChange={(v) => update((a) => { if (v) a.icon = { customEmojiId: v }; else delete a.icon; }, "icon")} />
         <FieldDiags list={diagsAt(diags, `${ptr}/icon`)} />
       </Field>
       <FieldDiags list={diagsAt(diags, ptr).filter((d) => d.code !== "NAVIGATE_TARGET")} />
@@ -251,6 +254,25 @@ export function ButtonAdvanced({ sid, aid, action, diags }: { sid: string; aid: 
       {action.type === "handler" && (
         <LocaleText sid={sid} pointer={`${ptr}/pending`} label="While the code runs" value={action.pending} multiline={false} disabled={!caps.text} diags={diags} onChange={setLocale("pending")} />
       )}
+    </div>
+  );
+}
+
+function IconField({ sid, ptr, value, disabled, onChange }: { sid: string; ptr: string; value: string; disabled: boolean; onChange: (id: string) => void }) {
+  const { slotOf } = useEmoji();
+  const slot = value ? slotOf.get(value) : undefined;
+  return (
+    <div className="flex items-center gap-2">
+      <EmojiPicker selected={value || null} disabled={disabled} align="start" onPick={(p) => onChange(p.id)}
+        trigger={
+          <Button type="button" variant="outline" size="sm" className="h-9 min-w-24 justify-start gap-1.5" disabled={disabled} aria-label="Choose a premium emoji icon">
+            {value ? <CustomEmoji id={value} className="size-5" /> : <span className="text-muted-foreground">Choose…</span>}
+            {slot && <span className="truncate text-xs">{slot}</span>}
+          </Button>
+        } />
+      <Input id={fieldDomId(sid, `${ptr}/icon`)} value={value} disabled={disabled} inputMode="numeric" placeholder="or paste an id" className="h-9 font-mono text-[13px]"
+        onChange={(e) => onChange(e.target.value.trim())} aria-label="Custom emoji id" />
+      {value && !disabled && <Button type="button" size="sm" variant="ghost" className="h-9" onClick={() => onChange("")}>Remove</Button>}
     </div>
   );
 }

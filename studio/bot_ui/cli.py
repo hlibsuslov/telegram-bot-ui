@@ -371,6 +371,49 @@ def cmd_import(args) -> int:
     return 1 if res.get("errors") else 0
 
 
+def cmd_emoji(args) -> int:
+    from . import emoji
+    root = _root(args)
+    try:
+        if args.action == "import":
+            sticker_set = None
+            if args.from_json:
+                with open(args.from_json, encoding="utf-8") as fh:
+                    sticker_set = json.load(fh)
+            elif not args.link:
+                return _fail(args, "USAGE", "emoji import <pack link or name> | --from-json saved-getStickerSet.json", 2)
+            res = emoji.import_pack(root, link=args.link, sticker_set=sticker_set)
+            _emit(args, res, f"{res['title']} ({res['pack']}): {res['count']} emoji, {res['previews']} previews "
+                             f"-> {emoji.LIBRARY}")
+            return 0
+        if args.action == "remove":
+            if not args.link:
+                return _fail(args, "USAGE", "emoji remove <pack name>", 2)
+            res = emoji.remove_pack(root, args.link)
+            _emit(args, res, f"removed {res['removed']}" + (f"; icons kept: {', '.join(res['iconsKept'])}" if res["iconsKept"] else ""))
+            return 0
+        if args.action == "icon":
+            if not args.slot:
+                return _fail(args, "USAGE", "emoji icon --slot <meaning> [--id <custom emoji id> | --clear]", 2)
+            res = emoji.set_icon(root, args.slot, None if args.clear else args.id, note=args.note, fallback=args.fallback)
+            _emit(args, res, f"{args.slot}: {'cleared' if args.clear else args.id}")
+            return 0
+        snap = open_snapshot(root)
+        lib = emoji.load_library(root)
+        if args.action == "list":
+            _emit(args, {"ok": True, "library": lib, "previews": emoji.previews(root)},
+                  "\n".join(f"{n}: {p.get('title')} · {len(p.get('emoji') or [])} emoji · {p.get('link')}"
+                            for n, p in lib["packs"].items()) or "no packs: bot-ui emoji import https://t.me/addemoji/<name>")
+            return 0
+        b = emoji.brief(snap, lib)
+        _emit(args, {"ok": True, **b}, emoji.brief_markdown(b))
+        return 0
+    except emoji.EmojiError as err:
+        return _fail(args, err.code, err.message, 2 if err.code in ("PACK_LINK", "SLOT_INVALID", "EMOJI_INVALID") else 4)
+    except (OSError, ValueError) as err:
+        return _fail(args, "IO_ERROR", str(err))
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="bot-ui", description=f"bot-ui {TOOL_VERSION} (project schemaVersion {SCHEMA_VERSION})")
     ap.add_argument("--version", action="version", version=f"bot-ui {TOOL_VERSION} schema {SCHEMA_VERSION}")
@@ -432,6 +475,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--output", required=True)
     p.add_argument("--format", choices=("html", "json"), default="html")
     p.add_argument("--screen", action="append", help="only these screens (default: all)")
+    p = add("emoji", cmd_emoji, "premium emoji library: import a pack by link, map icons to meanings, the agent's brief")
+    p.add_argument("action", choices=("import", "list", "icon", "remove", "brief"))
+    p.add_argument("link", nargs="?", help="import: https://t.me/addemoji/<name> or the name; remove: the pack name")
+    p.add_argument("--from-json", help="import a saved getStickerSet response (offline, no previews)")
+    p.add_argument("--slot", help="icon: the meaning, e.g. home, back, cart")
+    p.add_argument("--id", help="icon: the custom emoji id")
+    p.add_argument("--clear", action="store_true", help="icon: remove the slot")
+    p.add_argument("--note", help="icon: where to use it")
+    p.add_argument("--fallback", help="icon: the ordinary emoji, for an id not in an imported pack")
     p = sub.add_parser("import", help="build a bot-ui project from an existing aiogram bot (the bot's code is not changed)")
     p.add_argument("--source", required=True, help="the bot's source folder")
     p.add_argument("--into", help="project folder to create (default: <source>/bot-ui); an existing project is re-imported")

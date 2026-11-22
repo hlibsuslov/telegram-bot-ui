@@ -158,6 +158,14 @@ by hand.
   `icon.customEmojiId` on buttons. Set `capabilities.customEmoji` (`fragment` /
   `owner_premium` / `none`) from the real eligibility (`references/custom-emoji.md`); while it is
   `none` every use warns, because Telegram strips them silently.
+- Premium emoji library: when the project has `emoji/library.json` (packs imported by link in
+  the Studio's Emoji page or with `bot-ui emoji import <t.me/addemoji/...>`), run
+  `bot-ui emoji brief` before placing any custom emoji. It lists the bot's icon map (slot ->
+  id, fallback, use), what is placed where, ordinary emoji an icon can replace, and ids that are
+  not in the library. Use only those ids, by meaning; the fallback inside `<tg-emoji>` is the
+  map's. `validate` reports `CUSTOM_EMOJI_UNKNOWN`, `CUSTOM_EMOJI_FALLBACK_MISMATCH` and
+  `CUSTOM_EMOJI_DOUBLE_ICON` (an icon plus an emoji at the start of the label). The library's
+  `icons` has the icon-map shape: `scripts/audit_icons.py <project>/emoji/library.json`.
 
 ## Widgets in a project
 
