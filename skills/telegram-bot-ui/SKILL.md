@@ -4,7 +4,7 @@ description: "Telegram bot UI/UX skill, updated for every Bot API release. Desig
 license: MIT
 metadata:
   author: hlibsuslov
-  version: "2.3.0"
+  version: "2.4.0"
 ---
 
 # Telegram Bot UI
@@ -46,6 +46,7 @@ pipelines, Mini App front-end internals. Microsoft `.rtf` files.
 | The user wants | Start here | Recipes |
 |---|---|---|
 | Better screens, keyboards, wording, feedback in an existing bot | core workflow below, `references/navigation-and-flows.md` | 01-10 |
+| The whole interface as files by screen ID (`bot-ui/`), the local Studio, "shorten `checkout.payment.confirm`" | `references/bot-ui-projects.md` | — |
 | Fit the bot to the project's style, rethink every menu, tune it | `references/redesign-orchestration.md` | — |
 | "Build me a bot for X" (shop, support, booking, learning, community…) | `references/example-library.md`, `recipes/use-cases.json`, `references/use-case-playbooks.md` | 20-29, 60-64, 80-87 |
 | Posts in a channel, digests, mailings, editorial approval | `references/publishing-pipeline.md`, `references/channel-post-design.md` | 30-39 |
@@ -265,6 +266,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 
 **Engineering**
 - Unknown project → `references/project-adaptation.md`
+- `bot-ui/` project: screen IDs, CLI, Studio, revision conflicts, no-Studio path → `references/bot-ui-projects.md`
 - Update intake, `allowed_updates`, webhooks vs polling → `references/updates-and-delivery.md`
 - Escaping, injection, user or model output → `references/security-and-escaping.md`
 - Localization, RTL → `references/localization-and-rtl.md`

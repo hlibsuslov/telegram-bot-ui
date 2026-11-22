@@ -5,6 +5,58 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## Unreleased
+
+- bot-ui Studio: premium emoji library. The Emoji page imports a pack from its
+  `t.me/addemoji/...` link through the telegram-bot-ui resolver on the project site (no token;
+  only the pack name is sent; `BOT_UI_EMOJI_RESOLVER` changes or turns it off; the user's own
+  token or a saved getStickerSet response still work), shows every emoji with its picture, suggests icons for the ordinary
+  emoji the screens already use, and keeps the bot's icon map (one meaning per emoji) in
+  `emoji/library.json`. Text fields and button icons get an emoji picker; previews, the map and
+  the simulator draw the real pictures (adaptive emoji in the text colour); the offline artifact
+  inlines the pictures it needs.
+- Agent handoff: `bot-ui emoji brief [--json]` (icon map, placements, replaceable emoji, unknown
+  ids, rules) and a premium emoji section in the Changes prompt. `validate` adds
+  `CUSTOM_EMOJI_UNKNOWN`, `CUSTOM_EMOJI_FALLBACK_MISMATCH` and `CUSTOM_EMOJI_DOUBLE_ICON`.
+
+## 2.4.0 - 2026-11-22
+
+bot-ui projects and the optional local Studio (`studio/`, not part of the skill install).
+
+- bot-ui Studio opens one local project at a time. It maps screens and transitions, simulates
+  Telegram conversations, edits messages and keyboards, and previews HTML widgets. It saves
+  changes to the bot’s repository for Git review and can export a patch for offline drafts.
+- The landing page includes a browser demo of Pulloa, a coffee pickup bot with 19 screens,
+  four scenarios and six interactive widgets. README links cover the demo, local setup and
+  the project format in English, Russian and Ukrainian.
+- Skill route for a whole interface kept as files by stable screen ID:
+  `references/bot-ui-projects.md` (new UI from a description, connecting one route of an existing
+  bot with its `callback_data` kept, change by ID with a revision check and conflict handling,
+  local Studio or an exported snapshot and `apply-patch`, widget author/build/attach and what
+  changes in already-sent messages, groups and personal data, the path without the Studio).
+  Linked from `SKILL.md` and the `ui` capability of the adapters. The optional `studio/` folder
+  is not part of the skill install or the directory edition.
+- Evals: activation P40-P41, behavioural BUI1-BUI6.
+- `bot-ui` project format v1 (`studio/docs/contract.md`): screens, actions and one typed transition
+  rule per button, stable IDs and `callback_data`, a revision over the sources, one locked write
+  path with `expectedRevision`, field-level conflicts and journaled multi-file writes.
+- CLI `py -3 studio/bot-ui.py`: `init`, `list`, `show`, `validate`, `set`, `patch`, `apply-patch`,
+  `simulate`, `render`, `build`, `studio`, `export-snapshot`, `inventory` and `import` (aiogram
+  routers, read-only on the bot; refuses bots without router handlers).
+- Simulator engine in Python with a TypeScript port checked on the same fixtures; adapters for
+  aiogram 3.31.0 and raw tgkit over one runtime (Bot API 10.5 callbacks with `inline_message_id`
+  and inaccessible messages, stale buttons, widget fallback outside private chats).
+- Studio on shadcnblocks `application-shell1`: a map of Telegram message previews with arrows from
+  their buttons, a screen editor with a live preview, Beginner and Pro modes, en/ru/uk editing,
+  a Telegram-style simulator, one Changes page (drafts, saved files, requests, a ready prompt for
+  your agent), every media kind by `file_id`/URL and custom emoji.
+- Widgets: a library of the skill's 23 widgets with live previews, a visual builder (message,
+  product card, promo code, countdown offer, quiz) with presets and light/dark colours, named
+  preview states, photo-to-SVG assets, builds through the strict widget pipeline, export of the
+  HTML and the `sendWidget` payload.
+- An offline one-file artifact for hosts without a local port: edit texts and rules, simulate,
+  export a patch, apply it with the CLI.
+
 ## 2.3.0 - 2026-11-22
 
 Bot API 10.5 (released 2026-11-22).

@@ -10,7 +10,7 @@ Runs, in order:
     `# run-checks: <args>` in its first 40 lines (for example build_adapters --check,
     run_evals) - new validators join by adding that line, without editing this file;
   * the Python unittest suite: every `tests/test_*.py` (stdlib unittest discovery);
-  * Node tests: every `*.test.ts|mjs|js` under `skills/telegram-bot-ui/examples/`, run
+  * Node tests: every `*.test.ts|mjs|js` under `skills/telegram-bot-ui/examples/` and `studio/web/`, run
     with `node --test` from the nearest folder with a package.json. A folder whose package.json declares
     dependencies runs only when its node_modules exist (e.g. `npm ci`), otherwise it is
     reported as skipped. `.ts` tests need Node >= 22.18 (type stripping).
@@ -56,20 +56,24 @@ def discovered_scripts() -> list[tuple[str, str, list[str]]]:
 
 
 def node_groups() -> list[tuple[str, list[str], bool]]:
-    """(package dir, test files relative to it, needs node_modules) for examples/**."""
+    """(package dir, test files relative to it, needs node_modules) for examples/** and studio/web."""
     groups: dict[str, list[str]] = {}
-    base = os.path.join(ROOT, *SKILL_REL.split("/"), "examples")
-    for dirpath, dirnames, filenames in os.walk(base):
-        dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
-        for name in sorted(filenames):
-            if not NODE_TEST.search(name):
-                continue
-            pkg = dirpath
-            while pkg.startswith(base) and not os.path.isfile(os.path.join(pkg, "package.json")):
-                pkg = os.path.dirname(pkg)
-            if not pkg.startswith(base):
+    # The skill's examples, plus the optional Studio client (studio/web, runs after `npm ci`).
+    bases = [os.path.join(ROOT, *SKILL_REL.split("/"), "examples"), os.path.join(ROOT, "studio", "web")]
+    for base in bases:
+        if not os.path.isdir(base):
+            continue
+        for dirpath, dirnames, filenames in os.walk(base):
+            dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS and not d.startswith("dist"))
+            for name in sorted(filenames):
+                if not NODE_TEST.search(name):
+                    continue
                 pkg = dirpath
-            groups.setdefault(pkg, []).append(os.path.relpath(os.path.join(dirpath, name), pkg))
+                while pkg.startswith(base) and not os.path.isfile(os.path.join(pkg, "package.json")):
+                    pkg = os.path.dirname(pkg)
+                if not pkg.startswith(base):
+                    pkg = dirpath
+                groups.setdefault(pkg, []).append(os.path.relpath(os.path.join(dirpath, name), pkg))
     result = []
     for pkg, tests in sorted(groups.items()):
         needs = False

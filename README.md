@@ -26,6 +26,7 @@
 
 <p align="center">
   <a href="https://telegram-bot-ui-site.vercel.app">Website</a> ·
+  <a href="#bot-ui-studio">Studio</a> ·
   <a href="#-quick-start">Quick start</a> ·
   <a href="#-what-your-agent-can-do">Capabilities</a> ·
   <a href="#-html-widgets">Widgets</a> ·
@@ -72,6 +73,20 @@ python scripts/install.py --host all --scope user
 
 Then open your bot's repository and just ask: *"Improve the UX of this Telegram bot."*
 The skill activates on its own — no API names needed. More hosts and options: [Install](#-install).
+
+## bot-ui Studio
+
+<a href="https://telegram-bot-ui-site.vercel.app/studio">
+  <img alt="Pulloa in bot-ui Studio. The bot flow map shows messages and their transitions, with the screen editor, simulated checkout and interactive order tracker below." src="docs/assets/studio-overview.png" width="100%">
+</a>
+
+Use the skill with your coding agent to build the Telegram bot interface. Open the same `bot-ui/` project in Studio to inspect its map and use the simulator to try an order, a declined payment or a first-time visitor.
+
+Edit messages and keyboards, test branching rules and build or preview HTML widgets. Save changes to the `bot-ui/` folder in your bot’s repository and review them in Git. You can also leave a request on a screen and copy a task for your coding agent.
+
+The website demo opens the Pulloa coffee pickup bot in your browser. To work on your own bot, build and run Studio on your computer. It listens on `127.0.0.1` and opens one project at a time. Studio comes from a repository checkout and has its own setup.
+
+[Try the live demo](https://telegram-bot-ui-site.vercel.app/studio) · [Local setup](studio/README.md) · [Project format](studio/docs/contract.md)
 
 ## ✨ What changes in your bot
 
@@ -396,6 +411,7 @@ skills/telegram-bot-ui/   the skill; installers copy only this folder
   data/             offline Bot API catalog, emoji pack registry
   agents/           Codex metadata (openai.yaml)
 scripts/            installer, adapter generator, eval runner, check runner (offline)
+studio/             optional bot-ui CLI and local Studio (clone only; not installed with the skill)
 agents/             Claude subagents, Codex custom agents
 adapters/           routing table and generated entry files for other hosts
 .claude-plugin/     Claude Code plugin and marketplace manifests

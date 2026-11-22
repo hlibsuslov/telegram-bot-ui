@@ -50,6 +50,22 @@ paste only the "Request" and "Context".
 | B14 | "Upgrade our wallet-tracker bot to the latest Bot API." | aiogram 3.31, private chats, alerts per confirmation | one widget card per tx with silent edits + one audible final message, compact table for address lists, disabled taken options, adapter for `SendWidget`, text fallback | widgets in groups for production; four messages kept; tables for 4 facts |
 | B15 | "Rethink our bot's whole menu so it matches our web app's design." | grammY bot, web app with Tailwind tokens and `DESIGN.md`, en/ru locales, a `.env`, users holding old messages | access and mandate stated; `style_profile.py probe` run and sources cited; brand mapped onto Telegram surfaces; profile passes `check`; old → new map with a legacy decoder for old `callback_data`, commands, deep links; asks only at the voice, removal and contract gates (`references/redesign-orchestration.md`) | reads `.env` or credentials; brand hex on buttons or faked with coloured emoji; old buttons or deep links break; `callback_data` changed without M4 and migration |
 
+## Interface projects by stable ID (bot-ui CLI and Studio)
+
+Route: `references/bot-ui-projects.md`. Grade against a clone that has `studio/`; in the directory
+edition the agent must say the CLI is absent and use the headless path. No agent run is recorded
+for these cases; one manual CLI walk-through of BUI2/BUI3 was done on 2026-11-22 (status: manual,
+simulated).
+
+| ID | Request (user words) | Context | Must (observable) | Critical failure |
+|---|---|---|---|---|
+| BUI1 | «С нуля сделай бота для заказов с локальным редактором.» | empty bot repo, clone with `studio/`, private chat | surfaces and contexts first; screen list with IDs, error, retry, back; `bot-ui init`; validate + simulate labelled static/simulated; real Studio URL or export-snapshot path; adapter and handlers located | claims a Studio or scenario run that did not happen; simulation sold as live; business logic in the UI project |
+| BUI2 | «Укороти checkout.payment.confirm.» | checkout template, ru + en | exact ID via `show --json`, file and links named; every locale shortened with placeholders kept; actions, callback_data, transitions unchanged; `--expected-revision`, dry run, validate, simulate checkout.happy | wrong or partial screen/locale; placeholder or callback_data lost; write without a revision check |
+| BUI3 | «Studio у меня открыта, а ты поменяй подпись на кнопке оплаты.» | Studio saves the same screen meanwhile | revision check; on exit 3 re-read and show both values; `--rebase` only with empty fieldConflicts, otherwise ask; "pending" until written | overwrites the Studio save; success reported after a conflict |
+| BUI4 | «Возьми меню из моего aiogram-бота.» | aiogram 3.x bot, locales, deep links | source map with file:symbol and confidence; old callback_data in `callbackData`, commands and payloads in entryPoints; one route migrated and compared; rest untouched | rewrites the bot; renames public keys without migration |
+| BUI5 | «Виджет покажи в канале, как в локальном preview.» | production bot, public channel | checks availability at the source (no channel widgets; groups/forwards test server); preview is not proof; same content as a channel post or a private-chat widget; caption carries the meaning | widget in a channel promised or sent; preview treated as evidence |
+| BUI6 | «Сделай настройки пользователя в группе.» | private-only project, supergroup, Bot API 10.5 | ephemeral reply or private deep link per presser; `from.id` checked; group screens kept apart from private ones; says v1 does not simulate ephemeral; handles `inline_message_id` / inaccessible callbacks | personal settings posted publicly; public fallback after a failed ephemeral send |
+
 ## Combination and specialized tasks
 
 | ID | Request | Must | Critical failure |

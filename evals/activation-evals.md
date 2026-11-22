@@ -85,6 +85,8 @@ description is updated.
 | P37 | "Turn on topics with a sidebar for our bot from code, not in BotFather." | `setMySettings`, `has_topic_sidebar` (10.5) | `bot-settings.md` |
 | P38 | "Кнопки в старых сообщениях бота перестали работать — колбэк приходит без message." | `callback_query_mode`, `inline_message_id` (10.5) | `bot-settings.md` |
 | P39 | "Let me invite our five testers to the bot and greet them." | botinvite link, `WriteAccessAllowed.inviter` (10.5) | `bot-settings.md`, `onboarding-and-first-run.md` |
+| P40 | "Open my bot's screens in a local editor so I can change the texts myself." | bot-ui Studio, local preview | `bot-ui-projects.md` |
+| P41 | "Поменяй экран checkout.payment.confirm в нашем bot-ui проекте." | change by stable screen ID | `bot-ui-projects.md` |
 
 ## Negative (should NOT activate)
 

@@ -1,0 +1,283 @@
+{
+  "description": "Synthetic private-chat updates for the demo-shop template. Message IDs follow RecordingSession / FakeTransport numbering (first send = 1001).",
+  "outcomes": {
+    "checkout.confirm": [
+      "retry",
+      "ok"
+    ]
+  },
+  "context": {
+    "delivery.method": "pickup"
+  },
+  "data": {
+    "order.no": "4821",
+    "order.total": "1 290 ₽",
+    "order.status_text": "заказ собирают"
+  },
+  "updates": [
+    {
+      "update_id": 1,
+      "message": {
+        "message_id": 1,
+        "date": 1794736800,
+        "chat": {
+          "id": 111111111,
+          "type": "private",
+          "first_name": "Test"
+        },
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "text": "/start"
+      }
+    },
+    {
+      "update_id": 2,
+      "callback_query": {
+        "id": "q1",
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "chat_instance": "ci-1",
+        "message": {
+          "message_id": 1001,
+          "date": 1794736800,
+          "chat": {
+            "id": 111111111,
+            "type": "private",
+            "first_name": "Test"
+          },
+          "from": {
+            "id": 7000000001,
+            "is_bot": true,
+            "first_name": "Demo"
+          },
+          "text": "..."
+        },
+        "data": "entry.start:order"
+      }
+    },
+    {
+      "update_id": 3,
+      "callback_query": {
+        "id": "q2",
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "chat_instance": "ci-1",
+        "message": {
+          "message_id": 1001,
+          "date": 1794736800,
+          "chat": {
+            "id": 111111111,
+            "type": "private",
+            "first_name": "Test"
+          },
+          "from": {
+            "id": 7000000001,
+            "is_bot": true,
+            "first_name": "Demo"
+          },
+          "text": "..."
+        },
+        "data": "checkout.payment.choose:card"
+      }
+    },
+    {
+      "update_id": 4,
+      "message": {
+        "message_id": 2,
+        "date": 1794736800,
+        "chat": {
+          "id": 111111111,
+          "type": "private",
+          "first_name": "Test"
+        },
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "text": "Позвоните за 5 минут"
+      }
+    },
+    {
+      "update_id": 5,
+      "callback_query": {
+        "id": "q3",
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "chat_instance": "ci-1",
+        "message": {
+          "message_id": 1003,
+          "date": 1794736800,
+          "chat": {
+            "id": 111111111,
+            "type": "private",
+            "first_name": "Test"
+          },
+          "from": {
+            "id": 7000000001,
+            "is_bot": true,
+            "first_name": "Demo"
+          },
+          "text": "..."
+        },
+        "data": "checkout.payment.confirm:pay"
+      }
+    },
+    {
+      "update_id": 6,
+      "callback_query": {
+        "id": "q4",
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "chat_instance": "ci-1",
+        "message": {
+          "message_id": 1003,
+          "date": 1794736800,
+          "chat": {
+            "id": 111111111,
+            "type": "private",
+            "first_name": "Test"
+          },
+          "from": {
+            "id": 7000000001,
+            "is_bot": true,
+            "first_name": "Demo"
+          },
+          "text": "..."
+        },
+        "data": "checkout.payment.error:retry"
+      }
+    },
+    {
+      "update_id": 7,
+      "callback_query": {
+        "id": "q5",
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "chat_instance": "ci-1",
+        "message": {
+          "message_id": 1003,
+          "date": 1794736800,
+          "chat": {
+            "id": 111111111,
+            "type": "private",
+            "first_name": "Test"
+          },
+          "from": {
+            "id": 7000000001,
+            "is_bot": true,
+            "first_name": "Demo"
+          },
+          "text": "..."
+        },
+        "data": "checkout.payment.success:status"
+      }
+    },
+    {
+      "update_id": 8,
+      "callback_query": {
+        "id": "q6",
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "chat_instance": "ci-1",
+        "message": {
+          "message_id": 1004,
+          "date": 1794736800,
+          "chat": {
+            "id": 111111111,
+            "type": "private",
+            "first_name": "Test"
+          },
+          "from": {
+            "id": 7000000001,
+            "is_bot": true,
+            "first_name": "Demo"
+          },
+          "text": "..."
+        },
+        "data": "orders.status:route"
+      }
+    },
+    {
+      "update_id": 9,
+      "callback_query": {
+        "id": "q7",
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "chat_instance": "ci-1",
+        "message": {
+          "message_id": 1001,
+          "date": 1794736800,
+          "chat": {
+            "id": 111111111,
+            "type": "private",
+            "first_name": "Test"
+          },
+          "from": {
+            "id": 7000000001,
+            "is_bot": true,
+            "first_name": "Demo"
+          },
+          "text": "..."
+        },
+        "data": "legacy:removed-button"
+      }
+    },
+    {
+      "update_id": 10,
+      "callback_query": {
+        "id": "q8",
+        "from": {
+          "id": 111111111,
+          "is_bot": false,
+          "first_name": "Test",
+          "language_code": "ru"
+        },
+        "chat_instance": "ci-1",
+        "message": {
+          "message_id": 1005,
+          "date": 0,
+          "chat": {
+            "id": 111111111,
+            "type": "private",
+            "first_name": "Test"
+          }
+        },
+        "data": "orders.pickup:back"
+      }
+    }
+  ]
+}
