@@ -1,4 +1,5 @@
-import { Bot, Copy, RotateCcw } from "lucide-react";
+import { Bot, Copy, MessageSquarePlus, RotateCcw } from "lucide-react";
+import { RequestChange } from "../changes/Tray";
 import { useState } from "react";
 import { EDITABLE_FORMATS, keyboardRows, renderScreen, type Doc } from "@/core/render.ts";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +16,17 @@ import { KeyboardEditor, NewAction } from "./KeyboardEditor";
 export function CopyButtons({ sid, compact }: { sid: string; compact?: boolean }) {
   const { copyId, copyRequest } = useStudio();
   return (
-    <span className="flex items-center gap-1">
+    <span className="flex flex-wrap items-center gap-1">
       <Button type="button" size="sm" variant="outline" className={cn("h-7 gap-1 px-2 text-xs", compact && "px-1.5")} onClick={() => copyId(sid)} aria-label={`Copy ID ${sid}`}>
         <Copy className="size-3.5" /> {compact ? "ID" : "Copy ID"}
       </Button>
       <Button type="button" size="sm" variant="outline" className={cn("h-7 gap-1 px-2 text-xs", compact && "px-1.5")} onClick={() => copyRequest(sid)} aria-label={`Copy a request for your agent about ${sid}`}>
-        <Bot className="size-3.5" /> {compact ? "Ask" : "Copy request for the agent"}
+        <Bot className="size-3.5" /> {compact ? "Ask" : "Copy agent prompt"}
       </Button>
+      <RequestChange sid={sid} align="end" trigger={
+        <Button type="button" size="sm" variant="outline" className={cn("h-7 gap-1 px-2 text-xs", compact && "px-1.5")} aria-label={`Request a change to ${sid}`}>
+          <MessageSquarePlus className="size-3.5" /> {compact ? "Request" : "Request a change"}
+        </Button>} />
     </span>
   );
 }

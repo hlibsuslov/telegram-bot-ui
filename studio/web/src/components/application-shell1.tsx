@@ -156,7 +156,7 @@ export function ApplicationShell1({ className, brand, navGroups, footer, active,
         <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3 sm:px-4">
           <SidebarTrigger className="-ml-1" aria-label="Toggle navigation" />
           <Separator orientation="vertical" className="mx-1 hidden h-5 md:block" />
-          <span className="truncate text-sm font-semibold md:hidden">{mobileTitle}</span>
+          <span className="min-w-0 truncate text-sm font-semibold md:hidden">{mobileTitle}</span>
           <Breadcrumb className="hidden min-w-0 md:block">
             <BreadcrumbList className="flex-nowrap">
               {trail.map((crumb, index) => {

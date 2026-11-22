@@ -1,6 +1,6 @@
 // Telegram look, drawn locally (no Telegram assets): bot text goes through telegramHtmlToSafe into
 // React elements, never into innerHTML. Links are shown, not followed.
-import { useState, type ReactNode } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { CheckCheck, CornerUpLeft, ExternalLink, Puzzle, Send, SquareSlash } from "lucide-react";
 import { type Logical, telegramHtmlToSafe } from "@/core/render.ts";
 import { cn } from "@/lib/utils";
@@ -82,6 +82,35 @@ export function InlineKeyboard({ logical, onPress, hl, buttonSlot }: Pick<Bubble
   );
 }
 
+/** Six lines and an ellipsis; "more" opens the full text over the bubble without changing its size. */
+function ClampedText({ text, format }: { text: string; format: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [over, setOver] = useState(false);
+  const [open, setOpen] = useState(false);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (el) setOver(el.scrollHeight > el.clientHeight + 1);
+  }, [text, format]);
+  return (
+    <div className="relative">
+      <div ref={ref} className="overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:6]">
+        <MessageText text={text} format={format} />
+      </div>
+      {over && (
+        <button type="button" className="nodrag mt-0.5 text-[12px] font-medium text-[var(--tg-theme-link-color)]" aria-expanded={open}
+          onClick={(e) => { e.stopPropagation(); setOpen(true); }}>more</button>
+      )}
+      {open && (
+        <div className="nodrag nowheel absolute -inset-x-1.5 -top-1 z-20 max-h-80 overflow-y-auto rounded-xl bg-[var(--tg-theme-bg-color)] p-2 shadow-xl ring-1 ring-black/10"
+          onClick={(e) => e.stopPropagation()}>
+          <MessageText text={text} format={format} />
+          <button type="button" className="mt-1 text-[12px] font-medium text-[var(--tg-theme-link-color)]" onClick={() => setOpen(false)} autoFocus>less</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Bubble({ logical, onPress, edited, meta, widget, hl, clampText, buttonSlot, tail = true, time = "10:00" }: BubbleProps) {
   return (
     <div className="w-full">
@@ -92,9 +121,8 @@ export function Bubble({ logical, onPress, edited, meta, widget, hl, clampText, 
             <span className="min-w-0"><span className="block font-medium">Widget</span><span className="tg-hint block truncate font-mono text-[11px]">{widget}</span></span>
           </div>
         )}
-        <div data-hl={hl?.text || undefined} className={cn("rounded", clampText && "relative max-h-[176px] overflow-hidden")}>
-          <MessageText text={logical.text} format={logical.format} />
-          {clampText && <div className="pointer-events-none absolute inset-x-0 bottom-0 h-6 bg-gradient-to-t from-[var(--tg-theme-bg-color)] to-transparent" />}
+        <div data-hl={hl?.text || undefined} className="rounded">
+          {clampText ? <ClampedText text={logical.text} format={logical.format} /> : <MessageText text={logical.text} format={logical.format} />}
         </div>
         <div className="tg-meta float-right -mb-0.5 ml-2 flex translate-y-0.5 items-center gap-1 pt-0.5 text-[11px]">
           {meta}

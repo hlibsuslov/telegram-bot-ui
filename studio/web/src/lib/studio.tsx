@@ -10,6 +10,19 @@ export interface Toast { id: number; text: string; tone: "info" | "success" | "e
 /** The part of a screen being edited: outlined in the panel preview and on its map node. */
 export interface Highlight { sid: string; part: "text" | "action" | "keyboard" | "input" | "title"; actionId?: string; state?: string }
 
+/** A note for the agent about a screen, queued in this browser until it is handed off. */
+export interface AgentRequest { id: string; sid: string | null; text: string; at: number }
+export interface GitFile { path: string; status: string; screenId?: string; widgetId?: string }
+export interface GitStatus { git: boolean; branch?: string; head?: string; projectPath?: string; files: GitFile[]; diff: string }
+export interface Handoff { at: number; signature: string }
+
+function readJson<T>(key: string, fallback: T): T {
+  try { const raw = localStorage.getItem(key); return raw ? (JSON.parse(raw) as T) : fallback; } catch { return fallback; }
+}
+function writeJson(key: string, value: unknown) {
+  try { if (value === null || (Array.isArray(value) && !value.length)) localStorage.removeItem(key); else localStorage.setItem(key, JSON.stringify(value)); } catch { /* storage blocked */ }
+}
+
 export interface Caps { text: boolean; rule: boolean; structure: boolean; create: boolean; save: boolean; widgets: boolean }
 
 interface Ctx {
@@ -37,6 +50,14 @@ interface Ctx {
   setHighlight: (h: Highlight | null) => void;
   copyId: (sid: string) => void;
   copyRequest: (sid: string) => void;
+  requests: AgentRequest[];
+  addRequest: (sid: string | null, text: string) => void;
+  removeRequest: (id: string) => void;
+  git: GitStatus | null;
+  refreshGit: () => Promise<void>;
+  handoff: Handoff | null;
+  markHandedOff: () => void;
+  workSignature: string;
 }
 
 const StudioContext = createContext<Ctx | null>(null);
@@ -71,6 +92,10 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
   const [incoming, setIncoming] = useState<Loaded | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
   const saving = useRef(false);
+  const projKey = `${initial.projectId}:${initial.rootKey}`;
+  const [requests, setRequests] = useState<AgentRequest[]>(() => readJson(`bot-ui-studio:requests:${projKey}`, []));
+  const [handoff, setHandoff] = useState<Handoff | null>(() => readJson(`bot-ui-studio:handoff:${projKey}`, null));
+  const [git, setGit] = useState<GitStatus | null>(null);
   const studio = loaded.mode === "studio";
 
   const notify = useCallback((text: string, tone: Toast["tone"] = "info") => {
@@ -214,10 +239,43 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
     widgets: !!f.widgets,
   };
 
+  const addRequest = useCallback((sid: string | null, text: string) => {
+    setRequests((r) => {
+      const next = [...r, { id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, sid, text: text.trim(), at: Date.now() }];
+      writeJson(`bot-ui-studio:requests:${projKey}`, next);
+      return next;
+    });
+    notify(sid ? `Request for ${sid} queued for your agent` : "Request queued for your agent", "success");
+  }, [projKey, notify]);
+  const removeRequest = useCallback((id: string) => {
+    setRequests((r) => { const next = r.filter((x) => x.id !== id); writeJson(`bot-ui-studio:requests:${projKey}`, next); return next; });
+  }, [projKey]);
+  const refreshGit = useCallback(async () => {
+    if (!studio) return;
+    const res = await api<GitStatus>("/api/git-status", {});
+    setGit(res.ok && res.data && Array.isArray(res.data.files) ? res.data : null);
+  }, [studio]);
+  useEffect(() => { void refreshGit(); }, [refreshGit, loaded.revision]);
+  // What "handed off" refers to: the saved file changes, the queued requests and the drafts.
+  const workSignature = JSON.stringify([
+    (git?.files ?? []).map((f) => `${f.status}${f.path}`).sort(),
+    requests.map((r) => r.id),
+    Object.keys(store.data.screens).sort(),
+  ]);
+  const markHandedOff = useCallback(() => {
+    const h = { at: Date.now(), signature: JSON.stringify([(git?.files ?? []).map((f) => `${f.status}${f.path}`).sort(), [], Object.keys(store.data.screens).sort()]) };
+    setRequests([]);
+    writeJson(`bot-ui-studio:requests:${projKey}`, []);
+    setHandoff(h);
+    writeJson(`bot-ui-studio:handoff:${projKey}`, h);
+    notify("Marked as handed to the agent; the request queue is cleared", "success");
+  }, [git, store, projKey, notify]);
+
   const value: Ctx = {
     loaded, store, version, working, diags, validating, caps, pendingBase, adoptPendingBase, reload,
     replaceLoaded, saving, saveDiags, setSaveDiags, notify, toasts, focusField,
     editLocale, setEditLocale, highlight, setHighlight, copyId, copyRequest,
+    requests, addRequest, removeRequest, git, refreshGit, handoff, markHandedOff, workSignature,
   };
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>;
 }

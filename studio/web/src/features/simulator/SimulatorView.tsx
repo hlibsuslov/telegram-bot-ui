@@ -1,8 +1,10 @@
-import { ArrowLeft, Check, Copy, MousePointerClick, Play, RotateCcw, Send, Terminal, Zap } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Copy, MessageCircle, MousePointerClick, RotateCcw, Settings2, Terminal, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Engine, newSession, parityView, runScenario, type Session, type Snapshot } from "@/core/engine.ts";
 import type { Doc, Logical } from "@/core/render.ts";
+import { CodeBlock } from "@/components/code-view";
 import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 import { api, errorText } from "@/lib/api";
 import { copyText, exampleValues, locales } from "@/lib/model";
@@ -63,38 +65,58 @@ function effectNotes(entry: Doc, run: Run) {
   for (const d of entry.diagnostics ?? []) run.chat.push({ k: "note", text: `${d.code}: ${d.message}`, tone: d.severity === "error" ? "error" : "warn" });
 }
 
-const UPDATE_STYLE: Record<string, string> = {
-  message: "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-100",
-  callback_query: "bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-100",
-  event: "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100",
-  local: "bg-muted text-muted-foreground",
-};
+function updateText(u: Doc): { icon: React.ReactNode; text: string } {
+  if (u.type === "message") return { icon: <MessageCircle className="size-3.5" />, text: `“${u.text}”` };
+  if (u.type === "callback_query") return { icon: <MousePointerClick className="size-3.5" />, text: `pressed ${u.actionId}${u.message ? ` in message #${u.message}` : ""}` };
+  if (u.type === "event") return { icon: <Zap className="size-3.5" />, text: `event ${u.eventKey}` };
+  const rest = Object.fromEntries(Object.entries(u).filter(([k]) => k !== "type"));
+  if ("expect" in rest) return { icon: <Check className="size-3.5" />, text: `expect ${JSON.stringify(rest.expect)}` };
+  return { icon: <Settings2 className="size-3.5" />, text: `set ${JSON.stringify(rest)}` };
+}
 
 function TraceStep({ e, last }: { e: Doc; last: boolean }) {
-  const u = e.update ?? {};
-  const what = u.type === "message" ? `“${u.text}”` : u.type === "callback_query" ? `${u.actionId}${u.message ? ` on #${u.message}` : ""}` : u.type === "event" ? u.eventKey
-    : JSON.stringify(Object.fromEntries(Object.entries(u).filter(([k]) => k !== "type")));
+  const [open, setOpen] = useState(false);
+  const u = updateText(e.update ?? {});
   const t = e.transition;
-  const failed = (e.diagnostics ?? []).some((d: Doc) => d.severity === "error");
+  const diags: Doc[] = e.diagnostics ?? [];
+  const failed = diags.some((d) => d.severity === "error");
+  const quiet = !e.action && !t && !(e.effects ?? []).length && !diags.length;
   return (
-    <li className={cn("rounded-xl bg-card p-2.5 text-xs shadow-xs ring-1 ring-border", last && "ring-2 ring-foreground/70", failed && "ring-destructive")}>
-      <div className="flex items-center gap-2">
-        <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted font-mono text-[10px]">{e.step}</span>
-        <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-medium", UPDATE_STYLE[u.type] ?? UPDATE_STYLE.local)}>{u.type === "callback_query" ? "press" : u.type}</span>
-        <span className="min-w-0 truncate font-mono">{what}</span>
-      </div>
-      <dl className="mt-1.5 grid grid-cols-[4.5rem_1fr] gap-x-2 gap-y-0.5 pl-7 [overflow-wrap:anywhere]">
-        {e.action && (<><dt className="text-muted-foreground">action</dt><dd className="font-mono">{e.action.screenId}/{e.action.actionId ?? e.action.field} · {e.action.type}</dd></>)}
-        {t && (<><dt className="text-muted-foreground">transition</dt><dd className="font-mono">{t.from ?? "∅"} → {t.to} <span className="text-muted-foreground">via {t.via}</span></dd></>)}
-        {t?.rule && (<><dt className="text-muted-foreground">rule</dt><dd className="font-mono">{t.rule.field}: {t.rule.matched ? "matched" : "not matched"} → <b>{t.rule.branch}</b></dd></>)}
-        {(e.effects ?? []).length > 0 && (
-          <><dt className="text-muted-foreground">effects</dt>
-            <dd className="flex flex-wrap gap-1">{e.effects.map((x: Doc, i: number) => (
-              <span key={i} className="rounded bg-muted px-1 font-mono">{x.type}{x.instance ? ` #${x.instance}` : ""}{x.type === "answer" && x.text ? ` “${x.text}”` : ""}{x.reason ? ` (${x.reason})` : ""}</span>
-            ))}</dd></>
+    <li className="relative flex gap-3 pb-4 last:pb-1">
+      <span className="absolute top-6 bottom-0 left-[11px] w-px bg-border" aria-hidden />
+      <span className={cn("relative z-10 flex size-6 shrink-0 items-center justify-center rounded-full font-mono text-[10.5px] ring-4 ring-background",
+        failed ? "bg-red-600 text-white" : last ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>{e.step}</span>
+      <div className={cn("min-w-0 flex-1 text-xs", quiet && "text-muted-foreground")}>
+        <div className="flex items-center gap-1.5 pt-1 font-medium">{u.icon}<span className="min-w-0 truncate">{u.text}</span></div>
+        {e.action && e.action.type !== "stale" && (
+          <p className="mt-1 text-muted-foreground">button <span className="font-mono text-foreground">{e.action.actionId ?? e.action.field}</span> on <span className="font-mono text-foreground">{e.action.screenId}</span> · {e.action.type}</p>
         )}
-      </dl>
-      {(e.diagnostics ?? []).map((d: Doc, i: number) => <p key={i} className={cn("mt-1 pl-7", d.severity === "error" ? "text-destructive" : "text-warning")}>{d.code}: {d.message}</p>)}
+        {e.action?.type === "stale" && <p className="mt-1 text-amber-700 dark:text-amber-300">stale button: acknowledged, nothing changes</p>}
+        {t && (
+          <p className="mt-1 flex flex-wrap items-center gap-1 font-mono">
+            <span>{t.from ?? "start"}</span><ChevronRight className="size-3 text-muted-foreground" /><span className="font-semibold">{t.to}</span>
+            {t.rule && <span className={cn("rounded-full px-1.5 font-sans text-[10px] font-medium", t.rule.matched ? "bg-emerald-100 text-emerald-900" : "bg-slate-200 text-slate-800")}>{t.rule.field} {t.rule.matched ? "matched" : "not matched"} → {t.rule.branch}</span>}
+          </p>
+        )}
+        {(e.effects ?? []).length > 0 && (
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {e.effects.map((x: Doc, i: number) => (
+              <span key={i} className={cn("rounded-md px-1.5 py-0.5 font-mono text-[10.5px]",
+                x.type === "send" ? "bg-sky-100 text-sky-900 dark:bg-sky-950 dark:text-sky-100" : x.type === "edit" ? "bg-violet-100 text-violet-900 dark:bg-violet-950 dark:text-violet-100"
+                  : x.type === "fallback" ? "bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100" : "bg-muted")}>
+                {x.type}{x.instance ? ` #${x.instance}` : ""}{x.type === "answer" && x.text ? ` “${x.text}”` : ""}{x.reason ? ` · ${x.reason}` : ""}
+              </span>
+            ))}
+          </div>
+        )}
+        {diags.map((d, i) => <p key={i} className={cn("mt-1", d.severity === "error" ? "text-destructive" : "text-amber-700 dark:text-amber-300")}>{d.code}: {d.message}</p>)}
+        {!quiet && (
+          <button type="button" className="mt-1 text-[11px] text-muted-foreground underline-offset-2 hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "Hide details" : "Details"}</button>
+        )}
+        {open && (
+          <div className="mt-1"><CodeBlock lang="json" wrap maxHeight="16rem" code={JSON.stringify({ ...e, effects: (e.effects ?? []).map((x: Doc) => Object.fromEntries(Object.entries(x).filter(([k]) => k !== "render"))) }, null, 2)} /></div>
+        )}
+      </div>
     </li>
   );
 }
@@ -211,164 +233,187 @@ export function SimulatorView() {
     setParity({ state: same ? "same" : "diff", text: firstDiff });
   };
 
+  const settingsSummary = [ls.length > 1 ? locale : null, chat, ...enumContext.map(([n]) => `${n}=${ctx[n]}`)].filter(Boolean).join(" · ");
+  const startLabel = start.startsWith("scenario:") ? `Run scenario ${start.slice(9)}` : start.startsWith("cmd:") ? `/${start.slice(4)}` : `Open ${startScreen}`;
+
   return (
-    <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[300px_minmax(0,1fr)_360px]">
-      <section aria-label="Simulator controls" className="min-w-0 space-y-4 border-b p-4 lg:h-[calc(100svh-3.5rem)] lg:overflow-y-auto lg:border-r lg:border-b-0">
-        <div>
-          <h2 className="text-[15px] font-semibold">Simulator</h2>
-          <p className="text-xs text-muted-foreground">The bot-ui engine runs in this page on your current draft. Nothing is sent to Telegram.</p>
-        </div>
-        <Field label="Start from" htmlFor="sim-start">
-          <EnumSelect id="sim-start" value={start} onChange={setStart} options={[
-            ...commands.map((c: Doc) => ({ value: `cmd:${c.command}`, label: <span><span className="font-mono">/{c.command}</span> <span className="text-muted-foreground">→ {c.screen}</span></span> })),
-            { value: "screen", label: "A screen…" },
-            ...scenarios.map((x) => ({ value: `scenario:${x.scenarioId}`, label: <span>Scenario <span className="font-mono">{x.scenarioId}</span></span> })),
-          ]} />
-        </Field>
-        {start === "screen" && (
-          <Field label="Screen" htmlFor="sim-screen">
-            <EnumSelect id="sim-screen" value={startScreen} onChange={setStartScreen} className="font-mono text-[12.5px]"
-              options={Object.keys(working.screens).sort().map((id) => ({ value: id, label: id }))} />
-          </Field>
-        )}
-        <Button type="button" onClick={begin} className="w-full">{run ? <><RotateCcw className="size-4" /> Restart clean</> : <><Play className="size-4" /> Start</>}</Button>
-
-        <div className="space-y-3 rounded-xl bg-muted/50 p-3">
-          <p className="text-xs font-medium">Context</p>
-          {ls.length > 1 && (
-            <Field label="Language">
-              <Segmented label="Language" value={locale} onChange={(v) => { setLocale(v); act({ locale: v }); }} options={ls.map((l) => ({ value: l, label: l }))} />
-            </Field>
+    <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px]">
+      <section aria-label="Chat" className="flex min-h-[80svh] min-w-0 flex-col bg-muted/30 lg:h-[calc(100svh-3.5rem)] lg:min-h-0">
+        <div className="flex flex-wrap items-center gap-2 border-b bg-background px-3 py-2">
+          <div className="w-[min(100%,17rem)]">
+            <EnumSelect id="sim-start" label="Start from" size="sm" value={start} onChange={setStart} options={[
+              ...commands.map((c: Doc) => ({ value: `cmd:${c.command}`, label: <span><span className="font-mono">/{c.command}</span> <span className="text-muted-foreground">→ {c.screen}</span></span> })),
+              { value: "screen", label: "A screen…" },
+              ...scenarios.map((x) => ({ value: `scenario:${x.scenarioId}`, label: <span>Scenario <span className="font-mono">{x.scenarioId}</span></span> })),
+            ]} />
+          </div>
+          {start === "screen" && (
+            <div className="w-[min(100%,15rem)]">
+              <EnumSelect id="sim-screen" label="Screen" size="sm" value={startScreen} onChange={setStartScreen} className="font-mono text-[12.5px]"
+                options={Object.keys(working.screens).sort().map((id) => ({ value: id, label: id }))} />
+            </div>
           )}
-          <Field label="Chat">
-            <Segmented label="Chat type" value={chat} onChange={(v) => { setChat(v); act({ context: { chat: v } }); }} options={[{ value: "private", label: "private" }, { value: "group", label: "group" }]} />
-          </Field>
-          {enumContext.map(([n, f]) => (
-            <Field key={n} label={<span className="font-mono">{n}</span>}>
-              <Segmented label={n} value={String(ctx[n])} onChange={(v) => { const val = (f.values ?? []).find((x: any) => String(x) === v); setCtx({ ...ctx, [n]: val }); act({ context: { [n]: val } }); }}
-                options={(f.values ?? []).map((v: any) => ({ value: String(v), label: String(v) }))} />
-            </Field>
-          ))}
-          <Field label="Theme">
-            <Segmented label="Theme" value={theme} onChange={setTheme} options={[{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} />
-          </Field>
-        </div>
-
-        {handlers.length > 0 && (
-          <div className="space-y-2 rounded-xl bg-muted/50 p-3">
-            <p className="text-xs font-medium">Handler outcomes <span className="font-normal text-muted-foreground">(for presses)</span></p>
-            {handlers.map(([h, d]) => (
-              <Field key={h} label={<span className="font-mono">{h}</span>}>
-                <Segmented label={h} value={outcome[h] ?? ""} onChange={(v) => setOutcome({ ...outcome, [h]: v })} options={(d.outcomes ?? []).map((o: string) => ({ value: o, label: o }))} />
-              </Field>
-            ))}
-          </div>
-        )}
-
-        {events.length > 0 && (
-          <div className="space-y-2 rounded-xl bg-muted/50 p-3">
-            <p className="text-xs font-medium">Fire an event</p>
-            <EnumSelect label="Event" size="sm" value={eventKey} onChange={setEventKey}
-              options={events.map((e: Doc) => ({ value: e.eventKey, label: <span className="font-mono">{e.eventKey}</span> }))} />
-            <label className="sr-only" htmlFor="sim-ev-data">Event data (JSON)</label>
-            <Textarea id="sim-ev-data" rows={3} value={eventData} onChange={(e) => setEventData(e.target.value)} className="bg-background font-mono text-xs" />
-            <Button type="button" size="sm" variant="secondary" disabled={!run} className="w-full"
-              onClick={() => {
-                let data: Doc;
-                try { data = JSON.parse(eventData || "{}"); } catch (err) { return setEventErr(`Event data is not JSON: ${(err as Error).message}`); }
-                setEventErr("");
-                act({ event: eventKey, data });
-              }}>
-              <Zap className="size-3.5" /> Fire {eventKey}
-            </Button>
-            {eventErr && <p role="alert" className="text-[11px] text-destructive">{eventErr}</p>}
-            {!run && <p className="text-[11px] text-muted-foreground">Start a session first.</p>}
-          </div>
-        )}
-      </section>
-
-      <section aria-label="Chat" className="flex min-h-[78svh] justify-center bg-muted/30 p-3 sm:p-5 lg:h-[calc(100svh-3.5rem)] lg:min-h-0">
-        <figure className="flex min-h-0 w-full max-w-[440px] flex-col overflow-hidden rounded-[22px] shadow-[0_10px_40px_-14px_rgba(0,0,0,.35)] ring-1 ring-black/10">
-          <div className="tg flex min-h-0 flex-1 flex-col" data-theme={theme}>
-            <header className="flex items-center gap-3 bg-[var(--tg-theme-header-bg-color)] px-3 py-2 shadow-[0_1px_0_rgba(0,0,0,.08)]">
-              <ArrowLeft className="size-5 text-[var(--tg-theme-hint-color)]" aria-hidden />
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 text-sm font-semibold text-white" aria-hidden>
-                {loaded.title.slice(0, 1).toUpperCase()}
-              </span>
-              <span className="min-w-0">
-                <span className="block truncate text-[15px] font-semibold">{loaded.title}</span>
-                <span className="block text-[12.5px] text-[var(--tg-theme-hint-color)]">bot</span>
-              </span>
-            </header>
-            <div className="tg-wallpaper relative flex min-h-0 flex-1 flex-col">
-              <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-3" aria-live="polite">
-                {!run ? (
-                  <div className="m-auto max-w-[80%] rounded-2xl bg-[var(--tg-service-bg)] px-4 py-3 text-center text-[13px] text-white">
-                    <p className="font-semibold">{loaded.title}</p>
-                    <p className="opacity-90">Press Start (or Menu → a command) to open the bot.</p>
-                  </div>
-                ) : <Service>Today</Service>}
-                {run?.chat.map((c, i) => {
-                  if (c.k === "user") return <div key={i} className="flex pl-10"><OutgoingBubble text={c.text} /></div>;
-                  if (c.k === "note") return <div key={i} className="py-0.5"><Service tone={c.tone}>{c.text}</Service></div>;
-                  const next = run.chat[i + 1];
-                  return (
-                    <div key={`b${c.instance}`} className={cn("w-full max-w-[86%] pl-1.5 transition-transform", run.touched === c.instance && "animate-in fade-in-0 slide-in-from-bottom-1")}>
-                      <Bubble logical={c.render} edited={c.edited > 0} widget={c.widget} tail={!next || next.k !== "bot"}
-                        meta={<span className="font-mono opacity-70">#{c.instance}</span>}
-                        hl={run.touched === c.instance && c.edited > 0 ? { text: false } : undefined}
-                        onPress={(aid) => act({ press: aid, message: c.instance })} />
-                    </div>
-                  );
-                })}
-                <div ref={chatEnd} />
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button size="sm" variant="outline" className="h-8 gap-1.5"><Settings2 className="size-4" /> Settings <span className="hidden max-w-56 truncate font-mono text-[11px] text-muted-foreground md:inline">{settingsSummary}</span></Button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-[min(94vw,24rem)] space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                {ls.length > 1 && (
+                  <Field label="Language" htmlFor="sim-locale">
+                    <EnumSelect id="sim-locale" size="sm" value={locale} onChange={(v) => { setLocale(v); act({ locale: v }); }} options={ls.map((l) => ({ value: l, label: l }))} />
+                  </Field>
+                )}
+                <Field label="Chat type">
+                  <Segmented label="Chat type" value={chat} onChange={(v) => { setChat(v); act({ context: { chat: v } }); }} options={[{ value: "private", label: "private" }, { value: "group", label: "group" }]} />
+                </Field>
+                <Field label="Theme">
+                  <Segmented label="Theme" value={theme} onChange={setTheme} options={[{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} />
+                </Field>
               </div>
-              {run?.toast && (
-                <div key={run.toast.n} role="status" className="absolute inset-x-0 top-3 z-10 mx-auto w-fit max-w-[86%] animate-in rounded-xl bg-black/75 px-4 py-2.5 text-center text-[13.5px] text-white shadow-lg backdrop-blur fade-in-0 slide-in-from-top-2">
-                  {run.toast.text}
-                </div>
-              )}
-              {menu && commands.length > 0 && (
-                <div className="absolute inset-x-2 bottom-2 z-10 overflow-hidden rounded-xl bg-[var(--tg-theme-bg-color)] shadow-xl ring-1 ring-black/10" role="menu" aria-label="Bot commands">
-                  {commands.map((c: Doc) => (
-                    <button key={c.command} type="button" role="menuitem" className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-[14px] hover:bg-[var(--tg-theme-secondary-bg-color)]"
-                      onClick={() => { setMenu(false); if (run) act({ command: c.command }); else { setStart(`cmd:${c.command}`); } }}>
-                      <Terminal className="size-4 text-[var(--tg-theme-hint-color)]" aria-hidden />
-                      <span className="font-medium">/{c.command}</span>
-                      <span className="truncate text-[12.5px] text-[var(--tg-theme-hint-color)]">{c.screen}</span>
-                    </button>
+              {enumContext.length > 0 && (
+                <div className="space-y-2 border-t pt-3">
+                  <p className="text-xs font-semibold">Context fields</p>
+                  <p className="text-[11px] text-muted-foreground">Trusted values your server sets, e.g. delivery.method. Switch them to try both branches of a rule.</p>
+                  {enumContext.map(([n, f]) => (
+                    <Field key={n} label={<span className="font-mono">{n}</span>}>
+                      <Segmented label={n} value={String(ctx[n])} onChange={(v) => { const val = (f.values ?? []).find((x: any) => String(x) === v); setCtx({ ...ctx, [n]: val }); act({ context: { [n]: val } }); }}
+                        options={(f.values ?? []).map((v: any) => ({ value: String(v), label: String(v) }))} />
+                    </Field>
                   ))}
                 </div>
               )}
+              {handlers.length > 0 && (
+                <div className="space-y-2 border-t pt-3">
+                  <p className="text-xs font-semibold">Handler results</p>
+                  <p className="text-[11px] text-muted-foreground">What your bot's code returns when a handler button is pressed here.</p>
+                  {handlers.map(([h, d]) => (
+                    <Field key={h} label={<span className="font-mono">{h}</span>}>
+                      <Segmented label={h} value={outcome[h] ?? ""} onChange={(v) => setOutcome({ ...outcome, [h]: v })} options={(d.outcomes ?? []).map((o: string) => ({ value: o, label: o }))} />
+                    </Field>
+                  ))}
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+          {events.length > 0 && (
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button size="sm" variant="outline" className="h-8 gap-1.5" disabled={!run}><Zap className="size-4" /> External event</Button>
+              </PopoverTrigger>
+              <PopoverContent align="start" className="w-[min(94vw,22rem)] space-y-2">
+                <p className="text-xs font-semibold">Fire an external event</p>
+                <p className="text-[11px] text-muted-foreground">Like your server would, e.g. when an order status changes.</p>
+                <EnumSelect label="Event" size="sm" value={eventKey} onChange={setEventKey}
+                  options={events.map((e: Doc) => ({ value: e.eventKey, label: <span className="font-mono">{e.eventKey}</span> }))} />
+                <label className="sr-only" htmlFor="sim-ev-data">Event data (JSON)</label>
+                <Textarea id="sim-ev-data" rows={4} value={eventData} onChange={(e) => setEventData(e.target.value)} className="font-mono text-xs" />
+                <Button type="button" size="sm" className="w-full"
+                  onClick={() => {
+                    let data: Doc;
+                    try { data = JSON.parse(eventData || "{}"); } catch (err) { return setEventErr(`Event data is not JSON: ${(err as Error).message}`); }
+                    setEventErr("");
+                    act({ event: eventKey, data });
+                  }}>
+                  <Zap className="size-3.5" /> Fire {eventKey}
+                </Button>
+                {eventErr && <p role="alert" className="text-[11px] text-destructive">{eventErr}</p>}
+              </PopoverContent>
+            </Popover>
+          )}
+          {run && <Button size="sm" variant="ghost" className="ml-auto h-8" onClick={begin}><RotateCcw className="size-4" /> Restart clean</Button>}
+        </div>
+
+        <div className="flex min-h-0 flex-1 justify-center p-3 sm:p-5">
+          <figure className="flex min-h-0 w-full max-w-[440px] flex-col overflow-hidden rounded-[22px] shadow-[0_10px_40px_-14px_rgba(0,0,0,.35)] ring-1 ring-black/10">
+            <div className="tg flex min-h-0 flex-1 flex-col" data-theme={theme}>
+              <header className="flex items-center gap-3 bg-[var(--tg-theme-header-bg-color)] px-3 py-2 shadow-[0_1px_0_rgba(0,0,0,.08)]">
+                <ArrowLeft className="size-5 text-[var(--tg-theme-hint-color)]" aria-hidden />
+                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 text-sm font-semibold text-white" aria-hidden>
+                  {loaded.title.slice(0, 1).toUpperCase()}
+                </span>
+                <span className="min-w-0">
+                  <span className="block truncate text-[15px] font-semibold">{loaded.title}</span>
+                  <span className="block text-[12.5px] text-[var(--tg-theme-hint-color)]">bot</span>
+                </span>
+              </header>
+              <div className="tg-wallpaper relative flex min-h-0 flex-1 flex-col">
+                <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-3" aria-live="polite">
+                  {!run ? (
+                    <div className="m-auto max-w-[82%] rounded-2xl bg-[var(--tg-service-bg)] px-4 py-3 text-center text-[13px] text-white">
+                      <p className="font-semibold">What can this bot do?</p>
+                      <p className="opacity-90">{loaded.title}. Press START below: {startLabel}.</p>
+                    </div>
+                  ) : <Service>Today</Service>}
+                  {run?.chat.map((c, i) => {
+                    if (c.k === "user") return <div key={i} className="flex pl-10"><OutgoingBubble text={c.text} /></div>;
+                    if (c.k === "note") return <div key={i} className="py-0.5"><Service tone={c.tone}>{c.text}</Service></div>;
+                    const next = run.chat[i + 1];
+                    return (
+                      <div key={`b${c.instance}`} className={cn("w-full max-w-[86%] pl-1.5", run.touched === c.instance && "animate-in fade-in-0 slide-in-from-bottom-1")}>
+                        <Bubble logical={c.render} edited={c.edited > 0} widget={c.widget} tail={!next || next.k !== "bot"}
+                          meta={<span className="font-mono opacity-70">#{c.instance}</span>}
+                          onPress={(aid) => act({ press: aid, message: c.instance })} />
+                      </div>
+                    );
+                  })}
+                  <div ref={chatEnd} />
+                </div>
+                {run?.toast && (
+                  <div key={run.toast.n} role="status" className="absolute inset-x-0 top-3 z-10 mx-auto w-fit max-w-[86%] animate-in rounded-xl bg-black/75 px-4 py-2.5 text-center text-[13.5px] text-white shadow-lg backdrop-blur fade-in-0 slide-in-from-top-2">
+                    {run.toast.text}
+                  </div>
+                )}
+                {menu && commands.length > 0 && (
+                  <div className="absolute inset-x-2 bottom-2 z-10 overflow-hidden rounded-xl bg-[var(--tg-theme-bg-color)] shadow-xl ring-1 ring-black/10" role="menu" aria-label="Bot commands">
+                    {commands.map((c: Doc) => (
+                      <button key={c.command} type="button" role="menuitem" className="flex w-full items-center gap-3 px-3 py-2.5 text-left text-[14px] hover:bg-[var(--tg-theme-secondary-bg-color)]"
+                        onClick={() => { setMenu(false); act({ command: c.command }); }}>
+                        <Terminal className="size-4 text-[var(--tg-theme-hint-color)]" aria-hidden />
+                        <span className="font-medium">/{c.command}</span>
+                        <span className="truncate text-[12.5px] text-[var(--tg-theme-hint-color)]">{c.screen}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {!run ? (
+                <button type="button" onClick={begin} className="bg-[var(--tg-theme-bg-color)] py-3.5 text-center text-[15px] font-semibold tracking-wide text-[var(--tg-theme-button-color)] uppercase hover:bg-[var(--tg-theme-secondary-bg-color)]">
+                  Start
+                </button>
+              ) : (
+                <>
+                  {forcePh && <ForceReplyBar placeholder={forcePh} />}
+                  <Composer key={run.trace.length} placeholder={reply ? "Message or a key below" : "Message"}
+                    onSend={(text) => { setMenu(false); act({ text }); }} onMenu={commands.length ? () => setMenu(!menu) : undefined} />
+                  {reply && reply.keyboard.type === "reply" && <ReplyKeyboard logical={reply} onKey={(text) => act({ text })} />}
+                </>
+              )}
             </div>
-            {forcePh && <ForceReplyBar placeholder={forcePh} />}
-            <Composer key={run?.trace.length ?? 0} placeholder={reply ? "Message or a key below" : "Message"} disabled={!run}
-              onSend={(text) => { setMenu(false); act({ text }); }} onMenu={commands.length ? () => setMenu(!menu) : undefined} />
-            {reply && reply.keyboard.type === "reply" && <ReplyKeyboard logical={reply} onKey={(text) => act({ text })} />}
-          </div>
-          <figcaption className="flex flex-wrap justify-between gap-1 bg-background px-3 py-1.5 text-[11px] text-muted-foreground">
-            <span className="font-medium">Local preview, not Telegram</span>
-            <span>{chat} · {locale}{enumContext.map(([n]) => ` · ${n}=${ctx[n]}`).join("")}{lastBot ? ` · ${(lastBot as any).render.screenId}` : ""}</span>
-          </figcaption>
-        </figure>
+            <figcaption className="flex flex-wrap justify-between gap-1 bg-background px-3 py-1.5 text-[11px] text-muted-foreground">
+              <span className="font-medium">Local preview, not Telegram</span>
+              <span>{settingsSummary}{lastBot ? ` · ${(lastBot as any).render.screenId}` : ""}</span>
+            </figcaption>
+          </figure>
+        </div>
       </section>
 
-      <section aria-label="Trace" className="flex min-h-0 flex-col border-t p-4 lg:h-[calc(100svh-3.5rem)] lg:border-t-0 lg:border-l">
-        <div className="mb-3 flex items-baseline justify-between gap-2">
+      <section aria-label="Trace" className="flex min-h-0 min-w-0 flex-col border-t bg-background lg:h-[calc(100svh-3.5rem)] lg:border-t-0 lg:border-l">
+        <div className="flex items-baseline justify-between gap-2 border-b px-4 py-3">
           <h2 className="text-[15px] font-semibold">Trace</h2>
-          <span className="text-[11px] text-muted-foreground">{run?.trace.length ?? 0} steps</span>
+          <span className="text-[11px] text-muted-foreground">{run?.trace.length ?? 0} steps · what the engine did with each update</span>
         </div>
         {sc && (
-          <div className="mb-3 space-y-2 rounded-xl bg-muted/50 p-3 text-xs">
+          <div className="space-y-2 border-b px-4 py-3 text-xs">
             <div className="flex items-center gap-2">
               <span className="font-mono font-medium">{sc.scenarioId}</span>
               {run?.trace.some((e) => e.diagnostics?.some((d: Doc) => d.severity === "error"))
-                ? <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">failed</span>
+                ? <span className="rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-800">expectations failed</span>
                 : <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-medium text-emerald-900">expectations met</span>}
             </div>
             {replay && (
               <div className="flex items-start gap-1">
-                <code className="min-w-0 flex-1 rounded-md bg-background p-1.5 font-mono text-[11px] break-all">{replay}</code>
+                <code className="min-w-0 flex-1 rounded-md bg-muted p-1.5 font-mono text-[11px] break-all">{replay}</code>
                 <Button type="button" size="icon" variant="ghost" className="size-7" aria-label="Copy the CLI replay command"
                   onClick={async () => { if (await copyText(replay)) { setCopied(true); setTimeout(() => setCopied(false), 1200); } }}>
                   {copied ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
@@ -377,7 +422,7 @@ export function SimulatorView() {
             )}
             {caps.save && (
               <div className="flex flex-wrap items-center gap-2">
-                <Button type="button" size="sm" variant="outline" className="h-7 bg-background" onClick={crossCheck} disabled={parity.state === "busy"}>Cross-check with the Python engine</Button>
+                <Button type="button" size="sm" variant="outline" className="h-7" onClick={crossCheck} disabled={parity.state === "busy"}>Cross-check with the Python engine</Button>
                 {parity.state === "same" && <span className="font-medium text-success">identical</span>}
                 {parity.state === "diff" && <span className="text-destructive">differs: {parity.text}</span>}
                 {parity.state === "error" && <span className="text-destructive">{parity.text}</span>}
@@ -385,14 +430,11 @@ export function SimulatorView() {
             )}
           </div>
         )}
-        {!run && (
-          <p className="flex items-center gap-2 text-xs text-muted-foreground"><MousePointerClick className="size-4" /> Each update shows its action, transition and effects here.</p>
-        )}
-        <ol className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1" aria-label="Trace steps">
+        {!run && <p className="flex items-center gap-2 px-4 py-4 text-xs text-muted-foreground"><MousePointerClick className="size-4" /> Press START in the chat; each update appears here as a step.</p>}
+        <ol className="min-h-0 flex-1 overflow-y-auto px-4 py-3" aria-label="Trace steps">
           {run?.trace.map((e, i) => <TraceStep key={i} e={e} last={i === run.trace.length - 1} />)}
           <li ref={traceEnd} aria-hidden className="h-px" />
         </ol>
-        <p className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground"><Send className="size-3" /> Buttons in older messages stay pressable to test stale presses.</p>
       </section>
     </div>
   );

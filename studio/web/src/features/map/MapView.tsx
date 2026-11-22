@@ -2,7 +2,7 @@ import {
   Background, BaseEdge, EdgeLabelRenderer, Handle, MarkerType, MiniMap, Position, ReactFlow, ReactFlowProvider, useReactFlow,
   type Edge, type EdgeChange, type EdgeProps, type Node, type NodeChange, type NodeProps,
 } from "@xyflow/react";
-import { Bot, Copy, Maximize2, Minus, Play, Plus, Search, Zap } from "lucide-react";
+import { Copy, Maximize2, MessageSquarePlus, Minus, Play, Plus, Search, Zap } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { renderScreen, type Logical } from "@/core/render.ts";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,7 @@ import { defaultLocale, exampleValues, fieldDomId, scrollWithin } from "@/lib/mo
 import { go } from "@/lib/route";
 import { useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
+import { RequestChange } from "../changes/Tray";
 import { firstLine } from "../inspector/fields";
 import { hlFor, ScreenEditor } from "../inspector/ScreenInspector";
 import { Bubble, ForceReplyBar, ReplyKeyboard, type Hl } from "../preview/Telegram";
@@ -22,7 +23,7 @@ import { computeLayout, entryLabel, entryNodeId, layoutKey, mapEdges, midpoint, 
 type ScreenData = {
   sid: string; logical: Logical; kind: string; draft: boolean; errors: number; hl?: Hl; flash: boolean;
   unplaced: { aid: string; label: string }[]; input: string | null;
-  onAction: (sid: string, aid: string) => void; onCopy: (sid: string) => void; onAsk: (sid: string) => void;
+  onAction: (sid: string, aid: string) => void; onCopy: (sid: string) => void; requests: number;
 };
 type ScreenNodeT = Node<ScreenData, "screen">;
 type EntryNodeT = Node<{ label: string; kind: string }, "entry">;
@@ -44,8 +45,12 @@ const ScreenNode = memo(function ScreenNode({ data }: NodeProps<ScreenNodeT>) {
         {errors > 0 && <span className="rounded-full bg-red-100 px-1.5 text-[10px] font-medium text-red-800">{errors}</span>}
         <button type="button" className="nodrag rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Copy ID ${sid}`} title="Copy ID"
           onClick={(e) => { e.stopPropagation(); data.onCopy(sid); }}><Copy className="size-3.5" /></button>
-        <button type="button" className="nodrag rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Copy a request for your agent about ${sid}`} title="Copy request for the agent"
-          onClick={(e) => { e.stopPropagation(); data.onAsk(sid); }}><Bot className="size-3.5" /></button>
+<RequestChange sid={sid} trigger={
+          <button type="button" className="nodrag relative rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Request a change to ${sid}`} title="Request a change (note for your agent)"
+            onClick={(e) => e.stopPropagation()}>
+            <MessageSquarePlus className="size-3.5" />
+            {data.requests > 0 && <span className="absolute -top-1 -right-1 flex size-3.5 items-center justify-center rounded-full bg-violet-600 text-[9px] font-semibold text-white">{data.requests}</span>}
+          </button>} />
       </div>
       <div className="tg tg-wallpaper overflow-hidden rounded-xl" data-theme="light">
         <div className="relative py-2.5 pr-3 pl-3.5">
@@ -181,7 +186,7 @@ function ZoomControls() {
 }
 
 function Canvas({ selected, selectedAction, onAction }: { selected: string | null; selectedAction: string | null; onAction: (sid: string, aid: string) => void }) {
-  const { working, loaded, store, diags, editLocale, highlight, copyId, copyRequest } = useStudio();
+  const { working, loaded, store, diags, editLocale, highlight, copyId, requests } = useStudio();
   const rf = useReactFlow();
   const [sizes, setSizes] = useState<Record<string, { width: number; height: number }>>({});
   const [layout, setLayout] = useState<Layout | null>(null);
@@ -218,7 +223,7 @@ function Canvas({ selected, selectedAction, onAction }: { selected: string | nul
     const data: ScreenData = {
       sid: id, logical: renderScreen(loaded.project, s, { locale: editLocale, values }), kind: s.kind ?? "", draft: store.isDraft(id),
       errors: errorsBy[id] ?? 0, hl: hlFor(highlight, id) ?? (selected === id && selectedAction ? { actionId: selectedAction } : undefined),
-      flash: flash === id, unplaced, input: s.input?.field ?? null, onAction, onCopy: copyId, onAsk: copyRequest,
+      flash: flash === id, unplaced, input: s.input?.field ?? null, onAction, onCopy: copyId, requests: requests.filter((r) => r.sid === id).length,
     };
     return { ...common, type: "screen", data, selected: selected === id, ariaLabel: `Screen ${id}, ${s.kind ?? "screen"}${store.isDraft(id) ? ", draft" : ""}. Enter opens the editor.` };
   });

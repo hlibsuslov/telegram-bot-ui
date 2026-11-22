@@ -7,7 +7,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { api, errorText } from "@/lib/api";
 import { copyText, download, getPointer, sha256Text, shortRev } from "@/lib/model";
-import { href } from "@/lib/route";
+import { go, href } from "@/lib/route";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useStudio } from "@/lib/studio";
 import { CodeView } from "@/components/code-view";
 import { DiagLine } from "../inspector/fields";
@@ -80,7 +81,8 @@ function Conflict({ err, onRebase }: { err: Doc; onRebase: () => void }) {
 }
 
 export function ChangesView() {
-  const { store, loaded, caps, reload, replaceLoaded, saving, setSaveDiags, saveDiags, notify, focusField, diags, pendingBase } = useStudio();
+  const { store, loaded, caps, reload, replaceLoaded, saving, setSaveDiags, saveDiags, notify, focusField, diags, pendingBase, refreshGit, git } = useStudio();
+  const [savedFiles, setSavedFiles] = useState<string[] | null>(null);
   const [patch, setPatch] = useState<Doc | null>(null);
   const [preview, setPreview] = useState<{ diff: string; files: string[]; error?: string } | null>(null);
   const [conflict, setConflict] = useState<Doc | null>(null);
@@ -122,7 +124,8 @@ export function ChangesView() {
           store.afterSave(next, sentScreens, sentWidgets);
           replaceLoaded(next);
         }
-        notify(`Saved ${res.data.changedFiles?.length ?? 0} file(s): ${(res.data.changedFiles ?? []).join(", ") || "no byte changes"}.`, "success");
+        setSavedFiles(res.data.changedFiles ?? []);
+        void refreshGit();
       } else if (res.status === 409) {
         setConflict(res.data.error);
       } else if (res.status === 422) {
@@ -158,6 +161,23 @@ export function ChangesView() {
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-4 p-3 sm:p-4">
+      <Dialog open={!!savedFiles} onOpenChange={(o) => { if (!o) setSavedFiles(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Saved to files</DialogTitle>
+            <DialogDescription>Written to your repository. Not committed and not live: nothing is sent to Telegram or production.</DialogDescription>
+          </DialogHeader>
+          <ul className="space-y-1 rounded-lg bg-muted/50 p-3 font-mono text-xs">
+            {(savedFiles ?? []).map((f) => <li key={f}>{git?.projectPath ? `${git.projectPath}/` : ""}{f}</li>)}
+            {savedFiles?.length === 0 && <li className="font-sans text-muted-foreground">No byte changes: the files already held this content.</li>}
+          </ul>
+          <p className="text-sm text-muted-foreground">Your bot shows it after your usual commit and deploy. Next: hand it to your agent, or commit it yourself.</p>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSavedFiles(null)}>Done</Button>
+            <Button onClick={() => { setSavedFiles(null); go("task"); }}>Task for the agent</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-base font-semibold">Changes</h2>
         <span className="text-sm text-muted-foreground">{count} draft change{count === 1 ? "" : "s"} on revision <span className="font-mono">{shortRev(store.data.baseRevision)}</span></span>
