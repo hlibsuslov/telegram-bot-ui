@@ -21,7 +21,7 @@
 
 <p align="center">
   <b>An Agent Skill that makes your Telegram bot look, feel and run like a well-designed product.</b><br>
-  Bot screens and keyboards · streaming AI answers · HTML widgets · channel publishing · agent-operated bots · premium emoji · the whole Bot API, offline.
+  The whole bot interface: screens, texts and keyboards · navigation and states · streaming AI answers · HTML widgets · channel publishing · agent-operated bots · premium emoji · bot-ui Studio · the whole Bot API, offline.
 </p>
 
 <p align="center">
