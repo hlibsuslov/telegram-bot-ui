@@ -172,6 +172,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [validate_references.py](skills/telegram-bot-ui/scripts/validate_references.py): Validate the skill's internal references and links.
 - [validate_rich.py](skills/telegram-bot-ui/scripts/validate_rich.py): Check an InputRichMessage (or a sendRichMessage / draft payload) offline.
 - [validate_widget.py](skills/telegram-bot-ui/scripts/validate_widget.py): Check an HTML widget before sendWidget (Bot API 10.4). Offline, no token.
+- [widget_design.py](skills/telegram-bot-ui/scripts/widget_design.py): Widget design profiles: a small JSON (`design.json`) that restyles any kit widget without
 - [widget_lint.py](skills/telegram-bot-ui/scripts/widget_lint.py): Strict widget checks for the gallery and for widgets an agent writes (Bot API 10.4, profile 1).
 
 ## Optional

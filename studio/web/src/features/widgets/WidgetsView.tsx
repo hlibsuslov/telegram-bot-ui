@@ -31,15 +31,17 @@ import { DataSection, MessageSection, SendSection } from "./WidgetForms";
 import { Step } from "./Step";
 import { BuilderSteps, useBuilderStates } from "./builder/BuilderSteps";
 import { WidgetLibrary, type Template } from "./WidgetLibrary";
+import { DesignPanel, widgetParts, type DesignInfo } from "./DesignPanel";
 
 interface Build {
   ok: boolean; html: string; rawBytes: number; compressedBytes: number; limits: { rawBytes: number; compressedBytes: number; dataBytes: number };
   errors: string[]; warnings: string[]; caption?: string | null; sourceHash: string; payload?: Doc; lang: string; draft?: boolean;
+  design?: DesignInfo;
 }
 type BuildState = { status: "idle" | "updating" | "ok" | "error"; current: Build | null; message?: string };
 type Ev = { n: number; at: number; dir: "out" | "in" | "sys"; kind: string; text: string; json?: unknown };
 
-const ORDER = ["index.html", "style.css", "widget.js", "widget.json"];
+const ORDER = ["index.html", "style.css", "widget.js", "widget.json", "design.json"];
 const WIDTHS = [240, 320, 400, 600];
 const WIDGET_ID_RE = /^[a-z0-9][a-z0-9_-]*$/;
 
@@ -224,6 +226,15 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
     return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
   }), [files]);
   const [tab, setTab] = useState(names[0] ?? "index.html");
+  const design: Doc = useMemo(() => { try { const d = files["design.json"] ? JSON.parse(files["design.json"]) : {}; return d && typeof d === "object" && !Array.isArray(d) ? d : {}; } catch { return {}; } }, [files]);
+  const designBroken = useMemo(() => { try { if (files["design.json"]) JSON.parse(files["design.json"]); return false; } catch { return true; } }, [files]);
+  const parts = useMemo(() => widgetParts(files), [files]);
+  const saveDesign = (next: Doc) => {
+    const { preset: _p, version: _v, ...rest } = next;
+    const savedHasDesign = loaded.widgets[wid]?.files?.["design.json"] !== undefined;
+    if (!Object.keys(rest).length && !savedHasDesign) return store.dropNewWidgetFile(wid, "design.json");
+    store.setWidgetFile(wid, "design.json", `${JSON.stringify(next, null, 2)}\n`);
+  };
   const meta: Doc = useMemo(() => {
     try { return files["widget.json"] ? JSON.parse(files["widget.json"]) : loaded.widgets[wid]?.meta ?? {}; } catch { return loaded.widgets[wid]?.meta ?? {}; }
   }, [files, loaded, wid]);
@@ -564,9 +575,15 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
             </Field>
           </Step>
 
-          <Step n={2} icon={pro ? Code2 : Images} title={pro ? "Look" : "Pictures"} hint={pro ? "The HTML, CSS and JS that draw it, and its images. Most of the time you can leave this closed." : "Logos and pictures inside the widget. Turn a photo into a small vector picture."}
+          <Step n={2} icon={pro ? Code2 : Images} title="Look" hint={pro ? "Design profile (colours, shape, motion), the HTML, CSS and JS that draw it, and its images." : "Colours, shape and motion, and the pictures inside the widget. Turn a photo into a small vector picture."}
             open={open.has(2)} onToggle={() => toggle(2)}
             right={pro ? <Button size="sm" variant="ghost" className="h-8" onClick={() => setWide(true)} aria-label="Open the code wide"><Expand className="size-3.5" /> Open wide</Button> : undefined}>
+            {designBroken ? (
+              <Alert variant="destructive"><AlertTitle>design.json is not valid JSON</AlertTitle><AlertDescription>{pro ? "Fix it in the code below, or reset the draft." : "Reset the draft, or fix it in the code (Pro)."}</AlertDescription></Alert>
+            ) : runtime?.design ? (
+              <DesignPanel design={design} catalog={runtime.design} parts={parts} theme={theme === "dark" ? "dark" : "light"} onTheme={setTheme}
+                onChange={saveDesign} info={build.current?.design ?? (build.current?.ok ? null : undefined)} onReplay={() => setReset((r) => r + 1)} />
+            ) : null}
             {pro ? codeEditor(false) : (
               <p className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
                 <Code2 className="size-4 shrink-0" aria-hidden /> The code of the widget is hidden in Beginner mode.

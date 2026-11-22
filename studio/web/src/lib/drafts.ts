@@ -145,6 +145,17 @@ export class DraftStore {
     this.commit(next, `w:${wid}:${file}`);
   }
 
+  /** Drop a file the draft added (one with no saved version); saved files are edited, not dropped. */
+  dropNewWidgetFile(wid: string, file: string) {
+    if (this.saved.widgets[wid]?.files[file] !== undefined || this.data.widgets[wid]?.[file] === undefined) return;
+    const files = { ...this.data.widgets[wid] }, bases = { ...(this.data.widgetBases[wid] ?? {}) };
+    delete files[file];
+    delete bases[file];
+    const widgets = { ...this.data.widgets, [wid]: files }, widgetBases = { ...this.data.widgetBases, [wid]: bases };
+    if (!Object.keys(files).length) { delete widgets[wid]; delete widgetBases[wid]; }
+    this.commit({ ...this.data, widgets, widgetBases }, `w:${wid}:${file}`);
+  }
+
   resetScreen(sid: string) {
     if (!this.isDraft(sid)) return;
     const screens = { ...this.data.screens }, bases = { ...this.data.bases };
