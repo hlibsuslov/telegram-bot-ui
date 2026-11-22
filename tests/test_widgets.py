@@ -119,6 +119,24 @@ class QueryFlow(unittest.TestCase):
         self.t.script("editMessageWidgetData", TelegramErrorResponse(400, "Bad Request: message is not modified"))
         self.assertEqual(handle_widget_query(query("a"), self.store, self.t, decide), "ok")
 
+    def test_dropped_answer_is_retried(self):
+        import tgkit.widgets as w
+        slept, w._sleep = [], lambda s: slept.append(s)
+        try:
+            self.t.script("answerWidgetQuery", "TIMEOUT")
+            self.assertEqual(handle_widget_query(query("a"), self.store, self.t, decide), "ok")
+        finally:
+            w._sleep = __import__("time").sleep
+        self.assertEqual(len(self.t.params_of("answerWidgetQuery")), 2)
+        self.assertEqual(len(self.t.params_of("editMessageWidgetData")), 1)     # the action ran once
+        self.assertLess(sum(slept), 1)
+
+    def test_wallet_result_is_not_played_as_an_action(self):
+        q = query("a", type={"type": "sent_transaction", "msg_hash": "h"})
+        self.assertEqual(handle_widget_query(q, self.store, self.t, decide), "not_data")
+        self.assertEqual(self.t.params_of("editMessageWidgetData"), [])
+        self.assertFalse(self.answers()[0]["ok"])
+
     def test_late_answer_is_tolerated(self):
         self.t.script("answerWidgetQuery", TelegramErrorResponse(400, "Bad Request: query is too old"))
         self.assertEqual(handle_widget_query(query("a"), self.store, self.t, decide), "answered_late")
