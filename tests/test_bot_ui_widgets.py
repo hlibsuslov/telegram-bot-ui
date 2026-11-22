@@ -123,6 +123,16 @@ class Widgets(ProjectCase):
         with self.assertRaises(widgets.WidgetError):
             widgets.creation_patch(open_snapshot(self.root), "x", "gallery:../../etc")
 
+    def test_every_library_template_previews_without_writing(self):
+        snap = open_snapshot(self.root)
+        for t in widgets.templates():
+            r = widgets.template_preview(snap, t["id"], "en")
+            self.assertTrue(r["ok"], (t["id"], r["errors"]))
+            self.assertLessEqual(r["compressedBytes"], 4096)
+        self.assertEqual(open_snapshot(self.root).revision, snap.revision)
+        fields = snap.widgets["order-status"]["dataFields"]["chatData"]
+        self.assertEqual(set(fields) - set(snap.widgets["order-status"]["states"]["default"]["chatData"]), {"t4"})
+
     def test_mock_answers_come_from_the_gallery_handler(self):
         answers = widgets.mock_answers(open_snapshot(self.root), "order-status")
         self.assertIn("call", answers["default"])

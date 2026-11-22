@@ -236,7 +236,12 @@ def creation_patch(snap: Snapshot, widget_id: str, template: str, title: str | N
         files = {"index.html": BLANK_INDEX, "style.css": BLANK_CSS, "widget.js": BLANK_JS}
         title = title or "New widget"
         meta = {"send": {}, "states": {"default": {"chatData": {"title": title, "text": "Edit me in Data and states.", "r": 0}},
-                                       "empty": {}}, "queries": [], "fresh": []}
+                                       "empty": {}}, "queries": [], "fresh": [],
+                "dataFields": {"chatData": {
+                    "title": {"label": "Title", "type": "text", "help": "Bold first line of the widget."},
+                    "text": {"label": "Text", "type": "text", "help": "Second line, smaller."},
+                    "r": {"label": "Data version", "type": "number", "advanced": True,
+                          "help": "Goes up with every update so the widget ignores older data. The bot sets it."}}}}
         langs = [loc for loc in locales if loc in ("en", "ru", "uk")] or ["en"]
     elif template.startswith("gallery:"):
         name = template.split(":", 1)[1]
@@ -270,3 +275,30 @@ def creation_patch(snap: Snapshot, widget_id: str, template: str, title: str | N
                 "content": json.dumps(widget, ensure_ascii=False, indent=2) + "\n"}]
     changes += [{"widgetId": widget_id, "file": name, "content": text} for name, text in files.items()]
     return {"format": PATCH_FORMAT, "projectId": p.get("projectId"), "baseRevision": snap.revision, "changes": changes}
+
+
+_PREVIEW_CACHE: dict[tuple, dict] = {}
+
+
+def template_preview(snap: Snapshot, template: str, lang: str | None = None) -> dict:
+    """Build a library template in memory (nothing is written) for the library page thumbnails."""
+    from .project import parse_files
+    lang = lang or (snap.project or {}).get("defaultLocale", "en")
+    key = (template, lang, snap.revision if template == "blank" else "")
+    if key in _PREVIEW_CACHE:
+        return _PREVIEW_CACHE[key]
+    patch = creation_patch(snap, "library-preview", template)
+    files = dict(snap.files)
+    for c in patch["changes"]:
+        files[f"widgets/library-preview/{c['file']}"] = c["content"].encode("utf-8")
+    tmp = parse_files(snap.root, files)
+    meta = tmp.widgets["library-preview"]
+    use = lang if lang in (meta.get("languages") or []) else (meta.get("languages") or ["en"])[0]
+    built = build(tmp, "library-preview", lang=use)
+    state = (meta.get("states") or {}).get("default") or {}
+    out = {"template": template, "lang": use, "ok": built["ok"], "html": built["html"] if built["ok"] else "",
+           "rawBytes": built["rawBytes"], "compressedBytes": built["compressedBytes"], "errors": built["errors"][:3],
+           "chatData": state.get("chatData"), "publicData": state.get("publicData"),
+           "languages": meta.get("languages"), "now": meta.get("now")}
+    _PREVIEW_CACHE[key] = out
+    return out

@@ -164,3 +164,20 @@ baseRevision, the screens, scenarios and the project's declared fields; no paths
 widget sources). It edits texts and rules, simulates both branches and exports a
 `bot-ui-patch/v1` file. Writing to Git is always `bot-ui apply-patch --patch-file ...`, with the
 same checks as a Studio save; a patch from an older revision conflicts.
+
+## Widget data fields (optional, for people)
+
+`widget.json` may describe the keys of `chat_data` / `public_data` so the Studio can show a
+form instead of raw JSON. Unknown or undescribed keys still work and stay editable as JSON.
+
+```json
+"dataFields": {"chatData": {
+  "s":  {"label": "Current step", "type": "choice", "options": [{"value": 0, "label": "Order placed"}]},
+  "eta": {"label": "Expected arrival", "type": "time"},
+  "r":  {"label": "Data version", "type": "number", "advanced": true, "help": "The bot sets it."}
+}}
+```
+
+`type`: `text`, `number`, `choice` (`options` with typed values), `time` (unix seconds),
+`boolean`. `advanced: true` hides the field in Beginner mode. Labels are for the editor only;
+nothing here is sent to Telegram.

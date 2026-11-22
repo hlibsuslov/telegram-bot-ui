@@ -178,6 +178,11 @@ class Studio:
                                                     "currentHash": built["sourceHash"]}}
         if path == "/api/widget/templates":
             return 200, {"templates": widgets.templates()}
+        if path == "/api/widget/template-preview":
+            try:
+                return 200, widgets.template_preview(snap, str(body.get("template", "blank")), body.get("lang"))
+            except widgets.WidgetError as err:
+                return 422, {"ok": False, "error": {"code": err.code, "message": err.message}}
         if path == "/api/widget/create":
             try:
                 patch = widgets.creation_patch(snap, str(body.get("widgetId", "")), str(body.get("template", "blank")),
