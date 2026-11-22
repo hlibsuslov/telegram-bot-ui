@@ -70,12 +70,25 @@ function ImportCard({ preview }: { preview?: boolean }) {
           <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://t.me/addemoji/…" className="pl-8" aria-label="Pack link" disabled={busy} />
         </div>
         <Button type="submit" disabled={preview || busy || !link.trim()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {busy ? "Reading the pack…" : "Import"}</Button>
-        {doc.tokenEnv && !preview ? (
+        {doc.resolver || preview ? (
+          <div className="space-y-1 text-xs text-muted-foreground sm:col-span-2">
+            <p>No key needed: the pack is read through the telegram-bot-ui service{doc.resolver ? <> (<span className="font-mono">{doc.resolver}</span>)</> : null}, and only the pack name is sent.</p>
+            {!preview && (
+              <details>
+                <summary className="cursor-pointer">Use my own bot token instead</summary>
+                <div className="mt-1 space-y-1">
+                  <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Bot token (any bot of yours)" autoComplete="off" spellCheck={false} aria-label="Bot token" disabled={busy} />
+                  <p>Then the Studio reads the pack from Telegram itself (read-only getStickerSet). The token stays in this tab and is never saved.</p>
+                </div>
+              </details>
+            )}
+          </div>
+        ) : doc.tokenEnv ? (
           <p className="text-xs text-muted-foreground sm:col-span-2">Uses the bot token from <span className="font-mono">{doc.tokenEnv}</span> for one read-only call (getStickerSet) and the pictures. Nothing is sent to a chat.</p>
         ) : (
           <div className="space-y-1 sm:col-span-2">
             <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Bot token (any bot of yours)" autoComplete="off" spellCheck={false} aria-label="Bot token" disabled={busy} />
-            <p className="text-xs text-muted-foreground">Reading a pack needs any bot token: the Studio calls only the read-only getStickerSet and downloads the pictures. The token stays in this tab and is never saved. Or start the Studio with <span className="font-mono">TELEGRAM_TEST_BOT_TOKEN</span> set.</p>
+            <p className="text-xs text-muted-foreground">The telegram-bot-ui service is off (BOT_UI_EMOJI_RESOLVER), so reading a pack needs any bot token: the Studio calls only the read-only getStickerSet. The token stays in this tab and is never saved.</p>
           </div>
         )}
       </form>

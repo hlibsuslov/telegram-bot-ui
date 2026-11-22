@@ -120,9 +120,13 @@ method set by the server), `state` (set by an action's `set`), `input` (typed by
   one meaning. The skill's `scripts/audit_icons.py` reads this file as an icon map.
 
 Pictures live in `.bot-ui/emoji/<id>.<webp|webm|png|jpg>`, a local cache that is never committed;
-without it every surface shows the fallback. Only an import by link reaches Telegram (read-only
-`getStickerSet`, `getFile`, the file download on api.telegram.org) with a token from
-`TELEGRAM_TEST_BOT_TOKEN` / `BOT_TOKEN` or the Studio form; the token is never stored. A saved
+without it every surface shows the fallback. Only an import by link goes online. By default it
+asks the telegram-bot-ui resolver (`GET https://telegram-bot-ui-site.vercel.app/api/emoji-pack/<name>`
+and the picture paths it returns), which reads the pack with the project's own bot: the user
+needs no token and only the pack name is sent. `BOT_UI_EMOJI_RESOLVER` sets another resolver URL
+or `off`. With a token of the user's own (the Studio form, or `TELEGRAM_TEST_BOT_TOKEN` /
+`BOT_TOKEN` when the resolver is off) the Studio reads the pack itself (read-only `getStickerSet`,
+`getFile`, the file download on api.telegram.org); that token is never stored. A saved
 `getStickerSet` response imports offline without pictures. The library is not part of the
 revision. With a library, `validate` adds `CUSTOM_EMOJI_UNKNOWN` (id not in it, info) and
 `CUSTOM_EMOJI_FALLBACK_MISMATCH` (fallback differs from the pack's emoji, info); always,

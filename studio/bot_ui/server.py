@@ -8,8 +8,9 @@ Security model (local tool, one user):
   neither read nor write; the sandboxed widget preview has an opaque origin and is refused;
 * writes go through store.write_patch (revision check, lock, validation, atomic replace);
 * no request leaves this machine, with one exception the user starts by hand: importing a premium
-  emoji pack by link calls the read-only getStickerSet/getFile on api.telegram.org (emoji.py);
-  the bot token for it comes from the environment or the request and is never stored or returned;
+  emoji pack by link sends the pack name to the telegram-bot-ui resolver (emoji.py), or, with
+  the user's own token from the request or the environment, calls the read-only
+  getStickerSet/getFile on api.telegram.org; that token is never stored or returned;
 * widget builds run the skill's offline builder.
 """
 from __future__ import annotations

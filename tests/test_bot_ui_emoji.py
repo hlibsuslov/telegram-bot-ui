@@ -113,10 +113,51 @@ class Library(ProjectCase):
         self.assertEqual(lib["packs"]["demo_line_icons"]["emoji"][1]["format"], "animated")
         self.assertEqual(open_snapshot(self.root).files.get(emoji.LIBRARY), None, "the library is not a screen source")
 
-    def test_live_import_needs_a_token(self):
-        with mock.patch.dict(os.environ, {"TELEGRAM_TEST_BOT_TOKEN": "", "BOT_TOKEN": ""}), self.assertRaises(emoji.EmojiError) as cm:
+    def test_without_the_resolver_a_token_is_needed(self):
+        env = {"TELEGRAM_TEST_BOT_TOKEN": "", "BOT_TOKEN": "", "BOT_UI_EMOJI_RESOLVER": "off"}
+        with mock.patch.dict(os.environ, env), self.assertRaises(emoji.EmojiError) as cm:
             emoji.import_pack(self.root, link="demo_line_icons")
         self.assertEqual(cm.exception.code, "TOKEN_NEEDED")
+
+    def test_import_through_the_resolver_needs_no_token(self):
+        st = live_set()
+        doc = {"ok": True, "name": st["name"], "title": st["title"],
+               "emoji": [{"id": s["custom_emoji_id"], "fallback": s["emoji"], "format": "static", "adaptive": False,
+                          "preview": f"/api/emoji-pack/{st['name']}/{s['custom_emoji_id']}"} for s in st["stickers"]]}
+        doc["emoji"][0]["preview"] = "https://evil.example/x.webp"  # not the resolver's own path: skipped
+        asked: list[str] = []
+
+        def urlopen(req, timeout=None):
+            url = req.full_url
+            asked.append(url)
+            body, ctype = (json.dumps(doc).encode(), "application/json") if url.endswith("/demo_line_icons") else (WEBP, "image/webp")
+            resp = mock.MagicMock(status=200)
+            resp.headers = {"Content-Type": ctype}
+            resp.read = lambda n=-1: body
+            resp.__enter__ = lambda s: s
+            resp.__exit__ = lambda *a: False
+            return resp
+
+        env = {"TELEGRAM_TEST_BOT_TOKEN": "", "BOT_TOKEN": "", "BOT_UI_EMOJI_RESOLVER": "https://bot-ui.example/api/emoji-pack"}
+        with mock.patch.dict(os.environ, env), mock.patch("urllib.request.urlopen", side_effect=urlopen):
+            res = emoji.import_pack(self.root, link="https://t.me/addemoji/demo_line_icons")
+        self.assertEqual((res["source"], res["count"], res["previews"], res["previewsFailed"]), ("resolver", 47, 46, 1))
+        self.assertEqual(asked[0], "https://bot-ui.example/api/emoji-pack/demo_line_icons")
+        self.assertTrue(all(u.startswith("https://bot-ui.example/api/emoji-pack/") for u in asked))
+        self.assertNotIn("evil", " ".join(asked))
+        self.assertEqual(len(emoji.previews(self.root)), 46)
+
+    def test_resolver_errors_and_urls(self):
+        for bad in ("http://bot-ui.example/api", "file:///etc", "https://x.example/a b"):
+            with mock.patch.dict(os.environ, {"BOT_UI_EMOJI_RESOLVER": bad}), self.assertRaises(emoji.EmojiError):
+                emoji.resolver_url()
+        with mock.patch.dict(os.environ, {"BOT_UI_EMOJI_RESOLVER": "http://localhost:3020/api/emoji-pack/"}):
+            self.assertEqual(emoji.resolver_url(), "http://localhost:3020/api/emoji-pack")
+        err = urllib.error.HTTPError("u", 404, "nf", {"Content-Type": "application/json"}, None)
+        err.read = lambda n=-1: b'{"ok":false,"error":{"code":"PACK_NOT_FOUND","message":"no such pack"}}'
+        with mock.patch("urllib.request.urlopen", side_effect=err), self.assertRaises(emoji.EmojiError) as cm:
+            emoji._Resolver("https://bot-ui.example/api/emoji-pack").pack("nope")
+        self.assertEqual(cm.exception.code, "PACK_NOT_FOUND")
 
     def test_icon_map_one_meaning_per_emoji_and_audit_shape(self):
         emoji.import_pack(self.root, sticker_set=fixture())

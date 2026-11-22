@@ -8,8 +8,9 @@ Each release is tagged `v<version>`.
 ## Unreleased
 
 - bot-ui Studio: premium emoji library. The Emoji page imports a pack from its
-  `t.me/addemoji/...` link (read-only `getStickerSet` with any bot token, never stored; or a
-  saved response offline), shows every emoji with its picture, suggests icons for the ordinary
+  `t.me/addemoji/...` link through the telegram-bot-ui resolver on the project site (no token;
+  only the pack name is sent; `BOT_UI_EMOJI_RESOLVER` changes or turns it off; the user's own
+  token or a saved getStickerSet response still work), shows every emoji with its picture, suggests icons for the ordinary
   emoji the screens already use, and keeps the bot's icon map (one meaning per emoji) in
   `emoji/library.json`. Text fields and button icons get an emoji picker; previews, the map and
   the simulator draw the real pictures (adaptive emoji in the text colour); the offline artifact

@@ -16,7 +16,7 @@ export interface Use { screenId: string; pointer: string; id: string; fallback: 
 export interface Suggestion { slot: string; id: string; set: string; fallback: string }
 export interface EmojiDoc {
   library: Library; previews: Record<string, string>; usage: Use[]; vocabulary: Slot[];
-  suggestions: Suggestion[]; tokenEnv: string | null; error?: { code: string; message: string } | null;
+  suggestions: Suggestion[]; tokenEnv: string | null; resolver?: string | null; error?: { code: string; message: string } | null;
 }
 export interface Entry extends PackEmoji { pack: string }
 

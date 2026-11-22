@@ -10,10 +10,13 @@ Files
 * `.bot-ui/emoji/<id>.<webp|webm|png|jpg>`: local preview cache, never committed. Without it
   every surface shows the fallback emoji instead of the picture.
 
-Network: only `import_pack` with a token talks to Telegram, and only through the read-only
-methods getStickerSet and getFile plus the file download, on api.telegram.org. The token is used
-for that call and is never stored, logged or returned. A saved getStickerSet response imports
-the ids offline, without previews.
+Network: only `import_pack` goes online, and only when the user imports a pack by link.
+By default it asks the telegram-bot-ui resolver (the project site; BOT_UI_EMOJI_RESOLVER sets
+another URL or "off"), which reads the pack with its own bot: only the pack name is sent and the
+user needs no token. With a token of their own (the import form, or TELEGRAM_TEST_BOT_TOKEN /
+BOT_TOKEN when the resolver is off) the pack is read directly through the read-only
+getStickerSet and getFile on api.telegram.org; the token is never stored, logged or returned.
+A saved getStickerSet response imports the ids offline, without previews.
 """
 from __future__ import annotations
 
@@ -34,6 +37,11 @@ FORMAT = "bot-ui-emoji/v1"
 CACHE = f"{STATE_DIR}/emoji"
 API_HOST = "https://api.telegram.org"
 TOKEN_ENV = ("TELEGRAM_TEST_BOT_TOKEN", "BOT_TOKEN")
+RESOLVER_ENV = "BOT_UI_EMOJI_RESOLVER"
+DEFAULT_RESOLVER = "https://telegram-bot-ui-site.vercel.app/api/emoji-pack"
+RESOLVER_RE = re.compile(r"^(https://[A-Za-z0-9.-]+(:\d+)?|http://(127\.0\.0\.1|localhost)(:\d+)?)(/[A-Za-z0-9._~/-]*)?$")
+PICTURE_PATH = re.compile(r"^/api/emoji-pack/[A-Za-z0-9_]{1,64}/\d{1,20}$")
+PICTURE_TYPES = {"image/webp": "webp", "video/webm": "webm", "image/png": "png", "image/jpeg": "jpg"}
 
 PACK_NAME = re.compile(r"^[A-Za-z0-9_]{1,64}$")
 LINK_RE = re.compile(r"^(?:https?://)?(?:www\.)?(?:t\.me|telegram\.me|telegram\.dog)/(addemoji|addstickers)/([^/?#\s]+)/?(?:[?#].*)?$", re.I)
@@ -201,6 +209,70 @@ class _Bot:
         return data
 
 
+def resolver_url() -> str | None:
+    """Base URL of the pack resolver, or None when it is turned off."""
+    value = (os.environ.get(RESOLVER_ENV) or DEFAULT_RESOLVER).strip().rstrip("/")
+    if value.lower() in ("off", "none", "0", "false"):
+        return None
+    if not RESOLVER_RE.match(value):
+        raise EmojiError("RESOLVER_URL", f"{RESOLVER_ENV} must be an https URL (or http://localhost for testing)")
+    return value
+
+
+class _Resolver:
+    """The telegram-bot-ui pack resolver: GET <base>/<name> and the picture paths it returns.
+    Only the pack name leaves this machine; pictures come only from the resolver's own origin."""
+
+    def __init__(self, base: str, timeout: float = 30.0) -> None:
+        self.base, self._timeout = base, timeout
+        self.origin = "/".join(base.split("/", 3)[:3])
+        self.host = self.origin.split("://", 1)[1]
+
+    def _get(self, url: str, limit: int) -> tuple[int, str, bytes]:
+        req = urllib.request.Request(url, headers={"User-Agent": "bot-ui-studio", "Accept": "application/json, image/*, video/webm"})
+        try:
+            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+                return resp.status, resp.headers.get("Content-Type", ""), resp.read(limit + 1)
+        except urllib.error.HTTPError as err:
+            return err.code, (err.headers.get("Content-Type", "") if err.headers else ""), err.read(64 * 1024)
+        except (urllib.error.URLError, OSError, ValueError) as err:
+            raise EmojiError("RESOLVER_UNREACHABLE", f"the emoji resolver ({self.host}) did not answer: "
+                                                     f"{getattr(err, 'reason', err)}") from None
+
+    def pack(self, name: str) -> dict:
+        status, _, body = self._get(f"{self.base}/{name}", 2 * 1024 * 1024)
+        try:
+            doc = json.loads(body.decode("utf-8"))
+        except (UnicodeDecodeError, ValueError):
+            raise EmojiError("RESOLVER_ERROR", f"the emoji resolver answered HTTP {status} without JSON") from None
+        if status != 200 or not isinstance(doc, dict) or not doc.get("ok"):
+            err = (doc.get("error") if isinstance(doc, dict) else None) or {}
+            raise EmojiError(str(err.get("code") or "RESOLVER_ERROR"), str(err.get("message") or f"HTTP {status}"))
+        return doc
+
+    def picture(self, path: Any) -> tuple[str, bytes] | None:
+        if not isinstance(path, str) or not PICTURE_PATH.match(path):
+            return None
+        try:
+            status, ctype, body = self._get(self.origin + path, PREVIEW_MAX)
+        except EmojiError:
+            return None
+        ext = PICTURE_TYPES.get(ctype.split(";")[0].strip())
+        if status != 200 or not ext or len(body) > PREVIEW_MAX:
+            return None
+        return ext, body
+
+
+def _save_preview(cache: str, cid: str, ext: str, data: bytes) -> None:
+    for old in os.listdir(cache):
+        if old.split(".", 1)[0] == cid:
+            os.remove(os.path.join(cache, old))
+    tmp = os.path.join(cache, f"{cid}.{ext}.tmp")
+    with open(tmp, "wb") as fh:
+        fh.write(data)
+    os.replace(tmp, os.path.join(cache, f"{cid}.{ext}"))
+
+
 def _preview_source(sticker: dict) -> str | None:
     """file_id to show in a browser: the sticker itself (WEBP, WEBM) or the thumbnail of a TGS."""
     if sticker.get("is_animated"):
@@ -233,13 +305,7 @@ def fetch_previews(root: str, stickers: list[dict], bot: Any, workers: int = 6) 
             data = bot.download(path)
         except EmojiError:
             return False
-        for old in os.listdir(cache):
-            if old.split(".", 1)[0] == cid:
-                os.remove(os.path.join(cache, old))
-        tmp = os.path.join(cache, f"{cid}.{ext}.tmp")
-        with open(tmp, "wb") as fh:
-            fh.write(data)
-        os.replace(tmp, os.path.join(cache, f"{cid}.{ext}"))
+        _save_preview(cache, cid, ext, data)
         return True
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -247,30 +313,69 @@ def fetch_previews(root: str, stickers: list[dict], bot: Any, workers: int = 6) 
     return sum(results), sum(1 for r in results if not r)
 
 
+def _from_resolver(root: str, name: str, resolver: Any) -> tuple[dict, str, int, int]:
+    """A pack and its pictures through the resolver: (pack, name, pictures saved, without one)."""
+    doc = resolver.pack(name)
+    real = str(doc.get("name") or name)
+    if not PACK_NAME.match(real):
+        raise EmojiError("RESOLVER_ERROR", "the emoji resolver returned a bad pack name")
+    items = [e for e in (doc.get("emoji") or [])[:PACK_MAX]
+             if isinstance(e, dict) and isinstance(e.get("id"), str) and EMOJI_ID.match(e["id"])]
+    emoji = [{"id": e["id"], "fallback": str(e.get("fallback") or "")[:16],
+              "format": e["format"] if e.get("format") in ("static", "animated", "video") else "static",
+              "adaptive": bool(e.get("adaptive"))} for e in items]
+    pack = {"title": str(doc.get("title") or real)[:128], "link": f"https://t.me/addemoji/{real}",
+            "importedAt": time.strftime("%Y-%m-%d"), "formats": sorted({e["format"] for e in emoji}), "emoji": emoji}
+    cache = _cache_dir(root)
+
+    def one(e: dict) -> bool:
+        got = resolver.picture(e.get("preview"))
+        if not got:
+            return False
+        _save_preview(cache, e["id"], *got)
+        return True
+
+    with ThreadPoolExecutor(max_workers=6) as pool:
+        results = list(pool.map(one, items))
+    return pack, real, sum(results), sum(1 for r in results if not r)
+
+
 def import_pack(root: str, *, link: str | None = None, token: str | None = None, sticker_set: Any = None,
-                bot: Any = None) -> dict:
+                bot: Any = None, resolver: Any = None) -> dict:
     """Add (or refresh) a pack in the library. `sticker_set` = a saved getStickerSet response
-    (offline, no previews); otherwise the pack is read live with `token` (or `bot`, for tests)."""
+    (offline, no previews); `token` (or `bot`, for tests) reads it directly from Telegram;
+    otherwise the telegram-bot-ui resolver reads it (`resolver`, for tests). Only when the
+    resolver is off does a token from the environment take over."""
     lib = load_library(root)
     source = "file"
+    saved = failed = 0
+    pack = None
     if sticker_set is None:
         name = parse_pack_link(link or "")
-        if bot is None:
-            token = token or token_from_env()[0]
-            if not token:
-                raise EmojiError("TOKEN_NEEDED", "reading a pack needs any bot token (read-only getStickerSet): set "
-                                                 f"{' or '.join(TOKEN_ENV)}, or paste it in the Studio's import form; "
-                                                 "it is never saved")
-            bot = _Bot(token)
-        sticker_set = bot.call("getStickerSet", {"name": name})
-        source = "getStickerSet"
-    pack = pack_from_sticker_set(sticker_set, link if link and LINK_RE.match(link.strip()) else None)
-    raw = sticker_set.get("result", sticker_set) if isinstance(sticker_set, dict) else {}
-    name = raw["name"]
+        if bot is None and not token and resolver is None:
+            base = resolver_url()
+            if base:
+                resolver = _Resolver(base)
+            else:
+                token = token_from_env()[0]
+                if not token:
+                    raise EmojiError("TOKEN_NEEDED", f"the emoji resolver is off ({RESOLVER_ENV}): reading a pack needs any "
+                                                     f"bot token (read-only getStickerSet): set {' or '.join(TOKEN_ENV)}, or "
+                                                     "paste it in the Studio's import form; it is never saved")
+        if resolver is not None:
+            pack, name, saved, failed = _from_resolver(root, name, resolver)
+            source = "resolver"
+        else:
+            bot = bot or _Bot(token or "")
+            sticker_set = bot.call("getStickerSet", {"name": name})
+            source = "getStickerSet"
+    if pack is None:
+        pack = pack_from_sticker_set(sticker_set, link if link and LINK_RE.match(link.strip()) else None)
+        raw = sticker_set.get("result", sticker_set) if isinstance(sticker_set, dict) else {}
+        name = raw["name"]
+        if bot is not None and source == "getStickerSet":
+            saved, failed = fetch_previews(root, raw.get("stickers") or [], bot)
     pack["source"] = source
-    saved = failed = 0
-    if bot is not None and source == "getStickerSet":
-        saved, failed = fetch_previews(root, raw.get("stickers") or [], bot)
     packs = dict(lib.get("packs") or {})
     packs[name] = pack
     lib["packs"] = packs
@@ -543,9 +648,13 @@ def client_document(root: str, snap: Snapshot) -> dict:
     except EmojiError as err:
         lib, error = empty_library(), err.to_json()
     token, env = token_from_env()
+    try:
+        base = resolver_url()
+    except EmojiError:
+        base = None
     return {"library": lib, "previews": previews(root), "usage": usage(snap), "vocabulary": vocabulary(),
             "suggestions": suggest_icons(snap, lib) if not error else [], "tokenEnv": env if token else None,
-            "error": error}
+            "resolver": _Resolver(base).host if base else None, "error": error}
 
 
 def snapshot_block(snap: Snapshot, budget: int = 1_500_000) -> dict | None:
