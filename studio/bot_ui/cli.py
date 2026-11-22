@@ -353,7 +353,15 @@ def cmd_import(args) -> int:
         return _fail(args, "SOURCE_NOT_FOUND", f"{args.source} is not a folder", 2)
     into = args.into or os.path.join(args.source, "bot-ui")
     try:
-        res = import_bot(args.source, into, project_id=args.project_id, dry_run=args.dry_run)
+        probe = import_bot(args.source, into, project_id=args.project_id, dry_run=True)
+        if not (probe.get("stats") or {}).get("handlers"):
+            return _fail(args, "NO_HANDLERS_FOUND",
+                         "no aiogram router handlers (@router.message / @router.callback_query with filters) were "
+                         "found, so nothing was created. This bot routes updates in its own code: connect it "
+                         "with the skill's existing-bot route (references/bot-ui-projects.md) - the agent maps "
+                         "its views and texts to screens one route at a time, keeping its callback_data.", 1,
+                         files=(probe.get("stats") or {}).get("files"))
+        res = probe if args.dry_run else import_bot(args.source, into, project_id=args.project_id, dry_run=False)
     except StoreError as err:
         return _fail(args, err.code, err.message, **err.extra)
     if args.report:

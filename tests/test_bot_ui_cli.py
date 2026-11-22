@@ -106,6 +106,20 @@ class Cli(unittest.TestCase):
             self.assertNotIn(needle, text)
         self.assertNotIn("index.html", text, "widget sources stay out of the artifact")
 
+    def test_import_refuses_a_bot_without_router_handlers(self):
+        src = os.path.join(self.tmp, "custom-bot")
+        os.makedirs(src)
+        with open(os.path.join(src, "app.py"), "w", encoding="utf-8") as fh:
+            fh.write("async def on_update(update):
+    if update.get('text') == '/start':
+        return 'hi'
+")
+        target = os.path.join(self.tmp, "imported", "bot-ui")
+        code, doc, _ = self.j("import", "--source", src, "--into", target)
+        self.assertEqual(code, 1)
+        self.assertEqual(doc["error"]["code"], "NO_HANDLERS_FOUND")
+        self.assertFalse(os.path.exists(target), "nothing is created")
+
     def test_project_is_found_from_the_bot_repository_root(self):
         code, out, _ = run("list", "--json", cwd=os.path.dirname(self.root))
         self.assertEqual(code, 0)
