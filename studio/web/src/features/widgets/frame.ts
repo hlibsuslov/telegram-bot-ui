@@ -16,6 +16,11 @@ export function freshen(state: Doc | undefined, keys: string[] | undefined, base
   return s;
 }
 
+/** "light" or "dark", from the chat theme (the runtime themes carry _scheme). */
+export function frameScheme(theme: Doc | undefined): "light" | "dark" {
+  return theme?._scheme === "dark" ? "dark" : "light";
+}
+
 export function composeDoc(rt: Runtime, html: string, o: { session: string; theme: string; lang: string; meta: Doc; state: string; offline: boolean }): string {
   const th = rt.themes[o.theme] ?? rt.themes.light ?? {};
   let vars = `--tg-color-scheme:${th._scheme};--tg-text-font-size:${FS}px;--tg-text-line-height:1.35;--tg-text-padding:8px 12px;` +
@@ -34,6 +39,13 @@ export function composeDoc(rt: Runtime, html: string, o: { session: string; them
   };
   const cfgJson = JSON.stringify(cfg).replace(/</g, "\\u003c");
   const mock = rt.mock.replace(/<\/script/gi, "<\\/script");
-  return `<!doctype html><html dir="ltr" style="${vars.replace(/"/g, "&quot;")}"><head><meta charset="utf-8"><style>${rt.css}</style>` +
+  // The chat theme decides the colour scheme, not the viewer's OS: widgets (and the kit) declare
+  // `color-scheme: light dark`, which would otherwise follow prefers-color-scheme, flip
+  // light-dark() and give the frame an opaque Canvas of the other scheme behind theme-coloured
+  // text (black on black with a light chat theme on a dark OS). The iframe element gets the same
+  // scheme from frameScheme() so the embedder and the frame agree and the frame stays transparent.
+  const scheme = frameScheme(th);
+  return `<!doctype html><html dir="ltr" style="${vars.replace(/"/g, "&quot;")}"><head><meta charset="utf-8"><meta name="color-scheme" content="${scheme}">` +
+    `<style>${rt.css}</style><style>:root{color-scheme:${scheme} !important}html,body{background:transparent !important}</style>` +
     `<script>window.__cfg=${cfgJson};${mock}</script></head><body>${html}</body></html>`;
 }

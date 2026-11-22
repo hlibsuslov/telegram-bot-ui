@@ -15,7 +15,8 @@ import { ScreenPreview } from "../preview/Telegram";
 
 export type UpdateMeta = (fn: (meta: Doc) => void) => void;
 
-export function Section({ title, hint, children, className, id }: { title: string; hint?: string; children: ReactNode; className?: string; id?: string }) {
+export function Section({ title, hint, children, className, id, bare }: { title: string; hint?: string; children: ReactNode; className?: string; id?: string; bare?: boolean }) {
+  if (bare) return <div id={id} className={cn("space-y-3", className)}>{children}</div>;
   return (
     <section id={id} className={cn("space-y-3 rounded-xl bg-card p-4 ring-1 ring-border", className)} aria-label={title}>
       <div>
@@ -27,7 +28,7 @@ export function Section({ title, hint, children, className, id }: { title: strin
   );
 }
 
-export function MessageSection({ wid, meta, update, lang }: { wid: string; meta: Doc; update: UpdateMeta; lang: string }) {
+export function MessageSection({ wid, meta, update, lang, bare }: { wid: string; meta: Doc; update: UpdateMeta; lang: string; bare?: boolean }) {
   const { loaded, working, editLocale } = useStudio();
   const ls = locales(loaded.project);
   const def = defaultLocale(loaded.project);
@@ -37,7 +38,7 @@ export function MessageSection({ wid, meta, update, lang }: { wid: string; meta:
   const missing = ls.filter((l) => !capObj[l]);
   const fb = meta.fallbackScreen && working.screens[meta.fallbackScreen];
   return (
-    <Section title="Message" hint="What arrives with the widget: the caption under it, and the screen sent where widgets are unavailable.">
+    <Section bare={bare} title="Message" hint="What arrives with the widget: the caption under it, and the screen sent where widgets are unavailable.">
       <Field label={<>Caption <span className="font-mono text-[10px] uppercase">{loc}</span></>} htmlFor={`${wid}-caption`}
         extra={missing.length > 0 ? <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-900">missing in {missing.join(", ")}</span> : undefined}
         hint="{field} placeholders are filled from your data (example values here).">
@@ -85,10 +86,13 @@ function DataEditor({ wid, state, field, value, update, limit }: { wid: string; 
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono text-xs font-semibold">{field === "chatData" ? "chat_data" : "public_data"}</span>
         <span className={cn("font-mono text-[11px]", bytes > limit ? "font-semibold text-destructive" : "text-muted-foreground")}>{bytes} / {limit} B</span>
-        <span className="ml-auto"><Segmented size="xs" label={`${field} editor`} value={raw ? "raw" : "form"} onChange={(v) => { setRaw(v === "raw"); setText(JSON.stringify(value ?? {}, null, 2)); setErr(""); }}
+        <span className="h-1.5 min-w-16 flex-1 overflow-hidden rounded-full bg-muted" role="meter" aria-label={`${field} size`} aria-valuemin={0} aria-valuemax={limit} aria-valuenow={bytes}>
+          <span className={cn("block h-full rounded-full", bytes > limit ? "bg-destructive" : bytes > limit * 0.85 ? "bg-amber-500" : "bg-emerald-600")} style={{ width: `${Math.min(100, (bytes / limit) * 100)}%` }} />
+        </span>
+        <span><Segmented size="xs" label={`${field} editor`} value={raw ? "raw" : "form"} onChange={(v) => { setRaw(v === "raw"); setText(JSON.stringify(value ?? {}, null, 2)); setErr(""); }}
           options={[{ value: "form", label: "Form" }, { value: "raw", label: "JSON" }]} /></span>
       </div>
-      {!value && !raw && <p className="text-xs text-muted-foreground">Not set for this state. <button type="button" className="underline" onClick={() => set(() => undefined)}>Add an empty object</button></p>}
+      {!value && !raw && <p className="text-xs text-muted-foreground">Not sent in this state. <button type="button" className="underline" onClick={() => set(() => undefined)}>Add an empty object</button></p>}
       {value && !raw && isObj && (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-2">
           {Object.entries(value).map(([k, v]) => (
@@ -111,7 +115,7 @@ function DataEditor({ wid, state, field, value, update, limit }: { wid: string; 
   );
 }
 
-export function DataSection({ wid, meta, update, state, setState, limit }: { wid: string; meta: Doc; update: UpdateMeta; state: string; setState: (s: string) => void; limit: number }) {
+export function DataSection({ wid, meta, update, state, setState, limit, bare }: { wid: string; meta: Doc; update: UpdateMeta; state: string; setState: (s: string) => void; limit: number; bare?: boolean }) {
   const states = Object.keys(meta.states ?? {});
   const [name, setName] = useState("");
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -121,7 +125,7 @@ export function DataSection({ wid, meta, update, state, setState, limit }: { wid
   });
   const st: Doc = meta.states?.[state] ?? {};
   return (
-    <Section title="Data and demo states" hint="chat_data / public_data the bot sends with the widget. Each demo state is one example to preview.">
+    <Section bare={bare} title="Data and demo states" hint="chat_data / public_data the bot sends with the widget. Each demo state is one example to preview.">
       <div className="flex flex-wrap items-center gap-1.5" role="tablist" aria-label="Demo states">
         {states.map((s) => (
           <span key={s} className="flex items-center">
@@ -154,11 +158,11 @@ export function DataSection({ wid, meta, update, state, setState, limit }: { wid
   );
 }
 
-export function SendSection({ meta, update }: { meta: Doc; update: UpdateMeta }) {
+export function SendSection({ meta, update, bare }: { meta: Doc; update: UpdateMeta; bare?: boolean }) {
   const send: Doc = meta.send ?? {};
   const set = (k: string, v: any) => update((m) => { m.send ??= {}; if (v === undefined || v === false || v === "") delete m.send[k]; else m.send[k] = v; });
   return (
-    <Section title="Send options" hint="Parameters of sendWidget, outside the HTML.">
+    <Section bare={bare} title="Send options" hint="Parameters of sendWidget, outside the HTML.">
       <label className="flex items-center justify-between gap-3 text-sm"><span><span className="font-mono text-xs">allow_queries</span><span className="block text-xs text-muted-foreground">The widget may ask the bot (request()).</span></span>
         <Switch checked={!!send.allow_queries} onCheckedChange={(v) => set("allow_queries", v)} aria-label="allow_queries" /></label>
       <label className="flex items-center justify-between gap-3 text-sm"><span><span className="font-mono text-xs">is_shared</span><span className="block text-xs text-muted-foreground">One shared widget for everyone in the chat.</span></span>
