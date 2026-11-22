@@ -29,9 +29,13 @@ function Brand() {
     <SidebarMenu>
       <SidebarMenuItem>
         <div className="flex items-center gap-2 rounded-md p-2 group-data-[collapsible=icon]:p-0">
-          <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground" aria-hidden>
-            {loaded.title.slice(0, 1).toUpperCase()}
-          </div>
+          {loaded.demoAvatar ? (
+            <img src={loaded.demoAvatar} alt="" className="size-8 shrink-0 rounded-md" />
+          ) : (
+            <div className="flex aspect-square size-8 shrink-0 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground" aria-hidden>
+              {loaded.title.slice(0, 1).toUpperCase()}
+            </div>
+          )}
           <div className="grid min-w-0 flex-1 gap-1 leading-none group-data-[collapsible=icon]:hidden">
             <span className="truncate text-sm font-medium" title={loaded.title}>{loaded.title}</span>
             <span className="flex flex-wrap items-center gap-1">
@@ -124,8 +128,9 @@ function Shell() {
       { key: "map", label: "Map", icon: MapIcon, href: href("map") },
       { key: "screens", label: "Screens", icon: LayoutGrid, href: href("screens"), badge: Object.keys(working.screens).length },
       { key: "simulator", label: "Simulator", icon: MessagesSquare, href: href("simulator") },
-      // The demo carries no widget sources; the site shows the demo bot's widgets live next to it.
-      ...(demo ? [] : [{ key: "widgets", label: "Widgets", icon: Puzzle, href: href("widgets"), children: caps.widgets && widgetIds.length > 1 ? widgetIds.map((w) => ({ key: w, label: w, href: href("widgets", w) })) : undefined }]),
+      demo
+        ? { key: "widget-demos", label: "Widget demos", icon: Puzzle, href: "/studio#widgets", target: "_top" }
+        : { key: "widgets", label: "Widgets", icon: Puzzle, href: href("widgets"), children: caps.widgets && widgetIds.length > 1 ? widgetIds.map((w) => ({ key: w, label: w, href: href("widgets", w) })) : undefined },
       { key: "emoji", label: "Emoji", icon: Smile, href: href("emoji") },
       { key: "changes", label: "Changes", icon: GitCompareArrows, href: href("changes"), badge: n + requests.length || undefined },
       ...(loaded.mode === "artifact" ? [{ key: "about", label: demo ? "About this demo" : "What works here", icon: Info, href: href("about") }] : []),
@@ -160,7 +165,7 @@ function Shell() {
 
   return (
     <ApplicationShell1 brand={<Brand />} navGroups={navGroups} footer={<Footer />} active={active} trail={trail}
-      headerEnd={headerEnd} mobileTitle={`${TITLES[route.section]} · ${loaded.title}`}>
+      headerEnd={headerEnd} mobileTitle={`${TITLES[route.section]} · ${loaded.title}`} mobileAvatar={loaded.demoAvatar}>
       <PendingBanner />
       {loaded.readOnly && <div className="border-b bg-muted px-4 py-2 text-sm">This project's schema version is not supported: it opens read-only.</div>}
       {!store.storageOk && <div className="border-b bg-muted px-4 py-2 text-sm">This browser does not keep drafts (storage is blocked); they last until the tab closes.</div>}
