@@ -8,9 +8,9 @@ Security model (local tool, one user):
   neither read nor write; the sandboxed widget preview has an opaque origin and is refused;
 * writes go through store.write_patch (revision check, lock, validation, atomic replace);
 * no request leaves this machine, with one exception the user starts by hand: importing a premium
-  emoji pack by link sends the pack name to the telegram-bot-ui resolver (emoji.py), or, with
-  the user's own token from the request or the environment, calls the read-only
-  getStickerSet/getFile on api.telegram.org; that token is never stored or returned;
+  emoji pack by link sends the pack name to the telegram-bot-ui resolver (emoji.py), or, when
+  the resolver is off and a token is in the environment, calls the read-only
+  getStickerSet/getFile on api.telegram.org; the page never sends or receives a token;
 * widget builds run the skill's offline builder.
 """
 from __future__ import annotations
@@ -230,9 +230,7 @@ class Studio:
             if path == "/api/emoji":
                 return 200, emoji.client_document(self.root, snap)
             if path == "/api/emoji/import":
-                token = body.get("token") if isinstance(body.get("token"), str) else None
-                res = emoji.import_pack(self.root, link=body.get("link"), token=(token or "").strip() or None,
-                                        sticker_set=body.get("stickerSet"))
+                res = emoji.import_pack(self.root, link=body.get("link"), sticker_set=body.get("stickerSet"))
                 return 200, {**res, **emoji.client_document(self.root, open_snapshot(self.root))}
             if path == "/api/emoji/icon":
                 emoji.set_icon(self.root, str(body.get("slot", "")), body.get("id"), note=body.get("note"),

@@ -124,8 +124,8 @@ without it every surface shows the fallback. Only an import by link goes online.
 asks the telegram-bot-ui resolver (`GET https://telegram-bot-ui-site.vercel.app/api/emoji-pack/<name>`
 and the picture paths it returns), which reads the pack with the project's own bot: the user
 needs no token and only the pack name is sent. `BOT_UI_EMOJI_RESOLVER` sets another resolver URL
-or `off`. With a token of the user's own (the Studio form, or `TELEGRAM_TEST_BOT_TOKEN` /
-`BOT_TOKEN` when the resolver is off) the Studio reads the pack itself (read-only `getStickerSet`,
+or `off`; with it off, a token of the user's own (`TELEGRAM_TEST_BOT_TOKEN` /
+`BOT_TOKEN`) makes the Studio read the pack itself (read-only `getStickerSet`,
 `getFile`, the file download on api.telegram.org); that token is never stored. A saved
 `getStickerSet` response imports offline without pictures. The library is not part of the
 revision. With a library, `validate` adds `CUSTOM_EMOJI_UNKNOWN` (id not in it, info) and

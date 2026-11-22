@@ -1,6 +1,6 @@
 // Emoji page: import premium emoji packs by link, give emoji a meaning (the bot's icon map),
 // see where they are used, and hand the placement to the agent.
-import { AlertTriangle, Bot, Check, Copy, Download, FileJson, Library, Link2, Loader2, Plus, Search, Sparkles, Trash2, Wand2, X } from "lucide-react";
+import { AlertTriangle, Bot, Check, Copy, Download, Library, Link2, Loader2, Plus, Search, Sparkles, Trash2, Wand2, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { CodeView } from "@/components/code-view";
 import { Button } from "@/components/ui/button";
@@ -42,19 +42,19 @@ function ImportCard({ preview }: { preview?: boolean }) {
   const { doc, call } = useEmoji();
   const { notify, loaded } = useStudio();
   const [link, setLink] = useState("");
-  const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
-  const run = async (body: Record<string, unknown>) => {
+  const available = preview || !!doc.resolver || !!doc.tokenEnv;
+  const run = async () => {
     setBusy(true);
-    const res = await call("/api/emoji/import", body);
+    const res = await call("/api/emoji/import", { link: link.trim() });
     setBusy(false);
     if (!res.ok) { notify(res.error ?? "import failed", "error"); return; }
     const d = res.data;
-    notify(`${d.title}: ${d.count} emoji${d.source === "getStickerSet" ? `, ${d.previews} pictures${d.previewsFailed ? ` (${d.previewsFailed} without one)` : ""}` : " (ids only, no pictures)"}`, "success");
+    notify(`${d.title}: ${d.count} emoji${d.previews ? `, ${d.previews} pictures` : ""}`, "success");
     setLink("");
   };
   return (
-    <Section icon={Download} title="Add a pack" hint="Paste the link of an emoji pack (Telegram: the pack's menu, Share or Copy link).">
+    <Section icon={Download} title="Add a pack" hint="Paste the link of an emoji pack (in Telegram: the pack's menu, Copy link).">
       {preview && (
         <div className="flex flex-wrap items-center gap-2 rounded-lg bg-muted/60 px-3 py-2 text-xs">
           <span className="min-w-0 flex-1">{loaded.features.demo
@@ -63,42 +63,18 @@ function ImportCard({ preview }: { preview?: boolean }) {
           {loaded.features.demo && <a href={DEMO_SITE} target="_top" className="shrink-0 rounded-md border bg-background px-2 py-1 font-medium hover:bg-accent">Run it on your bot</a>}
         </div>
       )}
-      <fieldset disabled={preview || busy} className="contents">
-      <form className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto]" onSubmit={(e) => { e.preventDefault(); if (link.trim()) void run({ link: link.trim(), token: token.trim() || undefined }); }}>
-        <div className="relative">
+      <form className="flex flex-col gap-2 sm:flex-row" onSubmit={(e) => { e.preventDefault(); if (link.trim()) void run(); }}>
+        <div className="relative flex-1">
           <Link2 className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://t.me/addemoji/…" className="pl-8" aria-label="Pack link" disabled={busy} />
+          <Input value={link} onChange={(e) => setLink(e.target.value)} placeholder="https://t.me/addemoji/…" className="pl-8" aria-label="Pack link" disabled={preview || busy || !available} />
         </div>
-        <Button type="submit" disabled={preview || busy || !link.trim()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {busy ? "Reading the pack…" : "Import"}</Button>
-        {doc.resolver || preview ? (
-          <div className="space-y-1 text-xs text-muted-foreground sm:col-span-2">
-            <p>No key needed: the pack is read through the telegram-bot-ui service{doc.resolver ? <> (<span className="font-mono">{doc.resolver}</span>)</> : null}, and only the pack name is sent.</p>
-            {!preview && (
-              <details>
-                <summary className="cursor-pointer">Use my own bot token instead</summary>
-                <div className="mt-1 space-y-1">
-                  <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Bot token (any bot of yours)" autoComplete="off" spellCheck={false} aria-label="Bot token" disabled={busy} />
-                  <p>Then the Studio reads the pack from Telegram itself (read-only getStickerSet). The token stays in this tab and is never saved.</p>
-                </div>
-              </details>
-            )}
-          </div>
-        ) : doc.tokenEnv ? (
-          <p className="text-xs text-muted-foreground sm:col-span-2">Uses the bot token from <span className="font-mono">{doc.tokenEnv}</span> for one read-only call (getStickerSet) and the pictures. Nothing is sent to a chat.</p>
-        ) : (
-          <div className="space-y-1 sm:col-span-2">
-            <Input type="password" value={token} onChange={(e) => setToken(e.target.value)} placeholder="Bot token (any bot of yours)" autoComplete="off" spellCheck={false} aria-label="Bot token" disabled={busy} />
-            <p className="text-xs text-muted-foreground">The telegram-bot-ui service is off (BOT_UI_EMOJI_RESOLVER), so reading a pack needs any bot token: the Studio calls only the read-only getStickerSet. The token stays in this tab and is never saved.</p>
-          </div>
-        )}
+        <Button type="submit" disabled={preview || busy || !available || !link.trim()}>
+          {busy ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />} {busy ? "Reading the pack…" : "Import"}
+        </Button>
       </form>
-      <label className={cn("flex items-center gap-2 text-xs text-muted-foreground", preview ? "opacity-60" : "cursor-pointer")}>
-        <FileJson className="size-3.5" aria-hidden />
-        <span className="underline">or load a saved getStickerSet response</span> (ids only, no pictures)
-        <input type="file" accept="application/json,.json" className="sr-only" disabled={busy}
-          onChange={async (e) => { const f = e.target.files?.[0]; e.target.value = ""; if (!f) return; try { await run({ stickerSet: JSON.parse(await f.text()) }); } catch (err) { notify((err as Error).message, "error"); } }} />
-      </label>
-      </fieldset>
+      {!available && (
+        <p className="text-xs text-muted-foreground">Import is off here (<span className="font-mono">BOT_UI_EMOJI_RESOLVER=off</span>): use <span className="font-mono">bot-ui emoji import &lt;link&gt;</span> with your own bot token.</p>
+      )}
     </Section>
   );
 }

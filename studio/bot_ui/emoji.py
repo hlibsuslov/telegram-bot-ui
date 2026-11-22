@@ -360,8 +360,8 @@ def import_pack(root: str, *, link: str | None = None, token: str | None = None,
                 token = token_from_env()[0]
                 if not token:
                     raise EmojiError("TOKEN_NEEDED", f"the emoji resolver is off ({RESOLVER_ENV}): reading a pack needs any "
-                                                     f"bot token (read-only getStickerSet): set {' or '.join(TOKEN_ENV)}, or "
-                                                     "paste it in the Studio's import form; it is never saved")
+                                                     f"bot token (read-only getStickerSet): set {' or '.join(TOKEN_ENV)}; "
+                                                     "it is never saved")
         if resolver is not None:
             pack, name, saved, failed = _from_resolver(root, name, resolver)
             source = "resolver"
