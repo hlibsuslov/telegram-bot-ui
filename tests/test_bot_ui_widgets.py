@@ -92,6 +92,19 @@ class Widgets(ProjectCase):
         self.assertFalse(b["ok"])
         self.assertIn("WIDGET_FILE_MISSING", b["errors"][0])
 
+    def test_svg_asset_is_inlined_and_out_of_profile_svg_fails(self):
+        svg = ('<?xml version="1.0"?>\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">'
+               '<path fill="#2481cc" d="M0 0h8v8H0z"/></svg>\n')
+        self.write_raw("widgets/order-status/logo.svg", svg.encode())
+        rel = "widgets/order-status/index.html"
+        self.write_raw(rel, self.raw(rel).replace(b'<div class="k">', b'<div class="k"><!--@file logo.svg-->'))
+        snap = open_snapshot(self.root)
+        self.assertIn('<div class="k"><svg viewBox="0 0 8 8"><path', widgets.assemble(snap, "order-status"))
+        self.assertTrue(widgets.build(snap, "order-status", lang="en", values=VALUES)["ok"])
+        self.write_raw("widgets/order-status/logo.svg", b'<svg viewBox="0 0 8 8"><image href="data:image/png;base64,AA=="/></svg>')
+        bad = widgets.build(open_snapshot(self.root), "order-status", lang="en", values=VALUES)
+        self.assertFalse(bad["ok"])
+
     def test_mock_answers_come_from_the_gallery_handler(self):
         answers = widgets.mock_answers(open_snapshot(self.root), "order-status")
         self.assertIn("call", answers["default"])

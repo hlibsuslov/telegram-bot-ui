@@ -7,8 +7,9 @@
     "id": "main",
     "format": "regular.html",
     "text": {
+      "en": "⚠️ <b>The payment failed</b>\nNo money was taken. Try again or choose another method.",
       "ru": "⚠️ <b>Оплата не прошла</b>\nДеньги не списаны. Попробуйте ещё раз или выберите другой способ.",
-      "en": "⚠️ <b>The payment failed</b>\nNo money was taken. Try again or choose another method."
+      "uk": "⚠️ <b>Оплата не пройшла</b>\nГроші не списано. Спробуйте ще раз або оберіть інший спосіб."
     }
   },
   "keyboard": {
@@ -25,8 +26,9 @@
   "actions": {
     "retry": {
       "label": {
+        "en": "Try again",
         "ru": "Повторить",
-        "en": "Try again"
+        "uk": "Повторити"
       },
       "type": "handler",
       "handlerId": "checkout.confirm",
@@ -35,14 +37,16 @@
         "retry": "checkout.payment.error"
       },
       "pending": {
+        "en": "Checking the payment…",
         "ru": "Проверяем оплату…",
-        "en": "Checking the payment…"
+        "uk": "Перевіряємо оплату…"
       }
     },
     "methods": {
       "label": {
+        "en": "Payment options",
         "ru": "К выбору оплаты",
-        "en": "Payment options"
+        "uk": "До вибору оплати"
       },
       "type": "navigate",
       "to": "checkout.payment.choose"

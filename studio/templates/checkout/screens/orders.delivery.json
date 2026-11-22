@@ -7,8 +7,9 @@
     "id": "main",
     "format": "regular.html",
     "text": {
+      "en": "🛵 <b>Courier</b>\nThe courier brings order #{order.no} and calls ahead.",
       "ru": "🛵 <b>Курьер</b>\nКурьер привезёт заказ #{order.no} и позвонит заранее.",
-      "en": "🛵 <b>Courier</b>\nThe courier brings order #{order.no} and calls ahead."
+      "uk": "🛵 <b>Кур'єр</b>\nКур'єр привезе замовлення #{order.no} і зателефонує заздалегідь."
     }
   },
   "keyboard": {
@@ -22,8 +23,9 @@
   "actions": {
     "back": {
       "label": {
+        "en": "← Status",
         "ru": "← К статусу",
-        "en": "← Status"
+        "uk": "← До статусу"
       },
       "type": "back",
       "fallback": "orders.status"

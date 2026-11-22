@@ -7,8 +7,9 @@
     "id": "main",
     "format": "regular.html",
     "text": {
+      "en": "<b>How would you like to pay?</b>\nTotal: {order.total}",
       "ru": "<b>Как оплатить заказ?</b>\nСумма: {order.total}",
-      "en": "<b>How would you like to pay?</b>\nTotal: {order.total}"
+      "uk": "<b>Як оплатити замовлення?</b>\nСума: {order.total}"
     }
   },
   "keyboard": {
@@ -26,8 +27,9 @@
   "actions": {
     "card": {
       "label": {
+        "en": "Card",
         "ru": "Картой",
-        "en": "Card"
+        "uk": "Карткою"
       },
       "type": "navigate",
       "to": "checkout.note",
@@ -38,8 +40,9 @@
     },
     "cash": {
       "label": {
+        "en": "Cash",
         "ru": "Наличными",
-        "en": "Cash"
+        "uk": "Готівкою"
       },
       "type": "navigate",
       "to": "checkout.note",
@@ -50,8 +53,9 @@
     },
     "back": {
       "label": {
+        "en": "← Back",
         "ru": "← Назад",
-        "en": "← Back"
+        "uk": "← Назад"
       },
       "type": "back",
       "fallback": "entry.start"

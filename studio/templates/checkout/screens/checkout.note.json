@@ -7,15 +7,17 @@
     "id": "main",
     "format": "regular.plain",
     "text": {
+      "en": "Send one message with a note for the courier.",
       "ru": "Напишите комментарий для курьера одним сообщением.",
-      "en": "Send one message with a note for the courier."
+      "uk": "Напишіть коментар для кур'єра одним повідомленням."
     }
   },
   "keyboard": {
     "type": "force_reply",
     "placeholder": {
+      "en": "For example: call 5 minutes ahead",
       "ru": "Например: позвоните за 5 минут",
-      "en": "For example: call 5 minutes ahead"
+      "uk": "Наприклад: зателефонуйте за 5 хвилин"
     }
   },
   "input": {

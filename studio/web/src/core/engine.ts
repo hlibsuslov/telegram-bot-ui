@@ -3,8 +3,8 @@ import { type Doc, keyboardRows, localized, renderScreen, type Logical } from ".
 
 export const HISTORY_MAX = 20;
 const DEFAULT_TEXTS: Doc = {
-  stale: { en: "This button is out of date.", ru: "Эта кнопка устарела." },
-  disabled: { en: "Not available right now.", ru: "Сейчас недоступно." },
+  stale: { en: "This button is out of date.", ru: "Эта кнопка устарела.", uk: "Ця кнопка застаріла." },
+  disabled: { en: "Not available right now.", ru: "Сейчас недоступно.", uk: "Зараз недоступно." },
 };
 
 export interface Snapshot { project: Doc; screens: Record<string, Doc>; scenarios?: Record<string, Doc>; revision?: string }

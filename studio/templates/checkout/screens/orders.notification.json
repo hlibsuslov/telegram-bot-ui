@@ -7,8 +7,9 @@
     "id": "main",
     "format": "regular.html",
     "text": {
+      "en": "🔔 Order #{order.no}: {order.status_text}",
       "ru": "🔔 Заказ #{order.no}: {order.status_text}",
-      "en": "🔔 Order #{order.no}: {order.status_text}"
+      "uk": "🔔 Замовлення #{order.no}: {order.status_text}"
     }
   },
   "keyboard": {
@@ -22,8 +23,9 @@
   "actions": {
     "open": {
       "label": {
+        "en": "Open status",
         "ru": "Открыть статус",
-        "en": "Open status"
+        "uk": "Відкрити статус"
       },
       "type": "navigate",
       "to": "orders.status",

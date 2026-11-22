@@ -89,6 +89,23 @@ class Server(ProjectCase):
         self.assertEqual(res["error"]["code"], "REVISION_CONFLICT")
         self.assertEqual(res["patch"]["changes"][0]["ops"][0]["value"], "old base", "the draft comes back")
 
+    def test_git_status_lists_saved_but_uncommitted_screens(self):
+        import subprocess
+        status, doc, _ = self.req("POST", "/api/git-status", {})
+        self.assertEqual((status, doc["git"]), (200, False))
+        git = ["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid"]
+        subprocess.run(git + ["init", "-q"], cwd=self._tmp, check=True)
+        subprocess.run(git + ["add", "-A"], cwd=self._tmp, check=True)
+        subprocess.run(git + ["commit", "-qm", "init"], cwd=self._tmp, check=True)
+        rev = self.req("POST", "/api/revision", {})[1]["revision"]
+        self.req("POST", "/api/save", {"patch": {"format": "bot-ui-patch/v1", "baseRevision": rev, "changes": [
+            {"screenId": "orders.pickup", "ops": [{"op": "set", "path": "/title", "value": "Pickup!"}]}]}})
+        status, doc, _ = self.req("POST", "/api/git-status", {})
+        self.assertTrue(doc["git"])
+        self.assertEqual(doc["projectPath"], "мой бот/bot-ui")
+        self.assertEqual([(f["status"], f.get("screenId")) for f in doc["files"]], [("M", "orders.pickup")])
+        self.assertIn('+  "title": "Pickup!"', doc["diff"])
+
     def test_preview_frame_has_no_network(self):
         status, body, headers = self.req("GET", "/preview-frame.html")
         self.assertEqual(status, 200)

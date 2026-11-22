@@ -2,7 +2,7 @@
 
 A widget lives in widgets/<id>/: widget.json, an entry HTML file and optional local files.
 `<!--@file style.css-->` in the entry inlines a local file as <style>/<script> in place, so the
-split keeps the order of styles and scripts. Kit partials (`<!--@kit runtime.js-->`) come
+split keeps the order of styles and scripts; `<!--@file logo.svg-->` inlines raw <svg> markup. Kit partials (`<!--@kit runtime.js-->`) come
 from widgets/_kit/ in the project (vendored by `bot-ui init`), else from the skill.
 
 Every build is bound to `sourceHash` = sha256 of the widget's source bytes, the kit and the
@@ -50,9 +50,14 @@ def assemble(snap: Snapshot, wid: str) -> str:
         if rel not in snap.files:
             raise WidgetError("WIDGET_FILE_MISSING", f"{rel} (from {m.group(0)}) does not exist")
         body = normalize_bytes(snap.files[rel]).decode("utf-8")
+        if rel.endswith(".svg"):  # raw inline <svg> markup (profile 1: no <image>, no data: images)
+            body = re.sub(r"^\s*<\?xml[^>]*>\s*", "", body)
+            # Inline SVG in HTML needs no namespace; its URL would read as an external link.
+            body = re.sub(r'\s+xmlns(:xlink)?="http://www\.w3\.org/[^"]*"', "", body)
+            return body.rstrip("\n")
         tag = "style" if rel.endswith(".css") else "script" if rel.endswith(".js") else None
         if tag is None:
-            raise WidgetError("WIDGET_FILE_TYPE", f"{rel}: only .css and .js files can be inlined")
+            raise WidgetError("WIDGET_FILE_TYPE", f"{rel}: only .css, .js and .svg files can be inlined")
         return f"<{tag}>\n{body}</{tag}>"
 
     return FILE_MARK.sub(sub, text)

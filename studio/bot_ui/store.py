@@ -48,7 +48,7 @@ ALLOWED_PATHS = [re.compile("^" + p + "$") for p in (
 )]
 
 
-WIDGET_FILE_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]*\.(html|css|js|json)$")
+WIDGET_FILE_RE = re.compile(r"^[a-z0-9][a-z0-9_.-]*\.(html|css|js|json|svg)$")
 
 
 def content_hash(data: bytes | None) -> str | None:
@@ -267,7 +267,7 @@ def check_patch_shape(patch: Any) -> None:
         if isinstance(c, dict) and "widgetId" in c:
             if check_id(c["widgetId"]) or not isinstance(c.get("file"), str) or not WIDGET_FILE_RE.match(c["file"]) \
                     or not isinstance(c.get("content"), str):
-                raise StoreError("PATCH_FORMAT", "a widget change is {widgetId, file (name.html|css|js|json), content}")
+                raise StoreError("PATCH_FORMAT", "a widget change is {widgetId, file (name.html|css|js|json|svg), content}")
             if c["file"].endswith(".json"):
                 try:
                     json.loads(c["content"])

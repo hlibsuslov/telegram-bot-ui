@@ -7,14 +7,16 @@
     "id": "main",
     "format": "regular.html",
     "text": {
+      "en": "<b>Confirm order #{order.no}</b>\nPlease check the order details carefully before paying. The amount due is {order.total}. Note for the courier: {order.note}. After you press Pay we charge the amount and send a confirmation to this chat.",
       "ru": "<b>Подтвердите заказ #{order.no}</b>\nПожалуйста, внимательно проверьте детали заказа перед оплатой. Сумма к оплате составляет {order.total}. Комментарий для курьера: {order.note}. После нажатия кнопки «Оплатить» мы спишем сумму и пришлём подтверждение в этот чат.",
-      "en": "<b>Confirm order #{order.no}</b>\nPlease check the order details carefully before paying. The amount due is {order.total}. Note for the courier: {order.note}. After you press Pay we charge the amount and send a confirmation to this chat."
+      "uk": "<b>Підтвердіть замовлення #{order.no}</b>\nБудь ласка, уважно перевірте деталі замовлення перед оплатою. Сума до сплати становить {order.total}. Коментар для кур'єра: {order.note}. Після натискання кнопки «Оплатити» ми спишемо суму й надішлемо підтвердження в цей чат."
     },
     "states": {
       "loading": {
         "text": {
+          "en": "⏳ Checking the payment…",
           "ru": "⏳ Проверяем оплату…",
-          "en": "⏳ Checking the payment…"
+          "uk": "⏳ Перевіряємо оплату…"
         }
       }
     }
@@ -30,8 +32,9 @@
   "actions": {
     "pay": {
       "label": {
+        "en": "Pay {order.total}",
         "ru": "Оплатить {order.total}",
-        "en": "Pay {order.total}"
+        "uk": "Оплатити {order.total}"
       },
       "type": "handler",
       "handlerId": "checkout.confirm",
@@ -40,8 +43,9 @@
         "retry": "checkout.payment.error"
       },
       "pending": {
+        "en": "Checking the payment…",
         "ru": "Проверяем оплату…",
-        "en": "Checking the payment…"
+        "uk": "Перевіряємо оплату…"
       },
       "style": "success"
     }

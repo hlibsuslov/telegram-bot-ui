@@ -7,8 +7,9 @@
     "id": "main",
     "format": "regular.html",
     "text": {
+      "en": "✅ <b>Order #{order.no} is paid</b>\nWe will tell you when the courier leaves.",
       "ru": "✅ <b>Заказ #{order.no} оплачен</b>\nМы сообщим, когда курьер выедет.",
-      "en": "✅ <b>Order #{order.no} is paid</b>\nWe will tell you when the courier leaves."
+      "uk": "✅ <b>Замовлення #{order.no} оплачено</b>\nМи повідомимо, коли кур'єр виїде."
     }
   },
   "keyboard": {
@@ -25,8 +26,9 @@
   "actions": {
     "status": {
       "label": {
+        "en": "📦 Order status",
         "ru": "📦 Статус заказа",
-        "en": "📦 Order status"
+        "uk": "📦 Статус замовлення"
       },
       "type": "navigate",
       "to": "orders.status",
@@ -34,8 +36,9 @@
     },
     "menu": {
       "label": {
+        "en": "Menu",
         "ru": "В меню",
-        "en": "Menu"
+        "uk": "У меню"
       },
       "type": "navigate",
       "to": "entry.start"

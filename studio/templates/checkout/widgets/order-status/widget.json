@@ -3,12 +3,14 @@
   "title": "Статус заказа",
   "entry": "index.html",
   "languages": [
+    "en",
     "ru",
-    "en"
+    "uk"
   ],
   "caption": {
+    "en": "Order #{order.no} · {order.status_text}",
     "ru": "Заказ #{order.no} · {order.status_text}",
-    "en": "Order #{order.no} · {order.status_text}"
+    "uk": "Замовлення #{order.no} · {order.status_text}"
   },
   "send": {
     "allow_queries": true

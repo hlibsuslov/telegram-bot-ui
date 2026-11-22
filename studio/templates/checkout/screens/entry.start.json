@@ -7,8 +7,9 @@
     "id": "main",
     "format": "regular.html",
     "text": {
+      "en": "<b>Demo shop</b>\nPlace an order in a minute or check where it is now.",
       "ru": "<b>Демо-магазин</b>\nСоберите заказ за минуту или проверьте, где он сейчас.",
-      "en": "<b>Demo shop</b>\nPlace an order in a minute or check where it is now."
+      "uk": "<b>Демо-магазин</b>\nЗберіть замовлення за хвилину або перевірте, де воно зараз."
     }
   },
   "keyboard": {
@@ -25,8 +26,9 @@
   "actions": {
     "order": {
       "label": {
+        "en": "🛒 Place an order",
         "ru": "🛒 Оформить заказ",
-        "en": "🛒 Place an order"
+        "uk": "🛒 Оформити замовлення"
       },
       "type": "navigate",
       "to": "checkout.payment.choose",
@@ -35,8 +37,9 @@
     },
     "status": {
       "label": {
+        "en": "📦 Order status",
         "ru": "📦 Статус заказа",
-        "en": "📦 Order status"
+        "uk": "📦 Статус замовлення"
       },
       "type": "navigate",
       "to": "orders.status",

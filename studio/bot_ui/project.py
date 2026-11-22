@@ -32,7 +32,7 @@ SOURCE_PATTERNS = [
     re.compile(r"^project\.json$"),
     re.compile(r"^screens/[^/]+\.json$"),
     re.compile(r"^scenarios/[^/]+\.json$"),
-    re.compile(r"^widgets/[^/]+(/[^/]+)*\.(json|html|css|js)$"),
+    re.compile(r"^widgets/[^/]+(/[^/]+)*\.(json|html|css|js|svg)$"),
 ]
 
 

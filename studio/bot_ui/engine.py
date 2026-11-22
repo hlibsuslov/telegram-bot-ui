@@ -32,8 +32,8 @@ from .project import Snapshot
 
 HISTORY_MAX = 20
 HandlerFn = Callable[[str, dict], str]
-DEFAULT_TEXTS = {"stale": {"en": "This button is out of date.", "ru": "Эта кнопка устарела."},
-                 "disabled": {"en": "Not available right now.", "ru": "Сейчас недоступно."}}
+DEFAULT_TEXTS = {"stale": {"en": "This button is out of date.", "ru": "Эта кнопка устарела.", "uk": "Ця кнопка застаріла."},
+                 "disabled": {"en": "Not available right now.", "ru": "Сейчас недоступно.", "uk": "Зараз недоступно."}}
 
 
 def new_session(project: dict, *, locale: str | None = None, context: dict | None = None,

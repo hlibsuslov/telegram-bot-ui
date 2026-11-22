@@ -64,6 +64,42 @@ def _examples(snap: Snapshot) -> dict:
             if isinstance(f, dict) and "example" in f}
 
 
+def git_status(root: str, snap: Snapshot) -> dict:
+    """What is saved in the project folder but not committed (read-only Git calls only)."""
+    import subprocess
+
+    def git(*args: str) -> str | None:
+        try:
+            p = subprocess.run(["git", "-c", "core.quotepath=off", *args], cwd=root, capture_output=True,
+                               timeout=10, encoding="utf-8", errors="replace")
+        except (OSError, subprocess.SubprocessError):
+            return None
+        return p.stdout if p.returncode == 0 else None
+
+    top = git("rev-parse", "--show-toplevel")
+    if top is None:
+        return {"git": False, "files": [], "diff": ""}
+    rel = os.path.relpath(os.path.realpath(root), os.path.realpath(top.strip())).replace(os.sep, "/")
+    by_path = {f"{rel}/{p}" if rel != "." else p: sid for sid, p in snap.screen_files.items()}
+    files = []
+    for line in (git("status", "--porcelain=v1", "--untracked-files=all", "--", ".") or "").splitlines():
+        status, path = line[:2].strip() or "M", line[3:].strip().strip('"')
+        if " -> " in path:
+            path = path.split(" -> ", 1)[1]
+        if "/.bot-ui/" in f"/{path}":
+            continue
+        item = {"path": path, "status": status}
+        if path in by_path:
+            item["screenId"] = by_path[path]
+        m = path.split("/widgets/", 1)
+        if len(m) == 2 and "/" in m[1] and not m[1].startswith("_kit/"):
+            item["widgetId"] = m[1].split("/", 1)[0]
+        files.append(item)
+    return {"git": True, "branch": (git("rev-parse", "--abbrev-ref", "HEAD") or "").strip(),
+            "head": (git("rev-parse", "--short", "HEAD") or "").strip(), "projectPath": rel,
+            "files": files, "diff": git("diff", "HEAD", "--", ".") or ""}
+
+
 class Studio:
     def __init__(self, root: str, port: int) -> None:
         self.root = root
@@ -79,6 +115,8 @@ class Studio:
             root_key = hashlib.sha256(os.path.normcase(os.path.realpath(self.root)).encode()).hexdigest()[:16]
             return 200, {**project_document(snap), "rootKey": root_key, "rootLabel": os.path.basename(self.root),
                          "cliProject": self.root}
+        if path == "/api/git-status":
+            return 200, git_status(self.root, snap)
         if path == "/api/revision":
             return 200, {"revision": snap.revision}
         if path == "/api/validate":

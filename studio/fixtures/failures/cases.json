@@ -82,12 +82,12 @@
       "ops": [
         {
           "op": "remove",
-          "path": "/message/text/ru"
+          "path": "/message/text/en"
         }
       ],
       "expect": {
         "code": "DEFAULT_LOCALE_TEXT_MISSING",
-        "pointer": "/message/text/ru"
+        "pointer": "/message/text/en"
       }
     },
     {
