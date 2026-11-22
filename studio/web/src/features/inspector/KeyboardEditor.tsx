@@ -9,7 +9,7 @@ import { useStudio } from "@/lib/studio";
 import { defaultsForType } from "./ActionEditor";
 import { diagsAt, EnumSelect, Field, FieldDiags, LocaleText, SelectField } from "./fields";
 
-export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Doc; diags: Diag[] }) {
+export function KeyboardEditor({ sid, screen, diags, showType = true, onlyType }: { sid: string; screen: Doc; diags: Diag[]; showType?: boolean; onlyType?: boolean }) {
   const { store, loaded, caps, editLocale, setHighlight } = useStudio();
   const def = defaultLocale(loaded.project);
   const kb = screen.keyboard ?? { type: "none" };
@@ -26,20 +26,20 @@ export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Do
   const hasRows = ["inline", "reply"].includes(kb.type);
   return (
     <div className="space-y-3" onFocus={() => setHighlight({ sid, part: "keyboard" })}>
-      <SelectField id={fieldDomId(sid, "/keyboard/type")} label="Keyboard type" value={kb.type ?? "none"} disabled={st}
+      {(showType || onlyType) && <SelectField id={fieldDomId(sid, onlyType ? "/keyboard/type" : "/keyboard/type")} label="Keyboard type" value={kb.type ?? "none"} disabled={st}
         options={KEYBOARD_TYPES.map((t) => ({ value: t, label: t }))} diags={diagsAt(diags, "/keyboard/type")}
         onChange={(v) => store.updateScreen(sid, (doc) => {
           doc.keyboard = { ...(doc.keyboard ?? {}), type: v };
           if (!["inline", "reply"].includes(v)) delete doc.keyboard.rows;
           else doc.keyboard.rows ??= [];
           if (v !== "force_reply") delete doc.keyboard.placeholder;
-        })} />
-      {kb.type === "force_reply" && (
+        })} />}
+      {!onlyType && kb.type === "force_reply" && (
         <LocaleText sid={sid} pointer="/keyboard/placeholder" label="Input placeholder" value={kb.placeholder} multiline={false}
           disabled={!caps.text} diags={diags} hl={{ part: "input" }}
           onChange={(loc, text) => store.updateScreen(sid, (doc) => { doc.keyboard.placeholder = { ...(typeof doc.keyboard.placeholder === "object" ? doc.keyboard.placeholder : {}), [loc]: text }; }, `ph:${loc}`)} />
       )}
-      {hasRows && (
+      {!onlyType && hasRows && (
         <ol className="space-y-2" aria-label="Keyboard rows">
           {rows.map((row, r) => (
             <li key={r} className="rounded-lg bg-muted/50 p-2">
@@ -87,7 +87,7 @@ export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Do
           ))}
         </ol>
       )}
-      {hasRows && caps.structure && unplaced.length > 0 && (
+      {!onlyType && hasRows && caps.structure && unplaced.length > 0 && (
         <div className="w-64">
           <EnumSelect size="sm" label="New row with an action" value=""
             options={[{ value: "", label: "+ New row with…" }, ...unplaced.map((a) => ({ value: a, label: a }))]}

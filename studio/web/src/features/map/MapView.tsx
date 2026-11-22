@@ -16,7 +16,7 @@ import { useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
 import { RequestChange } from "../changes/Tray";
 import { firstLine } from "../inspector/fields";
-import { hlFor, ScreenEditor } from "../inspector/ScreenInspector";
+import { ChangeBadges, hlFor, ScreenEditor } from "../inspector/ScreenInspector";
 import { Bubble, ForceReplyBar, ReplyKeyboard, type Hl } from "../preview/Telegram";
 import { computeLayout, entryLabel, entryNodeId, layoutKey, mapEdges, midpoint, roundedPath, smoothPath, type Layout, type Pt } from "./graph";
 
@@ -31,7 +31,7 @@ type EntryNodeT = Node<{ label: string; kind: string }, "entry">;
 const port = (id: string) => <Handle type="source" position={Position.Right} id={id} className="bui-port" style={{ right: -14 }} />;
 
 const ScreenNode = memo(function ScreenNode({ data }: NodeProps<ScreenNodeT>) {
-  const { sid, logical, kind, draft, errors, hl, unplaced, input, flash } = data;
+  const { sid, logical, kind, errors, hl, unplaced, input, flash } = data;
   const kt = logical.keyboard.type;
   const tone = kind === "error" ? "bg-red-500" : kind === "notification" ? "bg-amber-500" : kind === "entry" ? "bg-sky-500" : "bg-slate-400";
   return (
@@ -41,7 +41,7 @@ const ScreenNode = memo(function ScreenNode({ data }: NodeProps<ScreenNodeT>) {
         <span className={cn("size-2 shrink-0 rounded-full", tone)} aria-hidden />
         <span className="text-[10.5px] text-muted-foreground">{kind}</span>
         <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] font-semibold" title={sid}>{sid}</span>
-        {draft && <span className="rounded-full bg-amber-100 px-1.5 text-[10px] font-medium text-amber-900">draft</span>}
+        <ChangeBadges kind="screen" id={sid} compact />
         {errors > 0 && <span className="rounded-full bg-red-100 px-1.5 text-[10px] font-medium text-red-800">{errors}</span>}
         <button type="button" className="nodrag rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Copy ID ${sid}`} title="Copy ID"
           onClick={(e) => { e.stopPropagation(); data.onCopy(sid); }}><Copy className="size-3.5" /></button>
@@ -123,6 +123,8 @@ function RoutedEdge({ id, sourceX, sourceY, targetX, targetY, data, markerEnd, s
 }
 
 const nodeTypes = { screen: ScreenNode, entry: EntryNode };
+const PANEL_KEY = "bot-ui-studio:panel-width";
+const PANEL_DEFAULT = 780;
 const edgeTypes = { routed: RoutedEdge };
 
 function MapSearch({ onPick }: { onPick: (sid: string) => void }) {
@@ -330,6 +332,19 @@ export function MapView({ id }: { id: string | null }) {
     });
   }, [setHighlight]);
   const close = () => { setHighlight(null); go("map"); };
+  const [panelW, setPanelW] = useState(() => { try { return Number(localStorage.getItem(PANEL_KEY)) || PANEL_DEFAULT; } catch { return PANEL_DEFAULT; } });
+  const setPanel = (w: number) => {
+    const c = Math.round(Math.max(420, Math.min(w, Math.max(480, window.innerWidth * 0.72))));
+    setPanelW(c);
+    try { localStorage.setItem(PANEL_KEY, String(c)); } catch { /* storage blocked */ }
+  };
+  const startResize = (e: React.PointerEvent) => {
+    (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
+    const move = (ev: PointerEvent) => setPanel(window.innerWidth - ev.clientX);
+    const up = () => { removeEventListener("pointermove", move); removeEventListener("pointerup", up); };
+    addEventListener("pointermove", move);
+    addEventListener("pointerup", up);
+  };
   const editor = selected ? <ScreenEditor key={selected} sid={selected} selectedAction={selectedAction} onClose={close} /> : null;
   return (
     <ReactFlowProvider>
@@ -339,7 +354,16 @@ export function MapView({ id }: { id: string | null }) {
           <Canvas selected={selected} selectedAction={selectedAction} onAction={onAction} />
         </div>
         {!isMobile && editor && (
-          <aside className="h-[calc(100svh-3.5rem)] w-[460px] shrink-0 border-l bg-background xl:w-[500px]" aria-label="Screen editor">{editor}</aside>
+          <aside className="relative h-[calc(100svh-3.5rem)] shrink-0 border-l bg-background" style={{ width: panelW }} aria-label="Screen editor">
+            <div role="separator" aria-orientation="vertical" aria-label="Resize the editor panel" aria-valuenow={panelW} aria-valuemin={420} aria-valuemax={1400} tabIndex={0}
+              title="Drag to resize; double-click to reset"
+              className="group absolute inset-y-0 -left-1.5 z-20 flex w-3 cursor-col-resize items-center justify-center"
+              onPointerDown={startResize} onDoubleClick={() => setPanel(PANEL_DEFAULT)}
+              onKeyDown={(e) => { if (e.key === "ArrowLeft") setPanel(panelW + 40); if (e.key === "ArrowRight") setPanel(panelW - 40); }}>
+              <span className="h-12 w-1 rounded-full bg-border group-hover:bg-foreground/40 group-focus-visible:bg-ring" />
+            </div>
+            {editor}
+          </aside>
         )}
       </div>
       {isMobile && (

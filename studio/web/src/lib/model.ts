@@ -232,7 +232,9 @@ export function scrollWithin(el: HTMLElement, align: "start" | "center" = "start
   const root = el.closest<HTMLElement>("[data-scroll-root]");
   if (!root) return;
   const sticky = root.querySelector<HTMLElement>("[data-scroll-sticky]");
-  const offset = sticky ? sticky.offsetHeight : 0;
+  // Only a sticky block above the element (stacked layout) covers it; a side column does not.
+  const sr = sticky?.getBoundingClientRect(), er = el.getBoundingClientRect();
+  const offset = sticky && sr && sr.left < er.right && sr.right > er.left ? sticky.offsetHeight : 0;
   const top = el.getBoundingClientRect().top - root.getBoundingClientRect().top + root.scrollTop;
   const room = root.clientHeight - offset;
   root.scrollTo({ top: align === "center" ? top - offset - Math.max(0, (room - el.offsetHeight) / 2) : top - offset - 12, behavior: "smooth" });

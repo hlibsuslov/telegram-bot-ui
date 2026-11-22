@@ -149,7 +149,7 @@ export function ScreensView({ id }: { id: string | null }) {
             <Button asChild size="sm" variant="ghost" className="md:hidden"><a href="#/screens"><ArrowLeft className="size-4" /> All screens</a></Button>
             <Button asChild size="sm" variant="outline" className="ml-auto"><a href={href("map", id)}><MapIcon className="size-4" /> Show on the map</a></Button>
           </div>
-          {exists ? <div className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col"><ScreenEditor key={id} sid={id} /></div>
+          {exists ? <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col"><ScreenEditor key={id} sid={id} /></div>
             : <p className="p-4 text-sm text-muted-foreground">No screen <span className="font-mono">{id}</span> in this project.</p>}
         </main>
       ) : (

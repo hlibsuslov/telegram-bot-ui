@@ -11,7 +11,8 @@ export function parseHash(hash: string): Route {
   if (head === "screen") return { section: "map", id: id || null };
   if (head === "screens") return { section: "screens", id: id || null };
   if (head === "widgets" || head === "widget") return { section: "widgets", id: id || null };
-  if (head === "simulator" || head === "changes" || head === "task" || head === "about" || head === "map") return { section: head, id: id || null };
+  if (head === "task") return { section: "changes", id: "prompt" };
+  if (head === "simulator" || head === "changes" || head === "about" || head === "map") return { section: head, id: id || null };
   return { section: "map", id: null };
 }
 
@@ -19,6 +20,7 @@ export function href(section: Section, id?: string | null): string {
   if (section === "map" && id) return `#/screen/${encodeURIComponent(id)}`;
   if (section === "screens" && id) return `#/screens/${encodeURIComponent(id)}`;
   if (section === "widgets" && id) return `#/widgets/${encodeURIComponent(id)}`;
+  if (section === "changes" && id) return `#/changes/${encodeURIComponent(id)}`;
   return `#/${section}`;
 }
 

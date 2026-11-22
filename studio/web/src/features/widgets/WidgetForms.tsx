@@ -11,6 +11,7 @@ import { defaultLocale, exampleValues, locales, utf8Bytes } from "@/lib/model";
 import { useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
 import { Field, ScreenPicker, Segmented } from "../inspector/fields";
+import { BeginnerDataForm, type FieldSpec } from "./DataFields";
 import { ScreenPreview } from "../preview/Telegram";
 
 export type UpdateMeta = (fn: (meta: Doc) => void) => void;
@@ -74,7 +75,8 @@ function ValueInput({ id, value, onChange }: { id: string; value: any; onChange:
   );
 }
 
-function DataEditor({ wid, state, field, value, update, limit }: { wid: string; state: string; field: "chatData" | "publicData"; value: Doc | undefined; update: UpdateMeta; limit: number }) {
+function DataEditor({ wid, state, field, value, update, limit, specs }: { wid: string; state: string; field: "chatData" | "publicData"; value: Doc | undefined; update: UpdateMeta; limit: number; specs?: Record<string, FieldSpec> }) {
+  const { pro } = useStudio();
   const [raw, setRaw] = useState(false);
   const [text, setText] = useState(() => JSON.stringify(value ?? {}, null, 2));
   const [err, setErr] = useState("");
@@ -84,16 +86,20 @@ function DataEditor({ wid, state, field, value, update, limit }: { wid: string; 
   return (
     <div className="space-y-2 rounded-lg bg-muted/40 p-3">
       <div className="flex flex-wrap items-center gap-2">
-        <span className="font-mono text-xs font-semibold">{field === "chatData" ? "chat_data" : "public_data"}</span>
+        <span className="text-xs font-semibold">{pro ? <span className="font-mono">{field === "chatData" ? "chat_data" : "public_data"}</span> : field === "chatData" ? "Data for this chat" : "Shared data (same for everyone)"}</span>
         <span className={cn("font-mono text-[11px]", bytes > limit ? "font-semibold text-destructive" : "text-muted-foreground")}>{bytes} / {limit} B</span>
         <span className="h-1.5 min-w-16 flex-1 overflow-hidden rounded-full bg-muted" role="meter" aria-label={`${field} size`} aria-valuemin={0} aria-valuemax={limit} aria-valuenow={bytes}>
           <span className={cn("block h-full rounded-full", bytes > limit ? "bg-destructive" : bytes > limit * 0.85 ? "bg-amber-500" : "bg-emerald-600")} style={{ width: `${Math.min(100, (bytes / limit) * 100)}%` }} />
         </span>
-        <span><Segmented size="xs" label={`${field} editor`} value={raw ? "raw" : "form"} onChange={(v) => { setRaw(v === "raw"); setText(JSON.stringify(value ?? {}, null, 2)); setErr(""); }}
-          options={[{ value: "form", label: "Form" }, { value: "raw", label: "JSON" }]} /></span>
+        {pro && <span><Segmented size="xs" label={`${field} editor`} value={raw ? "raw" : "form"} onChange={(v) => { setRaw(v === "raw"); setText(JSON.stringify(value ?? {}, null, 2)); setErr(""); }}
+          options={[{ value: "form", label: "Form" }, { value: "raw", label: "JSON" }]} /></span>}
       </div>
-      {!value && !raw && <p className="text-xs text-muted-foreground">Not sent in this state. <button type="button" className="underline" onClick={() => set(() => undefined)}>Add an empty object</button></p>}
-      {value && !raw && isObj && (
+      {!value && !raw && !specs && <p className="text-xs text-muted-foreground">Not sent in this state. <button type="button" className="underline" onClick={() => set(() => undefined)}>Add an empty object</button></p>}
+      {!pro && (value && isObj || specs) && (
+        <BeginnerDataForm id={`${wid}-${state}-${field}`} value={(isObj ? value : {}) as Doc} specs={specs ?? {}} onChange={(k, v) => set((d) => { if (v === undefined) delete d[k]; else d[k] = v; })} />
+      )}
+      {!pro && value && !isObj && <p className="text-xs text-muted-foreground">This data is a list; edit it in Pro.</p>}
+      {pro && value && !raw && isObj && (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(9rem,1fr))] gap-2">
           {Object.entries(value).map(([k, v]) => (
             <Field key={k} label={<span className="font-mono">{k}</span>} htmlFor={`${wid}-${state}-${field}-${k}`}>
@@ -102,7 +108,7 @@ function DataEditor({ wid, state, field, value, update, limit }: { wid: string; 
           ))}
         </div>
       )}
-      {(raw || (value && !isObj)) && (
+      {pro && (raw || (value && !isObj)) && (
         <>
           <Textarea rows={6} value={text} className="font-mono text-xs" aria-label={`${field} JSON`} onChange={(e) => {
             setText(e.target.value);
@@ -116,6 +122,7 @@ function DataEditor({ wid, state, field, value, update, limit }: { wid: string; 
 }
 
 export function DataSection({ wid, meta, update, state, setState, limit, bare }: { wid: string; meta: Doc; update: UpdateMeta; state: string; setState: (s: string) => void; limit: number; bare?: boolean }) {
+  const { pro } = useStudio();
   const states = Object.keys(meta.states ?? {});
   const [name, setName] = useState("");
   const [renaming, setRenaming] = useState<string | null>(null);
@@ -141,9 +148,9 @@ export function DataSection({ wid, meta, update, state, setState, limit, bare }:
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <form className="flex items-center gap-1.5" onSubmit={(e) => { e.preventDefault(); if (!valid) return; update((m) => { m.states = { ...(m.states ?? {}), [name]: JSON.parse(JSON.stringify(st)) }; }); setState(name); setName(""); }}>
+        <form className="flex flex-wrap items-center gap-1.5" onSubmit={(e) => { e.preventDefault(); if (!valid) return; update((m) => { m.states = { ...(m.states ?? {}), [name]: JSON.parse(JSON.stringify(st)) }; }); setState(name); setName(""); }}>
           <Input value={renaming ? "" : name} onChange={(e) => setName(e.target.value.trim())} placeholder="new-state" className="h-8 w-36 font-mono text-xs" aria-label="New state name" />
-          <Button type="submit" size="sm" variant="outline" className="h-8" disabled={!valid || !!renaming}><Plus className="size-3.5" /> Copy of {state}</Button>
+          <Button type="submit" size="sm" variant="outline" className="h-8" disabled={!valid || !!renaming}><Plus className="size-3.5" /> Add a test state<span className="hidden sm:inline">&nbsp;(copy of {state})</span></Button>
         </form>
         <Button size="sm" variant="ghost" className="h-8" onClick={() => { setName(state); setRenaming(state); }}><Pencil className="size-3.5" /> Rename</Button>
         {states.length > 1 && (
@@ -152,8 +159,10 @@ export function DataSection({ wid, meta, update, state, setState, limit, bare }:
           </Button>
         )}
       </div>
-      <DataEditor key={`${state}-chat`} wid={wid} state={state} field="chatData" value={st.chatData} update={update} limit={limit} />
-      <DataEditor key={`${state}-public`} wid={wid} state={state} field="publicData" value={st.publicData} update={update} limit={limit} />
+      <DataEditor key={`${state}-chat`} wid={wid} state={state} field="chatData" value={st.chatData} update={update} limit={limit} specs={meta.dataFields?.chatData} />
+      {(pro || st.publicData || meta.dataFields?.publicData) && (
+        <DataEditor key={`${state}-public`} wid={wid} state={state} field="publicData" value={st.publicData} update={update} limit={limit} specs={meta.dataFields?.publicData} />
+      )}
     </Section>
   );
 }

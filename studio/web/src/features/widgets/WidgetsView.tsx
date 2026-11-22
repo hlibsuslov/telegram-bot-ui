@@ -2,7 +2,7 @@
 // Check) beside a sticky live preview with its own toolbar. Builds come from /api/widget/build
 // (debounced, late answers dropped); the frame is the sandboxed /preview-frame.html.
 import {
-  ArrowDownLeft, ArrowUpRight, Check, ChevronDown, ChevronRight, Copy, Download, Expand, ImageUp, Plus, RefreshCw, RotateCcw, Save, Search, WifiOff,
+  ArrowDownLeft, ArrowUpRight, Check, ChevronDown, ChevronRight, Code2, Copy, Database, Download, Expand, ImageUp, Images, Library, MessageSquareText, Plus, Puzzle, RefreshCw, RotateCcw, Save, Send, ShieldCheck, WifiOff,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { type Doc } from "@/core/render.ts";
@@ -26,6 +26,7 @@ import { renderScreen } from "@/core/render.ts";
 import { composeDoc, frameScheme, type Runtime } from "./frame";
 import { insertMarker, marker, PhotoToSvg } from "./PhotoToSvg";
 import { DataSection, MessageSection, SendSection } from "./WidgetForms";
+import { WidgetLibrary, type Template } from "./WidgetLibrary";
 
 interface Build {
   ok: boolean; html: string; rawBytes: number; compressedBytes: number; limits: { rawBytes: number; compressedBytes: number; dataBytes: number };
@@ -59,7 +60,7 @@ const KIND_STYLE: Record<string, string> = {
   error: "bg-red-100 text-red-900 dark:bg-red-950 dark:text-red-100",
 };
 
-function Timeline({ events, onClear }: { events: Ev[]; onClear: () => void }) {
+function Timeline({ events, onClear, pro }: { events: Ev[]; onClear: () => void; pro: boolean }) {
   const [open, setOpen] = useState<number | null>(null);
   const t0 = events[0]?.at ?? 0;
   return (
@@ -76,13 +77,13 @@ function Timeline({ events, onClear }: { events: Ev[]; onClear: () => void }) {
           const expanded = open === e.n;
           return (
             <li key={e.n} className="border-b last:border-b-0">
-              <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-muted/50" aria-expanded={e.json !== undefined ? expanded : undefined}
-                onClick={() => e.json !== undefined && setOpen(expanded ? null : e.n)}>
+              <button type="button" className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-muted/50" aria-expanded={pro && e.json !== undefined ? expanded : undefined}
+                onClick={() => pro && e.json !== undefined && setOpen(expanded ? null : e.n)}>
                 <Icon className={cn("size-3.5 shrink-0", e.dir === "out" ? "text-sky-600" : e.dir === "in" ? "text-emerald-600" : "text-muted-foreground")} aria-label={e.dir === "out" ? "from the widget" : e.dir === "in" ? "to the widget" : "info"} />
                 <span className={cn("w-14 shrink-0 rounded-full px-1.5 py-0.5 text-center text-[10px] font-medium", KIND_STYLE[e.kind] ?? "bg-muted text-muted-foreground")}>{e.kind}</span>
                 <span className="min-w-0 flex-1 truncate font-mono text-[11.5px]">{e.text}</span>
                 <span className="shrink-0 font-mono text-[10.5px] text-muted-foreground tabular-nums">+{((e.at - t0) / 1000).toFixed(2)}s</span>
-                {e.json !== undefined && <ChevronRight className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", expanded && "rotate-90")} aria-hidden />}
+                {pro && e.json !== undefined && <ChevronRight className={cn("size-3.5 shrink-0 text-muted-foreground transition-transform", expanded && "rotate-90")} aria-hidden />}
               </button>
               {expanded && <div className="px-3 pb-2"><CodeBlock code={JSON.stringify(e.json, null, 2)} lang="json" maxHeight="16rem" wrap /></div>}
             </li>
@@ -96,12 +97,15 @@ function Timeline({ events, onClear }: { events: Ev[]; onClear: () => void }) {
 const parseMaybe = (s: unknown) => { if (typeof s !== "string") return s; try { return JSON.parse(s); } catch { return s; } };
 
 /** One numbered, collapsible step of the flow. */
-function Step({ n, title, hint, open, onToggle, children, right }: { n: number; title: string; hint: string; open: boolean; onToggle: () => void; children: ReactNode; right?: ReactNode }) {
+function Step({ n, icon: Icon, title, hint, open, onToggle, children, right }: { n: number; icon: typeof Plus; title: string; hint: string; open: boolean; onToggle: () => void; children: ReactNode; right?: ReactNode }) {
   return (
     <section className="rounded-2xl bg-card ring-1 ring-border" aria-labelledby={`wstep-${n}`}>
       <div className="flex items-start gap-3 p-4">
         <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`wstep-${n}-body`} className="flex min-w-0 flex-1 items-start gap-3 text-left">
-          <span className={cn("flex size-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold", open ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>{n}</span>
+          <span className={cn("relative flex size-8 shrink-0 items-center justify-center rounded-xl", open ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>
+            <Icon className="size-4" aria-hidden />
+            <span className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-background font-mono text-[9.5px] font-semibold text-foreground ring-1 ring-border">{n}</span>
+          </span>
           <span className="min-w-0 flex-1">
             <span id={`wstep-${n}`} className="block text-[15px] font-semibold tracking-tight">{title}</span>
             <span className="block text-xs text-muted-foreground">{hint}</span>
@@ -142,7 +146,7 @@ function WidgetSwitcher({ current, onNew }: { current: string | null; onNew: () 
         </div>
         <div className="mt-1 border-t pt-1">
           <button type="button" onClick={() => { setOpen(false); onNew(); }} className="flex w-full items-center gap-2 rounded-md px-2.5 py-2 text-left text-sm hover:bg-muted">
-            <Plus className="size-4" /> New widget
+            <Library className="size-4" /> New widget from the library
           </button>
         </div>
       </PopoverContent>
@@ -150,23 +154,23 @@ function WidgetSwitcher({ current, onNew }: { current: string | null; onNew: () 
   );
 }
 
-interface Template { id: string; title: string; summary: string }
-
-function NewWidgetDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+function NewWidgetDialog({ open, onOpenChange, preset }: { open: boolean; onOpenChange: (o: boolean) => void; preset: Template | null }) {
   const { loaded, store, reload, replaceLoaded, refreshGit, notify } = useStudio();
-  const [templates, setTemplates] = useState<Template[] | null>(null);
   const [id, setId] = useState("");
   const [title, setTitle] = useState("");
-  const [template, setTemplate] = useState("blank");
-  const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const template = preset?.id ?? "blank";
   useEffect(() => {
-    if (!open || templates) return;
-    api<{ templates: Template[] }>("/api/widget/templates", {}).then((r) => setTemplates(r.ok ? r.data.templates ?? [] : []));
-  }, [open, templates]);
+    if (!open) return;
+    setErr("");
+    if (preset && preset.id !== "blank") {
+      const base = preset.id.split(":").pop()!.toLowerCase().replace(/[^a-z0-9_-]+/g, "-").replace(/^[^a-z0-9]+/, "");
+      setId((v) => v || (loaded.widgets[base] ? `${base}-2` : base));
+      setTitle((v) => v || preset.title);
+    }
+  }, [open, preset, loaded.widgets]);
   const problem = !id ? "" : id.length > 64 ? "At most 64 characters." : !WIDGET_ID_RE.test(id) ? "One segment: lowercase letters, digits, _ and -." : loaded.widgets[id] ? "A widget with this ID exists." : "";
-  const shown = (templates ?? []).filter((t) => `${t.id} ${t.title} ${t.summary}`.toLowerCase().includes(q.toLowerCase()));
   const create = async () => {
     if (!id || problem) return;
     setBusy(true);
@@ -186,7 +190,7 @@ function NewWidgetDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
       void refreshGit();
       notify(`Created widgets/${id}/ (saved to files, not committed)`, "success");
       onOpenChange(false);
-      setId(""); setTitle(""); setTemplate("blank");
+      setId(""); setTitle("");
       go("widgets", id);
     } finally {
       setBusy(false);
@@ -194,41 +198,23 @@ function NewWidgetDialog({ open, onOpenChange }: { open: boolean; onOpenChange: 
   };
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-2xl">
+      <DialogContent>
         <form onSubmit={(e) => { e.preventDefault(); void create(); }} className="space-y-4">
           <DialogHeader>
-            <DialogTitle>New widget</DialogTitle>
-            <DialogDescription>Creates widgets/&lt;id&gt;/ in your project (saved to files, not committed). Start empty or from a ready example.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2"><Plus className="size-5" /> New widget</DialogTitle>
+            <DialogDescription>Creates widgets/&lt;id&gt;/ in your project (saved to files, not committed).</DialogDescription>
           </DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Widget ID" htmlFor="new-widget-id" hint={problem || "Lowercase letters, digits, _ and -; it never changes later."}>
-              <Input id="new-widget-id" autoFocus value={id} onChange={(e) => setId(e.target.value.trim())} placeholder="order-card" className="font-mono"
-                aria-invalid={!!problem || undefined} />
-            </Field>
-            <Field label="Title (optional)" htmlFor="new-widget-title">
-              <Input id="new-widget-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Order card" />
-            </Field>
+          <div className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 text-sm">
+            <Library className="size-4 text-muted-foreground" aria-hidden />
+            <span className="min-w-0 flex-1">Starting from <b>{preset?.title ?? "Blank"}</b></span>
+            <a href={href("widgets", "library")} onClick={() => onOpenChange(false)} className="text-xs underline">Choose another</a>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-muted-foreground">Start from</span>
-              <div className="relative ml-auto w-56">
-                <Search className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden />
-                <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search examples" aria-label="Search templates" className="h-8 pl-8 text-xs" />
-              </div>
-            </div>
-            <div role="radiogroup" aria-label="Template" className="grid max-h-[46svh] gap-2 overflow-y-auto p-0.5 sm:grid-cols-2">
-              {templates === null && <p className="text-xs text-muted-foreground">Loading templates…</p>}
-              {shown.map((t) => (
-                <button key={t.id} type="button" role="radio" aria-checked={template === t.id} onClick={() => setTemplate(t.id)}
-                  className="rounded-xl p-3 text-left ring-1 ring-border hover:bg-muted/50 aria-checked:bg-muted aria-checked:ring-2 aria-checked:ring-foreground">
-                  <span className="flex items-center gap-2 text-sm font-medium">{t.title}{t.id === "blank" && <span className="rounded-full bg-muted px-1.5 text-[10px] text-muted-foreground">empty</span>}</span>
-                  <span className="mt-0.5 line-clamp-2 block text-xs text-muted-foreground">{t.summary}</span>
-                </button>
-              ))}
-              {templates && !shown.length && <p className="text-xs text-muted-foreground">No example matches “{q}”.</p>}
-            </div>
-          </div>
+          <Field label="Widget ID" htmlFor="new-widget-id" hint={problem || "Lowercase letters, digits, _ and -; it never changes later."}>
+            <Input id="new-widget-id" autoFocus value={id} onChange={(e) => setId(e.target.value.trim())} placeholder="order-card" className="font-mono" aria-invalid={!!problem || undefined} />
+          </Field>
+          <Field label="Title (for you)" htmlFor="new-widget-title">
+            <Input id="new-widget-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Order card" />
+          </Field>
           {err && <p role="alert" className="text-sm text-destructive">{err}</p>}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
@@ -245,7 +231,7 @@ function PreviewToolbar({ children }: { children: ReactNode }) {
 }
 
 function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
-  const { store, loaded, notify, reload, replaceLoaded, refreshGit, saving: savingRef } = useStudio();
+  const { store, loaded, notify, reload, replaceLoaded, refreshGit, saving: savingRef, pro, setPro } = useStudio();
   const isMobile = useIsMobile();
   const files = store.widgetFiles(wid);
   const draft = !!store.data.widgets[wid];
@@ -509,10 +495,10 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
         <div className="min-w-0 space-y-3 lg:order-1">
           {metaError && <Alert variant="destructive"><AlertTitle>widget.json is not valid JSON</AlertTitle><AlertDescription>{metaError}. Fix it in step 2; the forms are paused.</AlertDescription></Alert>}
 
-          <Step n={1} title="Widget" hint="Which widget, its name and the languages it is built in." open={open.has(1)} onToggle={() => toggle(1)}>
+          <Step n={1} icon={Puzzle} title={pro ? "Widget" : "Your widget"} hint={pro ? "Which widget, its name and the languages it is built in." : "Pick a widget, give it a name and choose its languages."} open={open.has(1)} onToggle={() => toggle(1)}>
             <div className="grid gap-3 sm:grid-cols-2">
               <Field label="Widget">
-                <div className="flex items-center gap-2"><WidgetSwitcher current={wid} onNew={onNew} /><Button size="sm" variant="outline" onClick={onNew}><Plus className="size-3.5" /> New</Button></div>
+                <div className="flex items-center gap-2"><WidgetSwitcher current={wid} onNew={onNew} /><Button size="sm" variant="outline" onClick={onNew}><Library className="size-3.5" /> Library</Button></div>
               </Field>
               <Field label="Title (for you; not shown to users)" htmlFor={`${wid}-title`}>
                 <Input id={`${wid}-title`} value={meta.title ?? ""} disabled={!!metaError} onChange={(e) => updateMeta((m) => { m.title = e.target.value; })} />
@@ -532,10 +518,16 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
             </Field>
           </Step>
 
-          <Step n={2} title="Look" hint="The HTML, CSS and JS that draw it, and its images. Most of the time you can leave this closed." open={open.has(2)} onToggle={() => toggle(2)}
-            right={<Button size="sm" variant="ghost" className="h-8" onClick={() => setWide(true)}><Expand className="size-3.5" /> Open wide</Button>}>
-            {codeEditor(false)}
-            <details className="rounded-xl bg-muted/40 p-3">
+          <Step n={2} icon={pro ? Code2 : Images} title={pro ? "Look" : "Pictures"} hint={pro ? "The HTML, CSS and JS that draw it, and its images. Most of the time you can leave this closed." : "Logos and pictures inside the widget. Turn a photo into a small vector picture."}
+            open={open.has(2)} onToggle={() => toggle(2)}
+            right={pro ? <Button size="sm" variant="ghost" className="h-8" onClick={() => setWide(true)} aria-label="Open the code wide"><Expand className="size-3.5" /> Open wide</Button> : undefined}>
+            {pro ? codeEditor(false) : (
+              <p className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                <Code2 className="size-4 shrink-0" aria-hidden /> The code of the widget is hidden in Beginner mode.
+                <button type="button" className="ml-auto shrink-0 font-medium text-foreground underline" onClick={() => setPro(true)}>Open code (Pro)</button>
+              </p>
+            )}
+            <details className="rounded-xl bg-muted/40 p-3" open={!pro}>
               <summary className="flex cursor-pointer items-center gap-2 text-sm font-medium"><ImageUp className="size-4" /> Images (SVG){svgs.length > 0 && <span className="text-xs text-muted-foreground">· {svgs.length}</span>}</summary>
               <div className="mt-3 space-y-3">
                 <p className="text-xs text-muted-foreground">A <code className="font-mono">&lt;!--@file name.svg--&gt;</code> marker in the HTML puts the image there. Turn a photo or logo into a small SVG below.</p>
@@ -557,21 +549,21 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
             </details>
           </Step>
 
-          <Step n={3} title="What the bot sends (chat_data) and test states" open={open.has(3)} onToggle={() => toggle(3)}
-            hint="chat_data is the small per-message data your bot writes for the widget; states are only test examples for this preview.">
+          <Step n={3} icon={Database} title={pro ? "What the bot sends (chat_data) and test states" : "Test data"} open={open.has(3)} onToggle={() => toggle(3)}
+            hint={pro ? "chat_data is the small per-message data your bot writes for the widget; states are only test examples for this preview." : "Test data: what the bot puts into this widget. Pick an example state to see it."}>
             <div className={cn(metaError && "pointer-events-none opacity-50")}>
               <DataSection bare wid={wid} meta={meta} update={updateMeta} state={state} setState={setState} limit={limits.dataBytes} />
             </div>
           </Step>
 
-          <Step n={4} title="Message" hint="The caption under the widget, how it is sent, and the screen used where widgets are unavailable." open={open.has(4)} onToggle={() => toggle(4)}>
+          <Step n={4} icon={MessageSquareText} title={pro ? "Message" : "Message under the widget"} hint={pro ? "The caption under the widget, how it is sent, and the screen used where widgets are unavailable." : "The text under the widget, and what people see where widgets do not work."} open={open.has(4)} onToggle={() => toggle(4)}>
             <div className={cn("space-y-5", metaError && "pointer-events-none opacity-50")}>
               <MessageSection bare wid={wid} meta={meta} update={updateMeta} lang={lang} />
-              <div className="border-t pt-4"><p className="mb-2 text-xs font-semibold">How it is sent (sendWidget)</p><SendSection bare meta={meta} update={updateMeta} /></div>
+              <div className="border-t pt-4"><p className="mb-2 flex items-center gap-1.5 text-xs font-semibold"><Send className="size-3.5" aria-hidden /> {pro ? "How it is sent (sendWidget)" : "How it is sent"}</p><SendSection bare meta={meta} update={updateMeta} /></div>
             </div>
           </Step>
 
-          <Step n={5} title="Check" hint="Build status, Telegram's size limits and the requests the widget made in the preview." open={open.has(5)} onToggle={() => toggle(5)}>
+          <Step n={5} icon={ShieldCheck} title="Check" hint={pro ? "Build status, the size limits of Telegram and the requests the widget made in the preview." : "Is it small enough for Telegram, and what did it ask the bot?"} open={open.has(5)} onToggle={() => toggle(5)}>
             <div className="space-y-2.5">
               <Meter label="HTML" value={shown?.rawBytes ?? 0} limit={limits.rawBytes} />
               <Meter label="Compressed (zlib-9)" value={shown?.compressedBytes ?? 0} limit={limits.compressedBytes} />
@@ -588,7 +580,7 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
             {(build.current?.warnings?.length ?? 0) > 0 && (
               <Alert><AlertTitle className="text-xs">Warnings</AlertTitle><AlertDescription><ul className="list-disc pl-4 font-mono text-[11px]">{build.current!.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul></AlertDescription></Alert>
             )}
-            <Timeline events={events} onClear={() => setEvents([])} />
+            <Timeline events={events} onClear={() => setEvents([])} pro={pro} />
           </Step>
         </div>
       </div>
@@ -611,10 +603,14 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
           </DialogHeader>
           {exported && (
             <>
-              <CodeView maxHeight="50svh" tabs={[
-                { id: "html", label: "HTML", code: exported.html, lang: "html", filename: `${wid}.${lang}.html`, mime: "text/html" },
-                { id: "payload", label: "sendWidget payload", code: JSON.stringify(exported.payload, null, 2), lang: "json", filename: `${wid}.${lang}.sendWidget.json` },
-              ]} />
+              {pro ? (
+                <CodeView maxHeight="50svh" tabs={[
+                  { id: "html", label: "HTML", code: exported.html, lang: "html", filename: `${wid}.${lang}.html`, mime: "text/html" },
+                  { id: "payload", label: "sendWidget payload", code: JSON.stringify(exported.payload, null, 2), lang: "json", filename: `${wid}.${lang}.sendWidget.json` },
+                ]} />
+              ) : (
+                <p className="rounded-xl bg-muted/50 p-3 text-sm text-muted-foreground">Two files: the widget itself (HTML) and the settings your bot sends with it. Give both to your agent or developer.</p>
+              )}
               <div className="flex flex-wrap justify-end gap-2">
                 <Button variant="outline" onClick={() => download(`${wid}.${lang}.sendWidget.json`, JSON.stringify(exported.payload, null, 2))}><Download className="size-4" /> Payload</Button>
                 <Button onClick={() => download(`${wid}.${lang}.html`, exported.html, "text/html")}><Download className="size-4" /> HTML</Button>
@@ -630,6 +626,7 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
 export function WidgetsView({ id }: { id: string | null }) {
   const { loaded, caps, working } = useStudio();
   const [creating, setCreating] = useState(false);
+  const [preset, setPreset] = useState<Template | null>(null);
   const ids = Object.keys(loaded.widgets).sort();
   if (!caps.widgets) {
     return (
@@ -653,18 +650,25 @@ export function WidgetsView({ id }: { id: string | null }) {
       </div>
     );
   }
+  const dialog = <NewWidgetDialog open={creating} onOpenChange={setCreating} preset={preset} />;
+  if (id === "library") {
+    return <><WidgetLibrary hasWidgets={ids.length > 0} onUse={(t) => { setPreset(t); setCreating(true); }} />{dialog}</>;
+  }
   const wid = id && ids.includes(id) ? id : ids[0];
   return (
     <>
-      {wid ? <Workbench key={wid} wid={wid} onNew={() => setCreating(true)} /> : (
+      {wid ? <Workbench key={wid} wid={wid} onNew={() => go("widgets", "library")} /> : (
         <div className="mx-auto flex w-full max-w-lg flex-1 flex-col items-center justify-center gap-3 p-8 text-center">
-          <ImageUp className="size-8 text-muted-foreground" aria-hidden />
+          <Puzzle className="size-8 text-muted-foreground" aria-hidden />
           <h2 className="text-lg font-semibold">No widgets yet</h2>
           <p className="text-sm text-muted-foreground">A widget is a small interactive card your bot sends in a private chat. Start empty or from one of the ready examples.</p>
-          <Button onClick={() => setCreating(true)}><Plus className="size-4" /> New widget</Button>
+          <div className="flex gap-2">
+            <Button onClick={() => go("widgets", "library")}><Library className="size-4" /> Open the widget library</Button>
+            <Button variant="outline" onClick={() => { setPreset(null); setCreating(true); }}><Plus className="size-4" /> Start blank</Button>
+          </div>
         </div>
       )}
-      <NewWidgetDialog open={creating} onOpenChange={setCreating} />
+      {dialog}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { ChevronRight, Trash2 } from "lucide-react";
 import type { Diag } from "@/core/lint.ts";
 import type { Doc } from "@/core/render.ts";
 import { Button } from "@/components/ui/button";
@@ -121,39 +121,43 @@ export function NavigateTarget({ sid, aid, action, update, disabled, diags }: {
   );
 }
 
-export function ActionEditor({ sid, aid, action, placed, diags, selected }: { sid: string; aid: string; action: Doc; placed: boolean; diags: Diag[]; selected?: boolean }) {
-  const { store, loaded, caps, setHighlight } = useStudio();
-  const def = defaultLocale(loaded.project);
-  const ptr = `/actions/${aid}`;
-  const hl = { part: "action" as const, actionId: aid };
+function useActionUpdate(sid: string, aid: string) {
+  const { store } = useStudio();
   const update = (fn: (a: Doc) => void, key?: string) =>
     store.updateScreen(sid, (doc) => { fn(doc.actions[aid]); }, key ? `${aid}:${key}` : undefined);
   const setLocale = (field: string) => (loc: string, text: string) =>
     update((a) => { a[field] = typeof a[field] === "object" && a[field] ? { ...a[field], [loc]: text } : { [loc]: text }; }, `${field}:${loc}`);
-  const handlers = loaded.project.handlers ?? {};
-  const outcomes: string[] = handlers[action.handlerId]?.outcomes ?? Object.keys(action.outcomes ?? {});
-  const st = !caps.structure;
+  return { update, setLocale };
+}
+
+const TYPE_LABEL: Record<string, string> = {
+  navigate: "opens a screen", back: "goes back", url: "opens a link", answer: "shows a short notice", handler: "runs your bot's code", disabled: "is disabled",
+};
+
+/** Buttons group: what the button says and looks like. */
+export function ButtonCard({ sid, aid, action, placed, diags, selected }: { sid: string; aid: string; action: Doc; placed: boolean; diags: Diag[]; selected?: boolean }) {
+  const { store, loaded, caps, setHighlight, pro } = useStudio();
+  const def = defaultLocale(loaded.project);
+  const ptr = `/actions/${aid}`;
+  const hl = { part: "action" as const, actionId: aid };
+  const { update, setLocale } = useActionUpdate(sid, aid);
   return (
-    <article id={`${fieldDomId(sid, ptr)}-card`} className={cn("scroll-mt-40 space-y-3 rounded-xl border bg-card p-3 transition-shadow", selected && "ring-2 ring-amber-400")}
-      aria-labelledby={`${fieldDomId(sid, ptr)}-h`} onFocus={() => setHighlight({ sid, ...hl })}>
+    <article id={`${fieldDomId(sid, ptr)}-card`} className={cn("scroll-mt-4 space-y-3 rounded-xl bg-card p-3 ring-1 ring-border transition-shadow", selected && "ring-2 ring-amber-400")}
+      aria-label={`Button ${aid}`} onFocus={() => setHighlight({ sid, ...hl })}>
       <header className="flex flex-wrap items-center gap-2">
-        <h4 id={`${fieldDomId(sid, ptr)}-h`} className="font-mono text-sm font-semibold">
-          <span id={fieldDomId(sid, ptr)} tabIndex={-1}>{aid}</span>
-        </h4>
-        {!placed && <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">not on the keyboard</span>}
-        {action.hidden && <span className="rounded-full bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">hidden</span>}
+        <span id={fieldDomId(sid, ptr)} tabIndex={-1} className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px]">{aid}</span>
+        <span className="text-xs text-muted-foreground">{TYPE_LABEL[action.type] ?? action.type}</span>
+        {!placed && <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">not on the keyboard</span>}
         <div className="ml-auto flex items-center gap-1">
-          <div className="w-32">
-            <EnumSelect id={fieldDomId(sid, `${ptr}/type`)} label={`Type of ${aid}`} size="sm" value={action.type ?? ""} disabled={st}
-              options={ACTION_TYPES.map((t) => ({ value: t, label: t }))}
-              onChange={(v) => update((a) => {
-                for (const k of TYPE_KEYS) delete a[k];
-                a.type = v;
-                Object.assign(a, defaultsForType(v, loaded.project, def));
-              })} />
-          </div>
+          {pro && (
+            <div className="w-32">
+              <EnumSelect id={fieldDomId(sid, `${ptr}/type`)} label={`Type of ${aid}`} size="sm" value={action.type ?? ""} disabled={!caps.structure}
+                options={ACTION_TYPES.map((t) => ({ value: t, label: t }))}
+                onChange={(v) => update((a) => { for (const k of TYPE_KEYS) delete a[k]; a.type = v; Object.assign(a, defaultsForType(v, loaded.project, def)); })} />
+            </div>
+          )}
           {caps.structure && (
-            <Button type="button" size="icon" variant="ghost" className="size-8" aria-label={`Delete action ${aid}`}
+            <Button type="button" size="icon" variant="ghost" className="size-8" aria-label={`Delete button ${aid}`} title="Delete this button"
               onClick={() => store.updateScreen(sid, (doc) => {
                 delete doc.actions[aid];
                 if (doc.keyboard?.rows) doc.keyboard.rows = doc.keyboard.rows.map((r: string[]) => r.filter((x) => x !== aid)).filter((r: string[]) => r.length);
@@ -163,59 +167,84 @@ export function ActionEditor({ sid, aid, action, placed, diags, selected }: { si
           )}
         </div>
       </header>
-      <FieldDiags list={diagsAt(diags, `${ptr}/type`)} />
-      <LocaleText sid={sid} pointer={`${ptr}/label`} label="Button label" value={action.label} multiline={false}
-        disabled={!caps.text} diags={diags} onChange={setLocale("label")} hl={hl} />
-      <div className="grid gap-2 sm:grid-cols-2">
-        <SelectField id={fieldDomId(sid, `${ptr}/style`)} label="Button colour" value={action.style ?? ""} disabled={st}
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem]">
+        <LocaleText sid={sid} pointer={`${ptr}/label`} label="Label" value={action.label} multiline={false} disabled={!caps.text} diags={diags} onChange={setLocale("label")} hl={hl} />
+        <SelectField id={fieldDomId(sid, `${ptr}/style`)} label="Colour" value={action.style ?? ""} disabled={!caps.structure}
           options={STYLES.map((s) => ({ value: s, label: STYLE_LABELS[s] ?? s }))} diags={diagsAt(diags, `${ptr}/style`)}
           onChange={(v) => update((a) => { if (v) a.style = v; else delete a.style; })} />
-        {["navigate", "back", "handler"].includes(action.type) && (
-          <SelectField id={fieldDomId(sid, `${ptr}/presentation`)} label="Presentation" value={action.presentation ?? ""} disabled={st}
-            options={[{ value: "", label: "default (edit)" }, { value: "edit", label: "edit the message" }, { value: "send", label: "send a new message" }]}
-            diags={diagsAt(diags, `${ptr}/presentation`)}
-            onChange={(v) => update((a) => { if (v) a.presentation = v; else delete a.presentation; })} />
-        )}
       </div>
+      <FieldDiags list={diagsAt(diags, ptr).filter((d) => d.code !== "NAVIGATE_TARGET")} />
+    </article>
+  );
+}
+
+/** "Where buttons lead" group: the target, rule, outcomes or link of one button. */
+export function ButtonRoute({ sid, aid, action, diags, selected }: { sid: string; aid: string; action: Doc; diags: Diag[]; selected?: boolean }) {
+  const { loaded, caps, setHighlight, editLocale } = useStudio();
+  const def = defaultLocale(loaded.project);
+  const ptr = `/actions/${aid}`;
+  const hl = { part: "action" as const, actionId: aid };
+  const { update, setLocale } = useActionUpdate(sid, aid);
+  const handlers = loaded.project.handlers ?? {};
+  const outcomes: string[] = handlers[action.handlerId]?.outcomes ?? Object.keys(action.outcomes ?? {});
+  const label = typeof action.label === "object" ? action.label?.[editLocale] ?? action.label?.[def] : action.label;
+  if (action.type === "disabled") return null;
+  return (
+    <div className={cn("space-y-2 rounded-xl p-3 ring-1 ring-border", selected && "ring-2 ring-amber-400")} onFocus={() => setHighlight({ sid, ...hl })}>
+      <p className="flex items-center gap-1.5 text-sm"><span className="font-medium">«{label || aid}»</span><ChevronRight className="size-3.5 text-muted-foreground" aria-hidden /><span className="text-xs text-muted-foreground">{TYPE_LABEL[action.type] ?? action.type}</span></p>
       {action.type === "navigate" && <NavigateTarget sid={sid} aid={aid} action={action} update={update} disabled={!caps.rule} diags={diags} />}
       {action.type === "back" && (
-        <TargetSelect sid={sid} pointer={`${ptr}/fallback`} label="Fallback after a restart (no history)" value={action.fallback}
+        <TargetSelect sid={sid} pointer={`${ptr}/fallback`} label="If there is nothing to go back to (after a restart)" value={action.fallback}
           allowEmpty="No fallback" disabled={!caps.rule} diags={diags} hl={hl}
           onChange={(to) => update((a) => { if (to) a.fallback = to; else delete a.fallback; })} />
       )}
       {action.type === "url" && (
-        <Field label="URL (never followed by the map or the simulator)" htmlFor={fieldDomId(sid, `${ptr}/url`)}>
-          <Input id={fieldDomId(sid, `${ptr}/url`)} value={action.url ?? ""} disabled={st} className="font-mono text-[13px]"
+        <Field label="Link (never opened by the Studio)" htmlFor={fieldDomId(sid, `${ptr}/url`)}>
+          <Input id={fieldDomId(sid, `${ptr}/url`)} value={action.url ?? ""} disabled={!caps.structure} className="font-mono text-[13px]"
             onChange={(e) => update((a) => { a.url = e.target.value; }, "url")} />
           <FieldDiags list={diagsAt(diags, `${ptr}/url`)} />
         </Field>
       )}
       {action.type === "answer" && (
-        <LocaleText sid={sid} pointer={`${ptr}/text`} label="Toast text" value={action.text} multiline={false}
-          disabled={!caps.text} diags={diags} onChange={setLocale("text")} hl={hl} />
+        <LocaleText sid={sid} pointer={`${ptr}/text`} label="Notice text" value={action.text} multiline={false} disabled={!caps.text} diags={diags} onChange={setLocale("text")} hl={hl} />
       )}
       {action.type === "handler" && (
-        <div className="space-y-3">
-          <SelectField id={fieldDomId(sid, `${ptr}/handlerId`)} label="Handler (code the bot registers)" value={action.handlerId ?? ""} disabled={st}
-            options={[{ value: "", label: "Choose a handler…" }, ...Object.keys(handlers).map((h) => ({ value: h, label: h }))]}
-            diags={diagsAt(diags, `${ptr}/handlerId`)}
-            onChange={(v) => update((a) => { a.handlerId = v; a.outcomes = {}; })} />
-          <fieldset className="space-y-2 rounded-lg bg-muted/50 p-3">
-            <legend className="sr-only">Outcomes</legend>
-            <p className="text-xs font-medium text-muted-foreground">Outcomes</p>
-            {outcomes.length === 0 && <p className="text-xs text-muted-foreground">This handler declares no outcomes in project.json.</p>}
-            {outcomes.map((o) => (
-              <TargetSelect key={o} sid={sid} pointer={`${ptr}/outcomes/${o}`} label={`On ${o}`} value={action.outcomes?.[o]}
-                disabled={!caps.rule} diags={diags} hl={hl}
-                onChange={(to) => update((a) => { a.outcomes = { ...(a.outcomes ?? {}), [o]: to }; if (!to) delete a.outcomes[o]; })} />
-            ))}
-          </fieldset>
-          <LocaleText sid={sid} pointer={`${ptr}/pending`} label="While it runs (callback answer)" value={action.pending} multiline={false}
-            disabled={!caps.text} diags={diags} onChange={setLocale("pending")} hl={hl} />
+        <div className="space-y-2">
+          {outcomes.length === 0 && <p className="text-xs text-muted-foreground">Choose the bot code in Advanced.</p>}
+          {outcomes.map((o) => (
+            <TargetSelect key={o} sid={sid} pointer={`${ptr}/outcomes/${o}`} label={`When the code answers “${o}”`} value={action.outcomes?.[o]}
+              disabled={!caps.rule} diags={diags} hl={hl}
+              onChange={(to) => update((a) => { a.outcomes = { ...(a.outcomes ?? {}), [o]: to }; if (!to) delete a.outcomes[o]; })} />
+          ))}
         </div>
       )}
-      {action.type === "disabled" && <p className="text-xs text-muted-foreground">Answers with the project's “disabled” text.</p>}
-      <FieldDiags list={diagsAt(diags, ptr).filter((d) => d.code !== "NAVIGATE_TARGET")} />
-    </article>
+    </div>
+  );
+}
+
+/** Advanced group: presentation, handler wiring, pending text. */
+export function ButtonAdvanced({ sid, aid, action, diags }: { sid: string; aid: string; action: Doc; diags: Diag[] }) {
+  const { loaded, caps } = useStudio();
+  const ptr = `/actions/${aid}`;
+  const { update, setLocale } = useActionUpdate(sid, aid);
+  const handlers = loaded.project.handlers ?? {};
+  if (!["navigate", "back", "handler"].includes(action.type)) return null;
+  return (
+    <div className="space-y-2 rounded-xl bg-muted/40 p-3">
+      <p className="font-mono text-xs font-medium">{aid}</p>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <SelectField id={fieldDomId(sid, `${ptr}/presentation`)} label="Presentation" value={action.presentation ?? ""} disabled={!caps.structure}
+          options={[{ value: "", label: "default (edit)" }, { value: "edit", label: "edit the message" }, { value: "send", label: "send a new message" }]}
+          diags={diagsAt(diags, `${ptr}/presentation`)} onChange={(v) => update((a) => { if (v) a.presentation = v; else delete a.presentation; })} />
+        {action.type === "handler" && (
+          <SelectField id={fieldDomId(sid, `${ptr}/handlerId`)} label="Bot code (handler)" value={action.handlerId ?? ""} disabled={!caps.structure}
+            options={[{ value: "", label: "Choose…" }, ...Object.keys(handlers).map((h) => ({ value: h, label: h }))]}
+            diags={diagsAt(diags, `${ptr}/handlerId`)} onChange={(v) => update((a) => { a.handlerId = v; a.outcomes = {}; })} />
+        )}
+      </div>
+      {action.type === "handler" && (
+        <LocaleText sid={sid} pointer={`${ptr}/pending`} label="While the code runs" value={action.pending} multiline={false} disabled={!caps.text} diags={diags} onChange={setLocale("pending")} />
+      )}
+    </div>
   );
 }

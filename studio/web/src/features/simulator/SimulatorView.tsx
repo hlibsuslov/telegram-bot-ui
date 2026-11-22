@@ -5,6 +5,7 @@ import type { Doc, Logical } from "@/core/render.ts";
 import { CodeBlock } from "@/components/code-view";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api, errorText } from "@/lib/api";
 import { copyText, exampleValues, locales } from "@/lib/model";
@@ -74,7 +75,7 @@ function updateText(u: Doc): { icon: React.ReactNode; text: string } {
   return { icon: <Settings2 className="size-3.5" />, text: `set ${JSON.stringify(rest)}` };
 }
 
-function TraceStep({ e, last }: { e: Doc; last: boolean }) {
+function TraceStep({ e, last, pro }: { e: Doc; last: boolean; pro: boolean }) {
   const [open, setOpen] = useState(false);
   const u = updateText(e.update ?? {});
   const t = e.transition;
@@ -110,7 +111,7 @@ function TraceStep({ e, last }: { e: Doc; last: boolean }) {
           </div>
         )}
         {diags.map((d, i) => <p key={i} className={cn("mt-1", d.severity === "error" ? "text-destructive" : "text-amber-700 dark:text-amber-300")}>{d.code}: {d.message}</p>)}
-        {!quiet && (
+        {pro && !quiet && (
           <button type="button" className="mt-1 text-[11px] text-muted-foreground underline-offset-2 hover:underline" aria-expanded={open} onClick={() => setOpen(!open)}>{open ? "Hide details" : "Details"}</button>
         )}
         {open && (
@@ -129,7 +130,7 @@ function Service({ children, tone = "info" }: { children: React.ReactNode; tone?
 }
 
 export function SimulatorView() {
-  const { working, loaded, store, caps } = useStudio();
+  const { working, loaded, store, caps, pro } = useStudio();
   const project = loaded.project;
   const ls = locales(project);
   const commands = (project.entryPoints ?? []).filter((e: Doc) => e.type === "command");
@@ -306,8 +307,24 @@ export function SimulatorView() {
                 <p className="text-[11px] text-muted-foreground">Like your server would, e.g. when an order status changes.</p>
                 <EnumSelect label="Event" size="sm" value={eventKey} onChange={setEventKey}
                   options={events.map((e: Doc) => ({ value: e.eventKey, label: <span className="font-mono">{e.eventKey}</span> }))} />
-                <label className="sr-only" htmlFor="sim-ev-data">Event data (JSON)</label>
-                <Textarea id="sim-ev-data" rows={4} value={eventData} onChange={(e) => setEventData(e.target.value)} className="font-mono text-xs" />
+                {pro ? (
+                  <>
+                    <label className="sr-only" htmlFor="sim-ev-data">Event data (JSON)</label>
+                    <Textarea id="sim-ev-data" rows={4} value={eventData} onChange={(e) => setEventData(e.target.value)} className="font-mono text-xs" />
+                  </>
+                ) : (() => {
+                  let obj: Doc = {};
+                  try { obj = JSON.parse(eventData || "{}"); } catch { /* edited in Pro */ }
+                  return (
+                    <div className="space-y-2">
+                      {Object.entries(obj).map(([k, v]) => (
+                        <Field key={k} label={k} htmlFor={`sim-ev-${k}`}>
+                          <Input id={`sim-ev-${k}`} value={String(v ?? "")} onChange={(e) => setEventData(JSON.stringify({ ...obj, [k]: e.target.value }, null, 1))} className="h-8 text-xs" />
+                        </Field>
+                      ))}
+                    </div>
+                  );
+                })()}
                 <Button type="button" size="sm" className="w-full"
                   onClick={() => {
                     let data: Doc;
@@ -432,7 +449,7 @@ export function SimulatorView() {
         )}
         {!run && <p className="flex items-center gap-2 px-4 py-4 text-xs text-muted-foreground"><MousePointerClick className="size-4" /> Press START in the chat; each update appears here as a step.</p>}
         <ol className="min-h-0 flex-1 overflow-y-auto px-4 py-3" aria-label="Trace steps">
-          {run?.trace.map((e, i) => <TraceStep key={i} e={e} last={i === run.trace.length - 1} />)}
+          {run?.trace.map((e, i) => <TraceStep key={i} e={e} last={i === run.trace.length - 1} pro={pro} />)}
           <li ref={traceEnd} aria-hidden className="h-px" />
         </ol>
       </section>

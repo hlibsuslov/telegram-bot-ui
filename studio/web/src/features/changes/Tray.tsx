@@ -16,8 +16,8 @@ export function useChangeState() {
   const queued = requests.length;
   const handedOff = !!handoff && handoff.signature === workSignature && drafts === 0 && queued === 0;
   const next: { label: string; run: () => void } | null =
-    drafts > 0 ? { label: loaded.mode === "studio" ? "Save to files" : "Export patch", run: () => go("changes") }
-      : (saved > 0 || queued > 0) && !handedOff ? { label: "Task for the agent", run: () => go("task") }
+    drafts > 0 ? { label: loaded.mode === "studio" ? "Save to files" : "Export patch", run: () => go("changes", "drafts") }
+      : (saved > 0 || queued > 0) && !handedOff ? { label: "Prompt for the agent", run: () => go("changes", "prompt") }
         : null;
   return { drafts, saved, queued, handedOff, next, gitKnown: !!git };
 }
@@ -56,7 +56,7 @@ export function ChangeTray() {
           <p className="text-sm font-semibold">Where your changes are</p>
           <ul className="mt-1 divide-y">
             <Row dot="bg-amber-500" title="Draft" count={drafts} hint="Only in this browser. Nothing is written yet."
-              action={drafts ? <Button size="sm" variant="outline" className="h-7" onClick={() => { setOpen(false); go("changes"); }}>{studio ? "Review and save" : "Export patch"}</Button> : undefined} />
+              action={drafts ? <Button size="sm" variant="outline" className="h-7" onClick={() => { setOpen(false); go("changes", "drafts"); }}>{studio ? "Review and save" : "Export patch"}</Button> : undefined} />
             {studio && (
               <Row dot="bg-sky-500" title="Saved to files" count={gitKnown ? saved : "?"} hint="Written to bot-ui/ in your repo. Not committed, not live: the bot shows it after your usual commit and deploy." />
             )}
@@ -64,7 +64,7 @@ export function ChangeTray() {
             <Row dot="bg-emerald-500" title="Handed to the agent" count={handedOff ? <Check className="inline size-3.5" /> : "–"} hint="You copied the task prompt; your agent commits on a branch." />
           </ul>
           {(saved > 0 || queued > 0 || drafts > 0) && (
-            <Button size="sm" className="mt-2 w-full" onClick={() => { setOpen(false); go("task"); }}>Open the task for the agent</Button>
+            <Button size="sm" className="mt-2 w-full" onClick={() => { setOpen(false); go("changes", "prompt"); }}>Open Changes</Button>
           )}
         </PopoverContent>
       </Popover>

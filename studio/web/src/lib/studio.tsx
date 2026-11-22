@@ -58,6 +58,11 @@ interface Ctx {
   handoff: Handoff | null;
   markHandedOff: () => void;
   workSignature: string;
+  /** Beginner hides code, JSON and advanced fields; Pro shows everything. */
+  pro: boolean;
+  setPro: (v: boolean) => void;
+  /** Where a screen or widget stands, for badges that link to its entry in Changes. */
+  changeState: (kind: "screen" | "widget", id: string) => { draft: boolean; saved: boolean; requests: number };
 }
 
 const StudioContext = createContext<Ctx | null>(null);
@@ -218,6 +223,8 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
     try { localStorage.setItem("bot-ui-studio:edit-locale", l); } catch { /* storage blocked */ }
   }, []);
   const [highlight, setHighlight] = useState<Highlight | null>(null);
+  const [pro, setProState] = useState(() => { try { return localStorage.getItem("bot-ui-studio:mode") === "pro"; } catch { return false; } });
+  const setPro = useCallback((v: boolean) => { setProState(v); try { localStorage.setItem("bot-ui-studio:mode", v ? "pro" : "beginner"); } catch { /* storage blocked */ } }, []);
   const copyId = useCallback(async (sid: string) => {
     notify(await copyText(sid) ? `Copied ${sid}` : "Copy failed: select the ID and copy it by hand", "success");
   }, [notify]);
@@ -271,11 +278,17 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
     notify("Marked as handed to the agent; the request queue is cleared", "success");
   }, [git, store, projKey, notify]);
 
+  const changeState = useCallback((kind: "screen" | "widget", id: string) => ({
+    draft: kind === "screen" ? store.isDraft(id) : !!store.data.widgets[id],
+    saved: (git?.files ?? []).some((f) => (kind === "screen" ? f.screenId === id : f.widgetId === id)),
+    requests: kind === "screen" ? requests.filter((r) => r.sid === id).length : 0,
+  }), [store, git, requests, version]);
+
   const value: Ctx = {
     loaded, store, version, working, diags, validating, caps, pendingBase, adoptPendingBase, reload,
     replaceLoaded, saving, saveDiags, setSaveDiags, notify, toasts, focusField,
     editLocale, setEditLocale, highlight, setHighlight, copyId, copyRequest,
-    requests, addRequest, removeRequest, git, refreshGit, handoff, markHandedOff, workSignature,
+    requests, addRequest, removeRequest, git, refreshGit, handoff, markHandedOff, workSignature, pro, setPro, changeState,
   };
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>;
 }

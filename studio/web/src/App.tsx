@@ -1,4 +1,4 @@
-import { Bot, FileDiff, Info, LayoutGrid, Loader2, Map as MapIcon, MessagesSquare, Puzzle, Redo2, Undo2 } from "lucide-react";
+import { GitCompareArrows, Sprout, Wrench, Info, LayoutGrid, Loader2, Map as MapIcon, MessagesSquare, Puzzle, Redo2, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApplicationShell1, type Crumb, type NavGroup } from "@/components/application-shell1";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import { StudioProvider, useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
 import { AboutView, LoadSnapshot } from "@/features/artifact/AboutView";
 import { ChangesView } from "@/features/changes/ChangesView";
-import { TaskView } from "@/features/changes/TaskView";
 import { ChangeTray, EditLocaleSelect } from "@/features/changes/Tray";
 import { PendingBanner } from "@/features/changes/PendingBanner";
 import { MapView } from "@/features/map/MapView";
@@ -62,6 +61,21 @@ function Footer() {
   );
 }
 
+/** Beginner hides code, JSON and advanced fields; Pro shows everything. Remembered per browser. */
+function ModeSwitch() {
+  const { pro, setPro } = useStudio();
+  return (
+    <div role="radiogroup" aria-label="Interface mode" className="hidden items-center rounded-lg bg-muted p-0.5 sm:flex">
+      {[{ v: false, label: "Beginner", icon: Sprout }, { v: true, label: "Pro", icon: Wrench }].map(({ v, label, icon: Icon }) => (
+        <button key={label} type="button" role="radio" aria-checked={pro === v} onClick={() => setPro(v)} title={v ? "Pro: code, JSON and every field" : "Beginner: plain forms, no code"}
+          className="flex items-center gap-1 rounded-md px-2 py-0.5 text-xs text-muted-foreground aria-checked:bg-background aria-checked:text-foreground aria-checked:shadow-sm">
+          <Icon className="size-3.5" aria-hidden />{label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Toasts() {
   const { toasts } = useStudio();
   return (
@@ -101,8 +115,7 @@ function Shell() {
       { key: "screens", label: "Screens", icon: LayoutGrid, href: href("screens"), badge: Object.keys(working.screens).length },
       { key: "simulator", label: "Simulator", icon: MessagesSquare, href: href("simulator") },
       { key: "widgets", label: "Widgets", icon: Puzzle, href: href("widgets"), children: caps.widgets && widgetIds.length > 1 ? widgetIds.map((w) => ({ key: w, label: w, href: href("widgets", w) })) : undefined },
-      { key: "changes", label: "Changes", icon: FileDiff, href: href("changes"), badge: n || undefined },
-      { key: "task", label: "Task for the agent", icon: Bot, href: href("task"), badge: requests.length || undefined },
+      { key: "changes", label: "Changes", icon: GitCompareArrows, href: href("changes"), badge: n + requests.length || undefined },
       ...(loaded.mode === "artifact" ? [{ key: "about", label: "What works here", icon: Info, href: href("about") }] : []),
     ],
   }];
@@ -112,6 +125,7 @@ function Shell() {
 
   const headerEnd = (
     <>
+      <ModeSwitch />
       <ChangeTray />
       <EditLocaleSelect />
       {validating && <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Checking the draft" />}
@@ -126,8 +140,7 @@ function Shell() {
     case "screens": body = <ScreensView id={route.id} />; break;
     case "simulator": body = <SimulatorView />; break;
     case "widgets": body = <WidgetsView id={route.id} />; break;
-    case "changes": body = <ChangesView />; break;
-    case "task": body = <TaskView />; break;
+    case "changes": case "task": body = <ChangesView anchor={route.section === "task" ? "prompt" : route.id} />; break;
     case "about": body = <AboutView />; break;
     default: body = <MapView id={route.id} />;
   }
