@@ -42,7 +42,7 @@
 ---
 
 <p align="center">
-  <a href="https://telegram-bot-ui-site.vercel.app"><img alt="Demo: one sentence to the coding agent turns a cluttered bot menu into a clean screen with colored buttons, then a streaming reply with Stop and an approval notification" src="docs/assets/demo.gif" width="720"></a>
+  <a href="https://telegram-bot-ui-site.vercel.app"><img alt="Demo: one sentence to the coding agent turns a cluttered bot menu into a clean screen with colored buttons; then bot-ui Studio shows the bot map, the screen editor with premium emoji and a live order-tracker widget" src="docs/assets/demo.gif" width="720"></a>
 </p>
 
 ## ⚡ Quick start
