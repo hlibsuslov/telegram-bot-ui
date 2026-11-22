@@ -1,0 +1,24 @@
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Your profile"
+msgstr "Ваш профиль"
+
+msgid "My orders"
+msgstr "Мои заказы"
+
+msgid "Language"
+msgstr "Язык"
+
+msgid "Main menu"
+msgstr "Главное меню"
+
+msgid "No orders yet."
+msgstr "Заказов пока нет."
+
+msgid "Back"
+msgstr "Назад"
+
+msgid "Choose a language"
+msgstr "Выберите язык"

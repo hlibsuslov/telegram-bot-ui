@@ -67,7 +67,7 @@ export async function multiStepForm() {
   const t = new FakeTransport(); const submitted = new Set<string>(); let orders = 0;
   const kb = (complete: boolean) => ({ force_reply: true, inline_keyboard: [
     [{ text: "S", callback_data: "f:F7:0:o:0" }, { text: "M", callback_data: "f:F7:0:o:1" }],
-    [complete ? { text: "Submit", callback_data: "f:F7:submit", style: "success" } : { text: "Submit", disabled: {} }]] });
+    [complete ? { text: "Place order", callback_data: "f:F7:submit", style: "success" } : { text: "Place order", disabled: {} }]] });
   await t.call("sendMessage", { chat_id: CHAT, text: "Step 1 of 1. Choose a size or type it.", reply_markup: kb(false) });
   await t.call("sendMessage", { chat_id: CHAT, text: "Size: M. Ready to send.", reply_markup: kb(true) });
   const submit = async (qid: string) => {

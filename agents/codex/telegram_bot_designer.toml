@@ -18,6 +18,7 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 - `references/redesign-orchestration.md` (Build and audit bot interfaces)
 - `references/bot-style-profile.md` (Build and audit bot interfaces)
 - `scripts/style_profile.py` (Build and audit bot interfaces)
+- `references/bot-ui-projects.md` (Build and audit bot interfaces)
 - `references/example-library.md` (Product flows and use cases)
 - `recipes/use-cases.json` (Product flows and use cases)
 - `scripts/example_library.py` (Product flows and use cases)

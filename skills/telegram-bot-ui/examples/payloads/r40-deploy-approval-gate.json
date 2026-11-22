@@ -23,11 +23,6 @@
           "inline_keyboard": [
             [
               {
-                "text": "Approve",
-                "callback_data": "ap:081da789:n6d6976b:a",
-                "style": "danger"
-              },
-              {
                 "text": "Reject",
                 "callback_data": "ap:081da789:n6d6976b:r"
               }
@@ -36,6 +31,13 @@
               {
                 "text": "Details",
                 "callback_data": "ap:081da789:n6d6976b:d"
+              }
+            ],
+            [
+              {
+                "text": "Approve",
+                "callback_data": "ap:081da789:n6d6976b:a",
+                "style": "danger"
               }
             ]
           ]

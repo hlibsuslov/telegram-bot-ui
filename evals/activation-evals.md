@@ -85,6 +85,8 @@ description is updated.
 | P37 | "Turn on topics with a sidebar for our bot from code, not in BotFather." | `setMySettings`, `has_topic_sidebar` (10.5) | `bot-settings.md` |
 | P38 | "Кнопки в старых сообщениях бота перестали работать — колбэк приходит без message." | `callback_query_mode`, `inline_message_id` (10.5) | `bot-settings.md` |
 | P39 | "Let me invite our five testers to the bot and greet them." | botinvite link, `WriteAccessAllowed.inviter` (10.5) | `bot-settings.md`, `onboarding-and-first-run.md` |
+| P40 | "Open my bot's screens in a local editor so I can change the texts myself." | bot-ui Studio, local preview | `bot-ui-projects.md` |
+| P41 | "Поменяй экран checkout.payment.confirm в нашем bot-ui проекте." | change by stable screen ID | `bot-ui-projects.md` |
 
 ## Negative (should NOT activate)
 
@@ -111,6 +113,8 @@ description is updated.
 | UI2 | ru | "Бот как будто завис, пока думает над ответом." | no | `references/dynamic-feedback-and-streaming.md` |
 | UI3 | ru | "Переосмысли всё меню нашего бота и адаптируй его под стилистику проекта, если сможешь — изучи сам проект." | no | `references/redesign-orchestration.md`, `references/bot-style-profile.md` |
 | UI4 | en | "Make our Telegram bot feel like the rest of our product, then let me tune how chatty it is." | no | `references/redesign-orchestration.md`, `references/bot-style-profile.md` |
+| UI5 | ru | "Сделай меню бота премиальнее." | no | `references/visual-language.md` (§7 premium pass) |
+| UI6 | en | "Our bot looks cheap. Make the menus feel polished and premium." | no | `references/visual-language.md`, `references/buttons-and-styles.md` |
 
 ## Positive — Channel publishing (should activate)
 

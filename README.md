@@ -21,11 +21,12 @@
 
 <p align="center">
   <b>An Agent Skill that makes your Telegram bot look, feel and run like a well-designed product.</b><br>
-  Bot screens and keyboards · streaming AI answers · HTML widgets · channel publishing · agent-operated bots · premium emoji · the whole Bot API, offline.
+  The whole bot interface: screens, texts and keyboards · navigation and states · streaming AI answers · HTML widgets · channel publishing · agent-operated bots · premium emoji · bot-ui Studio · the whole Bot API, offline.
 </p>
 
 <p align="center">
   <a href="https://telegram-bot-ui-site.vercel.app">Website</a> ·
+  <a href="#bot-ui-studio">Studio</a> ·
   <a href="#-quick-start">Quick start</a> ·
   <a href="#-what-your-agent-can-do">Capabilities</a> ·
   <a href="#-html-widgets">Widgets</a> ·
@@ -42,7 +43,7 @@
 ---
 
 <p align="center">
-  <a href="https://telegram-bot-ui-site.vercel.app"><img alt="Demo: one sentence to the coding agent turns a cluttered bot menu into a clean screen with colored buttons, then a streaming reply with Stop and an approval notification" src="docs/assets/demo.gif" width="720"></a>
+  <a href="https://telegram-bot-ui-site.vercel.app"><img alt="Demo: one sentence to the coding agent turns a cluttered bot menu into a clean screen with colored buttons; then bot-ui Studio shows the bot map, the screen editor with premium emoji and a live order-tracker widget" src="docs/assets/demo.gif" width="720"></a>
 </p>
 
 ## ⚡ Quick start
@@ -72,6 +73,20 @@ python scripts/install.py --host all --scope user
 
 Then open your bot's repository and just ask: *"Improve the UX of this Telegram bot."*
 The skill activates on its own — no API names needed. More hosts and options: [Install](#-install).
+
+## bot-ui Studio
+
+<a href="https://telegram-bot-ui-site.vercel.app/studio">
+  <img alt="Pulloa in bot-ui Studio. The bot flow map shows messages and their transitions, with the screen editor, simulated checkout and interactive order tracker below." src="docs/assets/studio-overview.png" width="100%">
+</a>
+
+Use the skill with your coding agent to build the Telegram bot interface. Open the same `bot-ui/` project in Studio to inspect its map and use the simulator to try an order, a declined payment or a first-time visitor.
+
+Edit messages and keyboards, test branching rules and build or preview HTML widgets. Save changes to the `bot-ui/` folder in your bot’s repository and review them in Git. You can also leave a request on a screen and copy a task for your coding agent.
+
+The website demo opens the Pulloa coffee pickup bot in your browser. To work on your own bot, build and run Studio on your computer. It listens on `127.0.0.1` and opens one project at a time. Studio comes from a repository checkout and has its own setup.
+
+[Try the live demo](https://telegram-bot-ui-site.vercel.app/studio) · [Local setup](studio/README.md) · [Project format](studio/docs/contract.md)
 
 ## ✨ What changes in your bot
 
@@ -396,6 +411,7 @@ skills/telegram-bot-ui/   the skill; installers copy only this folder
   data/             offline Bot API catalog, emoji pack registry
   agents/           Codex metadata (openai.yaml)
 scripts/            installer, adapter generator, eval runner, check runner (offline)
+studio/             optional bot-ui CLI and local Studio (clone only; not installed with the skill)
 agents/             Claude subagents, Codex custom agents
 adapters/           routing table and generated entry files for other hosts
 .claude-plugin/     Claude Code plugin and marketplace manifests

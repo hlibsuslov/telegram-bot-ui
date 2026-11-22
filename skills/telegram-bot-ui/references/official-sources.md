@@ -264,7 +264,30 @@ Telegram does not specify them. Never present them to a user as API limits:
 - streaming throttle thresholds (800–1500 ms, 30–80 characters);
 - edit-based streaming side effects (flicker, scroll jumps, duplicate messages
   on error paths, stale timestamps) — widely reported engineering experience,
-  not documented behaviour.
+  not documented behaviour;
+- the premium-pass checks of 2026-11-22 (navigation last and unstyled, no ✅/❌ on
+  navigation, no bare "OK"/"Yes"/"Submit", page size by row density, the ≤ ~80-char preview
+  line, stale and notification shapes).
+
+## Community skills reviewed (2026-11-22)
+
+Read for ideas, not as sources of truth: every rule taken from them was restated in this
+skill's own words and checked against the official docs; no text, code or assets were copied.
+Revision read and license at that revision:
+
+| Repository | Revision | License | Ideas adopted |
+|---|---|---|---|
+| orihomie/aiobot-skill | `9104147e` | none found | page size by row density, no dead pager, stale menu → fresh entry |
+| pewpewgogo/telegram-bot-skill (telegram-bot-ui, -sessions) | `04c4fbd1` | MIT | bare "Yes/No" confirmations as an anti-example |
+| Zulut30/awesome-telegram-skills (telegram-dialogs, telegram-buttons) | `9d855488` | MIT | stale taps always answered; labels meaningful without color |
+| luisnomad/telegram-inline-keyboards | `41f1d4ba` | MIT (README) | collect silently, submit explicitly; answered-question collapse; resolve in place |
+| gulivan/telegram-bot-widgets-skill | `1dd3204a` | MIT | confirmed existing widget rules (color not opacity, text fallback) |
+| aislam23/telegram-widgets-skill | `c6fdfb42` | MIT | confirmed existing SDK note (aiogram drops `widget_query`) |
+| serejaris/telegram-skills (tg-reply-rewrite, tg-operator-cards, tg-rich-*) | `c1784f16` | MIT | notification first line, one fact per line, bold to check / code to copy, outcome footer; no half-open markup in drafts |
+| Aztech-1729/telegram-skills (telegram-bot-ux, telegram-bot-accessibility) | `9059d7ca` | none (no reuse granted) | consent never green, refusal never red; strip test; stale copy shape |
+| abbosahmad/telegram-premium-emojis | `604f0163` | MIT | fixed icon roles; its red Back is an anti-example |
+| aipedagog/tg-rich-post | `0ba7c871` | MIT | confirmed existing long-read rules |
+| ganiyevuz/telegram-richtext, kirniy/telegram-bot-api-docs-skill, nzhulikov/telegram-bot-skills, bubbuild/bub, davila7/claude-code-templates, TerminalSkills/skills, teamily-ai/telegram-bot-skill | `07df47a5`, `aa94c97f`, `2dee91da`, `ccf46785`, `44fd6fda`, `42289059`, `11b35a38` | MIT / MIT / Apache-2.0 / Apache-2.0 / MIT / Apache-2.0 / MIT | blocker report shape (bub); "❌ Close" as an anti-example (davila7); the rest already covered or outside the interface |
 
 ## Sections to re-review on each Telegram release
 
