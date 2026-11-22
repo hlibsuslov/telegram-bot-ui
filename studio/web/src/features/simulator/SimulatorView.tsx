@@ -1,10 +1,11 @@
-import { ArrowLeft, Check, ChevronRight, Copy, MessageCircle, MousePointerClick, RotateCcw, Settings2, Terminal, Zap } from "lucide-react";
+import { ArrowLeft, Check, ChevronRight, Code2, LayoutList, Copy, MessageCircle, MousePointerClick, Play, RotateCcw, Server, Settings2, SlidersHorizontal, Terminal, Zap } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Engine, newSession, parityView, runScenario, type Session, type Snapshot } from "@/core/engine.ts";
 import type { Doc, Logical } from "@/core/render.ts";
 import { CodeBlock } from "@/components/code-view";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SunMoonThemeToggle } from "@/components/ui/sun-moon-theme-toggle";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { api, errorText } from "@/lib/api";
@@ -13,6 +14,8 @@ import { useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
 import { EnumSelect, Field, Segmented } from "../inspector/fields";
 import { Bubble, Composer, ForceReplyBar, OutgoingBubble, ReplyKeyboard } from "../preview/Telegram";
+import { chatLayout, DevicePresets, DeviceStage, useDevice } from "./DeviceFrame";
+import { ChatTypeSwitch, LocaleChip, StartPicker, Tip } from "./SimControls";
 
 const OPEN_CMD = "__studio_open";
 
@@ -35,7 +38,8 @@ const canon = (v: any): any => Array.isArray(v) ? v.map(canon)
 
 function effectNotes(entry: Doc, run: Run) {
   const u = entry.update ?? {};
-  if (u.type === "message") run.chat.push({ k: "user", text: u.text });
+  if (u.type === "message" && u.text === `/${OPEN_CMD}`) run.chat.push({ k: "note", text: "Opened this screen directly", tone: "info" });
+  else if (u.type === "message") run.chat.push({ k: "user", text: u.text });
   else if (u.type === "event") run.chat.push({ k: "note", text: `External event ${u.eventKey}`, tone: "info" });
   else if (u.type === "local" && !("expect" in u)) {
     const { type: _t, ...rest } = u;
@@ -67,6 +71,7 @@ function effectNotes(entry: Doc, run: Run) {
 }
 
 function updateText(u: Doc): { icon: React.ReactNode; text: string } {
+  if (u.type === "message" && u.text === `/${OPEN_CMD}`) return { icon: <LayoutList className="size-3.5" />, text: "opened a screen directly" };
   if (u.type === "message") return { icon: <MessageCircle className="size-3.5" />, text: `“${u.text}”` };
   if (u.type === "callback_query") return { icon: <MousePointerClick className="size-3.5" />, text: `pressed ${u.actionId}${u.message ? ` in message #${u.message}` : ""}` };
   if (u.type === "event") return { icon: <Zap className="size-3.5" />, text: `event ${u.eventKey}` };
@@ -137,10 +142,15 @@ export function SimulatorView() {
   const events = (project.entryPoints ?? []).filter((e: Doc) => e.type === "event");
   const enumContext = Object.entries<Doc>(project.fields ?? {}).filter(([, f]) => f.source === "context" && f.type === "enum");
   const handlers = Object.entries<Doc>(project.handlers ?? {});
-  const scenarios = Object.values<Doc>(loaded.scenarios ?? {});
 
-  const [start, setStart] = useState(commands[0] ? `cmd:${commands[0].command}` : "screen");
-  const [startScreen, setStartScreen] = useState(Object.keys(working.screens).sort()[0] ?? "");
+  const [start, setStartState] = useState(() => {
+    try { const v = localStorage.getItem("bot-ui-studio:sim-start"); if (v) return v; } catch { /* storage blocked */ }
+    return commands[0] ? `cmd:${commands[0].command}` : `screen:${Object.keys(working.screens).sort()[0] ?? ""}`;
+  });
+  const setStart = (v: string) => { setStartState(v); try { localStorage.setItem("bot-ui-studio:sim-start", v); } catch { /* storage blocked */ } };
+  const [device, setDevice] = useDevice();
+  const [scale, setScale] = useState(1);
+  const layout = chatLayout(device.w);
   const [locale, setLocale] = useState(ls[0]);
   const [chat, setChat] = useState("private");
   const [ctx, setCtx] = useState<Doc>(() => Object.fromEntries(enumContext.map(([n, f]) => [n, f.values?.[0]])));
@@ -192,7 +202,11 @@ export function SimulatorView() {
     }
     const r: Run = { session: newSession(project, { locale, context: { chat, ...ctx }, data: exampleValues(project) }), chat: [], trace: [], toast: null, scenarioId: null, touched: null };
     if (start.startsWith("cmd:")) feed(r, { command: start.slice(4) });
-    else if (start === "screen" && startScreen) feed(r, { command: OPEN_CMD }, startScreen);
+    else if (start.startsWith("ev:")) {
+      let data: Doc = {};
+      try { data = JSON.parse(eventData || "{}"); } catch { /* example data only */ }
+      feed(r, { event: start.slice(3), data });
+    } else if (start.startsWith("screen:") && working.screens[start.slice(7)]) feed(r, { command: OPEN_CMD }, start.slice(7));
     setRun({ ...r });
   };
 
@@ -203,7 +217,10 @@ export function SimulatorView() {
     setRun(r);
   };
 
-  useEffect(() => { chatEnd.current?.scrollIntoView({ block: "end" }); traceEnd.current?.scrollIntoView({ block: "nearest" }); }, [run]);
+  // Scroll the chat and the trace lists themselves, never the page.
+  useEffect(() => {
+    for (const el of [chatEnd.current?.parentElement, traceEnd.current?.parentElement]) if (el) el.scrollTop = el.scrollHeight;
+  }, [run]);
   useEffect(() => {
     if (!run?.toast) return;
     const t = setTimeout(() => setRun((r) => (r ? { ...r, toast: null } : r)), 2600);
@@ -234,75 +251,68 @@ export function SimulatorView() {
     setParity({ state: same ? "same" : "diff", text: firstDiff });
   };
 
-  const settingsSummary = [ls.length > 1 ? locale : null, chat, ...enumContext.map(([n]) => `${n}=${ctx[n]}`)].filter(Boolean).join(" · ");
-  const startLabel = start.startsWith("scenario:") ? `Run scenario ${start.slice(9)}` : start.startsWith("cmd:") ? `/${start.slice(4)}` : `Open ${startScreen}`;
+  const startText = start.startsWith("scenario:") ? `runs the scenario ${start.slice(9)}` : start.startsWith("cmd:") ? `sends /${start.slice(4)}` : start.startsWith("ev:") ? `fires ${start.slice(3)}` : `opens ${start.slice(7)}`;
 
   return (
     <div className="grid min-h-0 flex-1 grid-cols-1 lg:grid-cols-[minmax(0,1fr)_400px]">
-      <section aria-label="Chat" className="flex min-h-[80svh] min-w-0 flex-col bg-muted/30 lg:h-[calc(100svh-3.5rem)] lg:min-h-0">
-        <div className="flex flex-wrap items-center gap-2 border-b bg-background px-3 py-2">
-          <div className="w-[min(100%,17rem)]">
-            <EnumSelect id="sim-start" label="Start from" size="sm" value={start} onChange={setStart} options={[
-              ...commands.map((c: Doc) => ({ value: `cmd:${c.command}`, label: <span><span className="font-mono">/{c.command}</span> <span className="text-muted-foreground">→ {c.screen}</span></span> })),
-              { value: "screen", label: "A screen…" },
-              ...scenarios.map((x) => ({ value: `scenario:${x.scenarioId}`, label: <span>Scenario <span className="font-mono">{x.scenarioId}</span></span> })),
-            ]} />
-          </div>
-          {start === "screen" && (
-            <div className="w-[min(100%,15rem)]">
-              <EnumSelect id="sim-screen" label="Screen" size="sm" value={startScreen} onChange={setStartScreen} className="font-mono text-[12.5px]"
-                options={Object.keys(working.screens).sort().map((id) => ({ value: id, label: id }))} />
-            </div>
-          )}
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button size="sm" variant="outline" className="h-8 gap-1.5"><Settings2 className="size-4" /> Settings <span className="hidden max-w-56 truncate font-mono text-[11px] text-muted-foreground md:inline">{settingsSummary}</span></Button>
-            </PopoverTrigger>
-            <PopoverContent align="start" className="w-[min(94vw,24rem)] space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                {ls.length > 1 && (
-                  <Field label="Language" htmlFor="sim-locale">
-                    <EnumSelect id="sim-locale" size="sm" value={locale} onChange={(v) => { setLocale(v); act({ locale: v }); }} options={ls.map((l) => ({ value: l, label: l }))} />
-                  </Field>
-                )}
-                <Field label="Chat type">
-                  <Segmented label="Chat type" value={chat} onChange={(v) => { setChat(v); act({ context: { chat: v } }); }} options={[{ value: "private", label: "private" }, { value: "group", label: "group" }]} />
-                </Field>
-                <Field label="Theme">
-                  <Segmented label="Theme" value={theme} onChange={setTheme} options={[{ value: "light", label: "Light" }, { value: "dark", label: "Dark" }]} />
-                </Field>
-              </div>
-              {enumContext.length > 0 && (
-                <div className="space-y-2 border-t pt-3">
-                  <p className="text-xs font-semibold">Context fields</p>
-                  <p className="text-[11px] text-muted-foreground">Trusted values your server sets, e.g. delivery.method. Switch them to try both branches of a rule.</p>
-                  {enumContext.map(([n, f]) => (
-                    <Field key={n} label={<span className="font-mono">{n}</span>}>
-                      <Segmented label={n} value={String(ctx[n])} onChange={(v) => { const val = (f.values ?? []).find((x: any) => String(x) === v); setCtx({ ...ctx, [n]: val }); act({ context: { [n]: val } }); }}
-                        options={(f.values ?? []).map((v: any) => ({ value: String(v), label: String(v) }))} />
-                    </Field>
-                  ))}
-                </div>
-              )}
-              {handlers.length > 0 && (
-                <div className="space-y-2 border-t pt-3">
-                  <p className="text-xs font-semibold">Handler results</p>
-                  <p className="text-[11px] text-muted-foreground">What your bot's code returns when a handler button is pressed here.</p>
-                  {handlers.map(([h, d]) => (
-                    <Field key={h} label={<span className="font-mono">{h}</span>}>
-                      <Segmented label={h} value={outcome[h] ?? ""} onChange={(v) => setOutcome({ ...outcome, [h]: v })} options={(d.outcomes ?? []).map((o: string) => ({ value: o, label: o }))} />
-                    </Field>
-                  ))}
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
+      <section aria-label="Chat" className="flex h-[86svh] min-w-0 flex-col bg-muted/30 lg:h-[calc(100svh-3.5rem)]">
+        <div className="flex flex-wrap items-center gap-2 border-b bg-background px-3 py-2" role="toolbar" aria-label="Simulator">
+          <StartPicker value={start} onChange={setStart} />
+          <Tip label={run ? "Restart clean from here" : "Start the chat"}>
+            <Button size="icon" variant={run ? "outline" : "default"} className="size-8" onClick={begin} aria-label={run ? "Restart clean" : "Start the chat"}>
+              {run ? <RotateCcw className="size-4" /> : <Play className="size-4" />}
+            </Button>
+          </Tip>
+          <span className="mx-1 h-5 w-px bg-border" aria-hidden />
+          <DevicePresets device={device} onChange={setDevice} scale={scale} />
+          <span className="ml-auto flex items-center gap-2">
+            <Tip label={theme === "dark" ? "Telegram dark theme" : "Telegram light theme"}>
+              <span className="inline-flex"><SunMoonThemeToggle theme={theme} onThemeChange={setTheme} syncDocument={false} size={32} /></span>
+            </Tip>
+            <LocaleChip value={locale} options={ls} onChange={(v) => { setLocale(v); act({ locale: v }); }} />
+            <ChatTypeSwitch value={chat} onChange={(v) => { setChat(v); act({ context: { chat: v } }); }} />
+            {(enumContext.length > 0 || handlers.length > 0) && (
+              <Popover>
+                <Tip label="Context: server values and handler results">
+                  <PopoverTrigger asChild>
+                    <Button size="icon" variant="outline" className="size-8" aria-label="Context: server values and handler results"><SlidersHorizontal className="size-4" /></Button>
+                  </PopoverTrigger>
+                </Tip>
+                <PopoverContent align="end" className="w-[min(94vw,22rem)] space-y-4">
+                  {enumContext.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold"><Server className="size-3.5" aria-hidden /> Values from your server</p>
+                      <p className="text-[11px] text-muted-foreground">Trusted values your server sets, e.g. delivery.method. Switch them to try both branches of a rule.</p>
+                      {enumContext.map(([n, f]) => (
+                        <Field key={n} label={<span className="font-mono">{n}</span>}>
+                          <Segmented label={n} value={String(ctx[n])} onChange={(v) => { const val = (f.values ?? []).find((x: any) => String(x) === v); setCtx({ ...ctx, [n]: val }); act({ context: { [n]: val } }); }}
+                            options={(f.values ?? []).map((v: any) => ({ value: String(v), label: String(v) }))} />
+                        </Field>
+                      ))}
+                    </div>
+                  )}
+                  {handlers.length > 0 && (
+                    <div className="space-y-2 border-t pt-3">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold"><Code2 className="size-3.5" aria-hidden /> Handler results</p>
+                      <p className="text-[11px] text-muted-foreground">What your bot code returns when a handler button is pressed here.</p>
+                      {handlers.map(([h, d]) => (
+                        <Field key={h} label={<span className="font-mono">{h}</span>}>
+                          <Segmented label={h} value={outcome[h] ?? ""} onChange={(v) => setOutcome({ ...outcome, [h]: v })} options={(d.outcomes ?? []).map((o: string) => ({ value: o, label: o }))} />
+                        </Field>
+                      ))}
+                    </div>
+                  )}
+                </PopoverContent>
+              </Popover>
+            )}
           {events.length > 0 && (
             <Popover>
-              <PopoverTrigger asChild>
-                <Button size="sm" variant="outline" className="h-8 gap-1.5" disabled={!run}><Zap className="size-4" /> External event</Button>
-              </PopoverTrigger>
-              <PopoverContent align="start" className="w-[min(94vw,22rem)] space-y-2">
+              <Tip label="Fire an event from your server">
+                <PopoverTrigger asChild>
+                  <Button size="icon" variant="outline" className="size-8" disabled={!run} aria-label="Fire an event from your server"><Zap className="size-4" /></Button>
+                </PopoverTrigger>
+              </Tip>
+              <PopoverContent align="end" className="w-[min(94vw,22rem)] space-y-2">
                 <p className="text-xs font-semibold">Fire an external event</p>
                 <p className="text-[11px] text-muted-foreground">Like your server would, e.g. when an order status changes.</p>
                 <EnumSelect label="Event" size="sm" value={eventKey} onChange={setEventKey}
@@ -338,11 +348,11 @@ export function SimulatorView() {
               </PopoverContent>
             </Popover>
           )}
-          {run && <Button size="sm" variant="ghost" className="ml-auto h-8" onClick={begin}><RotateCcw className="size-4" /> Restart clean</Button>}
+          </span>
         </div>
 
-        <div className="flex min-h-0 flex-1 justify-center p-3 sm:p-5">
-          <figure className="flex min-h-0 w-full max-w-[440px] flex-col overflow-hidden rounded-[22px] shadow-[0_10px_40px_-14px_rgba(0,0,0,.35)] ring-1 ring-black/10">
+        <DeviceStage device={device} onChange={setDevice} onScale={setScale}>
+          <figure className={cn("flex size-full flex-col overflow-hidden shadow-[0_10px_40px_-14px_rgba(0,0,0,.35)] ring-1 ring-black/10", layout.wide ? "rounded-xl" : device.w >= 700 ? "rounded-[18px]" : "rounded-[26px]")}>
             <div className="tg flex min-h-0 flex-1 flex-col" data-theme={theme}>
               <header className="flex items-center gap-3 bg-[var(--tg-theme-header-bg-color)] px-3 py-2 shadow-[0_1px_0_rgba(0,0,0,.08)]">
                 <ArrowLeft className="size-5 text-[var(--tg-theme-hint-color)]" aria-hidden />
@@ -355,19 +365,19 @@ export function SimulatorView() {
                 </span>
               </header>
               <div className="tg-wallpaper relative flex min-h-0 flex-1 flex-col">
-                <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto px-3 py-3" aria-live="polite">
+                <div className="mx-auto flex min-h-0 w-full flex-1 flex-col gap-1.5 overflow-y-auto py-3" style={{ maxWidth: layout.column, paddingLeft: layout.pad, paddingRight: layout.pad }} aria-live="polite">
                   {!run ? (
                     <div className="m-auto max-w-[82%] rounded-2xl bg-[var(--tg-service-bg)] px-4 py-3 text-center text-[13px] text-white">
                       <p className="font-semibold">What can this bot do?</p>
-                      <p className="opacity-90">{loaded.title}. Press START below: {startLabel}.</p>
+                      <p className="opacity-90">{loaded.title}. START {startText}.</p>
                     </div>
                   ) : <Service>Today</Service>}
                   {run?.chat.map((c, i) => {
-                    if (c.k === "user") return <div key={i} className="flex pl-10"><OutgoingBubble text={c.text} /></div>;
+                    if (c.k === "user") return <div key={i} className="ml-auto flex w-full" style={{ maxWidth: layout.bubble }}><OutgoingBubble text={c.text} /></div>;
                     if (c.k === "note") return <div key={i} className="py-0.5"><Service tone={c.tone}>{c.text}</Service></div>;
                     const next = run.chat[i + 1];
                     return (
-                      <div key={`b${c.instance}`} className={cn("w-full max-w-[86%] pl-1.5", run.touched === c.instance && "animate-in fade-in-0 slide-in-from-bottom-1")}>
+                      <div key={`b${c.instance}`} style={{ maxWidth: layout.bubble }} className={cn("w-full pl-1.5", run.touched === c.instance && "animate-in fade-in-0 slide-in-from-bottom-1")}>
                         <Bubble logical={c.render} edited={c.edited > 0} widget={c.widget} tail={!next || next.k !== "bot"}
                           meta={<span className="font-mono opacity-70">#{c.instance}</span>}
                           onPress={(aid) => act({ press: aid, message: c.instance })} />
@@ -394,8 +404,9 @@ export function SimulatorView() {
                   </div>
                 )}
               </div>
+              <div className="mx-auto w-full" style={{ maxWidth: layout.wide ? layout.column : undefined }}>
               {!run ? (
-                <button type="button" onClick={begin} className="bg-[var(--tg-theme-bg-color)] py-3.5 text-center text-[15px] font-semibold tracking-wide text-[var(--tg-theme-button-color)] uppercase hover:bg-[var(--tg-theme-secondary-bg-color)]">
+                <button type="button" onClick={begin} className="w-full bg-[var(--tg-theme-bg-color)] py-3.5 text-center text-[15px] font-semibold tracking-wide text-[var(--tg-theme-button-color)] uppercase hover:bg-[var(--tg-theme-secondary-bg-color)]">
                   Start
                 </button>
               ) : (
@@ -406,13 +417,14 @@ export function SimulatorView() {
                   {reply && reply.keyboard.type === "reply" && <ReplyKeyboard logical={reply} onKey={(text) => act({ text })} />}
                 </>
               )}
+              </div>
             </div>
             <figcaption className="flex flex-wrap justify-between gap-1 bg-background px-3 py-1.5 text-[11px] text-muted-foreground">
               <span className="font-medium">Local preview, not Telegram</span>
-              <span>{settingsSummary}{lastBot ? ` · ${(lastBot as any).render.screenId}` : ""}</span>
+              <span>{lastBot ? (lastBot as any).render.screenId : ""}</span>
             </figcaption>
           </figure>
-        </div>
+        </DeviceStage>
       </section>
 
       <section aria-label="Trace" className="flex min-h-0 min-w-0 flex-col border-t bg-background lg:h-[calc(100svh-3.5rem)] lg:border-t-0 lg:border-l">

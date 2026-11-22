@@ -46,3 +46,9 @@ source tabs (plus the built output) and a chat-bubble preview that follows every
 HTML. That repository has no license, so none of its code, CSS, templates, icons or texts were copied; it was
 read as a behavioural reference only, and the Studio's implementation is its own React/shadcn code on the bot-ui
 backend (`/api/widget/build`, `/api/widget/runtime`, `/api/widget/export` with the stale-build rule).
+
+## 21st.dev components
+
+| Component | Source | Id | Date | Use |
+| --- | --- | --- | --- | --- |
+| `src/components/ui/sun-moon-theme-toggle.tsx` (Sun Moon Dark Mode Theme Toggle by dhxwhy) | https://21st.dev/@dhxwhy/components/sun-moon-theme-toggle | 36079 | 2026-11-22 | Fetched through the 21st MCP, unchanged apart from a provenance header. Used inside the Studio only (simulator chat theme, controlled with `syncDocument={false}`, so it never touches the page `.dark` class); not redistributed in the skill or templates. |
