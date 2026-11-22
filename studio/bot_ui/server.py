@@ -58,6 +58,12 @@ def _overlay(snap: Snapshot, screens: dict | None) -> Snapshot:
     return parse_files(snap.root, files)
 
 
+def _examples(snap: Snapshot) -> dict:
+    """Caption values for previews and exports: the declared example of each field (synthetic)."""
+    return {k: f["example"] for k, f in ((snap.project or {}).get("fields") or {}).items()
+            if isinstance(f, dict) and "example" in f}
+
+
 class Studio:
     def __init__(self, root: str, port: int) -> None:
         self.root = root
@@ -118,7 +124,7 @@ class Studio:
                 draft = parse_files(self.root, files)
             if wid not in draft.widgets:
                 return 404, {"ok": False, "error": {"code": "WIDGET_NOT_FOUND", "message": str(wid)}}
-            built = widgets.build(draft, wid, lang=body.get("lang"), values=body.get("values"))
+            built = widgets.build(draft, wid, lang=body.get("lang"), values=body.get("values") or _examples(draft))
             if built["ok"]:
                 built["payload"] = widgets.payload(draft, wid, built, state=body.get("state", "default"))
                 built["payload"]["params"]["html"] = f"<{built['rawBytes']} bytes>"
@@ -126,7 +132,7 @@ class Studio:
             return 200, built
         if path == "/api/widget/export":
             wid = body.get("widget")
-            built = widgets.build(snap, wid, lang=body.get("lang"), values=body.get("values"))
+            built = widgets.build(snap, wid, lang=body.get("lang"), values=body.get("values") or _examples(snap))
             try:
                 return 200, widgets.export(snap, wid, built, body.get("sourceHash", ""))
             except widgets.WidgetError as err:
