@@ -60,7 +60,7 @@ def validate(params: dict[str, Any]) -> tuple[list[str], list[str]]:
             if not isinstance(value, str):
                 errors.append("inline_query_placeholder must be a string ('' = default placeholder)")
         elif key == "inline_feedback_share_denominator":
-            if value not in FEEDBACK_DENOMINATORS:
+            if isinstance(value, bool) or not isinstance(value, int) or value not in FEEDBACK_DENOMINATORS:
                 errors.append("inline_feedback_share_denominator must be one of 1, 10, 100, 1000 (0 = off)")
         elif key == "callback_query_mode":
             if value not in CALLBACK_QUERY_MODES:
@@ -116,20 +116,25 @@ def usernames(me: dict[str, Any]) -> list[str]:
 
 def addressed_to_me(text: str, me: dict[str, Any]) -> bool:
     """'/cmd@name args' in a group is for this bot if `name` is ANY active username."""
-    head = text.split(maxsplit=1)[0] if text else ""
-    if not head.startswith("/"):
+    parts = (text or "").split(maxsplit=1)
+    head = parts[0] if parts else ""
+    command, at, name = head[1:].partition("@") if head.startswith("/") else ("", "", "")
+    if not command:
         return False
-    _, at, name = head.partition("@")
     return not at or name.lower() in usernames(me)
 
 
-def callback_target(cq: dict[str, Any]) -> dict[str, Any]:
-    """Edit address for the message a callback came from, in any callback_query_mode."""
+def callback_target(cq: dict[str, Any]) -> dict[str, Any] | None:
+    """Edit address for the message a callback came from, in any callback_query_mode.
+    None: the message is an InaccessibleMessage (date 0, e.g. deleted) - don't edit it,
+    answer the query and send a fresh message if the user still needs the result."""
     if cq.get("inline_message_id"):
         return {"inline_message_id": cq["inline_message_id"]}
     msg = cq.get("message") or {}
     if not msg.get("chat"):
         raise ValueError("callback without message or inline_message_id")
+    if msg.get("date") == 0:
+        return None
     return {"chat_id": msg["chat"]["id"], "message_id": msg["message_id"]}
 
 

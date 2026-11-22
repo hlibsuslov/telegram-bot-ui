@@ -85,7 +85,8 @@ arrive. Messages sent **via** the bot (inline mode) always come with `inline_mes
 
 - **[API]** A callback with `inline_message_id` has no `message` and no chat. Edit it with
   `editMessageText` / `editMessageReplyMarkup` and `inline_message_id`; `settings.callback_target`
-  returns the right address in every mode.
+  returns the right address in every mode, or `None` for an `InaccessibleMessage` (date 0):
+  answer the query and send the result in a new message instead of editing.
 - **[Heuristic]** With `auto` or `inline`, keep what a handler needs in `callback_data` (it is
   echoed back) or in state keyed by `from.id`; a lookup by `(chat_id, message_id)` finds nothing.
   `ScreenFlow` (`tgkit/flows.py`) keys sessions by message, so it expects `default` (in `auto` it

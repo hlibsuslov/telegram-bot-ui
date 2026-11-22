@@ -38,21 +38,28 @@ class Settings(unittest.TestCase):
         self.assertEqual(settings.validate({"has_topics_enabled": True, "inline_feedback_share_denominator": 0}), ([], []))
         errors, _ = settings.validate({"has_topics_enabled": "yes", "unknown": True, "inline_query_placeholder": None})
         self.assertEqual(len(errors), 3)
+        for bad in (True, False, 10.0, "10"):
+            errors, _ = settings.validate({"inline_feedback_share_denominator": bad})
+            self.assertEqual(len(errors), 1, repr(bad))
         _, warnings = settings.validate({"needs_inline_query_location": True, "can_communicate_with_bots": True})
         self.assertEqual(len(warnings), 2)
 
     def test_callback_target_in_every_mode(self):
         inline = _paths.load("examples", "fixtures", "callback_bot_message_inline_mode.json")["callback_query"]
         self.assertEqual(settings.callback_target(inline), {"inline_message_id": "BAAAAKx2nwABOWNSENT"})
-        classic = {"id": "1", "message": {"message_id": 5, "date": 0, "chat": {"id": 42, "type": "private"}}}
+        classic = {"id": "1", "message": {"message_id": 5, "date": 1763800000, "chat": {"id": 42, "type": "private"}}}
         self.assertEqual(settings.callback_target(classic), {"chat_id": 42, "message_id": 5})
         with self.assertRaises(ValueError):
             settings.callback_target({"id": "2"})
+        gone = {"id": "3", "message": {"message_id": 5, "date": 0, "chat": {"id": 42, "type": "private"}}}
+        self.assertIsNone(settings.callback_target(gone))     # InaccessibleMessage: don't edit
 
     def test_commands_for_any_active_username(self):
         self.assertTrue(settings.addressed_to_me("/start@ORDERS_AI", ME))
         self.assertFalse(settings.addressed_to_me("/start@someone_bot", ME))
         self.assertFalse(settings.addressed_to_me("hello @orders_ai", ME))
+        for text in ("", "   ", "/", "/@orders_ai", None):
+            self.assertFalse(settings.addressed_to_me(text, ME), repr(text))
         self.assertEqual(settings.usernames({"username": "solo_bot"}), ["solo_bot"])
 
     def test_invites(self):

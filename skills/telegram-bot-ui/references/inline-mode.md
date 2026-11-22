@@ -21,8 +21,8 @@ Labels: **[API]** spec; **[Official]** Telegram's guides; **[Heuristic]** this s
 `inline_query_placeholder` and `needs_inline_query_location`; the feedback share is
 write-only. Settings from code: `bot-settings.md#inline-mode-settings`.
 
-Without `/setinline` nobody can invoke the bot inline; without feedback there are no
-`chosen_inline_result` updates at all.
+Without inline mode on (`/setinline` or `supports_inline_queries`) nobody can invoke the bot
+inline; without feedback there are no `chosen_inline_result` updates at all.
 
 ## Flow and state
 

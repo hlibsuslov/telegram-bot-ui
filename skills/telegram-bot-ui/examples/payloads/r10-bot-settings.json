@@ -99,6 +99,54 @@
           ]
         }
       }
+    },
+    {
+      "method": "answerCallbackQuery",
+      "params": {
+        "callback_query_id": "q-off",
+        "text": "Topics off"
+      }
+    },
+    {
+      "method": "editMessageText",
+      "params": {
+        "inline_message_id": "BAAAAKx2nwABOWNSENT",
+        "text": "Topics are off. Orders stay in one chat.",
+        "reply_markup": {
+          "inline_keyboard": [
+            [
+              {
+                "text": "Turn on",
+                "callback_data": "set:1:topics:on"
+              }
+            ]
+          ]
+        }
+      }
+    },
+    {
+      "method": "answerCallbackQuery",
+      "params": {
+        "callback_query_id": "q-gone",
+        "text": "Topics on"
+      }
+    },
+    {
+      "method": "sendMessage",
+      "params": {
+        "chat_id": 444444444,
+        "text": "Topics are on. Each order gets its own topic in the sidebar.",
+        "reply_markup": {
+          "inline_keyboard": [
+            [
+              {
+                "text": "Turn off",
+                "callback_data": "set:1:topics:off"
+              }
+            ]
+          ]
+        }
+      }
     }
   ]
 }
