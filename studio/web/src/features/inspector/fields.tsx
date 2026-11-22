@@ -80,9 +80,9 @@ export function missingLocales(project: Doc, value: any): string[] {
 }
 
 /** One localized text in the current editing language, with a "missing" badge and a way to fill it. */
-export function LocaleText({ sid, pointer, value, onChange, disabled, label, multiline = true, diags, hl, hint }: {
+export function LocaleText({ sid, pointer, value, onChange, disabled, label, multiline = true, diags, hl, hint, max }: {
   sid: string; pointer: string; value: any; onChange: (loc: string, text: string) => void; disabled?: boolean;
-  label: string; multiline?: boolean; diags: Diag[]; hl?: Omit<Highlight, "sid">; hint?: ReactNode;
+  label: string; multiline?: boolean; diags: Diag[]; hl?: Omit<Highlight, "sid">; hint?: ReactNode; max?: number;
 }) {
   const { loaded, editLocale, setHighlight } = useStudio();
   const def = defaultLocale(loaded.project);
@@ -116,6 +116,7 @@ export function LocaleText({ sid, pointer, value, onChange, disabled, label, mul
           </Button>
         )}
         {!missing && others.length > 0 && <span className="text-[10px] text-muted-foreground">missing in {others.join(", ")}</span>}
+        {max && <span className={cn("font-mono text-[10.5px] tabular-nums", [...current].length > max ? "font-semibold text-destructive" : "text-muted-foreground")}>{[...current].length}/{max}</span>}
       </>
     }>
       {multiline

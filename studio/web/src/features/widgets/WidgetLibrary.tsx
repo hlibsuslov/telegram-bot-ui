@@ -1,7 +1,7 @@
 // Widget library: every template (blank, skill gallery, recipes) as a card with a live thumbnail.
 // Thumbnails reuse the sandboxed /preview-frame.html protocol, load lazily (IntersectionObserver)
 // and at most three template builds run at a time.
-import { ArrowLeft, BookOpen, FileQuestion, Languages, Library, Loader2, Package, Plus, Search, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Code2, SlidersHorizontal, FileQuestion, Languages, Library, Loader2, Package, Plus, Search, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { Doc } from "@/core/render.ts";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,7 @@ import { href } from "@/lib/route";
 import { cn } from "@/lib/utils";
 import { Segmented } from "../inspector/fields";
 import { composeDoc, frameScheme, type Runtime } from "./frame";
+import { typeIcon } from "./builder/BuilderSteps";
 
 export interface Template { id: string; title: string; summary: string }
 interface PreviewDoc { ok: boolean; html: string; chatData?: Doc; publicData?: Doc; now?: number; languages?: string[]; rawBytes?: number; compressedBytes?: number }
@@ -107,10 +108,38 @@ export function WidgetLibrary({ onUse, hasWidgets }: { onUse: (t: Template) => v
   const [source, setSource] = useState("all");
   const [info, setInfo] = useState<Record<string, PreviewDoc>>({});
   useEffect(() => { api<{ templates: Template[] }>("/api/widget/templates", {}).then((r) => setTemplates(r.ok ? r.data.templates ?? [] : [])); }, []);
-  const list = (templates ?? [])
-    .filter((t) => source === "all" || sourceOf(t.id) === source || t.id === "blank")
-    .filter((t) => `${t.id} ${t.title} ${t.summary}`.toLowerCase().includes(q.toLowerCase()))
+  const matches = (t: Template) => `${t.id} ${t.title} ${t.summary}`.toLowerCase().includes(q.toLowerCase());
+  // Blank first, then the visual (builder) types; the gallery and recipes are edited as code.
+  const isVisual = (t: Template) => t.id === "blank" || sourceOf(t.id) === "builder";
+  const visual = (templates ?? []).filter((t) => isVisual(t) && (source === "all" || source === "builder") && matches(t))
     .sort((a, b) => (a.id === "blank" ? -1 : b.id === "blank" ? 1 : 0));
+  const list = (templates ?? [])
+    .filter((t) => !isVisual(t))
+    .filter((t) => source === "all" || sourceOf(t.id) === source)
+    .filter(matches);
+  const card = (t: Template) => {
+    const p = info[t.id];
+    const src = sourceOf(t.id);
+    return (
+      <li key={t.id} className="flex flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-border">
+        <LiveThumb t={t} onInfo={(d) => setInfo((m) => (m[t.id] ? m : { ...m, [t.id]: d }))} />
+        <div className="flex flex-1 flex-col gap-2 p-3">
+          <div>
+            <h3 className="flex items-center gap-1.5 text-sm font-semibold">{src === "builder" && (() => { const I = typeIcon(t.id.split(":")[1] ?? ""); return <I className="size-4" aria-hidden />; })()}{t.title}</h3>
+            <p className="line-clamp-2 text-xs text-muted-foreground">{t.summary}</p>
+          </div>
+          <div className="flex flex-wrap gap-1 text-[10.5px]">
+            <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-0.5", src === "builder" ? "bg-emerald-100 text-emerald-900" : src === "recipe" ? "bg-violet-100 text-violet-900" : src === "gallery" ? "bg-sky-100 text-sky-900" : "bg-muted text-muted-foreground")}>
+              {src === "builder" ? <SlidersHorizontal className="size-3" aria-hidden /> : src === "recipe" ? <BookOpen className="size-3" aria-hidden /> : src === "gallery" ? <Sparkles className="size-3" aria-hidden /> : <Plus className="size-3" aria-hidden />}{src === "builder" ? "visual, no code" : src}
+            </span>
+            {p?.languages?.length ? <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground"><Languages className="size-3" aria-hidden />{p.languages.join(", ")}</span> : null}
+            {p?.compressedBytes ? <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground"><Package className="size-3" aria-hidden />{(p.compressedBytes / 1024).toFixed(1)} KB</span> : null}
+          </div>
+          <Button className="mt-auto w-full" onClick={() => onUse(t)}>Use this</Button>
+        </div>
+      </li>
+    );
+  };
   return (
     <div className="mx-auto w-full max-w-6xl space-y-5 p-4 sm:p-6">
       <div className="flex flex-wrap items-end gap-3">
@@ -124,34 +153,22 @@ export function WidgetLibrary({ onUse, hasWidgets }: { onUse: (t: Template) => v
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search widgets" aria-label="Search widgets" className="pl-8" />
         </div>
         <Segmented label="Source" value={source} onChange={setSource}
-          options={[{ value: "all", label: "All" }, { value: "gallery", label: "Gallery" }, { value: "recipe", label: "Recipes" }]} />
+          options={[{ value: "all", label: "All" }, { value: "builder", label: "Visual" }, { value: "gallery", label: "Gallery" }, { value: "recipe", label: "Recipes" }]} />
       </div>
       {templates === null && <p className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Loading the library…</p>}
-      <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4" aria-label="Widget templates">
-        {list.map((t) => {
-          const p = info[t.id];
-          const src = sourceOf(t.id);
-          return (
-            <li key={t.id} className="flex flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-border">
-              <LiveThumb t={t} onInfo={(d) => setInfo((m) => (m[t.id] ? m : { ...m, [t.id]: d }))} />
-              <div className="flex flex-1 flex-col gap-2 p-3">
-                <div>
-                  <h3 className="text-sm font-semibold">{t.title}</h3>
-                  <p className="line-clamp-2 text-xs text-muted-foreground">{t.summary}</p>
-                </div>
-                <div className="flex flex-wrap gap-1 text-[10.5px]">
-                  <span className={cn("inline-flex items-center gap-1 rounded-full px-1.5 py-0.5", src === "recipe" ? "bg-violet-100 text-violet-900" : src === "gallery" ? "bg-sky-100 text-sky-900" : "bg-muted text-muted-foreground")}>
-                    {src === "recipe" ? <BookOpen className="size-3" aria-hidden /> : src === "gallery" ? <Sparkles className="size-3" aria-hidden /> : <Plus className="size-3" aria-hidden />}{src}
-                  </span>
-                  {p?.languages?.length ? <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground"><Languages className="size-3" aria-hidden />{p.languages.join(", ")}</span> : null}
-                  {p?.compressedBytes ? <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-muted-foreground"><Package className="size-3" aria-hidden />{(p.compressedBytes / 1024).toFixed(1)} KB</span> : null}
-                </div>
-                <Button className="mt-auto w-full" onClick={() => onUse(t)}>Use this</Button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      {visual.length > 0 && (
+        <section className="space-y-3" aria-labelledby="lib-visual">
+          <h3 id="lib-visual" className="flex items-center gap-2 text-sm font-semibold"><SlidersHorizontal className="size-4" /> Visual widgets <span className="font-normal text-muted-foreground">· filled in with a form, no code</span></h3>
+          <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4" aria-label="Visual widget templates">{visual.map(card)}</ul>
+        </section>
+      )}
+      {templates && !visual.some((t) => t.id !== "blank") && source !== "gallery" && source !== "recipe" && (
+        <p className="rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground">Visual widgets appear here once the Studio server has the builder.</p>
+      )}
+      <section className="space-y-3" aria-labelledby="lib-code">
+        {visual.length > 0 && <h3 id="lib-code" className="flex items-center gap-2 text-sm font-semibold"><Code2 className="size-4" /> Advanced <span className="font-normal text-muted-foreground">· edited as code</span></h3>}
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(15rem,1fr))] gap-4" aria-label="Widget templates">{list.map(card)}</ul>
+      </section>
       {templates && !list.length && <p className="text-sm text-muted-foreground">No widget matches “{q}”.</p>}
     </div>
   );

@@ -1,8 +1,10 @@
 // Telegram look, drawn locally (no Telegram assets): bot text goes through telegramHtmlToSafe into
 // React elements, never into innerHTML. Links are shown, not followed.
 import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { CheckCheck, CornerUpLeft, ExternalLink, Puzzle, Send, SquareSlash } from "lucide-react";
-import { type Logical, telegramHtmlToSafe } from "@/core/render.ts";
+import {
+  CheckCheck, Clapperboard, CornerUpLeft, ExternalLink, EyeOff, Film, Image as ImageIcon, Mic, Music, Play, Puzzle, Send, Sparkle, SquareSlash, Sticker, Video,
+} from "lucide-react";
+import { type Logical, type Media, telegramHtmlToSafe } from "@/core/render.ts";
 import { cn } from "@/lib/utils";
 
 type SafeNode = ReturnType<typeof telegramHtmlToSafe>[number];
@@ -32,6 +34,7 @@ function renderNodes(nodes: SafeNode[] | undefined, key = "n"): ReactNode[] {
       case "pre": return <pre key={k}>{kids}</pre>;
       case "blockquote": return <blockquote key={k}>{kids}</blockquote>;
       case "tg-spoiler": return <Spoiler key={k}>{kids}</Spoiler>;
+      case "tg-emoji": return <span key={k} className="relative" title="Custom emoji: users who cannot see it get this emoji">{kids}<span className="absolute -top-0.5 -right-1 size-1.5 rounded-full bg-violet-500" aria-hidden /></span>;
       case "a": return <span key={k} className="tg-link" title={n.href ? `Link: ${n.href} (not followed in the preview)` : undefined}>{kids}</span>;
       default: return <span key={k}>{kids}</span>;
     }
@@ -71,6 +74,7 @@ export function InlineKeyboard({ logical, onPress, hl, buttonSlot }: Pick<Bubble
               data-style={b.style} data-hl={hl?.actionId === b.actionId || undefined}
               onClick={onPress ? (e) => { e.stopPropagation(); onPress(b.actionId); } : undefined}
               title={b.url ? `Opens ${b.url} (not followed)` : b.callbackData ? `callback_data ${b.callbackData}` : undefined}>
+              {b.icon && <Sparkle className="size-3 shrink-0" aria-label="custom emoji icon" />}
               <span className="truncate">{b.text}</span>
               {b.url && <ExternalLink className="absolute top-1 right-1 size-2.5 shrink-0" aria-hidden />}
               {buttonSlot?.(b.actionId)}
@@ -111,10 +115,75 @@ function ClampedText({ text, format }: { text: string; format: string }) {
   );
 }
 
+const MEDIA_ICON: Record<string, typeof Puzzle> = { photo: ImageIcon, video: Film, animation: Clapperboard, audio: Music, voice: Mic, video_note: Video, sticker: Sticker };
+
+function mediaLabel(m: Media): string {
+  if (m.source === "missing" || m.file === null) return m.source === "field" ? "field: no value in this run" : "no file";
+  if (m.source === "fileId") return `file_id ${m.file.length > 14 ? `${m.file.slice(0, 12)}…` : m.file}`;
+  if (m.source === "url") { try { return `URL ${new URL(m.file).host}`; } catch { return "URL"; } }
+  return `field value ${m.file.length > 18 ? `${m.file.slice(0, 16)}…` : m.file}`;
+}
+
+/** A drawn stand-in for the media (nothing is downloaded): type icon, source label, spoiler blur. */
+export function MediaCard({ media, compact }: { media: Media; compact?: boolean }) {
+  return <div data-media={media.type} className="contents"><MediaInner media={media} compact={compact} /></div>;
+}
+
+function MediaInner({ media, compact }: { media: Media; compact?: boolean }) {
+  const Icon = MEDIA_ICON[media.type] ?? ImageIcon;
+  const label = mediaLabel(media);
+  if (media.type === "sticker") {
+    return <div className="flex flex-col items-start gap-0.5"><span className={compact ? "text-5xl" : "text-7xl"} role="img" aria-label={`sticker ${media.emoji ?? ""}`}>{media.emoji ?? "🙂"}</span><span className="tg-service rounded-full px-2 py-0.5 text-[10.5px]">sticker · {label}</span></div>;
+  }
+  if (media.type === "video_note") {
+    return (
+      <div className="flex flex-col items-start gap-1">
+        <div className={cn("flex items-center justify-center rounded-full bg-gradient-to-br from-slate-500 to-slate-700 text-white shadow", compact ? "size-28" : "size-40")} aria-label="round video message"><Video className="size-8" /></div>
+        <span className="tg-service rounded-full px-2 py-0.5 text-[10.5px]">video message · {label}</span>
+      </div>
+    );
+  }
+  if (media.type === "voice" || media.type === "audio") {
+    return (
+      <div className="mb-1 flex items-center gap-2.5">
+        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-[var(--tg-theme-button-color)] text-white">{media.type === "voice" ? <Play className="size-4" /> : <Music className="size-4" />}</span>
+        <span className="min-w-0 flex-1">
+          {media.type === "voice"
+            ? <span className="flex h-5 items-end gap-0.5" aria-label="voice message">{[3, 6, 9, 5, 11, 7, 4, 8, 12, 6, 3, 7, 10, 5].map((h, i) => <span key={i} className="w-0.5 rounded-full bg-[var(--tg-theme-button-color)]" style={{ height: h + 4 }} />)}</span>
+            : <span className="block text-[13.5px] font-medium">Audio</span>}
+          <span className="tg-hint block truncate text-[11px]">{label}</span>
+        </span>
+      </div>
+    );
+  }
+  return (
+    <div className={cn("relative -mx-2.5 -mt-1.5 mb-1.5 flex flex-col items-center justify-center gap-1 overflow-hidden rounded-t-[14px] bg-gradient-to-br from-slate-300 to-slate-400 text-slate-700 dark:from-slate-600 dark:to-slate-700 dark:text-slate-100", compact ? "h-28" : "h-40")}>
+      <Icon className="size-8" aria-hidden />
+      <span className="text-[11px] font-medium">{media.type}</span>
+      <span className="rounded-full bg-black/40 px-2 py-0.5 text-[10.5px] text-white">{label}</span>
+      {media.spoiler && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white/30 backdrop-blur-md" aria-label="spoiler: blurred until tapped">
+          <span className="flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 text-[11px] text-white"><EyeOff className="size-3" /> spoiler</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Bubble({ logical, onPress, edited, meta, widget, hl, clampText, buttonSlot, tail = true, time = "10:00" }: BubbleProps) {
+  const media = logical.media;
+  if (media && (media.type === "sticker" || media.type === "video_note")) {
+    return (
+      <div className="w-full">
+        <div className="flex items-end gap-2"><MediaCard media={media} compact={clampText} /><span className="tg-service mb-1 rounded-full px-1.5 py-0.5 text-[10.5px]">{edited ? "edited · " : ""}{time}</span></div>
+        <InlineKeyboard logical={logical} onPress={onPress} hl={hl} buttonSlot={buttonSlot} />
+      </div>
+    );
+  }
   return (
     <div className="w-full">
-      <div className="tg-bubble px-2.5 pt-1.5 pb-1" data-tail={tail}>
+      <div className="tg-bubble overflow-hidden px-2.5 pt-1.5 pb-1" data-tail={tail}>
+        {media && <MediaCard media={media} compact={clampText} />}
         {widget && (
           <div className="mb-1.5 flex items-center gap-2 rounded-lg bg-[color-mix(in_srgb,var(--tg-theme-button-color)_12%,transparent)] px-2 py-1.5 text-[12.5px]">
             <Puzzle className="size-4 shrink-0 text-[var(--tg-theme-button-color)]" aria-hidden />

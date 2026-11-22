@@ -173,6 +173,12 @@ export function ButtonCard({ sid, aid, action, placed, diags, selected }: { sid:
           options={STYLES.map((s) => ({ value: s, label: STYLE_LABELS[s] ?? s }))} diags={diagsAt(diags, `${ptr}/style`)}
           onChange={(v) => update((a) => { if (v) a.style = v; else delete a.style; })} />
       </div>
+      <Field label="Custom emoji icon (optional)" htmlFor={fieldDomId(sid, `${ptr}/icon`)}
+        hint="Digits of a custom emoji, e.g. from a sticker set link. Telegram shows it only if your bot may use custom emoji (Fragment username or a Premium owner).">
+        <Input id={fieldDomId(sid, `${ptr}/icon`)} value={action.icon?.customEmojiId ?? ""} disabled={!caps.structure} inputMode="numeric" placeholder="5368324170671202286" className="font-mono text-[13px]"
+          onChange={(e) => update((a) => { const v = e.target.value.trim(); if (v) a.icon = { customEmojiId: v }; else delete a.icon; }, "icon")} />
+        <FieldDiags list={diagsAt(diags, `${ptr}/icon`)} />
+      </Field>
       <FieldDiags list={diagsAt(diags, ptr).filter((d) => d.code !== "NAVIGATE_TARGET")} />
     </article>
   );

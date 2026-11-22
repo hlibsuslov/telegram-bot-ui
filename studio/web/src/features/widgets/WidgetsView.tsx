@@ -28,6 +28,8 @@ import { renderScreen } from "@/core/render.ts";
 import { composeDoc, frameScheme, type Runtime } from "./frame";
 import { insertMarker, marker, PhotoToSvg } from "./PhotoToSvg";
 import { DataSection, MessageSection, SendSection } from "./WidgetForms";
+import { Step } from "./Step";
+import { BuilderSteps, useBuilderStates } from "./builder/BuilderSteps";
 import { WidgetLibrary, type Template } from "./WidgetLibrary";
 
 interface Build {
@@ -98,29 +100,6 @@ function Timeline({ events, onClear, pro }: { events: Ev[]; onClear: () => void;
 
 const parseMaybe = (s: unknown) => { if (typeof s !== "string") return s; try { return JSON.parse(s); } catch { return s; } };
 
-/** One numbered, collapsible step of the flow. */
-function Step({ n, icon: Icon, title, hint, open, onToggle, children, right }: { n: number; icon: typeof Plus; title: string; hint: string; open: boolean; onToggle: () => void; children: ReactNode; right?: ReactNode }) {
-  return (
-    <section className="rounded-2xl bg-card ring-1 ring-border" aria-labelledby={`wstep-${n}`}>
-      <div className="flex items-start gap-3 p-4">
-        <button type="button" onClick={onToggle} aria-expanded={open} aria-controls={`wstep-${n}-body`} className="flex min-w-0 flex-1 items-start gap-3 text-left">
-          <span className={cn("relative flex size-8 shrink-0 items-center justify-center rounded-xl", open ? "bg-foreground text-background" : "bg-muted text-muted-foreground")}>
-            <Icon className="size-4" aria-hidden />
-            <span className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-background font-mono text-[9.5px] font-semibold text-foreground ring-1 ring-border">{n}</span>
-          </span>
-          <span className="min-w-0 flex-1">
-            <span id={`wstep-${n}`} className="block text-[15px] font-semibold tracking-tight">{title}</span>
-            <span className="block text-xs text-muted-foreground">{hint}</span>
-          </span>
-          <ChevronDown className={cn("mt-1 size-4 shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} aria-hidden />
-        </button>
-        {right}
-      </div>
-      {open && <div id={`wstep-${n}-body`} className="space-y-4 px-4 pb-5 sm:pl-14">{children}</div>}
-    </section>
-  );
-}
-
 function WidgetSwitcher({ current, onNew }: { current: string | null; onNew: () => void }) {
   const { loaded } = useStudio();
   const [open, setOpen] = useState(false);
@@ -178,6 +157,7 @@ function NewWidgetDialog({ open, onOpenChange, preset }: { open: boolean; onOpen
     setBusy(true);
     setErr("");
     try {
+      const ownBase = !store.stale;
       const res = await api("/api/widget/create", { widgetId: id, template, title: title || undefined, expectedRevision: store.saved.revision });
       if (!res.ok) {
         if (res.status === 409) {
@@ -188,6 +168,8 @@ function NewWidgetDialog({ open, onOpenChange, preset }: { open: boolean; onOpen
         return;
       }
       const next = await reload();
+      // Our own write moved the revision: keep the other drafts on top of it (they did not change).
+      if (next && ownBase) store.rebase(next, false);
       if (next) replaceLoaded(next);
       void refreshGit();
       notify(`Created widgets/${id}/ (saved to files, not committed)`, "success");
@@ -262,8 +244,13 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
   const [exported, setExported] = useState<Doc | null>(null);
   const [exportErr, setExportErr] = useState("");
   const [wide, setWide] = useState(false);
+  const [confirmEject, setConfirmEject] = useState(false);
+  const [ejecting, setEjecting] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [open, setOpen] = useState<Set<number>>(() => new Set(isMobile ? [3] : [1, 3, 4, 5]));
+  const isBuilder = !!meta.builder && !meta.builder.ejected;
+  const builderStates = useBuilderStates(meta);
+  const stateIds = builderStates ? builderStates.map((x) => x.id) : states;
+  const [open, setOpen] = useState<Set<number>>(() => new Set(isBuilder ? (isMobile ? [2] : [1, 2, 4]) : isMobile ? [3] : [1, 3, 4, 5]));
   const seq = useRef(0);
   const frameRef = useRef<HTMLIFrameElement>(null);
   const toggle = (n: number) => setOpen((o) => {
@@ -274,13 +261,13 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
   // Narrow screens: one step open at a time.
   useEffect(() => { if (isMobile) setOpen((o) => (o.size > 1 ? new Set([3]) : o)); }, [isMobile]);
   useEffect(() => { if (!langs.includes(lang)) setLang(langs[0]); }, [langs, lang]);
-  useEffect(() => { if (!states.includes(state)) setState(states[0]); }, [states, state]);
+  useEffect(() => { if (stateIds.length && !stateIds.includes(state)) setState(stateIds[0]); }, [stateIds, state]);
 
   useEffect(() => {
     let live = true;
-    api("/api/widget/runtime", { widget: wid }).then((res) => { if (!live) return; if (res.ok) setRuntime(res.data); else notify(`Widget runtime: ${errorText(res.data)}`, "error"); });
+    api("/api/widget/runtime", { widget: wid, state }).then((res) => { if (!live) return; if (res.ok) setRuntime(res.data); else notify(`Widget runtime: ${errorText(res.data)}`, "error"); });
     return () => { live = false; };
-  }, [wid, loaded.revision, notify]);
+  }, [wid, loaded.revision, notify, state]);
 
   // Debounced build; an answer is used only if it belongs to the latest request.
   const filesJson = JSON.stringify(files);
@@ -354,9 +341,12 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
 
   const doExport = async () => {
     setExportErr("");
-    const b = build.current;
-    if (!b?.ok) return setExportErr("Fix the build errors first (step 5).");
-    const res = await api("/api/widget/export", { widget: wid, lang, sourceHash: b.sourceHash });
+    if (draft) return setExportErr("Save first: export uses the saved files.");
+    // Export is always the production build: the saved files in the first state (a preview
+    // state has its own sourceHash and is refused).
+    const saved = await api<Build>("/api/widget/build", { widget: wid, lang });
+    if (!saved.ok || !saved.data.ok) return setExportErr(saved.ok ? `Fix the build errors first: ${saved.data.errors?.[0] ?? ""}` : errorText(saved.data));
+    const res = await api("/api/widget/export", { widget: wid, lang, sourceHash: saved.data.sourceHash });
     if (!res.ok) {
       const code = res.data?.error?.code;
       return setExportErr(code === "STALE_BUILD" ? "Save first: export uses the saved files, and this build is of your unsaved draft." : errorText(res.data));
@@ -440,7 +430,7 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
         <Segmented size="xs" label="Chat theme" value={theme} onChange={setTheme} options={Object.keys(runtime?.themes ?? { light: 1, dark: 1 }).filter((t) => t !== "outgoing").map((t) => ({ value: t, label: t === "light" ? "Light" : t === "dark" ? "Dark" : t }))} />
         <Segmented size="xs" label="Bubble width" value={String(width)} onChange={(v) => setWidth(Number(v))} options={WIDTHS.map((w) => ({ value: String(w), label: String(w) }))} />
         {langs.length > 1 && <Segmented size="xs" label="Widget language" value={lang} onChange={setLang} options={langs.map((l) => ({ value: l, label: l.toUpperCase() }))} />}
-        <div className="w-32"><EnumSelect size="sm" label="Test state" value={state} onChange={setState} options={states.map((s) => ({ value: s, label: s }))} /></div>
+        <div className="w-32"><EnumSelect size="sm" label={builderStates ? "Preview state" : "Test state"} value={state} onChange={setState} options={builderStates ? builderStates.map((x) => ({ value: x.id, label: x.title })) : states.map((s) => ({ value: s, label: s }))} /></div>
         <span className="ml-auto flex items-center gap-1">
           <Button size="icon" variant={offline ? "default" : "ghost"} className="size-8" aria-pressed={offline} onClick={() => setOffline(!offline)} title="Bot offline: requests time out" aria-label="Bot offline"><WifiOff className="size-4" /></Button>
           <Button size="icon" variant="ghost" className="size-8" onClick={() => setReset((r) => r + 1)} title="Restart the widget" aria-label="Restart the widget"><RefreshCw className="size-4" /></Button>
@@ -473,6 +463,51 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
     </div>
   );
 
+  const checkContent = (
+    <>
+            <div className="space-y-2.5">
+              <Meter label="HTML" value={shown?.rawBytes ?? 0} limit={limits.rawBytes} />
+              <Meter label="Compressed (zlib-9)" value={shown?.compressedBytes ?? 0} limit={limits.compressedBytes} />
+              <Meter label={`chat_data · ${state}`} value={dataBytes} limit={limits.dataBytes} />
+              <p className={cn("rounded-lg px-2.5 py-1.5 text-xs font-medium", !shown ? "bg-muted text-muted-foreground" : over ? "bg-red-100 text-red-900" : near ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900")} aria-live="polite">
+                {statusText}{shown && !over ? " · ready to export" : ""}
+              </p>
+            </div>
+            {build.status === "error" && (
+              <Alert variant="destructive"><AlertTitle className="text-xs">Build errors</AlertTitle>
+                <AlertDescription><ul className="list-disc pl-4 font-mono text-[11px]">{(build.current?.errors?.length ? build.current.errors : [build.message]).map((e, i) => <li key={i}>{e}</li>)}</ul></AlertDescription>
+              </Alert>
+            )}
+            {(build.current?.warnings?.length ?? 0) > 0 && (
+              <Alert><AlertTitle className="text-xs">Warnings</AlertTitle><AlertDescription><ul className="list-disc pl-4 font-mono text-[11px]">{build.current!.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul></AlertDescription></Alert>
+            )}
+            <Timeline events={events} onClear={() => setEvents([])} pro={pro} />
+    </>
+  );
+  const messageContent = (
+    <div className="space-y-5">
+              <MessageSection bare wid={wid} meta={meta} update={updateMeta} lang={lang} />
+              <div className="border-t pt-4"><p className="mb-2 flex items-center gap-1.5 text-xs font-semibold"><Send className="size-3.5" aria-hidden /> {pro ? "How it is sent (sendWidget)" : "How it is sent"}</p><SendSection bare meta={meta} update={updateMeta} /></div>
+    </div>
+  );
+
+  const eject = async () => {
+    setEjecting(true);
+    try {
+      const ownBase = !store.stale;
+      const res = await api("/api/widget/eject", { widget: wid, expectedRevision: store.saved.revision });
+      if (!res.ok) { notify(res.status === 409 ? "The project changed; reload and try again." : `Not switched to code: ${errorText(res.data)}`, "error"); return; }
+      const next = await reload();
+      if (next && ownBase) store.rebase(next, false);
+      if (next) replaceLoaded(next);
+      void refreshGit();
+      setConfirmEject(false);
+      notify(`widgets/${wid}/ is now edited as code (saved to files, not committed)`, "success");
+    } finally {
+      setEjecting(false);
+    }
+  };
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="sticky top-14 z-20 flex flex-wrap items-center gap-2 border-b bg-background/95 px-4 py-2.5 backdrop-blur">
@@ -484,7 +519,8 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
           <Button asChild size="sm" variant="outline" className={cn(!draft && "pointer-events-none opacity-50")} aria-disabled={!draft || undefined}>
             <a href={href("changes")} tabIndex={draft ? undefined : -1}><Save className="size-3.5" /> Save</a>
           </Button>
-          <Button size="sm" onClick={doExport} disabled={!build.current?.ok}><Download className="size-3.5" /> Export</Button>
+          {isBuilder && pro && <Button size="sm" variant="outline" onClick={() => setConfirmEject(true)}><Code2 className="size-3.5" /> Edit the code</Button>}
+          <Button size="sm" onClick={doExport} disabled={!build.current?.ok && !lastGood}><Download className="size-3.5" /> Export</Button>
         </span>
         {exportErr && <p role="alert" className="w-full text-right text-xs text-destructive">{exportErr}</p>}
       </div>
@@ -495,12 +531,20 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
         </div>
 
         <div className="min-w-0 space-y-3 lg:order-1">
+          {meta.builder?.ejected && <p className="flex items-center gap-2 rounded-xl bg-muted/50 px-3 py-2 text-xs text-muted-foreground"><Code2 className="size-4" aria-hidden /> Made with the visual builder, now edited as code: the files are the source.</p>}
           {metaError && <Alert variant="destructive"><AlertTitle>widget.json is not valid JSON</AlertTitle><AlertDescription>{metaError}. Fix it in step 2; the forms are paused.</AlertDescription></Alert>}
 
+          {isBuilder ? (
+            <BuilderSteps wid={wid} meta={meta} updateMeta={updateMeta} svgs={svgs} addAsset={addAsset} saving={saving}
+              open={open} toggle={toggle} openOnly={(n) => setOpen(new Set([n]))} theme={theme} setTheme={setTheme}
+              replay={() => setReset((r) => r + 1)} onEject={() => setConfirmEject(true)}
+              checkContent={checkContent} messageContent={messageContent} buildErrors={build.current?.errors?.length ?? 0} />
+          ) : (
+            <>
           <Step n={1} icon={Puzzle} title={pro ? "Widget" : "Your widget"} hint={pro ? "Which widget, its name and the languages it is built in." : "Pick a widget, give it a name and choose its languages."} open={open.has(1)} onToggle={() => toggle(1)}>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Widget">
-                <div className="flex items-center gap-2"><WidgetSwitcher current={wid} onNew={onNew} /><Button size="sm" variant="outline" onClick={onNew}><Library className="size-3.5" /> Library</Button></div>
+            <div className="grid gap-3 xl:grid-cols-2">
+              <Field label="Widget" className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2"><WidgetSwitcher current={wid} onNew={onNew} /><Button size="sm" variant="outline" onClick={onNew}><Library className="size-3.5" /> Library</Button></div>
               </Field>
               <Field label="Title (for you; not shown to users)" htmlFor={`${wid}-title`}>
                 <Input id={`${wid}-title`} value={meta.title ?? ""} disabled={!!metaError} onChange={(e) => updateMeta((m) => { m.title = e.target.value; })} />
@@ -560,32 +604,34 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
 
           <Step n={4} icon={MessageSquareText} title={pro ? "Message" : "Message under the widget"} hint={pro ? "The caption under the widget, how it is sent, and the screen used where widgets are unavailable." : "The text under the widget, and what people see where widgets do not work."} open={open.has(4)} onToggle={() => toggle(4)}>
             <div className={cn("space-y-5", metaError && "pointer-events-none opacity-50")}>
-              <MessageSection bare wid={wid} meta={meta} update={updateMeta} lang={lang} />
-              <div className="border-t pt-4"><p className="mb-2 flex items-center gap-1.5 text-xs font-semibold"><Send className="size-3.5" aria-hidden /> {pro ? "How it is sent (sendWidget)" : "How it is sent"}</p><SendSection bare meta={meta} update={updateMeta} /></div>
+              {messageContent}
             </div>
           </Step>
 
           <Step n={5} icon={ShieldCheck} title="Check" hint={pro ? "Build status, the size limits of Telegram and the requests the widget made in the preview." : "Is it small enough for Telegram, and what did it ask the bot?"} open={open.has(5)} onToggle={() => toggle(5)}>
-            <div className="space-y-2.5">
-              <Meter label="HTML" value={shown?.rawBytes ?? 0} limit={limits.rawBytes} />
-              <Meter label="Compressed (zlib-9)" value={shown?.compressedBytes ?? 0} limit={limits.compressedBytes} />
-              <Meter label={`chat_data · ${state}`} value={dataBytes} limit={limits.dataBytes} />
-              <p className={cn("rounded-lg px-2.5 py-1.5 text-xs font-medium", !shown ? "bg-muted text-muted-foreground" : over ? "bg-red-100 text-red-900" : near ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900")} aria-live="polite">
-                {statusText}{shown && !over ? " · ready to export" : ""}
-              </p>
-            </div>
-            {build.status === "error" && (
-              <Alert variant="destructive"><AlertTitle className="text-xs">Build errors</AlertTitle>
-                <AlertDescription><ul className="list-disc pl-4 font-mono text-[11px]">{(build.current?.errors?.length ? build.current.errors : [build.message]).map((e, i) => <li key={i}>{e}</li>)}</ul></AlertDescription>
-              </Alert>
-            )}
-            {(build.current?.warnings?.length ?? 0) > 0 && (
-              <Alert><AlertTitle className="text-xs">Warnings</AlertTitle><AlertDescription><ul className="list-disc pl-4 font-mono text-[11px]">{build.current!.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul></AlertDescription></Alert>
-            )}
-            <Timeline events={events} onClear={() => setEvents([])} pro={pro} />
+            {checkContent}
           </Step>
+            </>
+          )}
         </div>
       </div>
+
+      <Dialog open={confirmEject} onOpenChange={setConfirmEject}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Code2 className="size-5" /> Edit {wid} as code?</DialogTitle>
+            <DialogDescription>
+              The builder writes its HTML, CSS and JS into widgets/{wid}/ and steps back: from then on those files are the source and the form is read-only.
+              Going back is only possible through Git.
+            </DialogDescription>
+          </DialogHeader>
+          {draft && <p className="rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-950">Save your changes to this widget first; the code is written from the saved files.</p>}
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setConfirmEject(false)}>Cancel</Button>
+            <Button onClick={eject} disabled={ejecting || draft}>{ejecting ? "Switching…" : "Edit the code"}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={wide} onOpenChange={setWide}>
         <DialogContent className="flex h-[90svh] flex-col sm:max-w-[min(96vw,1400px)]">

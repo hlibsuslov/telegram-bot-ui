@@ -1,11 +1,12 @@
 import {
-  Bot, ChevronDown, Copy, FolderGit2, Keyboard, MessageSquarePlus, PencilLine, RotateCcw, Settings2, TextCursorInput, Type, Waypoints, X,
+  Bot, ChevronDown, Copy, FolderGit2, ImagePlus, Keyboard, MessageSquarePlus, PencilLine, RotateCcw, Settings2, TextCursorInput, Type, Waypoints, X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { EDITABLE_FORMATS, keyboardRows, renderScreen, type Doc } from "@/core/render.ts";
+import { CAPTION_MAX, CAPTION_MEDIA, EDITABLE_FORMATS, keyboardRows, mediaOf, MEDIA_TYPES, renderScreen, SPOILER_MEDIA, type Doc } from "@/core/render.ts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { defaultLocale, exampleValues, fieldDomId, KINDS, screenFile } from "@/lib/model";
 import { href } from "@/lib/route";
 import { type Highlight, useStudio } from "@/lib/studio";
@@ -96,6 +97,7 @@ export function ScreenInspector({ sid, compact, selectedAction }: { sid: string;
   const def = defaultLocale(loaded.project);
   const file = screenFile(loaded, sid);
   const msg = screen.message ?? {};
+  const media = mediaOf(screen);
   const fmt: string = msg.format ?? "regular.plain";
   const editableFormat = EDITABLE_FORMATS.has(fmt);
   const set = (fn: (doc: Doc) => void, key?: string) => store.updateScreen(sid, fn, key);
@@ -121,10 +123,15 @@ export function ScreenInspector({ sid, compact, selectedAction }: { sid: string;
         </details>
       )}
 
-      <Group icon={Type} title="Text" hint="What the message says." id={sp("text")}>
-        <LocaleText sid={sid} pointer="/message/text" label="Message" value={msg.text} disabled={!caps.text || !editableFormat} diags={diags}
+      <MediaGroup sid={sid} screen={screen} diags={diags} />
+
+      <Group icon={Type} title="Text" hint={media && !CAPTION_MEDIA.has(media.type) ? "This kind of media has no caption." : media ? "The caption under the media." : "What the message says."} id={sp("text")}>
+        {media && !CAPTION_MEDIA.has(media.type) ? (
+          <p className="text-xs text-muted-foreground">A {media.type === "video_note" ? "round video message" : "sticker"} is sent without text; put any text on its own screen.</p>
+        ) : <LocaleText sid={sid} pointer="/message/text" label={media ? "Caption" : "Message"} value={msg.text} disabled={!caps.text || !editableFormat} diags={diags}
+          max={media ? CAPTION_MAX : 4096}
           hl={{ part: "text" }} onChange={setText((doc) => (doc.message ??= {}))}
-          hint={fmt === "regular.html" ? "Bold: <b>…</b>, italic: <i>…</i>, link: <a href=\"…\">…</a>. {field} is filled in when sent." : "{field} is filled in when sent."} />
+          hint={fmt === "regular.html" ? "Bold: <b>…</b>, italic: <i>…</i>, link: <a href=\"…\">…</a>, custom emoji: <tg-emoji emoji-id=\"…\">☕</tg-emoji>. {field} is filled in when sent." : "{field} is filled in when sent."} />}
         {!editableFormat && <p className="text-xs text-muted-foreground"><span className="font-mono">{fmt}</span> is read-only here; edit <span className="font-mono">{file}</span> in your editor.</p>}
       </Group>
 
@@ -246,5 +253,55 @@ export function ScreenEditor({ sid, selectedAction, onClose, compact }: { sid: s
         </div>
       </div>
     </div>
+  );
+}
+
+const MEDIA_LABEL: Record<string, string> = { photo: "Photo", video: "Video", animation: "GIF / animation", audio: "Audio", voice: "Voice message", video_note: "Round video", sticker: "Sticker" };
+
+/** Media above the text: type, where the file comes from (no uploads), spoiler, sticker emoji. */
+function MediaGroup({ sid, screen, diags }: { sid: string; screen: Doc; diags: ReturnType<typeof useScreenDiags> }) {
+  const { store, caps, loaded } = useStudio();
+  const m: Doc | null = screen.message?.media && typeof screen.message.media === "object" ? screen.message.media : null;
+  const set = (fn: (media: Doc | null) => Doc | null, key?: string) => store.updateScreen(sid, (doc) => {
+    doc.message ??= {};
+    const next = fn(doc.message.media ?? null);
+    if (next) doc.message.media = next; else delete doc.message.media;
+  }, key);
+  const source = m?.file && typeof m.file === "object" ? (["fileId", "url", "field"].find((k) => k in m.file) ?? "fileId") : "fileId";
+  const fields = Object.keys(loaded.project.fields ?? {});
+  const at = (p: string) => diagsAt(diags, p);
+  return (
+    <Group icon={ImagePlus} title="Media" hint="A photo, video, voice or sticker sent with the message. Files are referenced, never uploaded." id={`${sid}-media`} collapsible defaultOpen={!!m}>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <SelectField id={fieldDomId(sid, "/message/media/type")} label="Kind" value={m?.type ?? ""} disabled={!caps.structure} diags={at("/message/media/type")}
+          options={[{ value: "", label: "No media (text only)" }, ...Object.keys(MEDIA_TYPES).map((t) => ({ value: t, label: MEDIA_LABEL[t] ?? t }))]}
+          onChange={(v) => set((cur) => (v ? { ...(cur ?? { file: { fileId: "" } }), type: v } : null))} />
+        {m && (
+          <SelectField id={fieldDomId(sid, "/message/media/file")} label="File comes from" value={source} disabled={!caps.structure} diags={at("/message/media/file")}
+            options={[{ value: "fileId", label: "Telegram file_id" }, { value: "url", label: "https:// link" }, { value: "field", label: "A field (set by the bot)" }]}
+            onChange={(v) => set((cur) => ({ ...cur, file: { [v]: v === "field" ? fields[0] ?? "" : "" } }))} />
+        )}
+      </div>
+      {m && source !== "field" && (
+        <Field label={source === "url" ? "Link" : "file_id"} htmlFor={fieldDomId(sid, `/message/media/file/${source}`)} hint={source === "fileId" ? "Copy it from a message your bot received or sent." : "Telegram downloads it from this address."}>
+          <Input id={fieldDomId(sid, `/message/media/file/${source}`)} value={m.file?.[source] ?? ""} disabled={!caps.structure} className="font-mono text-[13px]"
+            onChange={(e) => set((cur) => ({ ...cur, file: { [source]: e.target.value } }), "media-file")} />
+          <FieldDiags list={at(`/message/media/file/${source}`)} />
+        </Field>
+      )}
+      {m && source === "field" && (
+        <SelectField id={fieldDomId(sid, "/message/media/file/field")} label="Field" value={m.file?.field ?? ""} disabled={!caps.structure} diags={at("/message/media/file/field")}
+          options={fields.map((f) => ({ value: f, label: f }))} onChange={(v) => set((cur) => ({ ...cur, file: { field: v } }))} />
+      )}
+      {m && SPOILER_MEDIA.has(m.type) && (
+        <label className="flex items-center justify-between gap-3 text-sm">Hide under a spoiler<Switch checked={!!m.spoiler} disabled={!caps.structure} onCheckedChange={(v) => set((cur) => { const n = { ...cur }; if (v) n.spoiler = true; else delete n.spoiler; return n; })} aria-label="Spoiler" /></label>
+      )}
+      {m?.type === "sticker" && (
+        <Field label="Emoji shown in the preview" htmlFor={fieldDomId(sid, "/message/media/emoji")}>
+          <Input id={fieldDomId(sid, "/message/media/emoji")} value={m.emoji ?? ""} disabled={!caps.structure} className="w-24 text-lg" onChange={(e) => set((cur) => ({ ...cur, emoji: e.target.value }), "media-emoji")} />
+        </Field>
+      )}
+      <FieldDiags list={diagsAt(diags, "/message/media")} />
+    </Group>
   );
 }
