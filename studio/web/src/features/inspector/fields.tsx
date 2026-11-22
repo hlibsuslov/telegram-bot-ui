@@ -12,8 +12,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { defaultLocale, fieldDomId, locales } from "@/lib/model";
 import { type Highlight, useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
-import { EmojiPicker } from "@/features/emoji/EmojiPicker";
-import { tgEmojiHtml } from "@/features/emoji/context";
+import { EmojiPicker, type Picked } from "@/features/emoji/EmojiPicker";
+import { insertEmoji as insertEmojiText, type Placement } from "@/features/emoji/text.ts";
 
 export function useScreenDiags(sid: string): Diag[] {
   const { diags } = useStudio();
@@ -82,11 +82,17 @@ export function missingLocales(project: Doc, value: any): string[] {
 }
 
 /** One localized text in the current editing language, with a "missing" badge and a way to fill it. */
-export function LocaleText({ sid, pointer, value, onChange, disabled, label, multiline = true, diags, hl, hint, max, emoji }: {
+export function LocaleText({ sid, pointer, value, onChange, disabled, label, multiline = true, diags, hl, hint, max, emoji, emojiPlain, emojiPick, emojiLabel }: {
   sid: string; pointer: string; value: any; onChange: (loc: string, text: string) => void; disabled?: boolean;
   label: string; multiline?: boolean; diags: Diag[]; hl?: Omit<Highlight, "sid">; hint?: ReactNode; max?: number;
   /** regular.html text: offer the premium emoji picker, which inserts <tg-emoji> at the cursor. */
   emoji?: boolean;
+  /** Plain text: the picker still inserts; this gets the new text (HTML-escaped around the
+   * emoji) and switches the message to regular.html in the same edit. */
+  emojiPlain?: (loc: string, text: string) => void;
+  /** Where Telegram takes no custom emoji in the text (button labels): the pick goes here instead. */
+  emojiPick?: (p: Picked) => void;
+  emojiLabel?: string;
 }) {
   const fieldRef = useRef<HTMLTextAreaElement & HTMLInputElement>(null);
   const { loaded, editLocale, setHighlight } = useStudio();
@@ -103,14 +109,12 @@ export function LocaleText({ sid, pointer, value, onChange, disabled, label, mul
   const others = ls.filter((l) => l !== loc && (typeof obj[l] !== "string" || !obj[l]));
   const sourceLoc = loc !== def ? def : ls.find((l) => l !== def && typeof obj[l] === "string" && obj[l]);
   const source = sourceLoc ? obj[sourceLoc] : undefined;
-  const insertEmoji = (id: string, fallback: string) => {
+  const insertEmoji = (id: string, fallback: string, where: Placement = "cursor") => {
     const el = fieldRef.current;
-    const at = el && document.activeElement !== null && el.selectionStart !== null ? el.selectionStart : current.length;
-    const end = el?.selectionEnd ?? at;
-    const next = current.slice(end);
-    const tag = tgEmojiHtml(id, fallback) + (next && !/^\s/.test(next) ? " " : "");
-    onChange(loc, current.slice(0, at) + tag + next);
-    requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(at + tag.length, at + tag.length); });
+    const pos = el && el.selectionStart !== null ? el.selectionStart : current.length;
+    const { text, caret } = insertEmojiText(current, { start: pos, end: el?.selectionEnd ?? pos }, where, id, fallback, !!emojiPlain);
+    (emojiPlain ?? onChange)(loc, text);
+    requestAnimationFrame(() => { el?.focus(); el?.setSelectionRange(caret, caret); });
   };
   const common = {
     id, value: current, disabled, ref: fieldRef,
@@ -130,7 +134,9 @@ export function LocaleText({ sid, pointer, value, onChange, disabled, label, mul
           </Button>
         )}
         {!missing && others.length > 0 && <span className="text-[10px] text-muted-foreground">missing in {others.join(", ")}</span>}
-        {emoji && !disabled && <EmojiPicker label="Emoji" onPick={(p) => insertEmoji(p.id, p.fallback)} />}
+        {(emoji || emojiPlain || emojiPick) && !disabled && (
+          <EmojiPicker label={emojiLabel ?? "Emoji"} placements={!emojiPick} onPick={(p) => (emojiPick ? emojiPick(p) : insertEmoji(p.id, p.fallback, p.where))} />
+        )}
         {max && <span className={cn("font-mono text-[10.5px] tabular-nums", [...current].length > max ? "font-semibold text-destructive" : "text-muted-foreground")}>{[...current].length}/{max}</span>}
       </>
     }>
@@ -141,6 +147,8 @@ export function LocaleText({ sid, pointer, value, onChange, disabled, label, mul
     </Field>
   );
 }
+
+export { dropLeadingEmoji, plainToHtml } from "@/features/emoji/text.ts";
 
 const NONE = "__none__";
 

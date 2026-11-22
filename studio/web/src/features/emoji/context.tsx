@@ -95,7 +95,7 @@ export function EmojiProvider({ loaded, children }: { loaded: Loaded; children: 
   return <EmojiContext.Provider value={value}>{children}</EmojiContext.Provider>;
 }
 
-export const tgEmojiHtml = (id: string, fallback: string) => `<tg-emoji emoji-id="${id}">${fallback || "⭐"}</tg-emoji>`;
+export { tgEmojiHtml } from "./text.ts";
 
 /** Slots of the vocabulary that accept this ordinary emoji (variation selectors ignored). */
 export function slotsForEmoji(vocab: Slot[], emoji: string): Slot[] {

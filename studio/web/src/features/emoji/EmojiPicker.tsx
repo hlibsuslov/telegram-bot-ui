@@ -10,7 +10,18 @@ import { cn } from "@/lib/utils";
 import { CustomEmoji } from "./CustomEmoji";
 import { useEmoji } from "./context";
 
-export interface Picked { id: string; fallback: string; slot?: string }
+import type { Placement } from "./text.ts";
+
+export type { Placement };
+export interface Picked { id: string; fallback: string; slot?: string; where?: Placement }
+
+const PLACEMENTS: { value: Placement; label: string }[] = [
+  { value: "start", label: "At the start" }, { value: "cursor", label: "At the cursor" }, { value: "end", label: "At the end" },
+];
+const WHERE_KEY = "bot-ui-studio:emoji-where";
+const savedWhere = (): Placement => {
+  try { const v = localStorage.getItem(WHERE_KEY); return v === "start" || v === "end" ? v : "cursor"; } catch { return "cursor"; }
+};
 
 function Tile({ id, fallback, caption, selected, onPick }: { id: string; fallback: string; caption?: string; selected?: boolean; onPick: () => void }) {
   return (
@@ -22,11 +33,15 @@ function Tile({ id, fallback, caption, selected, onPick }: { id: string; fallbac
   );
 }
 
-export function EmojiPicker({ onPick, selected, disabled, label = "Premium emoji", trigger, align = "end" }: {
+export function EmojiPicker({ onPick, selected, disabled, label = "Premium emoji", trigger, align = "end", placements }: {
   onPick: (p: Picked) => void; selected?: string | null; disabled?: boolean; label?: string; trigger?: ReactNode; align?: "start" | "end";
+  /** Text fields: let the person choose where the emoji goes (remembered per browser). */
+  placements?: boolean;
 }) {
   const { doc, slotOf } = useEmoji();
   const [open, setOpen] = useState(false);
+  const [where, setWhere] = useState<Placement>(savedWhere);
+  const chooseWhere = (w: Placement) => { setWhere(w); try { localStorage.setItem(WHERE_KEY, w); } catch { /* storage blocked */ } };
   const [q, setQ] = useState("");
   const icons = Object.entries(doc.library.icons ?? {});
   const packs = Object.entries(doc.library.packs ?? {});
@@ -34,7 +49,7 @@ export function EmojiPicker({ onPick, selected, disabled, label = "Premium emoji
   const match = (fallback: string, slot?: string, id?: string) =>
     !query || fallback.includes(q.trim()) || (slot ?? "").includes(query) || (id ?? "").startsWith(query);
   const shownIcons = useMemo(() => icons.filter(([slot, i]) => match(i.fallback, slot, i.id)), [icons, query]);
-  const pick = (p: Picked) => { onPick(p); setOpen(false); };
+  const pick = (p: Picked) => { onPick(placements ? { ...p, where } : p); setOpen(false); };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -54,6 +69,14 @@ export function EmojiPicker({ onPick, selected, disabled, label = "Premium emoji
           </div>
         ) : (
           <>
+            {placements && (
+              <div role="radiogroup" aria-label="Where the emoji goes" className="mb-2 grid grid-cols-3 rounded-lg bg-muted p-0.5">
+                {PLACEMENTS.map((o) => (
+                  <button key={o.value} type="button" role="radio" aria-checked={where === o.value} onClick={() => chooseWhere(o.value)}
+                    className="rounded-md px-1.5 py-1 text-[11px] text-muted-foreground aria-checked:bg-background aria-checked:text-foreground aria-checked:shadow-sm">{o.label}</button>
+                ))}
+              </div>
+            )}
             <div className="relative mb-2">
               <Search className="pointer-events-none absolute top-1/2 left-2 size-3.5 -translate-y-1/2 text-muted-foreground" aria-hidden />
               <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Meaning, emoji or id" className="h-8 pl-7 text-xs" aria-label="Search premium emoji" autoFocus />

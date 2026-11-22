@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { CustomEmoji } from "@/features/emoji/CustomEmoji";
 import { EmojiPicker } from "@/features/emoji/EmojiPicker";
 import { useEmoji } from "@/features/emoji/context";
-import { diagsAt, EnumSelect, Field, FieldDiags, LocaleText, Segmented, SelectField, TargetSelect } from "./fields";
+import { diagsAt, dropLeadingEmoji, EnumSelect, Field, FieldDiags, LocaleText, Segmented, SelectField, TargetSelect } from "./fields";
 
 const TYPE_KEYS = ["to", "rule", "fallback", "url", "text", "handlerId", "outcomes", "pending"];
 
@@ -139,11 +139,19 @@ const TYPE_LABEL: Record<string, string> = {
 
 /** Buttons group: what the button says and looks like. */
 export function ButtonCard({ sid, aid, action, placed, diags, selected }: { sid: string; aid: string; action: Doc; placed: boolean; diags: Diag[]; selected?: boolean }) {
-  const { store, loaded, caps, setHighlight, pro } = useStudio();
+  const { store, loaded, caps, setHighlight, pro, working } = useStudio();
   const def = defaultLocale(loaded.project);
   const ptr = `/actions/${aid}`;
   const hl = { part: "action" as const, actionId: aid };
   const { update, setLocale } = useActionUpdate(sid, aid);
+  const keyboardType = working.screens[sid]?.keyboard?.type ?? "inline";
+  // An icon goes before the label; the emoji the label started with would show twice.
+  const setIcon = (id: string) => update((a) => {
+    if (!id) { delete a.icon; return; }
+    a.icon = { customEmojiId: id };
+    if (typeof a.label === "string") a.label = dropLeadingEmoji(a.label) || a.label;
+    else if (a.label && typeof a.label === "object") for (const k of Object.keys(a.label)) a.label[k] = dropLeadingEmoji(a.label[k]) || a.label[k];
+  }, "icon");
   return (
     <article id={`${fieldDomId(sid, ptr)}-card`} className={cn("scroll-mt-4 space-y-3 rounded-xl bg-card p-3 ring-1 ring-border transition-shadow", selected && "ring-2 ring-amber-400")}
       aria-label={`Button ${aid}`} onFocus={() => setHighlight({ sid, ...hl })}>
@@ -171,15 +179,15 @@ export function ButtonCard({ sid, aid, action, placed, diags, selected }: { sid:
         </div>
       </header>
       <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_12rem]">
-        <LocaleText sid={sid} pointer={`${ptr}/label`} label="Label" value={action.label} multiline={false} disabled={!caps.text} diags={diags} onChange={setLocale("label")} hl={hl} />
+        <LocaleText sid={sid} pointer={`${ptr}/label`} label="Label" value={action.label} multiline={false} disabled={!caps.text} diags={diags} onChange={setLocale("label")} hl={hl}
+          emojiLabel="Icon" emojiPick={caps.structure && ["inline", "reply"].includes(keyboardType) ? (p) => setIcon(p.id) : undefined} />
         <SelectField id={fieldDomId(sid, `${ptr}/style`)} label="Colour" value={action.style ?? ""} disabled={!caps.structure}
           options={STYLES.map((s) => ({ value: s, label: STYLE_LABELS[s] ?? s }))} diags={diagsAt(diags, `${ptr}/style`)}
           onChange={(v) => update((a) => { if (v) a.style = v; else delete a.style; })} />
       </div>
       <Field label="Premium emoji icon (optional)" htmlFor={fieldDomId(sid, `${ptr}/icon`)}
         hint="Shown before the label. Pick it from the bot's icons (Emoji page); Telegram shows it only if your bot may use custom emoji (Fragment username or a Premium owner).">
-        <IconField sid={sid} ptr={ptr} value={action.icon?.customEmojiId ?? ""} disabled={!caps.structure}
-          onChange={(v) => update((a) => { if (v) a.icon = { customEmojiId: v }; else delete a.icon; }, "icon")} />
+        <IconField sid={sid} ptr={ptr} value={action.icon?.customEmojiId ?? ""} disabled={!caps.structure} onChange={setIcon} />
         <FieldDiags list={diagsAt(diags, `${ptr}/icon`)} />
       </Field>
       <FieldDiags list={diagsAt(diags, ptr).filter((d) => d.code !== "NAVIGATE_TARGET")} />

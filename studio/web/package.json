@@ -8,7 +8,7 @@
     "build": "vite build",
     "build:artifact": "vite build --mode artifact && node scripts/inline-artifact.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --test src/features/widgets/vectorize.test.ts src/features/widgets/frame.test.ts src/features/widgets/builder/logic.test.ts"
+    "test": "node --test src/features/widgets/vectorize.test.ts src/features/widgets/frame.test.ts src/features/widgets/builder/logic.test.ts src/features/emoji/text.test.ts"
   },
   "dependencies": {
     "@dagrejs/dagre": "3.1.3",

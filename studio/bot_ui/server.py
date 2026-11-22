@@ -229,6 +229,8 @@ class Studio:
         try:
             if path == "/api/emoji":
                 return 200, emoji.client_document(self.root, snap)
+            if snap.read_only and path in ("/api/emoji/import", "/api/emoji/icon", "/api/emoji/remove-pack"):
+                return 409, {"ok": False, "error": {"code": "READ_ONLY", "message": "this project opens read-only"}}
             if path == "/api/emoji/import":
                 res = emoji.import_pack(self.root, link=body.get("link"), sticker_set=body.get("stickerSet"))
                 return 200, {**res, **emoji.client_document(self.root, open_snapshot(self.root))}

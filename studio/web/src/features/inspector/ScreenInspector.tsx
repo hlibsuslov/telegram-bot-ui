@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { RequestChange } from "../changes/Tray";
 import { ScreenPreview, type Hl } from "../preview/Telegram";
 import { ButtonAdvanced, ButtonCard, ButtonRoute } from "./ActionEditor";
-import { DiagLine, diagsAt, EnumSelect, Field, FieldDiags, LocaleText, Segmented, SelectField, TargetSelect, useScreenDiags } from "./fields";
+import { DiagLine, diagsAt, EnumSelect, Field, FieldDiags, LocaleText, plainToHtml, Segmented, SelectField, TargetSelect, useScreenDiags } from "./fields";
 import { KeyboardEditor, NewAction } from "./KeyboardEditor";
 
 export function DraftBadge({ draft, isNew }: { draft: boolean; isNew?: boolean }) {
@@ -103,6 +103,9 @@ export function ScreenInspector({ sid, compact, selectedAction }: { sid: string;
   const set = (fn: (doc: Doc) => void, key?: string) => store.updateScreen(sid, fn, key);
   const setText = (base: (doc: Doc) => Doc) => (loc: string, text: string) =>
     set((doc) => { const o = base(doc); o.text = typeof o.text === "object" && o.text ? { ...o.text, [loc]: text } : { [loc]: text }; }, `text:${loc}`);
+  // Premium emoji in a plain-text message: switch it to regular.html (escaped) in the same edit.
+  const toHtml = (base: (doc: Doc) => Doc) => (loc: string, text: string) =>
+    set((doc) => { doc.message ??= {}; plainToHtml(doc.message); const o = base(doc); o.text = { ...(typeof o.text === "object" && o.text ? o.text : {}), [loc]: text }; }, `text:${loc}`);
   const placed = new Set(keyboardRows(screen).flat());
   const actions = Object.entries<Doc>(screen.actions ?? {});
   const inputFields = Object.entries<Doc>(loaded.project.fields ?? {}).filter(([, f]) => f.source === "input");
@@ -129,7 +132,7 @@ export function ScreenInspector({ sid, compact, selectedAction }: { sid: string;
         {media && !CAPTION_MEDIA.has(media.type) ? (
           <p className="text-xs text-muted-foreground">A {media.type === "video_note" ? "round video message" : "sticker"} is sent without text; put any text on its own screen.</p>
         ) : <LocaleText sid={sid} pointer="/message/text" label={media ? "Caption" : "Message"} value={msg.text} disabled={!caps.text || !editableFormat} diags={diags}
-          max={media ? CAPTION_MAX : 4096} emoji={fmt === "regular.html"}
+          max={media ? CAPTION_MAX : 4096} emoji={fmt === "regular.html"} emojiPlain={fmt === "regular.plain" ? toHtml((doc) => doc.message) : undefined}
           hl={{ part: "text" }} onChange={setText((doc) => (doc.message ??= {}))}
           hint={fmt === "regular.html" ? "Bold: <b>…</b>, italic: <i>…</i>, link: <a href=\"…\">…</a>, premium emoji: the Emoji button, or <tg-emoji emoji-id=\"…\">☕</tg-emoji>. {field} is filled in when sent." : "{field} is filled in when sent."} />}
         {!editableFormat && <p className="text-xs text-muted-foreground"><span className="font-mono">{fmt}</span> is read-only here; edit <span className="font-mono">{file}</span> in your editor.</p>}
@@ -175,6 +178,7 @@ export function ScreenInspector({ sid, compact, selectedAction }: { sid: string;
         ) : <p className="text-xs"><span className="font-mono">{fmt}</span> is read-only in the Studio (FORMAT_READ_ONLY).</p>}
         {Object.entries<Doc>(msg.states ?? {}).map(([st, v]) => (
           <LocaleText key={st} sid={sid} pointer={`/message/states/${st}/text`} label={`Text while “${st}”`} value={v?.text}
+            emoji={fmt === "regular.html"} emojiPlain={fmt === "regular.plain" ? toHtml((doc) => doc.message.states[st]) : undefined}
             hl={{ part: "text", state: st }} disabled={!caps.text || !editableFormat} diags={diags} onChange={setText((doc) => doc.message.states[st])} />
         ))}
         {caps.structure && editableFormat && !msg.states?.loading && (

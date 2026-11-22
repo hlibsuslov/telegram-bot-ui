@@ -79,7 +79,7 @@ class Token(unittest.TestCase):
         bot = emoji._Bot(TOKEN)
         self.assertNotIn(TOKEN, repr(bot))
         err = urllib.error.URLError(f"cannot reach https://api.telegram.org/bot{TOKEN}/getStickerSet")
-        with mock.patch("urllib.request.urlopen", side_effect=err), self.assertRaises(emoji.EmojiError) as cm:
+        with mock.patch.object(emoji._OPENER, "open", side_effect=err), self.assertRaises(emoji.EmojiError) as cm:
             bot.call("getStickerSet", {"name": "x"})
         self.assertEqual(cm.exception.code, "TELEGRAM_UNREACHABLE")
         self.assertNotIn(TOKEN, cm.exception.message)
@@ -139,7 +139,7 @@ class Library(ProjectCase):
             return resp
 
         env = {"TELEGRAM_TEST_BOT_TOKEN": "", "BOT_TOKEN": "", "BOT_UI_EMOJI_RESOLVER": "https://bot-ui.example/api/emoji-pack"}
-        with mock.patch.dict(os.environ, env), mock.patch("urllib.request.urlopen", side_effect=urlopen):
+        with mock.patch.dict(os.environ, env), mock.patch.object(emoji._OPENER, "open", side_effect=urlopen):
             res = emoji.import_pack(self.root, link="https://t.me/addemoji/demo_line_icons")
         self.assertEqual((res["source"], res["count"], res["previews"], res["previewsFailed"]), ("resolver", 47, 46, 1))
         self.assertEqual(asked[0], "https://bot-ui.example/api/emoji-pack/demo_line_icons")
@@ -155,9 +155,36 @@ class Library(ProjectCase):
             self.assertEqual(emoji.resolver_url(), "http://localhost:3020/api/emoji-pack")
         err = urllib.error.HTTPError("u", 404, "nf", {"Content-Type": "application/json"}, None)
         err.read = lambda n=-1: b'{"ok":false,"error":{"code":"PACK_NOT_FOUND","message":"no such pack"}}'
-        with mock.patch("urllib.request.urlopen", side_effect=err), self.assertRaises(emoji.EmojiError) as cm:
+        with mock.patch.object(emoji._OPENER, "open", side_effect=err), self.assertRaises(emoji.EmojiError) as cm:
             emoji._Resolver("https://bot-ui.example/api/emoji-pack").pack("nope")
         self.assertEqual(cm.exception.code, "PACK_NOT_FOUND")
+        self.assertIsNone(emoji._NoRedirect().redirect_request(None, None, 302, "Found", {}, "https://evil.example/"))
+
+    def test_an_empty_resolver_answer_changes_nothing(self):
+        emoji.import_pack(self.root, sticker_set=fixture())
+        before = self.raw(emoji.LIBRARY)
+        empty = mock.Mock(host="bot-ui.example")
+        empty.pack.return_value = {"ok": True, "name": "demo_line_icons", "title": "x", "emoji": None}
+        with self.assertRaises(emoji.EmojiError) as cm:
+            emoji.import_pack(self.root, link="demo_line_icons", resolver=empty)
+        self.assertEqual(cm.exception.code, "RESOLVER_ERROR")
+        self.assertEqual(self.raw(emoji.LIBRARY), before)
+
+    def test_a_hand_broken_library_still_loads(self):
+        os.makedirs(os.path.join(self.root, "emoji"), exist_ok=True)
+        self.write_raw(emoji.LIBRARY, json.dumps({"format": emoji.FORMAT, "packs": {"ok_pack": {"emoji": [
+            {"id": "123", "fallback": 7}, {"id": "abc"}, "x"]}, "bad name!": {}}, "icons": {"home": {"id": 5}, "cart": {"id": "123", "fallback": None}}}).encode())
+        lib = emoji.load_library(self.root)
+        self.assertEqual(lib["packs"]["ok_pack"]["emoji"], [{"id": "123", "fallback": ""}])
+        self.assertEqual(list(lib["packs"]), ["ok_pack"])
+        self.assertEqual(lib["icons"], {"cart": {"id": "123", "fallback": ""}})
+        emoji.brief(open_snapshot(self.root), lib)  # no crash on what is left
+
+    def test_env_token_is_trimmed(self):
+        with mock.patch.dict(os.environ, {"TELEGRAM_TEST_BOT_TOKEN": TOKEN + "\n"}):
+            self.assertEqual(emoji.token_from_env(), (TOKEN, "TELEGRAM_TEST_BOT_TOKEN"))
+        with self.assertRaises(emoji.EmojiError):
+            emoji._Bot(TOKEN + "\n")
 
     def test_icon_map_one_meaning_per_emoji_and_audit_shape(self):
         emoji.import_pack(self.root, sticker_set=fixture())
@@ -281,6 +308,16 @@ class Server(ProjectCase):
             self.assertEqual(self.req("GET", bad)[0], 404, bad)
         status, raw, _ = self.req("POST", "/api/emoji", {})
         self.assertEqual(json.loads(raw)["previews"], {"0100000000000024": "0100000000000024.webp"})
+
+    def test_a_read_only_project_refuses_library_writes(self):
+        doc = self.read("project.json")
+        doc["schemaVersion"] = 999
+        self.write_raw("project.json", json.dumps(doc).encode())
+        for path, body in (("/api/emoji/import", {"stickerSet": fixture()}), ("/api/emoji/icon", {"slot": "home", "id": "1", "fallback": "🏠"}),
+                           ("/api/emoji/remove-pack", {"pack": "x"})):
+            status, raw, _ = self.req("POST", path, body)
+            self.assertEqual((status, json.loads(raw)["error"]["code"]), (409, "READ_ONLY"), path)
+        self.assertFalse(os.path.exists(os.path.join(self.root, "emoji")))
 
 
 if __name__ == "__main__":

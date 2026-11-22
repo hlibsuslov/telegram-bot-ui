@@ -24,13 +24,14 @@ import json
 import os
 import re
 import time
+import uuid
 import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
 
 from . import skill
-from .project import STATE_DIR, Snapshot, resolve_inside
+from .project import STATE_DIR, PathError, Snapshot, resolve_inside
 
 LIBRARY = "emoji/library.json"
 FORMAT = "bot-ui-emoji/v1"
@@ -82,20 +83,39 @@ def load_library(root: str) -> dict:
         raise EmojiError("LIBRARY_INVALID", f"{LIBRARY} is not valid UTF-8 JSON: {err}") from None
     if not isinstance(doc, dict) or doc.get("format") != FORMAT:
         raise EmojiError("LIBRARY_INVALID", f"{LIBRARY} is not a {FORMAT} document")
-    doc.setdefault("packs", {})
-    doc.setdefault("icons", {})
-    return doc
+    return _sanitized(doc)
+
+
+def _sanitized(doc: dict) -> dict:
+    """Drop entries of the wrong shape (a hand-edited file must not break every surface)."""
+    packs = {}
+    for name, pack in (doc.get("packs") if isinstance(doc.get("packs"), dict) else {}).items():
+        if not isinstance(pack, dict) or not PACK_NAME.match(str(name)):
+            continue
+        emoji = [{**e, "fallback": e.get("fallback") if isinstance(e.get("fallback"), str) else ""}
+                 for e in (pack.get("emoji") if isinstance(pack.get("emoji"), list) else [])
+                 if isinstance(e, dict) and isinstance(e.get("id"), str) and EMOJI_ID.match(e["id"])]
+        packs[name] = {**pack, "title": str(pack.get("title") or name), "link": str(pack.get("link") or ""), "emoji": emoji}
+    icons = {slot: {**i, "fallback": i.get("fallback") if isinstance(i.get("fallback"), str) else ""}
+             for slot, i in (doc.get("icons") if isinstance(doc.get("icons"), dict) else {}).items()
+             if isinstance(i, dict) and isinstance(i.get("id"), str) and EMOJI_ID.match(i["id"]) and SLOT_RE.match(str(slot))}
+    return {**doc, "packs": packs, "icons": icons}
 
 
 def has_library(root: str) -> bool:
     return os.path.isfile(os.path.join(root, *LIBRARY.split("/")))
 
 
-def save_library(root: str, lib: dict) -> None:
+def update_library(root: str, change: Callable[[dict], Any]) -> tuple[dict, Any]:
+    """Re-read the library under the project write lock, apply `change`, write it atomically.
+    Returns (library, what `change` returned); an EmojiError from `change` writes nothing."""
     from .store import _atomic_write, write_lock
-    data = (json.dumps(lib, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
     with write_lock(root):
+        lib = load_library(root)
+        out = change(lib)
+        data = (json.dumps(lib, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
         _atomic_write(resolve_inside(root, LIBRARY), data)
+    return lib, out
 
 
 def same_emoji(a: str, b: str) -> bool:
@@ -147,17 +167,17 @@ def pack_from_sticker_set(st: Any, link: str | None = None) -> dict:
         if not isinstance(cid, str) or not EMOJI_ID.match(cid):
             continue
         fmt = "video" if s.get("is_video") else "animated" if s.get("is_animated") else "static"
-        emoji.append({"id": cid, "fallback": s.get("emoji") or "", "format": fmt,
+        emoji.append({"id": cid, "fallback": s["emoji"][:16] if isinstance(s.get("emoji"), str) else "", "format": fmt,
                       "adaptive": bool(s.get("needs_repainting"))})
     formats = sorted({e["format"] for e in emoji})
-    return {"title": st.get("title") or st["name"], "link": link or f"https://t.me/addemoji/{st['name']}",
+    return {"title": str(st.get("title") or st["name"])[:128], "link": link or f"https://t.me/addemoji/{st['name']}",
             "importedAt": time.strftime("%Y-%m-%d"), "formats": formats, "emoji": emoji}
 
 
 def token_from_env() -> tuple[str | None, str | None]:
     """(token, env var name) of the first configured token variable."""
     for name in TOKEN_ENV:
-        value = os.environ.get(name)
+        value = (os.environ.get(name) or "").strip()
         if value:
             return value, name
     return None, None
@@ -167,7 +187,7 @@ class _Bot:
     """Read-only Bot API calls with the token kept out of every message."""
 
     def __init__(self, token: str, timeout: float = 20.0) -> None:
-        if not TOKEN_RE.match(token):
+        if not TOKEN_RE.fullmatch(token or ""):
             raise EmojiError("TOKEN_INVALID", "that does not look like a bot token (digits:letters from @BotFather)")
         self._token, self._timeout = token, timeout
 
@@ -183,11 +203,11 @@ class _Bot:
         req = urllib.request.Request(f"{API_HOST}/bot{self._token}/{method}",
                                      data=json.dumps(params).encode("utf-8"), headers={"Content-Type": "application/json"})
         try:
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
-                doc = json.loads(resp.read().decode("utf-8"))
+            with _OPENER.open(req, timeout=self._timeout) as resp:
+                doc = json.loads(resp.read(BODY_MAX).decode("utf-8"))
         except urllib.error.HTTPError as err:
             try:
-                doc = json.loads(err.read().decode("utf-8"))
+                doc = json.loads(err.read(64 * 1024).decode("utf-8"))
             except ValueError:
                 doc = {"ok": False, "description": f"HTTP {err.code}"}
         except (urllib.error.URLError, OSError, ValueError) as err:
@@ -200,13 +220,24 @@ class _Bot:
         if not FILE_PATH_RE.match(file_path) or ".." in file_path:
             raise EmojiError("FILE_PATH", "unexpected file path")
         try:
-            with urllib.request.urlopen(f"{API_HOST}/file/bot{self._token}/{file_path}", timeout=self._timeout) as resp:
+            with _OPENER.open(f"{API_HOST}/file/bot{self._token}/{file_path}", timeout=self._timeout) as resp:
                 data = resp.read(PREVIEW_MAX + 1)
         except (urllib.error.URLError, OSError) as err:
             raise EmojiError("TELEGRAM_UNREACHABLE", self._clean(f"download failed: {err}")) from None
         if len(data) > PREVIEW_MAX:
             raise EmojiError("FILE_TOO_LARGE", f"> {PREVIEW_MAX} bytes")
         return data
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """A redirect could lead to another host or an unbounded body: treat it as an error."""
+
+    def redirect_request(self, *args, **kwargs):
+        return None
+
+
+_OPENER = urllib.request.build_opener(_NoRedirect)
+BODY_MAX = 2 * 1024 * 1024
 
 
 def resolver_url() -> str | None:
@@ -231,7 +262,7 @@ class _Resolver:
     def _get(self, url: str, limit: int) -> tuple[int, str, bytes]:
         req = urllib.request.Request(url, headers={"User-Agent": "bot-ui-studio", "Accept": "application/json, image/*, video/webm"})
         try:
-            with urllib.request.urlopen(req, timeout=self._timeout) as resp:
+            with _OPENER.open(req, timeout=self._timeout) as resp:
                 return resp.status, resp.headers.get("Content-Type", ""), resp.read(limit + 1)
         except urllib.error.HTTPError as err:
             return err.code, (err.headers.get("Content-Type", "") if err.headers else ""), err.read(64 * 1024)
@@ -240,7 +271,9 @@ class _Resolver:
                                                      f"{getattr(err, 'reason', err)}") from None
 
     def pack(self, name: str) -> dict:
-        status, _, body = self._get(f"{self.base}/{name}", 2 * 1024 * 1024)
+        status, _, body = self._get(f"{self.base}/{name}", BODY_MAX)
+        if len(body) > BODY_MAX:
+            raise EmojiError("RESOLVER_ERROR", "the emoji resolver answer is too large")
         try:
             doc = json.loads(body.decode("utf-8"))
         except (UnicodeDecodeError, ValueError):
@@ -263,14 +296,23 @@ class _Resolver:
         return ext, body
 
 
-def _save_preview(cache: str, cid: str, ext: str, data: bytes) -> None:
-    for old in os.listdir(cache):
-        if old.split(".", 1)[0] == cid:
-            os.remove(os.path.join(cache, old))
-    tmp = os.path.join(cache, f"{cid}.{ext}.tmp")
+def _save_preview(root: str, cid: str, ext: str, data: bytes) -> None:
+    """Write one picture into the cache: a unique temp file, then an atomic replace; the same
+    emoji's picture in another format goes afterwards. Links in the path are refused."""
+    if not EMOJI_ID.match(cid) or ext not in ("webp", "webm", "png", "jpg"):
+        return
+    cache = _cache_dir(root)
+    target = resolve_inside(root, f"{CACHE}/{cid}.{ext}")
+    tmp = os.path.join(cache, f".{cid}.{uuid.uuid4().hex}.tmp")
     with open(tmp, "wb") as fh:
         fh.write(data)
-    os.replace(tmp, os.path.join(cache, f"{cid}.{ext}"))
+    os.replace(tmp, target)
+    for other in ("webp", "webm", "png", "jpg"):
+        if other != ext:
+            try:
+                os.remove(resolve_inside(root, f"{CACHE}/{cid}.{other}"))
+            except (FileNotFoundError, PathError):
+                pass
 
 
 def _preview_source(sticker: dict) -> str | None:
@@ -283,15 +325,13 @@ def _preview_source(sticker: dict) -> str | None:
 
 def _cache_dir(root: str) -> str:
     from .store import _state_dir
-    path = os.path.join(_state_dir(root), "emoji")
-    os.makedirs(path, exist_ok=True)
-    return path
+    _state_dir(root)
+    os.makedirs(os.path.join(root, *CACHE.split("/")), exist_ok=True)
+    return resolve_inside(root, CACHE)
 
 
 def fetch_previews(root: str, stickers: list[dict], bot: Any, workers: int = 6) -> tuple[int, int]:
     """Download a preview per sticker into the cache. Returns (saved, failed)."""
-    cache = _cache_dir(root)
-
     def one(s: dict) -> bool:
         cid, fid = s.get("custom_emoji_id"), _preview_source(s)
         if not isinstance(cid, str) or not EMOJI_ID.match(cid) or not fid:
@@ -305,7 +345,7 @@ def fetch_previews(root: str, stickers: list[dict], bot: Any, workers: int = 6) 
             data = bot.download(path)
         except EmojiError:
             return False
-        _save_preview(cache, cid, ext, data)
+        _save_preview(root, cid, ext, data)
         return True
 
     with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -319,20 +359,20 @@ def _from_resolver(root: str, name: str, resolver: Any) -> tuple[dict, str, int,
     real = str(doc.get("name") or name)
     if not PACK_NAME.match(real):
         raise EmojiError("RESOLVER_ERROR", "the emoji resolver returned a bad pack name")
-    items = [e for e in (doc.get("emoji") or [])[:PACK_MAX]
+    items = [e for e in (doc.get("emoji") if isinstance(doc.get("emoji"), list) else [])[:PACK_MAX]
              if isinstance(e, dict) and isinstance(e.get("id"), str) and EMOJI_ID.match(e["id"])]
+    if not items:
+        raise EmojiError("RESOLVER_ERROR", "the emoji resolver returned no emoji for this pack; nothing was changed")
     emoji = [{"id": e["id"], "fallback": str(e.get("fallback") or "")[:16],
               "format": e["format"] if e.get("format") in ("static", "animated", "video") else "static",
               "adaptive": bool(e.get("adaptive"))} for e in items]
     pack = {"title": str(doc.get("title") or real)[:128], "link": f"https://t.me/addemoji/{real}",
             "importedAt": time.strftime("%Y-%m-%d"), "formats": sorted({e["format"] for e in emoji}), "emoji": emoji}
-    cache = _cache_dir(root)
-
     def one(e: dict) -> bool:
         got = resolver.picture(e.get("preview"))
         if not got:
             return False
-        _save_preview(cache, e["id"], *got)
+        _save_preview(root, e["id"], *got)
         return True
 
     with ThreadPoolExecutor(max_workers=6) as pool:
@@ -346,7 +386,7 @@ def import_pack(root: str, *, link: str | None = None, token: str | None = None,
     (offline, no previews); `token` (or `bot`, for tests) reads it directly from Telegram;
     otherwise the telegram-bot-ui resolver reads it (`resolver`, for tests). Only when the
     resolver is off does a token from the environment take over."""
-    lib = load_library(root)
+    load_library(root)  # an unreadable library stops the import before any network call
     source = "file"
     saved = failed = 0
     pack = None
@@ -376,27 +416,29 @@ def import_pack(root: str, *, link: str | None = None, token: str | None = None,
         if bot is not None and source == "getStickerSet":
             saved, failed = fetch_previews(root, raw.get("stickers") or [], bot)
     pack["source"] = source
-    packs = dict(lib.get("packs") or {})
-    packs[name] = pack
-    lib["packs"] = packs
-    # Icons keep their slot; a refreshed pack updates their fallback and format.
-    idx = {e["id"]: e for e in pack["emoji"]}
-    for icon in (lib.get("icons") or {}).values():
-        e = idx.get(icon.get("id"))
-        if e and icon.get("set") == name:
-            icon.update(fallback=e["fallback"], animated=e["format"] != "static", adaptive=e["adaptive"])
-    save_library(root, lib)
+
+    def merge(lib: dict) -> None:
+        lib["packs"] = {**lib["packs"], name: pack}
+        # Icons keep their slot; a refreshed pack updates their fallback and format.
+        idx = {e["id"]: e for e in pack["emoji"]}
+        for icon in lib["icons"].values():
+            e = idx.get(icon.get("id"))
+            if e and icon.get("set") == name:
+                icon.update(fallback=e["fallback"], animated=e["format"] != "static", adaptive=e["adaptive"])
+
+    update_library(root, merge)
     return {"ok": True, "pack": name, "title": pack["title"], "count": len(pack["emoji"]), "source": source,
             "previews": saved, "previewsFailed": failed}
 
 
 def remove_pack(root: str, name: str) -> dict:
-    lib = load_library(root)
-    if name not in (lib.get("packs") or {}):
-        raise EmojiError("PACK_NOT_FOUND", name)
-    del lib["packs"][name]
-    save_library(root, lib)
-    kept = [s for s, i in (lib.get("icons") or {}).items() if i.get("set") == name]
+    def drop(lib: dict) -> None:
+        if name not in lib["packs"]:
+            raise EmojiError("PACK_NOT_FOUND", str(name))
+        del lib["packs"][name]
+
+    lib, _ = update_library(root, drop)
+    kept = [s for s, i in lib["icons"].items() if i.get("set") == name]
     return {"ok": True, "removed": name, "iconsKept": kept}
 
 
@@ -404,8 +446,16 @@ def set_icon(root: str, slot: str, emoji_id: str | None, *, note: str | None = N
     """Put an emoji on a slot of the icon map (or clear the slot with emoji_id None)."""
     if not isinstance(slot, str) or not SLOT_RE.match(slot):
         raise EmojiError("SLOT_INVALID", "a slot is a short meaning in lowercase: home, back, cart, paid, ...")
-    lib = load_library(root)
-    icons = dict(lib.get("icons") or {})
+    if fallback is not None and not isinstance(fallback, str):
+        raise EmojiError("FALLBACK_INVALID", "the fallback is one ordinary emoji")
+    if note is not None and not isinstance(note, str):
+        raise EmojiError("NOTE_INVALID", "the note is text")
+    lib, icons = update_library(root, lambda lib: _set_icon(lib, slot, emoji_id, note, fallback))
+    return {"ok": True, "icons": icons}
+
+
+def _set_icon(lib: dict, slot: str, emoji_id: str | None, note: str | None, fallback: str | None) -> dict:
+    icons = dict(lib["icons"])
     if emoji_id is None:
         icons.pop(slot, None)
     else:
@@ -417,7 +467,7 @@ def set_icon(root: str, slot: str, emoji_id: str | None, *, note: str | None = N
         e = emoji_index({**lib, "icons": {}}).get(emoji_id)
         if e is None and not fallback:
             raise EmojiError("EMOJI_UNKNOWN", "import its pack first, or give the fallback emoji")
-        icon = {"id": emoji_id, "set": e["pack"] if e else "", "fallback": (e or {}).get("fallback") or fallback or "",
+        icon = {"id": emoji_id, "set": e["pack"] if e else "", "fallback": ((e or {}).get("fallback") or fallback or "")[:16],
                 "animated": bool(e and e["format"] != "static"), "adaptive": bool(e and e["adaptive"])}
         prev = icons.get(slot) or {}
         if note is not None or prev.get("note"):
@@ -426,13 +476,15 @@ def set_icon(root: str, slot: str, emoji_id: str | None, *, note: str | None = N
                 icon.pop("note")
         icons[slot] = icon
     lib["icons"] = icons
-    save_library(root, lib)
-    return {"ok": True, "icons": icons}
+    return icons
 
 
 def previews(root: str) -> dict[str, str]:
     """id -> cached preview file name."""
-    path = os.path.join(root, *CACHE.split("/"))
+    try:
+        path = resolve_inside(root, CACHE)
+    except PathError:
+        return {}
     if not os.path.isdir(path):
         return {}
     out = {}
@@ -446,7 +498,10 @@ def previews(root: str) -> dict[str, str]:
 def preview_file(root: str, name: str) -> str | None:
     if not PREVIEW_RE.match(name):
         return None
-    full = os.path.join(root, *CACHE.split("/"), name)
+    try:
+        full = resolve_inside(root, f"{CACHE}/{name}")
+    except PathError:
+        return None
     return full if os.path.isfile(full) else None
 
 
