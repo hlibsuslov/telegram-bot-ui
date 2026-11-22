@@ -2,7 +2,7 @@ import { Check, Upload, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { fromSnapshot, shortRev } from "@/lib/model";
+import { DEMO_SITE, fromSnapshot, shortRev } from "@/lib/model";
 import { useStudio } from "@/lib/studio";
 
 const LABELS: Record<string, string> = {
@@ -36,9 +36,43 @@ export function LoadSnapshot() {
   );
 }
 
+const DEMO_TRY = [
+  ["Map", "every screen of the bot as the message people see, with arrows from each button to where it leads."],
+  ["Simulator", "press START and use the bot. The trace on the right shows what the engine did with each update."],
+  ["Screens", "open a screen, change a text or a button label, and see the preview and the map update."],
+  ["Changes", "your edits as one list, plus a ready task for your coding agent."],
+];
+
+function DemoAbout() {
+  const { loaded } = useStudio();
+  return (
+    <div className="mx-auto w-full max-w-2xl space-y-4 p-3 sm:p-4">
+      <h2 className="text-base font-semibold">About this demo</h2>
+      <p className="text-sm text-muted-foreground">
+        <span className="font-medium text-foreground">{loaded.title}</span> is a sample coffee bot built for this demo. Everything runs in this
+        browser tab: no account, no bot token, no requests to Telegram or anywhere else. Your edits stay in this browser.
+      </p>
+      <ul className="divide-y rounded-md border">
+        {DEMO_TRY.map(([title, text]) => (
+          <li key={title} className="px-3 py-2 text-sm"><span className="font-medium">{title}</span>: <span className="text-muted-foreground">{text}</span></li>
+        ))}
+      </ul>
+      <Alert>
+        <AlertTitle>On your own bot</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>The Studio runs on your machine next to the bot's repository. Saving writes the screen files, and <code className="font-mono">git diff</code> shows the change.
+            Widgets get a live preview and a size check there too.</p>
+          <a href={DEMO_SITE} target="_top" className="inline-flex items-center gap-1 font-medium underline underline-offset-4">How to run it on your bot</a>
+        </AlertDescription>
+      </Alert>
+    </div>
+  );
+}
+
 export function AboutView() {
   const { loaded } = useStudio();
   const features = loaded.features;
+  if (features.demo) return <DemoAbout />;
   return (
     <div className="mx-auto w-full max-w-2xl space-y-4 p-3 sm:p-4">
       <h2 className="text-base font-semibold">What works here</h2>

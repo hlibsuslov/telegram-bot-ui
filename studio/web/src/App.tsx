@@ -1,11 +1,11 @@
-import { GitCompareArrows, Sprout, Wrench, Info, LayoutGrid, Loader2, Map as MapIcon, MessagesSquare, Puzzle, Redo2, Undo2 } from "lucide-react";
+import { ArrowUpRight, GitCompareArrows, Sprout, Wrench, Info, LayoutGrid, Loader2, Map as MapIcon, MessagesSquare, Puzzle, Redo2, Undo2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { ApplicationShell1, type Crumb, type NavGroup } from "@/components/application-shell1";
 import { Button } from "@/components/ui/button";
 import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { api, errorText } from "@/lib/api";
-import { embeddedSnapshot, fromProjectDocument, fromSnapshot, shortRev, type Loaded } from "@/lib/model";
+import { DEMO_SITE, embeddedSnapshot, fromProjectDocument, fromSnapshot, shortRev, type Loaded } from "@/lib/model";
 import { href, useRoute, type Section } from "@/lib/route";
 import { StudioProvider, useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
@@ -51,6 +51,13 @@ function Footer() {
     <div className="space-y-2 px-2 pb-1 text-[11px] text-muted-foreground group-data-[collapsible=icon]:hidden">
       {loaded.mode === "studio" ? (
         <p>Local Studio on this machine{loaded.rootLabel ? <> · <span className="font-mono">{loaded.rootLabel}</span></> : null}. Nothing is sent to Telegram.</p>
+      ) : loaded.features.demo ? (
+        <>
+          <p>Public demo with a sample bot. Runs in your browser: edits stay here, nothing is sent anywhere.</p>
+          <a href={DEMO_SITE} target="_top" className="inline-flex items-center gap-1 rounded-md border bg-background px-2 py-1 text-xs text-foreground hover:bg-accent">
+            <ArrowUpRight className="size-3.5" aria-hidden />Run it on your bot
+          </a>
+        </>
       ) : (
         <>
           <p>Offline artifact: a snapshot in one file. No network.</p>
@@ -108,15 +115,17 @@ function Shell() {
   useEffect(() => { document.title = `${TITLES[route.section]}${route.id ? ` · ${route.id}` : ""} · ${loaded.title} · bot-ui`; }, [route, loaded.title]);
 
   const widgetIds = Object.keys(loaded.widgets).sort();
+  const demo = !!loaded.features.demo;
   const navGroups: NavGroup[] = [{
-    title: loaded.mode === "studio" ? "Studio" : "Artifact",
+    title: loaded.mode === "studio" ? "Studio" : demo ? "Live demo" : "Artifact",
     items: [
       { key: "map", label: "Map", icon: MapIcon, href: href("map") },
       { key: "screens", label: "Screens", icon: LayoutGrid, href: href("screens"), badge: Object.keys(working.screens).length },
       { key: "simulator", label: "Simulator", icon: MessagesSquare, href: href("simulator") },
-      { key: "widgets", label: "Widgets", icon: Puzzle, href: href("widgets"), children: caps.widgets && widgetIds.length > 1 ? widgetIds.map((w) => ({ key: w, label: w, href: href("widgets", w) })) : undefined },
+      // The demo carries no widget sources; the site shows the demo bot's widgets live next to it.
+      ...(demo ? [] : [{ key: "widgets", label: "Widgets", icon: Puzzle, href: href("widgets"), children: caps.widgets && widgetIds.length > 1 ? widgetIds.map((w) => ({ key: w, label: w, href: href("widgets", w) })) : undefined }]),
       { key: "changes", label: "Changes", icon: GitCompareArrows, href: href("changes"), badge: n + requests.length || undefined },
-      ...(loaded.mode === "artifact" ? [{ key: "about", label: "What works here", icon: Info, href: href("about") }] : []),
+      ...(loaded.mode === "artifact" ? [{ key: "about", label: demo ? "About this demo" : "What works here", icon: Info, href: href("about") }] : []),
     ],
   }];
   const trail: Crumb[] = [{ label: loaded.title, href: href("map") }, { label: TITLES[route.section], href: href(route.section) }];
@@ -129,7 +138,7 @@ function Shell() {
       <ChangeTray />
       <EditLocaleSelect />
       {validating && <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Checking the draft" />}
-      <span className="hidden rounded border px-1.5 py-0.5 text-[11px] text-muted-foreground sm:inline">{loaded.mode === "studio" ? "Local Studio" : "Artifact · offline"}</span>
+      <span className="hidden rounded border px-1.5 py-0.5 text-[11px] text-muted-foreground sm:inline">{loaded.mode === "studio" ? "Local Studio" : demo ? "Demo · in your browser" : "Artifact · offline"}</span>
       <Button size="icon" variant="ghost" className="size-8" onClick={() => store.undo()} disabled={!store.past.length} aria-label="Undo (Ctrl+Z)" title="Undo (Ctrl+Z)"><Undo2 className="size-4" /></Button>
       <Button size="icon" variant="ghost" className="size-8" onClick={() => store.redo()} disabled={!store.future.length} aria-label="Redo (Ctrl+Y)" title="Redo (Ctrl+Y)"><Redo2 className="size-4" /></Button>
     </>
