@@ -1,0 +1,191 @@
+{
+ "name": "setMySettings",
+ "kind": "method",
+ "section": "Available methods",
+ "anchor": "setmysettings",
+ "url": "https://core.telegram.org/bots/api#setmysettings",
+ "parameters": [
+  {
+   "name": "supports_inline_queries",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to enable inline mode for the bot or False to disable it"
+  },
+  {
+   "name": "inline_query_placeholder",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "New placeholder for inline queries, which is shown in the input field after the bot's username. Pass an empty string to use the default placeholder."
+  },
+  {
+   "name": "needs_inline_query_location",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to request the location of the user with every inline query to the bot or False to stop requesting it"
+  },
+  {
+   "name": "inline_feedback_share_denominator",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Denominator of the share of chosen inline results received by the bot; the bot receives 1 out of inline_feedback_share_denominator chosen results. Must be one of 1, 10, 100, or 1000. Pass 0 to stop receiving chosen inline results."
+  },
+  {
+   "name": "can_join_groups",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to allow adding the bot to groups or False to disallow it"
+  },
+  {
+   "name": "can_read_all_group_messages",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to disable privacy mode for the bot or False to enable it"
+  },
+  {
+   "name": "can_connect_to_business",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to allow connecting the bot to user accounts to manage them or False to disallow it"
+  },
+  {
+   "name": "can_manage_bots",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to allow creating other bots that will be controlled by the bot or False to disallow it"
+  },
+  {
+   "name": "supports_guest_queries",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to allow guest queries to the bot from chats it isn't a member of or False to disallow them"
+  },
+  {
+   "name": "supports_join_request_queries",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to allow assigning the bot to process join request queries or False to disallow it"
+  },
+  {
+   "name": "has_topics_enabled",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to enable forum topic mode in private chats with the bot or False to disable it"
+  },
+  {
+   "name": "allows_users_to_create_topics",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to allow users to create and delete topics in private chats with the bot or False to disallow it"
+  },
+  {
+   "name": "has_topic_sidebar",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to show topics in private chats with the bot in a sidebar or False to stop showing them in a sidebar"
+  },
+  {
+   "name": "can_communicate_with_bots",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Pass True to allow the bot to communicate with other bots in groups, private chats, and through business accounts or False to disallow it"
+  },
+  {
+   "name": "callback_query_mode",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Mode in which the bot receives callback queries from buttons in messages sent by the bot. Must be one of “default” (the field message is always used and contains an InaccessibleMessage if the message is inaccessible to the bot), “auto” (the field inline_message_id is used instead of the field message if the message is inaccessible to the bot; the field message can still contain an inaccessible message if the message has just been deleted), or “inline” (the field inline_message_id is always used instead of the field message)."
+  }
+ ],
+ "description": "Use this method to change settings of the bot. Settings that aren't specified remain unchanged. Returns True on success.",
+ "returns": "True"
+}

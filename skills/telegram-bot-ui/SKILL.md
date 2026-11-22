@@ -4,7 +4,7 @@ description: "Telegram bot UI/UX skill, updated for every Bot API release. Desig
 license: MIT
 metadata:
   author: hlibsuslov
-  version: "2.2.1"
+  version: "2.3.0"
 ---
 
 # Telegram Bot UI
@@ -14,7 +14,7 @@ metadata:
 Portable, SDK-agnostic skill for everything a Telegram bot shows and sends: bot
 screens, whole products, channel posts, HTML widgets, premium emoji, and an
 agent's own bot. It also owns the server side those features need. Verified
-against **Bot API 10.4 (2026-11-09) on 2026-11-15**; no newer version existed then.
+against **Bot API 10.5 (2026-11-22) on 2026-11-22**; no newer version existed then.
 
 A regular message has no CSS and no layout engine: its interface is **text,
 formatting, keyboards, chat chrome (commands, menu button, deep links) and the
@@ -47,7 +47,7 @@ pipelines, Mini App front-end internals. Microsoft `.rtf` files.
 
 | The user wants | Start here | Recipes |
 |---|---|---|
-| Better screens, keyboards, wording, feedback in an existing bot | core workflow below, `references/navigation-and-flows.md` | 01-09 |
+| Better screens, keyboards, wording, feedback in an existing bot | core workflow below, `references/navigation-and-flows.md` | 01-10 |
 | Fit the bot to the project's style, rethink every menu, tune it | `references/redesign-orchestration.md` | — |
 | "Build me a bot for X" (shop, support, booking, learning, community…) | `references/example-library.md`, `recipes/use-cases.json`, `references/use-case-playbooks.md` | 20-29, 60-64, 80-87 |
 | Posts in a channel, digests, mailings, editorial approval | `references/publishing-pipeline.md`, `references/channel-post-design.md` | 30-39 |
@@ -57,8 +57,8 @@ pipelines, Mini App front-end internals. Microsoft `.rtf` files.
 | "Does the API have…", payments, inline, business, media, admin | `references/api-catalog.md` (offline catalog + tools) | — |
 
 Index of all recipes by task, symbol, version and context: `recipes/README.md`
-(human) and `recipes/manifest.json` (machine). Every 10.3/10.4 changelog row:
-`recipes/registry.json`, `references/bot-api-10.3-10.4.md`.
+(human) and `recipes/manifest.json` (machine). Every 10.3-10.5 changelog row:
+`recipes/registry.json`, `references/bot-api-coverage.md`.
 
 ## Initiative rule
 
@@ -202,6 +202,8 @@ Details: `references/dynamic-feedback-and-streaming.md`.
   confirmed destructive action; omit it elsewhere.
 - `force_reply` on keyboards (10.3) = buttons plus a reply field; on inline keyboards
   it can't change in an edit.
+- A callback may carry `inline_message_id` and no `message` (inline mode, or a bot whose
+  `callback_query_mode` is `auto`/`inline`, 10.5): edit by that id, route by `callback_data`.
 - Labels must make sense without color and without icons.
   Full rules: `references/buttons-and-styles.md`.
 
@@ -222,6 +224,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 - Feedback mechanism → `references/dynamic-feedback-and-streaming.md`; draft state machine, Stop, races → `references/streaming-and-editing.md`
 - Personal / ephemeral answers in groups → `references/ephemeral-and-personal.md`
 - Topics, channel DMs, business, inline: which fields → `references/topics-and-contexts.md`
+- Bot settings from code (`setMySettings`, `getMe` → `BotFullInfo`, callback mode, topic sidebar, owner invite links) → `references/bot-settings.md`
 - Personalization, links, previews → `references/personalization-and-links.md`
 - Consistency and the pre-finish checklist → `references/consistency-and-review.md`
 - Worked before/after scenarios → `references/examples-before-after.md`; real bot upgrade → `references/case-study-btc-tracker.md`
@@ -270,7 +273,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 - Errors, fallbacks, old clients → `references/errors-and-fallbacks.md`
 - SDK gaps, raw payloads → `references/sdk-compatibility.md`
 - Testing → `references/testing-playbook.md`
-- Whole-API lookup and per-version table → `references/api-catalog.md`; every 10.3/10.4 item → `references/bot-api-10.3-10.4.md`; version gates → `references/ui-changelog.md`; sources and dates → `references/official-sources.md`
+- Whole-API lookup and per-version table → `references/api-catalog.md`; every 10.3-10.5 item → `references/bot-api-coverage.md`; version gates → `references/ui-changelog.md`; sources and dates → `references/official-sources.md`
 
 ## Tools (offline, stdlib, no token)
 

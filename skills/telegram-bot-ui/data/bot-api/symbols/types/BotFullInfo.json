@@ -1,0 +1,227 @@
+{
+ "name": "BotFullInfo",
+ "kind": "type",
+ "section": "Available types",
+ "anchor": "botfullinfo",
+ "url": "https://core.telegram.org/bots/api#botfullinfo",
+ "fields": [
+  {
+   "name": "id",
+   "type": "Integer",
+   "types": [
+    {
+     "name": "Integer",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Unique identifier for this bot. This number may have more than 32 significant bits and some programming languages may have difficulty/silent defects in interpreting it. But it has at most 52 significant bits, so a 64-bit integer or double-precision float type are safe for storing this identifier."
+  },
+  {
+   "name": "is_bot",
+   "type": "True",
+   "types": [
+    {
+     "name": "True",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Always True"
+  },
+  {
+   "name": "first_name",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "Bot's first name"
+  },
+  {
+   "name": "username",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Bot's username"
+  },
+  {
+   "name": "active_usernames",
+   "type": "Array of String",
+   "types": [
+    {
+     "name": "String",
+     "array": 1
+    }
+   ],
+   "required": false,
+   "description": "If non-empty, the list of all active usernames of the bot"
+  },
+  {
+   "name": "can_join_groups",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the bot can be added to groups"
+  },
+  {
+   "name": "can_read_all_group_messages",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if privacy mode is disabled for the bot"
+  },
+  {
+   "name": "supports_guest_queries",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the bot supports guest queries from chats it is not a member of"
+  },
+  {
+   "name": "supports_inline_queries",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the bot supports inline queries"
+  },
+  {
+   "name": "inline_query_placeholder",
+   "type": "String",
+   "types": [
+    {
+     "name": "String",
+     "array": 0
+    }
+   ],
+   "required": false,
+   "description": "Placeholder for inline queries, which is shown in the input field after the bot's username; omitted if the default placeholder is used"
+  },
+  {
+   "name": "needs_inline_query_location",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the bot requests the location of the user with every inline query"
+  },
+  {
+   "name": "can_connect_to_business",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the bot can be connected to a user account to manage it"
+  },
+  {
+   "name": "has_main_web_app",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the bot has a main Web App"
+  },
+  {
+   "name": "has_topics_enabled",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the bot has forum topic mode enabled in private chats"
+  },
+  {
+   "name": "allows_users_to_create_topics",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the bot allows users to create and delete topics in private chats"
+  },
+  {
+   "name": "has_topic_sidebar",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if topics in private chats with the bot are shown in a sidebar"
+  },
+  {
+   "name": "can_manage_bots",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if other bots can be created to be controlled by the bot"
+  },
+  {
+   "name": "supports_join_request_queries",
+   "type": "Boolean",
+   "types": [
+    {
+     "name": "Boolean",
+     "array": 0
+    }
+   ],
+   "required": true,
+   "description": "True, if the bot supports join request queries and can be assigned to process them"
+  }
+ ],
+ "subtypes": [],
+ "description": "This object contains full information about the bot itself."
+}

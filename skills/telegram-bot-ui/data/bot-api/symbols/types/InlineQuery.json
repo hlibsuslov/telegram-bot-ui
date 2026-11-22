@@ -75,7 +75,7 @@
     }
    ],
    "required": false,
-   "description": "Sender location, only for bots that request user location"
+   "description": "Sender location, only for bots that enabled user location requests via @BotFather or using the parameter needs_inline_query_location of the method setMySettings"
   }
  ],
  "subtypes": [],

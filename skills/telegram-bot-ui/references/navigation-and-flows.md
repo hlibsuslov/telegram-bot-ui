@@ -102,8 +102,9 @@ version list: `ui-changelog.md`.
   correctness depend on an edit landing.
 - **Topics in private chats (9.3/9.4)** — `message_thread_id` in private chats
   and `createForumTopic` let a bot split a conversation into threads (support,
-  orders, alerts) instead of one flat log. `User.has_topics_enabled` and
-  `User.allows_users_to_create_topics` tell you what is available.
+  orders, alerts) instead of one flat log. `getMe` (`BotFullInfo` since 10.5:
+  `has_topics_enabled`, `allows_users_to_create_topics`, `has_topic_sidebar`) tells
+  you what is on; `setMySettings` turns it on from code (`bot-settings.md`).
 - **Streaming drafts (`sendMessageDraft`, 9.3; all bots since 9.5)** — a
   temporary ~30-second preview of a message being generated; the final message
   must still be sent with `sendMessage`. Perceived-latency UX, not a screen.

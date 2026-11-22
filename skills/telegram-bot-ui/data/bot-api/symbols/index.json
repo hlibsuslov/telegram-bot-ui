@@ -1,6 +1,6 @@
 {
- "bot_api_version": "10.4",
- "release_date": "2026-11-09",
+ "bot_api_version": "10.5",
+ "release_date": "2026-11-22",
  "source": "https://core.telegram.org/bots/api",
  "methods": {
   "addStickerToSet": "Stickers",
@@ -171,6 +171,7 @@
   "setMyDescription": "Available methods",
   "setMyName": "Available methods",
   "setMyProfilePhoto": "Available methods",
+  "setMySettings": "Available methods",
   "setMyShortDescription": "Available methods",
   "setPassportDataErrors": "Telegram Passport",
   "setStickerEmojiList": "Stickers",
@@ -224,6 +225,7 @@
   "BotCommandScopeChatMember": "Available types",
   "BotCommandScopeDefault": "Available types",
   "BotDescription": "Available types",
+  "BotFullInfo": "Available types",
   "BotName": "Available types",
   "BotShortDescription": "Available types",
   "BotSubscriptionUpdated": "Available types",

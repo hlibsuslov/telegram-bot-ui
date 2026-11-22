@@ -19,12 +19,12 @@
    "const": "expandable_blockquote"
   },
   {
-   "name": "text",
-   "type": "RichText",
+   "name": "blocks",
+   "type": "Array of InputRichBlock",
    "types": [
     {
-     "name": "RichText",
-     "array": 0
+     "name": "InputRichBlock",
+     "array": 1
     }
    ],
    "required": true,
