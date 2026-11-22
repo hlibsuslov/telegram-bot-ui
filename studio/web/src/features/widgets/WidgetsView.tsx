@@ -1,6 +1,8 @@
 // Widget page: one top-to-bottom flow of numbered steps (Widget, Look, What the bot sends, Message,
 // Check) beside a sticky live preview with its own toolbar. Builds come from /api/widget/build
-// (debounced, late answers dropped); the frame is the sandboxed /preview-frame.html.
+// (debounced, late answers dropped); the frame is /preview-frame.html, sandboxed by its own
+// response header (CSP sandbox allow-scripts: opaque origin), so embedding browsers that refuse
+// the iframe sandbox attribute still show it.
 import {
   ArrowDownLeft, ArrowUpRight, Check, ChevronDown, ChevronRight, Code2, Copy, Database, Download, Expand, ImageUp, Images, Library, MessageSquareText, Plus, Puzzle, RefreshCw, RotateCcw, Save, Send, ShieldCheck, WifiOff,
 } from "lucide-react";
@@ -448,7 +450,7 @@ function Workbench({ wid, onNew }: { wid: string; onNew: () => void }) {
         <div className="flex justify-center px-3 py-6" style={{ background: th._chat ?? "#b9cea0" }}>
           <div className="max-w-full overflow-hidden rounded-2xl rounded-bl-md shadow-sm" style={{ width, background: th.bg_color ?? "#fff", color: th.text_color ?? "#000", colorScheme: scheme }}>
             {doc ? (
-              <iframe key={session} ref={frameRef} title={`Widget ${wid} preview`} sandbox="allow-scripts" src="/preview-frame.html" scrolling="no"
+              <iframe key={session} ref={frameRef} title={`Widget ${wid} preview`} src="/preview-frame.html" scrolling="no"
                 className="block w-full border-0" style={{ height, colorScheme: scheme }} />
             ) : (
               <div className="p-4 text-sm opacity-70">{build.status === "updating" || !runtime ? "Building…" : "No successful build yet."}</div>

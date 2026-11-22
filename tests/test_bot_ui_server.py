@@ -111,6 +111,7 @@ class Server(ProjectCase):
         self.assertEqual(status, 200)
         csp = headers["Content-Security-Policy"]
         self.assertIn("connect-src 'none'", csp)
+        self.assertTrue(csp.startswith("sandbox allow-scripts;"), "isolated by the header, not only by the iframe attribute")
         self.assertIn("default-src 'none'", csp)
         self.assertIn("e.source !== parent", body)
 

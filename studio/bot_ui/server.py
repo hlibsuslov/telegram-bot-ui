@@ -297,8 +297,11 @@ CSP = ("default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';
 # cookies, storage or same-origin access to the Studio, its API refuses Origin: null), and
 # its own CSP: no network at all, inline code only. The parent sends the document to show;
 # the frame accepts it once, from its parent only.
-PREVIEW_CSP = ("default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; "
-               "font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'")
+# `sandbox allow-scripts` in the response header gives the same opaque-origin isolation as the
+# iframe attribute, so the frame stays isolated even where an embedding browser (e.g. an app's
+# built-in pane) refuses frames that carry the sandbox attribute.
+PREVIEW_CSP = ("sandbox allow-scripts; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; "
+               "img-src data:; font-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'")
 PREVIEW_FRAME = """<!doctype html><html><head><meta charset="utf-8"></head><body><script>
 addEventListener("message", function once(e) {
   if (e.source !== parent || !e.data || e.data.k !== "load" || typeof e.data.doc !== "string") return;

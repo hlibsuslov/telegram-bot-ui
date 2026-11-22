@@ -84,7 +84,7 @@ function LiveThumb({ t, onInfo }: { t: Template; onInfo: (d: PreviewDoc) => void
     <div ref={box} className="relative flex h-48 items-start justify-center overflow-hidden rounded-xl bg-[#c2d6a9] pt-3" aria-hidden={state !== "failed"}>
       {doc && state !== "failed" && (
         <div className="origin-top overflow-hidden rounded-xl bg-white shadow-sm" style={{ width: 320, height: h, transform: `scale(${scale})`, colorScheme: frameScheme({ _scheme: "light" }) }}>
-          <iframe ref={frame} title={`${t.title} preview`} sandbox="allow-scripts" src="/preview-frame.html" scrolling="no" tabIndex={-1}
+          <iframe ref={frame} title={`${t.title} preview`} src="/preview-frame.html" scrolling="no" tabIndex={-1}
             className="pointer-events-none block w-full border-0" style={{ height: h, colorScheme: "light" }} />
         </div>
       )}
@@ -133,9 +133,7 @@ export function WidgetLibrary({ onUse, hasWidgets }: { onUse: (t: Template) => v
           const src = sourceOf(t.id);
           return (
             <li key={t.id} className="flex flex-col overflow-hidden rounded-2xl bg-card ring-1 ring-border">
-              {t.id === "blank" ? (
-                <div className="flex h-48 flex-col items-center justify-center gap-2 bg-muted/60 text-muted-foreground"><Plus className="size-8" aria-hidden /><span className="text-sm">Start from an empty widget</span></div>
-              ) : <LiveThumb t={t} onInfo={(d) => setInfo((m) => (m[t.id] ? m : { ...m, [t.id]: d }))} />}
+              <LiveThumb t={t} onInfo={(d) => setInfo((m) => (m[t.id] ? m : { ...m, [t.id]: d }))} />
               <div className="flex flex-1 flex-col gap-2 p-3">
                 <div>
                   <h3 className="text-sm font-semibold">{t.title}</h3>
