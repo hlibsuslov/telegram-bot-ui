@@ -21,7 +21,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
-from . import SCHEMA_VERSION, TOOL_VERSION, widgets
+from . import SCHEMA_VERSION, TOOL_VERSION, builder, widgets
 from .engine import parity_view, run_scenario
 from .project import Snapshot, open_snapshot, parse_files
 from .render import bot_request, render_screen
@@ -162,7 +162,8 @@ class Studio:
                 draft = parse_files(self.root, files)
             if wid not in draft.widgets:
                 return 404, {"ok": False, "error": {"code": "WIDGET_NOT_FOUND", "message": str(wid)}}
-            built = widgets.build(draft, wid, lang=body.get("lang"), values=body.get("values") or _examples(draft))
+            built = widgets.build(draft, wid, lang=body.get("lang"), values=body.get("values") or _examples(draft),
+                                  state=body.get("state"))
             if built["ok"]:
                 built["payload"] = widgets.payload(draft, wid, built, state=body.get("state", "default"))
                 built["payload"]["params"]["html"] = f"<{built['rawBytes']} bytes>"
@@ -192,6 +193,24 @@ class Studio:
                 res = write_patch(self.root, patch)
             except widgets.WidgetError as err:
                 return 422, {"ok": False, "error": {"code": err.code, "message": err.message}}
+            except StoreError as err:
+                return (409 if err.code == "REVISION_CONFLICT" else 422), {"ok": False, "error": err.to_json()}
+            return 200, res.to_json()
+        if path == "/api/widget/builder-schema":
+            return 200, builder.schema((snap.project or {}).get("locales"))
+        if path == "/api/widget/builder-validate":
+            wid = body.get("widget")
+            assets = builder.assets_of(snap, wid) if isinstance(wid, str) and wid in snap.widgets else None
+            issues = builder.validate_config(body.get("config"), assets)
+            return 200, {"ok": not issues, "issues": issues}
+        if path == "/api/widget/eject":
+            try:
+                patch = builder.eject_patch(snap, str(body.get("widget", "")))
+                if body.get("expectedRevision"):
+                    patch["baseRevision"] = body["expectedRevision"]
+                res = write_patch(self.root, patch)
+            except widgets.WidgetError as err:
+                return (404 if err.code == "WIDGET_NOT_FOUND" else 422), {"ok": False, "error": {"code": err.code, "message": err.message}}
             except StoreError as err:
                 return (409 if err.code == "REVISION_CONFLICT" else 422), {"ok": False, "error": err.to_json()}
             return 200, res.to_json()

@@ -17,7 +17,7 @@ import re
 import tempfile
 from typing import Any
 
-from . import render
+from . import builder, render
 from .project import Snapshot, normalize_bytes
 from .skill import kit_dir as skill_kit_dir
 from .skill import load
@@ -35,10 +35,17 @@ def _project_kit(snap: Snapshot) -> dict[str, bytes]:
     return {rel[len("widgets/_kit/"):]: data for rel, data in snap.files.items() if rel.startswith("widgets/_kit/")}
 
 
-def assemble(snap: Snapshot, wid: str) -> str:
+def assemble(snap: Snapshot, wid: str, lang: str | None = None, state: str | None = None) -> str:
     w = snap.widgets.get(wid)
     if w is None:
         raise WidgetError("WIDGET_NOT_FOUND", f"widget {wid} does not exist")
+    if builder.active(w):  # generated from widget.json; `state` only for preview builds
+        dl = (snap.project or {}).get("defaultLocale", "en")
+        try:
+            return builder.generate(w["builder"], lang, builder.assets_of(snap, wid), default_locale=dl,
+                                    langs=w.get("languages") or None, state=state)
+        except ValueError as err:
+            raise WidgetError("BUILDER_INVALID", str(err))
     base = f"widgets/{wid}/"
     entry = base + w.get("entry", "index.html")
     if entry not in snap.files:
@@ -68,6 +75,8 @@ def source_hash(snap: Snapshot, wid: str, options: dict) -> str:
     for rel in sorted(r for r in snap.files if r.startswith(f"widgets/{wid}/") or r.startswith("widgets/_kit/")):
         h.update(rel.encode() + b"\0" + normalize_bytes(snap.files[rel]) + b"\0")
     h.update(json.dumps(options, sort_keys=True, ensure_ascii=False).encode())
+    if builder.active(snap.widgets.get(wid)):  # widget.json (the config) is hashed above; add the generator
+        h.update(builder.GENERATOR.encode())
     return "sha256:" + h.hexdigest()
 
 
@@ -82,15 +91,20 @@ def caption_for(snap: Snapshot, wid: str, lang: str, values: dict | None = None)
 
 
 def build(snap: Snapshot, wid: str, *, lang: str | None = None, values: dict | None = None,
-          strict: bool = True) -> dict[str, Any]:
+          strict: bool = True, state: str | None = None) -> dict[str, Any]:
     bw = load("build_widget")
     p = snap.project or {}
     lang = lang or p.get("defaultLocale", "en")
     caption = caption_for(snap, wid, lang, values)
     options = {"lang": lang, "caption": caption, "strict": strict}
+    w = snap.widgets.get(wid)
+    if not (builder.active(w) and builder.is_preview_state(w["builder"], state)):
+        state = None  # production/export builds: the default state, not in the hash
+    else:
+        options["state"] = state
     shash = source_hash(snap, wid, options)
     try:
-        src = assemble(snap, wid)
+        src = assemble(snap, wid, lang, state)
     except WidgetError as err:
         return {"ok": False, "widget": wid, "lang": lang, "sourceHash": shash, "errors": [f"[{err.code}] {err.message}"],
                 "warnings": [], "html": "", "rawBytes": 0, "compressedBytes": 0, "limits": _limits(bw)}
@@ -104,6 +118,7 @@ def build(snap: Snapshot, wid: str, *, lang: str | None = None, values: dict | N
             kd = tmp
         res = bw.build_text(src, caption=caption or None, strict=strict, kit_dir=kd, langs=(lang,))
     return {"ok": res.ok, "widget": wid, "lang": lang, "sourceHash": shash, "caption": caption, "html": res.html,
+            "previewState": state,
             "rawBytes": res.raw_bytes, "compressedBytes": res.compressed_bytes, "includes": res.includes,
             "errors": res.errors, "warnings": res.warnings, "limits": _limits(bw), "summary": res.summary() if res.ok else ""}
 
@@ -119,9 +134,10 @@ def payload(snap: Snapshot, wid: str, built: dict, *, chat_id: int | str = 11111
     w = snap.widgets[wid]
     st = (w.get("states") or {}).get(state) or {}
     send = w.get("send") or {}
+    allow = send.get("allow_queries", False) or (isinstance(w.get("builder"), dict) and builder.needs_queries(w["builder"]))
     return bw.payload(built["html"], chat_id=chat_id, caption=built.get("caption"), chat_data=st.get("chatData"),
                       public_data=st.get("publicData"), shared=send.get("is_shared", False),
-                      allow_queries=send.get("allow_queries", False), reply_markup=reply_markup,
+                      allow_queries=allow, reply_markup=reply_markup,
                       width=send.get("width"), height=send.get("height"))
 
 
@@ -129,7 +145,7 @@ def export(snap: Snapshot, wid: str, built: dict, expected_hash: str) -> dict:
     """Refuse a stale build: the hash must match the current sources and options."""
     options = {"lang": built["lang"], "caption": built.get("caption"), "strict": True}
     current = source_hash(snap, wid, options)
-    if expected_hash != current or built.get("sourceHash") != current:
+    if built.get("previewState") or expected_hash != current or built.get("sourceHash") != current:
         raise WidgetError("STALE_BUILD", "the build is not of the current sources; rebuild before export")
     if not built.get("ok"):
         raise WidgetError("BUILD_FAILED", "the build has errors; fix them before export")
@@ -159,6 +175,8 @@ def split_html(single: str) -> dict[str, str]:
 def mock_answers(snap: Snapshot, wid: str) -> dict:
     """Precomputed answers of the gallery handler named in widget.json mock.handler."""
     w = snap.widgets[wid]
+    if isinstance(w.get("builder"), dict):  # also after eject: the requests are the generated ones
+        return builder.mock_answers(w["builder"])
     handler = (w.get("mock") or {}).get("handler", "")
     if not handler.startswith("gallery:"):
         return {}
@@ -204,6 +222,9 @@ def templates() -> list[dict]:
     """Starting points for a new widget: a blank one and every skill gallery widget with a demo."""
     bw = load("build_widget")
     out = [{"id": "blank", "title": "Blank widget", "summary": "Title and text from chat_data, on the widget kit."}]
+    # Visual (form-built) widgets right after the blank one; the blank entry stays first.
+    out += [{"id": f"builder:{t}", "title": builder.TYPE_SCHEMA[t]["title"], "summary": builder.TYPE_SCHEMA[t]["summary"],
+             "icon": builder.TYPE_SCHEMA[t]["icon"], "source": "builder"} for t in builder.TYPES]
     for name in bw.gallery_sources():
         demo_path = os.path.join(bw.DEMO_DIR, name)
         demo_path = demo_path[:-5] + ".json"
@@ -243,6 +264,16 @@ def creation_patch(snap: Snapshot, widget_id: str, template: str, title: str | N
                     "r": {"label": "Data version", "type": "number", "advanced": True,
                           "help": "Goes up with every update so the widget ignores older data. The bot sets it."}}}}
         langs = [loc for loc in locales if loc in ("en", "ru", "uk")] or ["en"]
+    elif template.startswith("builder:"):
+        kind = template.split(":", 1)[1]
+        if kind not in builder.TYPES:
+            raise WidgetError("TEMPLATE_UNKNOWN", f"no builder type {kind!r}")
+        langs = [loc for loc in locales if loc in builder.KIT_LANGS] or ["en"]
+        meta, files = builder.creation_files(kind, langs)
+        dl = p.get("defaultLocale", "en")
+        title = title or builder.TYPE_SCHEMA[kind]["title"]
+        caps = {loc: builder.caption_text(meta["builder"], loc, dl) or title for loc in locales}
+        meta["caption"] = caps
     elif template.startswith("gallery:"):
         name = template.split(":", 1)[1]
         src = os.path.join(bw.SRC_DIR, name + ".html")
@@ -270,7 +301,7 @@ def creation_patch(snap: Snapshot, widget_id: str, template: str, title: str | N
     else:
         raise WidgetError("TEMPLATE_UNKNOWN", f"unknown template {template!r}")
     widget = {"id": widget_id, "title": title, "entry": "index.html", "languages": langs,
-              "caption": {loc: title for loc in locales}, **meta, "now": 1794736800}
+              "caption": {loc: title for loc in locales}, **meta, "now": builder.PREVIEW_NOW}
     changes = [{"widgetId": widget_id, "file": "widget.json",
                 "content": json.dumps(widget, ensure_ascii=False, indent=2) + "\n"}]
     changes += [{"widgetId": widget_id, "file": name, "content": text} for name, text in files.items()]
