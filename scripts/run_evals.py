@@ -226,6 +226,8 @@ def execute(cases: list[dict], host: str, model: str | None, timeout: int, dry_r
             continue
         start = time.time()
         try:
+            # Windows npm installs the CLI as a .cmd shim that CreateProcess can't find by name.
+            cmd = [shutil.which(cmd[0]) or cmd[0], *cmd[1:]]
             proc = subprocess.run(cmd, cwd=project, capture_output=True, text=True,
                                   encoding="utf-8", errors="replace", timeout=timeout)
             output, status = proc.stdout + proc.stderr, proc.returncode

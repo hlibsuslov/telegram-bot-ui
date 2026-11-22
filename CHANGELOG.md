@@ -5,6 +5,38 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## 2.4.0 - 2026-11-22
+
+Premium pass: what a person sees, checked. Ideas from 21 public Telegram skills, restated and
+verified (revisions and licenses: `references/official-sources.md`, "Community skills reviewed").
+
+- Routing: "make it premium / nicer / polished" now goes to the premium pass
+  (`references/visual-language.md` §7: first line and facts → buttons → color → icons, themes,
+  locales, custom emoji off, states, compatibility), not only to the emoji-pack recipes.
+- `SKILL.md` mode list: a polish request reads the premium pass first and covers empty, error
+  and stale states (a real agent run without it skipped them).
+- `validate_keyboard.py` warns on layout and meaning: styled or ✅/❌-marked navigation (red
+  Back, "❌ Close"; "Close account" is an action, not navigation), navigation above other
+  actions (a confirmation's red last row is allowed), a `danger` button sharing a row with any
+  other action (Back beside it is fine), labels that don't say what happens ("OK", "Yes",
+  "Submit", "Да", "Надіслати"), more than 8 rows; Ukrainian destructive words ("Скинути") now
+  count as destructive. Warnings only; tests in `tests/test_premium_pass.py`.
+- Found by those checks in our own examples and fixed (layout and labels only, same
+  `callback_data`): R35 Reject on its own row; `AgentBridge.approve(destructive=True)` (R40, MCP
+  `approve`) puts the red Approve alone in the last row so a mis-tap on Reject can't run it.
+- R03 (form): the submit button sits above Back/Cancel and says "Place order"
+  (`FormRunner(submit_label=...)`, default "Send answers"); Python, TypeScript and payload updated.
+- Shapes for stale screens (out of date + what is saved + one fresh entry) and notifications
+  (event and needed action in the ≤ ~80-char preview line, one fact per line, resolved in place)
+  in `microcopy-and-labels.md`; consent/peer-choice/escape style rules in `buttons-and-styles.md`;
+  page size by row density, no dead pager and a multi-select pattern in `inline-keyboards.md`;
+  no half-open markup in drafts (`streaming-and-editing.md`); strip test in the final review.
+- Worked set on one bot, same data before and after (menu, wizard, error, empty, stale tap,
+  notification): `examples-before-after.md` 17-20, `examples/premium-pass/before-after.json`.
+- Evals: UI5 (ru), UI6 (en) activation and B16 behavioural for the premium request.
+- `scripts/run_evals.py --execute` resolves the host CLI with `shutil.which` (Windows npm
+  installs `claude.cmd`, which `CreateProcess` can't start by name).
+
 ## 2.3.0 - 2026-11-22
 
 Bot API 10.5 (released 2026-11-22).

@@ -47,7 +47,9 @@
               {
                 "text": "Edit text",
                 "callback_data": "pub:edit:d42:1"
-              },
+              }
+            ],
+            [
               {
                 "text": "Reject",
                 "callback_data": "pub:reject:d42:1",
@@ -83,7 +85,9 @@
               {
                 "text": "Edit text",
                 "callback_data": "pub:edit:d43:1"
-              },
+              }
+            ],
+            [
               {
                 "text": "Reject",
                 "callback_data": "pub:reject:d43:1",
@@ -161,7 +165,9 @@
               {
                 "text": "Edit text",
                 "callback_data": "pub:edit:d42:2"
-              },
+              }
+            ],
+            [
               {
                 "text": "Reject",
                 "callback_data": "pub:reject:d42:2",

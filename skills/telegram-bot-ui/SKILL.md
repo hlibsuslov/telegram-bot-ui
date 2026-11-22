@@ -4,7 +4,7 @@ description: "Telegram bot UI/UX skill, updated for every Bot API release. Desig
 license: MIT
 metadata:
   author: hlibsuslov
-  version: "2.3.0"
+  version: "2.4.0"
 ---
 
 # Telegram Bot UI
@@ -46,6 +46,7 @@ pipelines, Mini App front-end internals. Microsoft `.rtf` files.
 | The user wants | Start here | Recipes |
 |---|---|---|
 | Better screens, keyboards, wording, feedback in an existing bot | core workflow below, `references/navigation-and-flows.md` | 01-10 |
+| "Make it premium / nicer / polished" | premium pass: `references/visual-language.md` §7 (copy and hierarchy first, icons last), `references/examples-before-after.md` 17-20 | 70 for icons |
 | Fit the bot to the project's style, rethink every menu, tune it | `references/redesign-orchestration.md` | — |
 | "Build me a bot for X" (shop, support, booking, learning, community…) | `references/example-library.md`, `recipes/use-cases.json`, `references/use-case-playbooks.md` | 20-29, 60-64, 80-87 |
 | Posts in a channel, digests, mailings, editorial approval | `references/publishing-pipeline.md`, `references/channel-post-design.md` | 30-39 |
@@ -83,6 +84,10 @@ and say which features you chose and why.
   payload, test. No full audit, no unrelated redesign.
 * **Feature, screen, post type or widget**: steps 1-6 below for the affected
   screens, then build from the closest recipe and adapt it.
+* **Polish: "make it premium / nicer / cleaner"**: the premium pass in
+  `references/visual-language.md` §7, read before editing. Every screen in scope gets copy and a
+  first line, then hierarchy and labels, then color, icons last. Every list gets its empty state,
+  every load its error state, and old buttons get the stale answer. Contracts stay frozen.
 * **New bot, migration, "latest Bot API"**: full workflow plus the initiative rule.
 
 ## Core workflow (audit before you redesign)
@@ -202,7 +207,8 @@ Details: `references/dynamic-feedback-and-streaming.md`.
   it can't change in an edit.
 - A callback may carry `inline_message_id` and no `message` (inline mode, or a bot whose
   `callback_query_mode` is `auto`/`inline`, 10.5): edit by that id, route by `callback_data`.
-- Labels must make sense without color and without icons.
+- Labels must make sense without color and without icons; Back/Cancel/Close stay
+  unstyled and last; `validate_keyboard.py` warnings are design defects to fix.
   Full rules: `references/buttons-and-styles.md`.
 
 ## Which reference to read (task-routed — don't read them all)
@@ -218,7 +224,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 - Reply keyboards, `ForceReply`, placeholders → `references/reply-keyboards.md`
 - Screens, back/home, commands, menu button, deep links → `references/navigation-and-flows.md`
 - First run, `/start` payloads, language choice, returning users → `references/onboarding-and-first-run.md`
-- One visual language, screen anatomy → `references/visual-language.md`
+- One visual language, screen anatomy, the premium pass → `references/visual-language.md`
 - Feedback mechanism → `references/dynamic-feedback-and-streaming.md`; draft state machine, Stop, races → `references/streaming-and-editing.md`
 - Personal / ephemeral answers in groups → `references/ephemeral-and-personal.md`
 - Topics, channel DMs, business, inline: which fields → `references/topics-and-contexts.md`
