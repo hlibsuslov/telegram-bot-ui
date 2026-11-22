@@ -90,6 +90,7 @@ def main(argv=None) -> int:
     ap.add_argument("--ref", default="feat/bot-ui-studio")
     ap.add_argument("--work", required=True)
     ap.add_argument("--keep", action="store_true")
+    ap.add_argument("--build-web", action="store_true", help="npm ci + build + build:artifact in the clone (needs the npm registry once)")
     a = ap.parse_args(argv)
     work = os.path.abspath(a.work)
     if os.path.exists(work) and os.listdir(work):
@@ -206,6 +207,12 @@ def main(argv=None) -> int:
          confirm["params"]["text"].replace("\n", " / "))
 
     # 8 optional builds
+    if a.build_web:
+        web = os.path.join(clone, "studio", "web")
+        npm = shutil.which("npm") or "npm"
+        for args in (["ci", "--no-audit", "--no-fund"], ["run", "typecheck"], ["run", "build"], ["run", "build:artifact"]):
+            sh([npm, *args], cwd=web)
+        step("8 studio/web: npm ci, typecheck, build, build:artifact", os.path.isfile(os.path.join(web, "dist", "index.html")))
     _, b = bu(clone, "build", "--project", project, check=False)
     step("8a widget build", b.get("ok", False), "; ".join(f"{w['lang']}: {w['rawBytes']} B / {w['compressedBytes']} B zlib-9"
                                                     for w in b.get("widgets", [])))
