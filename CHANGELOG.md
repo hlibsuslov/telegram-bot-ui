@@ -13,7 +13,7 @@ bot-ui projects and the optional local Studio (`studio/`, not part of the skill 
   Telegram conversations, edits messages and keyboards, and previews HTML widgets. It saves
   changes to the bot’s repository for Git review and can export a patch for offline drafts.
 - The landing page includes a browser demo of Pulloa, a coffee pickup bot with 19 screens,
-  four scenarios and two interactive widgets. README links cover the demo, local setup and
+  four scenarios and six interactive widgets. README links cover the demo, local setup and
   the project format in English, Russian and Ukrainian.
 - Skill route for a whole interface kept as files by stable screen ID:
   `references/bot-ui-projects.md` (new UI from a description, connecting one route of an existing
