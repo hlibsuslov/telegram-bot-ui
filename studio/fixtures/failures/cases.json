@@ -1,0 +1,168 @@
+{
+  "description": "Each case is applied to templates/checkout as ops on one screen; the result must be refused with this diagnostic by the Python validator (write_patch) and reported with the same code and pointer by the TypeScript lint (lint.ts).",
+  "cases": [
+    {
+      "name": "target-missing",
+      "screenId": "checkout.payment.confirm",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/actions/pay/outcomes/ok",
+          "value": "checkout.nowhere"
+        }
+      ],
+      "expect": {
+        "code": "TARGET_MISSING",
+        "pointer": "/actions/pay/outcomes/ok"
+      }
+    },
+    {
+      "name": "target-empty",
+      "screenId": "orders.status",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/actions/route/rule/match",
+          "value": ""
+        }
+      ],
+      "expect": {
+        "code": "TARGET_EMPTY",
+        "pointer": "/actions/route/rule/match"
+      }
+    },
+    {
+      "name": "rule-untrusted-field",
+      "screenId": "orders.status",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/actions/route/rule/when/field",
+          "value": "order.note"
+        }
+      ],
+      "expect": {
+        "code": "RULE_FIELD_UNTRUSTED",
+        "pointer": "/actions/route/rule/when/field"
+      }
+    },
+    {
+      "name": "rule-undeclared-field",
+      "screenId": "orders.status",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/actions/route/rule/when/field",
+          "value": "user.vip"
+        }
+      ],
+      "expect": {
+        "code": "RULE_FIELD_UNDECLARED",
+        "pointer": "/actions/route/rule/when/field"
+      }
+    },
+    {
+      "name": "rule-value-type",
+      "screenId": "orders.status",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/actions/route/rule/when/eq",
+          "value": "drone"
+        }
+      ],
+      "expect": {
+        "code": "RULE_VALUE_TYPE",
+        "pointer": "/actions/route/rule/when/eq"
+      }
+    },
+    {
+      "name": "default-locale-missing",
+      "screenId": "checkout.payment.confirm",
+      "ops": [
+        {
+          "op": "remove",
+          "path": "/message/text/ru"
+        }
+      ],
+      "expect": {
+        "code": "DEFAULT_LOCALE_TEXT_MISSING",
+        "pointer": "/message/text/ru"
+      }
+    },
+    {
+      "name": "placeholder-undeclared",
+      "screenId": "checkout.payment.confirm",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/message/text/ru",
+          "value": "Код {order.secret}"
+        }
+      ],
+      "expect": {
+        "code": "PLACEHOLDER_UNDECLARED",
+        "pointer": "/message/text/ru"
+      }
+    },
+    {
+      "name": "html-unbalanced",
+      "screenId": "entry.start",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/message/text/en",
+          "value": "<b>Demo shop"
+        }
+      ],
+      "expect": {
+        "code": "HTML_UNBALANCED",
+        "pointer": "/message/text/en"
+      }
+    },
+    {
+      "name": "keyboard-action-missing",
+      "screenId": "checkout.payment.confirm",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/keyboard/rows",
+          "value": [
+            [
+              "pay"
+            ],
+            [
+              "ghost"
+            ]
+          ]
+        }
+      ],
+      "expect": {
+        "code": "KEYBOARD_ACTION_MISSING",
+        "pointer": "/keyboard/rows/1/0"
+      }
+    },
+    {
+      "name": "navigate-both",
+      "screenId": "entry.start",
+      "ops": [
+        {
+          "op": "set",
+          "path": "/actions/order/rule",
+          "value": {
+            "when": {
+              "field": "payment.method",
+              "eq": "card"
+            },
+            "match": "checkout.note",
+            "otherwise": "checkout.note"
+          }
+        }
+      ],
+      "expect": {
+        "code": "NAVIGATE_TARGET",
+        "pointer": "/actions/order"
+      }
+    }
+  ]
+}

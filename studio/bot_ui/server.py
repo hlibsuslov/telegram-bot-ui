@@ -15,6 +15,7 @@ import json
 import mimetypes
 import os
 import secrets
+import sys
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -68,7 +69,10 @@ class Studio:
     def api(self, path: str, body: dict) -> tuple[int, dict]:
         snap = open_snapshot(self.root)
         if path == "/api/project":
-            return 200, project_document(snap)
+            import hashlib
+            root_key = hashlib.sha256(os.path.normcase(os.path.realpath(self.root)).encode()).hexdigest()[:16]
+            return 200, {**project_document(snap), "rootKey": root_key, "rootLabel": os.path.basename(self.root),
+                         "cliProject": self.root}
         if path == "/api/revision":
             return 200, {"revision": snap.revision}
         if path == "/api/validate":
@@ -252,15 +256,20 @@ npm run build</pre>
 
 
 def serve(root: str, *, host: str = "127.0.0.1", port: int = 0, open_screen: str | None = None,
-          open_browser: bool = False, ready: threading.Event | None = None, holder: dict | None = None) -> int:
+          open_browser: bool = False, ready: threading.Event | None = None, holder: dict | None = None,
+          quiet: bool = False) -> int:
     if host not in ("127.0.0.1", "localhost"):
         raise ValueError("the Studio binds to loopback only")
     srv = ThreadingHTTPServer((host, port), BaseHTTPRequestHandler)
     studio = Studio(root, srv.server_address[1])
     srv.RequestHandlerClass = studio.handler()
     url = f"http://127.0.0.1:{studio.port}/" + (f"#/screen/{open_screen}" if open_screen else "")
-    print(f"bot-ui Studio {TOOL_VERSION} for {root}\n  {url}\n  Ctrl+C stops it (local only; nothing is sent to Telegram)",
-          flush=True)
+    banner = f"bot-ui Studio {TOOL_VERSION} for {root}\n  {url}\n  Ctrl+C stops it (local only; nothing is sent to Telegram)\n"
+    try:
+        sys.stdout.write("" if quiet else banner)
+    except UnicodeEncodeError:  # a non-UTF-8 console and a Unicode project path
+        sys.stdout.write(banner.encode("ascii", "backslashreplace").decode("ascii"))
+    sys.stdout.flush()
     if holder is not None:
         holder.update(server=srv, studio=studio, url=url)
     if ready is not None:
