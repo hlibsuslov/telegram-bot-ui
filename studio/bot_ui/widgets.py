@@ -210,7 +210,14 @@ def templates() -> list[dict]:
         if not os.path.isfile(demo_path):
             continue
         demo = bw.load_demo(demo_path)
-        out.append({"id": f"gallery:{name[:-5]}", "title": demo.get("title", name[:-5]), "summary": demo.get("summary", "")})
+        out.append({"id": f"gallery:{name[:-5]}", "title": demo.get("title", name[:-5]), "summary": demo.get("summary", ""),
+                    "source": "gallery"})
+    # Built examples from the recipes that have no separate source (kept as one HTML file).
+    for name in sorted(os.listdir(bw.OUT_DIR)):
+        stem = name[:-5]
+        if name.endswith(".html") and not os.path.isfile(os.path.join(bw.SRC_DIR, name)):
+            out.append({"id": f"recipe:{stem}", "title": stem.replace("-", " ").capitalize(),
+                        "summary": "Built example from the skill recipes (one HTML file, no demo states).", "source": "recipe"})
     return out
 
 
@@ -245,6 +252,16 @@ def creation_patch(snap: Snapshot, widget_id: str, template: str, title: str | N
         meta["mock"] = {"handler": f"gallery:{name}"}
         have = set(bw.source_languages("\n".join(files.values())))
         langs = [loc for loc in locales if loc in have] or sorted(have)[:1] or ["en"]
+    elif template.startswith("recipe:"):
+        name = template.split(":", 1)[1]
+        built = os.path.join(bw.OUT_DIR, name + ".html")
+        if not re.match(r"^[a-z0-9-]+$", name) or not os.path.isfile(built) or os.path.isfile(os.path.join(bw.SRC_DIR, name + ".html")):
+            raise WidgetError("TEMPLATE_UNKNOWN", f"no recipe widget {name!r}")
+        with open(built, encoding="utf-8") as fh:
+            files = {"index.html": fh.read().replace("\r\n", "\n")}
+        title = title or name.replace("-", " ").capitalize()
+        meta = {"send": {}, "states": {"default": {}}, "queries": [], "fresh": []}
+        langs = [loc for loc in locales if loc == "en"] or locales[:1]
     else:
         raise WidgetError("TEMPLATE_UNKNOWN", f"unknown template {template!r}")
     widget = {"id": widget_id, "title": title, "entry": "index.html", "languages": langs,
