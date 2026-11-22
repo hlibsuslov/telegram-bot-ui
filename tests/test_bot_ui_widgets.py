@@ -105,6 +105,24 @@ class Widgets(ProjectCase):
         bad = widgets.build(open_snapshot(self.root), "order-status", lang="en", values=VALUES)
         self.assertFalse(bad["ok"])
 
+    def test_new_widget_from_blank_and_from_the_gallery(self):
+        from bot_ui.store import write_patch
+        names = [t["id"] for t in widgets.templates()]
+        self.assertEqual(names[0], "blank")
+        self.assertIn("gallery:quiz", names)
+        for wid, template in (("promo", "blank"), ("quiz-card", "gallery:quiz")):
+            res = write_patch(self.root, widgets.creation_patch(open_snapshot(self.root), wid, template))
+            self.assertEqual(len(res.changed_files), 4)
+            snap = open_snapshot(self.root)
+            for lang in snap.widgets[wid]["languages"]:
+                self.assertTrue(widgets.build(snap, wid, lang=lang)["ok"], (wid, lang))
+        for bad, code in (("promo", "WIDGET_EXISTS"), ("Bad.ID", "WIDGET_ID_INVALID")):
+            with self.assertRaises(widgets.WidgetError) as ctx:
+                widgets.creation_patch(open_snapshot(self.root), bad, "blank")
+            self.assertEqual(ctx.exception.code, code)
+        with self.assertRaises(widgets.WidgetError):
+            widgets.creation_patch(open_snapshot(self.root), "x", "gallery:../../etc")
+
     def test_mock_answers_come_from_the_gallery_handler(self):
         answers = widgets.mock_answers(open_snapshot(self.root), "order-status")
         self.assertIn("call", answers["default"])

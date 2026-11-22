@@ -171,3 +171,85 @@ def preview_runtime() -> dict:
     """The skill's mock runtime (JS) and default CSS for the sandboxed preview frame."""
     pw = load("preview_widget")
     return {"mock": pw.MOCK_JS, "css": pw.DEFAULT_CSS, "themes": pw.THEMES}
+
+
+# ------------------------------------------------------------------ new widgets
+
+BLANK_INDEX = """<!-- New widget (private chat). Build with `bot-ui build`.
+  chat_data: {"title": "...", "text": "...", "r": 0} -->
+<!--@file style.css-->
+<div class="k">
+  <div class="hd"><span class="tt el" id="ti"></span></div>
+  <div class="mt" id="tx"></div>
+  <div class="st" id="st"></div>
+</div>
+<!--@kit runtime.js-->
+<!--@kit i18n.js-->
+<!--@file widget.js-->
+"""
+BLANK_CSS = "/*@kit tokens.css*/\n#tx { margin-top: 4px }\n"
+BLANK_JS = """/*@lang en*/K.add({ en: { none: "Nothing yet. The bot fills this in." } });/*@end*/
+/*@lang ru*/K.add({ ru: { none: "Пока пусто. Бот заполнит это сам." } });/*@end*/
+/*@lang uk*/K.add({ uk: { none: "Поки порожньо. Бот заповнить це сам." } });/*@end*/
+function draw() {
+  var s = K.S.chatData, $ = K.$;
+  $("ti").textContent = (s && s.title) || K.t("none");
+  $("tx").textContent = (s && s.text) || "";
+}
+K.start(draw);
+"""
+
+
+def templates() -> list[dict]:
+    """Starting points for a new widget: a blank one and every skill gallery widget with a demo."""
+    bw = load("build_widget")
+    out = [{"id": "blank", "title": "Blank widget", "summary": "Title and text from chat_data, on the widget kit."}]
+    for name in bw.gallery_sources():
+        demo_path = os.path.join(bw.DEMO_DIR, name)
+        demo_path = demo_path[:-5] + ".json"
+        if not os.path.isfile(demo_path):
+            continue
+        demo = bw.load_demo(demo_path)
+        out.append({"id": f"gallery:{name[:-5]}", "title": demo.get("title", name[:-5]), "summary": demo.get("summary", "")})
+    return out
+
+
+def creation_patch(snap: Snapshot, widget_id: str, template: str, title: str | None = None) -> dict:
+    """bot-ui-patch/v1 that creates widgets/<widget_id>/ from a template (written by write_patch)."""
+    from . import PATCH_FORMAT
+    from .project import check_id
+    if (err := check_id(widget_id)) or "." in widget_id:
+        raise WidgetError("WIDGET_ID_INVALID", err or "a widget ID is one segment (no '.')")
+    if widget_id in snap.widgets:
+        raise WidgetError("WIDGET_EXISTS", f"widget {widget_id} already exists")
+    p = snap.project or {}
+    locales = p.get("locales") or ["en"]
+    bw = load("build_widget")
+    if template == "blank":
+        files = {"index.html": BLANK_INDEX, "style.css": BLANK_CSS, "widget.js": BLANK_JS}
+        title = title or "New widget"
+        meta = {"send": {}, "states": {"default": {"chatData": {"title": title, "text": "Edit me in Data and states.", "r": 0}},
+                                       "empty": {}}, "queries": [], "fresh": []}
+        langs = [loc for loc in locales if loc in ("en", "ru", "uk")] or ["en"]
+    elif template.startswith("gallery:"):
+        name = template.split(":", 1)[1]
+        src = os.path.join(bw.SRC_DIR, name + ".html")
+        demo_path = os.path.join(bw.DEMO_DIR, name + ".json")
+        if not re.match(r"^[a-z0-9-]+$", name) or not os.path.isfile(src) or not os.path.isfile(demo_path):
+            raise WidgetError("TEMPLATE_UNKNOWN", f"no gallery widget {name!r}")
+        with open(src, encoding="utf-8") as fh:
+            files = split_html(fh.read().replace("\r\n", "\n"))
+        demo = bw.load_demo(demo_path)
+        title = title or demo.get("title", name)
+        meta = {k: demo[k] for k in ("send", "states", "queries", "fresh") if k in demo}
+        meta["mock"] = {"handler": f"gallery:{name}"}
+        have = set(bw.source_languages("\n".join(files.values())))
+        langs = [loc for loc in locales if loc in have] or sorted(have)[:1] or ["en"]
+    else:
+        raise WidgetError("TEMPLATE_UNKNOWN", f"unknown template {template!r}")
+    widget = {"id": widget_id, "title": title, "entry": "index.html", "languages": langs,
+              "caption": {loc: title for loc in locales}, **meta, "now": 1794736800}
+    changes = [{"widgetId": widget_id, "file": "widget.json",
+                "content": json.dumps(widget, ensure_ascii=False, indent=2) + "\n"}]
+    changes += [{"widgetId": widget_id, "file": name, "content": text} for name, text in files.items()]
+    return {"format": PATCH_FORMAT, "projectId": p.get("projectId"), "baseRevision": snap.revision, "changes": changes}

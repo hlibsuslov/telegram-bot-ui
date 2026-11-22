@@ -293,10 +293,11 @@ def apply_changes(snap: Snapshot, changes: list[dict]) -> tuple[dict[str, bytes 
     """Future file bytes for each touched screen, and field conflicts against `from` values."""
     writes: dict[str, bytes | None] = {}
     conflicts: list[dict] = []
+    created = {c["widgetId"] for c in changes if "widgetId" in c and c["file"] == "widget.json"}
     for c in changes:
         if "widgetId" in c:
             rel = f"widgets/{c['widgetId']}/{c['file']}"
-            if c["widgetId"] not in snap.widgets and c["file"] != "widget.json":
+            if c["widgetId"] not in snap.widgets and c["widgetId"] not in created:
                 raise StoreError("WIDGET_NOT_FOUND", f"widget {c['widgetId']} does not exist")
             current = snap.files.get(rel)
             if "fromHash" in c and c["fromHash"] != content_hash(current):

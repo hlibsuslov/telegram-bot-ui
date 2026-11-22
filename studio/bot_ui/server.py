@@ -176,6 +176,20 @@ class Studio:
             except widgets.WidgetError as err:
                 return 409, {"ok": False, "error": {"code": err.code, "message": err.message,
                                                     "currentHash": built["sourceHash"]}}
+        if path == "/api/widget/templates":
+            return 200, {"templates": widgets.templates()}
+        if path == "/api/widget/create":
+            try:
+                patch = widgets.creation_patch(snap, str(body.get("widgetId", "")), str(body.get("template", "blank")),
+                                               body.get("title"))
+                if body.get("expectedRevision"):
+                    patch["baseRevision"] = body["expectedRevision"]
+                res = write_patch(self.root, patch)
+            except widgets.WidgetError as err:
+                return 422, {"ok": False, "error": {"code": err.code, "message": err.message}}
+            except StoreError as err:
+                return (409 if err.code == "REVISION_CONFLICT" else 422), {"ok": False, "error": err.to_json()}
+            return 200, res.to_json()
         if path == "/api/widget/runtime":
             wid = body.get("widget")
             return 200, {**widgets.preview_runtime(), "answers": widgets.mock_answers(snap, wid) if wid in snap.widgets else {}}
