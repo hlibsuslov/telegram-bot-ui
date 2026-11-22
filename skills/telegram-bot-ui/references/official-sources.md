@@ -1,8 +1,8 @@
 # Official sources and verification log
 
-> **Last verification: 2026-11-15.** Verified against **Bot API 10.4 (released
-> 2026-11-09)**, the newest version in the official changelog on that date (10.3 was
-> released 2026-08-24); no newer version existed on 2026-11-15. The full API is
+> **Last verification: 2026-11-22.** Verified against **Bot API 10.5 (released
+> 2026-11-22)**, the newest version in the official changelog on that date (10.4 was
+> released 2026-11-09); no newer version existed on 2026-11-22. The full API is
 > snapshotted in `data/bot-api/` (see `api-catalog.md`). Before version-dependent work, re-check the changelog for a newer
 > version and update this file. Updating these references is part of maintaining the skill —
 > no separate permission step is needed when the task is to update the skill.
@@ -16,11 +16,11 @@ the task is version-sensitive:
 3. Update the references, `recipes/registry.json` and this log — **do not delete historic
    facts** needed for older-SDK compatibility; mark them as version-specific.
 
-## Machine-readable snapshot (2026-11-15)
+## Machine-readable snapshot (2026-11-22)
 
 `py -3 scripts/sync_bot_api.py` parsed https://core.telegram.org/bots/api and
-https://core.telegram.org/bots/api-changelog on 2026-11-15: Bot API **10.4**, 193 methods,
-425 types, 29 union types, 81 changelog releases (`data/bot-api/catalog.json`,
+https://core.telegram.org/bots/api-changelog on 2026-11-22: Bot API **10.5**, 194 methods,
+426 types, 29 union types, 82 changelog releases (`data/bot-api/catalog.json`,
 `changelog.json`). `robots.txt` on core.telegram.org returned 404. Re-run the sync
 whenever this file's date is older than the newest changelog entry, then diff with
 `py -3 scripts/tg_api_lookup.py diff`.
@@ -172,6 +172,24 @@ Confirmed against official changelog / blog:
 - `link_preview_options` fields: `is_disabled`, `url`, `prefer_small_media`,
   `show_above_text`.
 
+## Facts verified on 2026-11-22 (Bot API 10.5)
+
+| Source | URL | Used for |
+|---|---|---|
+| Bot API changelog, 10.5 | https://core.telegram.org/bots/api-changelog#november-22-2026 | registry rows 10.5-* |
+| setMySettings | https://core.telegram.org/bots/api#setmysettings | `bot-settings.md`, `tgkit/settings.py` |
+| BotFullInfo, getMe | https://core.telegram.org/bots/api#botfullinfo | `bot-settings.md` |
+| CallbackQuery (`callback_query_mode`) | https://core.telegram.org/bots/api#callbackquery | `bot-settings.md#callback-query-mode` |
+| WriteAccessAllowed (`inviter`, botinvite links) | https://core.telegram.org/bots/api#writeaccessallowed | `bot-settings.md#owner-invites-botinvite-links` |
+| (Input)RichBlockExpandableBlockQuotation | https://core.telegram.org/bots/api#inputrichblockexpandableblockquotation | `telegram-capabilities.md`, `tgkit/rich.py` |
+| tdlib/telegram-bot-api | commit "Update version to 10.5." (2026-11-21) | `sdk-compatibility.md#bot-api-105-status-2026-11-22` |
+
+Facts: `setMySettings` changes only the given settings; `getMe` returns `BotFullInfo` and the
+getMe-only fields left `User`; `inline_feedback_share_denominator`, `can_communicate_with_bots`
+and `callback_query_mode` can't be read back; expandable quotes take `blocks` (required) and no
+longer `text`. Not stated by the docs (treated as **Unverified**): whether BotFather and
+`setMySettings` share one store (assumed: last write wins), and how clients render a topic sidebar.
+
 ## Facts verified on 2026-11-12 (Bot API 10.3 and 10.4)
 
 Sources read on 2026-11-12 (machine-readable `.md` versions of the pages):
@@ -219,7 +237,7 @@ Official Telegram open source / tooling for the newest API (checked 2026-11-12):
   "Telegram iOS Icons" (tgiosicons), "TG iOS & macOS Icons" (tgmacicons), "Telegram Android
   Icons" (TgAndroidIcons) and "Unigram" (UnigramIcons) are community packs imitating client
   icon styles — treat each as its own family (`visual-language.md`).
-- No official open-source example bot for 10.3/10.4 was found; SDK support is tracked in
+- No official open-source example bot for 10.3-10.5 was found; SDK support is tracked in
   `sdk-compatibility.md`.
 
 SDK status verified 2026-11-12 (re-checked 2026-11-15: aiogram 3.32.0 and

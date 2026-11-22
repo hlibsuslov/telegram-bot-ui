@@ -447,6 +447,43 @@
       "why": "topic links"
     },
     {
+      "id": "P37",
+      "area": "api-lookup",
+      "lang": "en",
+      "prompt": "Turn on topics with a sidebar for our bot from code, not in BotFather.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-settings.md"
+      ],
+      "why": "setMySettings, has_topic_sidebar (10.5)"
+    },
+    {
+      "id": "P38",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Кнопки в старых сообщениях бота перестали работать — колбэк приходит без message.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-settings.md"
+      ],
+      "why": "callback_query_mode, inline_message_id (10.5)"
+    },
+    {
+      "id": "P39",
+      "area": "use-cases",
+      "lang": "en",
+      "prompt": "Let me invite our five testers to the bot and greet them.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-settings.md",
+        "references/onboarding-and-first-run.md"
+      ],
+      "why": "botinvite link, WriteAccessAllowed.inviter (10.5)"
+    },
+    {
       "id": "N1",
       "area": "out-of-scope",
       "lang": "en",

@@ -5,8 +5,29 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
-## Unreleased
+## 2.3.0 - 2026-11-22
 
+Bot API 10.5 (released 2026-11-22).
+
+- Catalog synced to 10.5: 194 methods, 426 types (`setMySettings`, `BotFullInfo`; `getMe` returns
+  `BotFullInfo`; getMe-only flags removed from `User`; `WriteAccessAllowed.inviter`).
+- **Breaking for 10.3/10.4 payloads:** expandable quotes in Rich Messages hold `blocks` instead of
+  `text`. `tgkit.rich.expandable_quote` emits blocks (a plain `text` becomes one paragraph, or pass
+  `blocks=`); R02, R09, R26, R31, the publishing renderer and the TypeScript R02 twin migrated;
+  R02 now folds a real list inside the quote.
+- Bot settings from code: `references/bot-settings.md` and `tgkit/settings.py` (`validate`, `plan`,
+  `apply` = getMe + one `setMySettings` with only the differences, `callback_target` for every
+  `callback_query_mode`, `addressed_to_me` over `active_usernames`, `invite_link`, `inviter_of`);
+  recipe 10 (`recipes/10-bot-settings.md`, `r10_bot_settings.py`, payload, three fixtures) and
+  `tests/test_bot_settings.py`.
+- Coverage registry: 11 rows for 10.5 (63 in all, none uncovered); the generated table is now
+  `references/bot-api-coverage.md` (was `bot-api-10.3-10.4.md`).
+- References: inline mode, topics, onboarding (invited users skip `/start`), deep links
+  (`t.me/botinvite`), business accounts, navigation, capabilities, changelog and catalog tables,
+  official sources; `sdk-compatibility.md` records that no SDK declares 10.5 yet (tdlib's Bot API
+  server does) and what breaks meanwhile. SKILL.md: callbacks without `message`.
+- Payload headers and evals: every captured payload re-validated against the 10.5 catalog;
+  activation evals P37-P39.
 - Widget docs: field report from a production game bot (`widget-patterns.md` §16) — one shared
   widget per app with per-user state in answers, versioning by HTML hash with every old
   `widget_id` routed, hidden information on the server, fractions sent as strings, answer

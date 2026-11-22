@@ -1,4 +1,4 @@
-"""Coverage proof: every 10.3/10.4 row points at an existing section, example and
+"""Coverage proof: every 10.3-10.5 row points at an existing section, example and
 check; every recipe runs; the payload layer matches the code."""
 import contextlib
 import io
@@ -38,7 +38,8 @@ class Registry(unittest.TestCase):
     def test_counts_match_the_changelog(self):
         self.assertEqual(sum(r["version"] == "10.3" for r in ROWS), 21)   # bullets in "Bot API 10.3"
         self.assertEqual(sum(r["version"] == "10.4" for r in ROWS), 31)   # bullets in "Bot API 10.4"
-        self.assertEqual(len({r["id"] for r in ROWS}), 52)
+        self.assertEqual(sum(r["version"] == "10.5" for r in ROWS), 11)   # bullets in "Bot API 10.5"
+        self.assertEqual(len({r["id"] for r in ROWS}), 63)
 
     def test_every_row_is_complete_and_resolves(self):
         text = corpus()

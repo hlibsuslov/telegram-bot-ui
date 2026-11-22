@@ -139,7 +139,9 @@ class Diff(unittest.TestCase):
     def test_added_removed_changed(self):
         old = sync.load_catalog()
         new = copy.deepcopy(old)
-        new["meta"]["bot_api_version"] = "10.5"
+        major, minor = old["meta"]["bot_api_version"].split(".")
+        bumped = f"{major}.{int(minor) + 1}"
+        new["meta"]["bot_api_version"] = bumped
         new["methods"]["sendHologram"] = {**copy.deepcopy(new["methods"]["getMe"]), "name": "sendHologram"}
         del new["types"]["CallbackGame"]
         new["methods"]["sendMessage"]["parameters"].append(
@@ -153,7 +155,7 @@ class Diff(unittest.TestCase):
         ch = d["changed"]["methods"]["sendMessage"]
         self.assertEqual(ch["added_parameters"], ["hologram"])
         self.assertEqual(ch["modified_parameters"]["text"]["required"], [True, False])
-        self.assertIn("10.4 -> 10.5", sync.summarize_diff(d))
+        self.assertIn(f"{old['meta']['bot_api_version']} -> {bumped}", sync.summarize_diff(d))
 
     def test_identical_snapshots_have_no_changes(self):
         cat = sync.load_catalog()
@@ -206,6 +208,18 @@ class SnapshotIntegrity(unittest.TestCase):
             self.assertIn(s, self.cat["methods"])
         for s in ("Widget", "WidgetQuery", "TonWalletCard", "PaidMessagesWaived", "AreaPosition"):
             self.assertIn(s, self.cat["types"])
+
+    def test_known_10_5_symbols_present(self):
+        self.assertIn("setMySettings", self.cat["methods"])
+        self.assertEqual(self.cat["methods"]["getMe"]["returns"], "BotFullInfo")
+        info = {f["name"] for f in self.cat["types"]["BotFullInfo"]["fields"]}
+        self.assertLessEqual({"active_usernames", "inline_query_placeholder", "needs_inline_query_location",
+                              "has_topic_sidebar"}, info)
+        self.assertNotIn("can_join_groups", {f["name"] for f in self.cat["types"]["User"]["fields"]})
+        self.assertIn("inviter", {f["name"] for f in self.cat["types"]["WriteAccessAllowed"]["fields"]})
+        quote = {f["name"] for f in self.cat["types"]["InputRichBlockExpandableBlockQuotation"]["fields"]}
+        self.assertIn("blocks", quote)
+        self.assertNotIn("text", quote)
 
     def test_changelog_snapshot_matches_catalog_version(self):
         cl = sync.load_changelog()

@@ -48,7 +48,7 @@ export async function interactiveDocument() {
     { type: "table", is_bordered: true, is_compact: true, cells: [
       [{ text: "Key", is_header: true, align: "left", valign: "middle" }, { text: "Days left", is_header: true, align: "right", valign: "middle" }],
       [{ text: "signing", align: "left", valign: "middle" }, { text: "12", align: "right", valign: "middle" }]] },
-    { type: "expandable_blockquote", text: "Auditor note: rotation must be logged…", credit: "Audit 2026-10" },
+    { type: "expandable_blockquote", blocks: [{ type: "paragraph", text: "Auditor note: rotation must be logged…" }], credit: "Audit 2026-10" },
     { type: "document", document: { type: "document", media: "BQACAgIAAxkBAAIBdemoFileId" }, caption: { text: "Full procedure (PDF)" } },
     { type: "buttons", align: "left", buttons: [{ text: "Approve", callback_data: "doc:approve:v3", style: "success" }, { text: "Copy id", copy_text: { text: "ROT-2026-v3" } }] },
   ] };
