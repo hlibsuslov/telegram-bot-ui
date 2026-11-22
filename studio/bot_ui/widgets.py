@@ -1,6 +1,7 @@
 """Widget workbench backend: source -> assemble -> build_widget (lint, check, zlib-9) -> payload.
 
 A widget lives in widgets/<id>/: widget.json, an entry HTML file and optional local files.
+An optional design.json is a design profile (skill scripts/widget_design.py) applied at build.
 `<!--@file style.css-->` in the entry inlines a local file as <style>/<script> in place, so the
 split keeps the order of styles and scripts. Kit partials (`<!--@kit runtime.js-->`) come
 from widgets/_kit/ in the project (vendored by `bot-ui init`), else from the skill.
@@ -89,6 +90,11 @@ def build(snap: Snapshot, wid: str, *, lang: str | None = None, values: dict | N
     except WidgetError as err:
         return {"ok": False, "widget": wid, "lang": lang, "sourceHash": shash, "errors": [f"[{err.code}] {err.message}"],
                 "warnings": [], "html": "", "rawBytes": 0, "compressedBytes": 0, "limits": _limits(bw)}
+    try:
+        design = design_of(snap, wid)
+    except WidgetError as err:
+        return {"ok": False, "widget": wid, "lang": lang, "sourceHash": shash, "errors": [f"[{err.code}] {err.message}"],
+                "warnings": [], "html": "", "rawBytes": 0, "compressedBytes": 0, "limits": _limits(bw)}
     kit = _project_kit(snap)
     with tempfile.TemporaryDirectory(prefix="bot-ui-kit-") as tmp:
         kd = skill_kit_dir()
@@ -97,10 +103,30 @@ def build(snap: Snapshot, wid: str, *, lang: str | None = None, values: dict | N
                 with open(os.path.join(tmp, name), "wb") as fh:
                     fh.write(normalize_bytes(data))
             kd = tmp
-        res = bw.build_text(src, caption=caption or None, strict=strict, kit_dir=kd, langs=(lang,))
-    return {"ok": res.ok, "widget": wid, "lang": lang, "sourceHash": shash, "caption": caption, "html": res.html,
-            "rawBytes": res.raw_bytes, "compressedBytes": res.compressed_bytes, "includes": res.includes,
-            "errors": res.errors, "warnings": res.warnings, "limits": _limits(bw), "summary": res.summary() if res.ok else ""}
+        res = bw.build_text(src, caption=caption or None, strict=strict, kit_dir=kd, langs=(lang,), design=design)
+        plain = bw.build_text(src, caption=caption or None, kit_dir=kd, langs=(lang,)) if res.design_css else None
+    out = {"ok": res.ok, "widget": wid, "lang": lang, "sourceHash": shash, "caption": caption, "html": res.html,
+           "rawBytes": res.raw_bytes, "compressedBytes": res.compressed_bytes, "includes": res.includes,
+           "errors": res.errors, "warnings": res.warnings, "limits": _limits(bw), "summary": res.summary() if res.ok else ""}
+    if design is not None:
+        wd = load("widget_design")
+        out["design"] = {"css": res.design_css, "bytes": res.compressed_bytes - plain.compressed_bytes if plain else 0,
+                         "contrast": wd.contrast_report(design)}
+    return out
+
+
+def design_of(snap: Snapshot, wid: str) -> dict | None:
+    """The widget's design profile (widgets/<id>/design.json), or None when it has none."""
+    raw = snap.files.get(f"widgets/{wid}/design.json")
+    if raw is None:
+        return None
+    try:
+        design = json.loads(normalize_bytes(raw).decode("utf-8"))
+    except ValueError as err:
+        raise WidgetError("DESIGN_INVALID", f"widgets/{wid}/design.json is not valid JSON: {err}") from err
+    if not isinstance(design, dict):
+        raise WidgetError("DESIGN_INVALID", f"widgets/{wid}/design.json must be an object")
+    return design
 
 
 def _limits(bw) -> dict:
@@ -163,6 +189,7 @@ def mock_answers(snap: Snapshot, wid: str) -> dict:
 
 
 def preview_runtime() -> dict:
-    """The skill's mock runtime (JS) and default CSS for the sandboxed preview frame."""
+    """The skill's mock runtime (JS) and default CSS for the sandboxed preview frame, plus the
+    design-profile catalogue (slots, options, presets) the Design tab draws its controls from."""
     pw = load("preview_widget")
-    return {"mock": pw.MOCK_JS, "css": pw.DEFAULT_CSS, "themes": pw.THEMES}
+    return {"mock": pw.MOCK_JS, "css": pw.DEFAULT_CSS, "themes": pw.THEMES, "design": load("widget_design").catalog()}

@@ -48,12 +48,15 @@ SLOTS: dict[str, dict[str, Any]] = {
     "danger": {"label": "Errors and destructive", "vars": ["--k-bad"], "tg": "var(--tg-theme-destructive-text-color,#e53935)"},
 }
 
-# Telegram's default palettes (the preview's light and dark themes) for contrast checks only.
+# Telegram's default palettes (the preview's light and dark themes): contrast checks and the
+# editor's "unset" swatches. Success/warning are the kit's light-dark() pairs.
 TG = {
     "light": {"bg": "#ffffff", "text": "#000000", "hint": "#707579", "button": "#2481cc", "buttonText": "#ffffff",
-              "surface": "#f1f1f4", "accent": "#2481cc", "danger": "#e53935"},
+              "surface": "#f1f1f4", "accent": "#2481cc", "danger": "#e53935", "separator": "#e7e7ea",
+              "border": "#e7e7ea", "success": "#2e8b3e", "warning": "#a86400"},
     "dark": {"bg": "#212d3b", "text": "#ffffff", "hint": "#7d8b99", "button": "#50a8eb", "buttonText": "#ffffff",
-             "surface": "#2b3a4b", "accent": "#64b5ef", "danger": "#ee686f"},
+             "surface": "#2b3a4b", "accent": "#64b5ef", "danger": "#ee686f", "separator": "#0f161e",
+             "border": "#0f161e", "success": "#5ec46e", "warning": "#f0a73a"},
 }
 
 ENUMS = {

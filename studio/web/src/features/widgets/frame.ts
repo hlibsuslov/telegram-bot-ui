@@ -2,8 +2,9 @@
 // does (default CSS, window.__cfg, the mock runtime, the built widget) for the sandboxed
 // /preview-frame.html, which accepts it once from its parent.
 import type { Doc } from "@/core/render.ts";
+import type { DesignCatalog } from "./DesignPanel";
 
-export interface Runtime { mock: string; css: string; themes: Record<string, Doc>; answers: Record<string, Record<string, { pushes?: { field: string; text: string }[]; result?: string | null }>> }
+export interface Runtime { mock: string; css: string; themes: Record<string, Doc>; design?: DesignCatalog; answers: Record<string, Record<string, { pushes?: { field: string; text: string }[]; result?: string | null }>> }
 
 const FS = 15;
 

@@ -1,6 +1,7 @@
 """bot-ui widget workbench backend: assembly, builds bound to sources, export, import split."""
 from __future__ import annotations
 
+import json
 import os
 import re
 import unittest
@@ -91,6 +92,30 @@ class Widgets(ProjectCase):
         b = widgets.build(open_snapshot(self.root), "order-status", lang="ru")
         self.assertFalse(b["ok"])
         self.assertIn("WIDGET_FILE_MISSING", b["errors"][0])
+
+    def test_design_profile_is_applied_measured_and_part_of_the_identity(self):
+        plain = widgets.build(open_snapshot(self.root), "order-status", lang="ru", values=VALUES)
+        self.assertNotIn("design", plain)
+        wd = load("widget_design")
+        self.write_raw("widgets/order-status/design.json", json.dumps(wd.apply_preset("soft")).encode())
+        b = widgets.build(open_snapshot(self.root), "order-status", lang="ru", values=VALUES)
+        self.assertTrue(b["ok"], b["errors"])
+        self.assertNotEqual(b["sourceHash"], plain["sourceHash"])
+        self.assertIn("--tg-button-radius:24px", b["html"])
+        self.assertEqual(b["design"]["bytes"], b["compressedBytes"] - plain["compressedBytes"])
+        self.assertGreater(b["design"]["bytes"], 0)
+        self.assertEqual({r["theme"] for r in b["design"]["contrast"]}, {"light", "dark"})
+        self.assertIn("soft", widgets.preview_runtime()["design"]["presets"])
+
+    def test_broken_design_profile_is_a_build_error(self):
+        self.write_raw("widgets/order-status/design.json", b"{not json")
+        b = widgets.build(open_snapshot(self.root), "order-status", lang="ru")
+        self.assertFalse(b["ok"])
+        self.assertIn("DESIGN_INVALID", b["errors"][0])
+        self.write_raw("widgets/order-status/design.json", b'{"button": {"style": "neon"}}')
+        b = widgets.build(open_snapshot(self.root), "order-status", lang="ru")
+        self.assertFalse(b["ok"])
+        self.assertIn("button.style", b["errors"][0])
 
     def test_mock_answers_come_from_the_gallery_handler(self):
         answers = widgets.mock_answers(open_snapshot(self.root), "order-status")

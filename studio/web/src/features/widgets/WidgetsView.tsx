@@ -13,16 +13,18 @@ import { cn } from "@/lib/utils";
 import { Field } from "../inspector/fields";
 import { DraftBadge } from "../inspector/ScreenInspector";
 import { ScreenPreview } from "../preview/Telegram";
+import { DesignPanel, widgetParts, type DesignInfo } from "./DesignPanel";
 import { composeDoc, type Runtime } from "./frame";
 
 interface Build {
   ok: boolean; html: string; rawBytes: number; compressedBytes: number; limits: { rawBytes: number; compressedBytes: number; dataBytes: number };
   errors: string[]; warnings: string[]; caption?: string | null; sourceHash: string; payload?: Doc; lang: string; draft?: boolean;
+  design?: DesignInfo;
 }
 type BuildState = { status: "idle" | "updating" | "ok" | "error"; current: Build | null; message?: string };
 type LogLine = { t: string; m: string; n: number };
 
-const ORDER = ["index.html", "style.css", "widget.js", "widget.json"];
+const ORDER = ["index.html", "style.css", "widget.js", "widget.json", "design.json"];
 const WIDTHS = [200, 320, 430];
 
 function Meter({ label, value, limit }: { label: string; value: number; limit: number }) {
@@ -47,6 +49,16 @@ function Workbench({ wid }: { wid: string }) {
     return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.localeCompare(b);
   }), [files]);
   const [tab, setTab] = useState(names[0] ?? "index.html");
+  const [mode, setMode] = useState<"design" | "code">("design");
+  const design: Doc = useMemo(() => { try { const d = files["design.json"] ? JSON.parse(files["design.json"]) : {}; return d && typeof d === "object" && !Array.isArray(d) ? d : {}; } catch { return {}; } }, [files]);
+  const designBroken = useMemo(() => { try { if (files["design.json"]) JSON.parse(files["design.json"]); return false; } catch { return true; } }, [files]);
+  const parts = useMemo(() => widgetParts(files), [files]);
+  const saveDesign = (next: Doc) => {
+    const { preset: _p, version: _v, ...rest } = next;
+    const savedHasDesign = loaded.widgets[wid]?.files?.["design.json"] !== undefined;
+    if (!Object.keys(rest).length && !savedHasDesign) return store.dropNewWidgetFile(wid, "design.json");
+    store.setWidgetFile(wid, "design.json", `${JSON.stringify(next, null, 2)}\n`);
+  };
   const meta: Doc = useMemo(() => {
     try { return files["widget.json"] ? JSON.parse(files["widget.json"]) : loaded.widgets[wid]?.meta ?? {}; } catch { return loaded.widgets[wid]?.meta ?? {}; }
   }, [files, loaded, wid]);
@@ -182,6 +194,23 @@ function Workbench({ wid }: { wid: string }) {
             </>
           )}
         </div>
+        <div role="radiogroup" aria-label="Editor" className="inline-flex gap-1 rounded-lg bg-muted p-1">
+          {(["design", "code"] as const).map((m) => (
+            <button key={m} type="button" role="radio" aria-checked={mode === m} onClick={() => setMode(m)}
+              className={cn("rounded-md px-3 py-1 text-xs", mode === m ? "bg-background font-medium shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+              {m === "design" ? "Design" : "Code"}
+            </button>
+          ))}
+        </div>
+        {mode === "design" && (designBroken ? (
+          <Alert variant="destructive"><AlertTitle>design.json is not valid JSON</AlertTitle><AlertDescription>Fix it in Code, or reset the draft.</AlertDescription></Alert>
+        ) : runtime?.design ? (
+          <DesignPanel design={design} catalog={runtime.design} parts={parts} theme={theme === "dark" ? "dark" : "light"} onTheme={setTheme}
+            onChange={saveDesign} info={build.current?.design ?? (build.current?.ok ? null : undefined)} onReplay={() => setReset((r) => r + 1)} />
+        ) : (
+          <p className="text-sm text-muted-foreground">{runtime ? "This skill version has no design profiles (scripts/widget_design.py)." : "Loading…"}</p>
+        ))}
+        {mode === "code" && <>
         <div role="tablist" aria-label="Widget files" className="flex flex-wrap gap-1 border-b">
           {names.map((n) => (
             <button key={n} role="tab" type="button" aria-selected={tab === n} aria-controls={`wf-${n}`} onClick={() => setTab(n)}
@@ -199,9 +228,10 @@ function Workbench({ wid }: { wid: string }) {
             {tab === "widget.json" && metaError && <p className="mt-1 text-xs text-destructive">widget.json is not valid JSON: {metaError}</p>}
           </div>
         )}
+        </>}
       </section>
 
-      <section className="min-w-0 space-y-3 p-3 sm:p-4" aria-label="Build and preview">
+      <section className="min-w-0 space-y-3 p-3 sm:p-4 xl:sticky xl:top-0 xl:max-h-svh xl:self-start xl:overflow-y-auto" aria-label="Build and preview">
         <div className="flex flex-wrap items-end gap-2">
           <Field label="Language" htmlFor="w-lang"><NativeSelect id="w-lang" size="sm" value={lang} onChange={(e) => setLang(e.target.value)}>{langs.map((l) => <NativeSelectOption key={l} value={l}>{l}</NativeSelectOption>)}</NativeSelect></Field>
           <Field label="Demo state" htmlFor="w-state"><NativeSelect id="w-state" size="sm" value={state} onChange={(e) => setState(e.target.value)}>{states.map((s) => <NativeSelectOption key={s} value={s}>{s}</NativeSelectOption>)}</NativeSelect></Field>
