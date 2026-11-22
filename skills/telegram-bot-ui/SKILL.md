@@ -4,7 +4,7 @@ description: "Telegram bot UI/UX skill, updated for every Bot API release. Desig
 license: MIT
 metadata:
   author: hlibsuslov
-  version: "2.3.0"
+  version: "2.4.0"
 ---
 
 # Telegram Bot UI
