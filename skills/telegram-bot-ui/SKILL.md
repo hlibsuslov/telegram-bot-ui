@@ -246,7 +246,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 **Widgets and Mini Apps**
 - Runtime, limits, send / query / state life cycle → `references/widgets.md`
 - Tokens, type, states, RTL, accessibility → `references/widget-design-system.md`
-- State architecture, backends and REST data, Mini App hand-off, channel-safe variants → `references/widget-patterns.md`
+- State architecture, backends and REST data, Mini App hand-off, channel-safe variants, games and live apps on one shared widget → `references/widget-patterns.md`
 - Launching Mini Apps and receiving their data → `references/mini-apps-bridge.md`
 - Wallet pay / sign, TON cards and transfers → `references/wallet-and-ton.md`
 
