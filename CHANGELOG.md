@@ -5,6 +5,17 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## Unreleased
+
+- Skill route for a whole interface kept as files by stable screen ID:
+  `references/bot-ui-projects.md` (new UI from a description, connecting one route of an existing
+  bot with its `callback_data` kept, change by ID with a revision check and conflict handling,
+  local Studio or an exported snapshot and `apply-patch`, widget author/build/attach and what
+  changes in already-sent messages, groups and personal data, the path without the Studio).
+  Linked from `SKILL.md` and the `ui` capability of the adapters. The optional `studio/` folder
+  is not part of the skill install or the directory edition.
+- Evals: activation P40-P41, behavioural BUI1-BUI6.
+
 ## 2.3.0 - 2026-11-22
 
 Bot API 10.5 (released 2026-11-22).

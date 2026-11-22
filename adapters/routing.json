@@ -43,7 +43,8 @@
         "recipes/README.md",
         "references/redesign-orchestration.md",
         "references/bot-style-profile.md",
-        "scripts/style_profile.py"
+        "scripts/style_profile.py",
+        "references/bot-ui-projects.md"
       ]
     },
     {

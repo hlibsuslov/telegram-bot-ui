@@ -484,6 +484,30 @@
       "why": "botinvite link, WriteAccessAllowed.inviter (10.5)"
     },
     {
+      "id": "P40",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Open my bot's screens in a local editor so I can change the texts myself.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-ui-projects.md"
+      ],
+      "why": "bot-ui Studio, local preview"
+    },
+    {
+      "id": "P41",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Поменяй экран checkout.payment.confirm в нашем bot-ui проекте.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-ui-projects.md"
+      ],
+      "why": "change by stable screen ID"
+    },
+    {
       "id": "N1",
       "area": "out-of-scope",
       "lang": "en",
@@ -1855,6 +1879,112 @@
         "sends late result after cancel",
         "treats MIME as trusted validation",
         "calls FakeTransport evidence a live Telegram test"
+      ]
+    },
+    {
+      "id": "BUI1",
+      "area": "use-cases",
+      "lang": "ru",
+      "request": "С нуля сделай бота для заказов с локальным редактором.",
+      "context": "empty bot repository, clone of telegram-bot-ui with studio/ available, private chat, aiogram",
+      "must": [
+        "names audience, chat contexts and whether widgets or rich messages are available before creating files",
+        "writes a short screen list with stable IDs, happy path, error, retry and back",
+        "creates the project with `bot-ui init --project <repo>/bot-ui` (or reports the exact command when it cannot run it)",
+        "runs `bot-ui validate` and `bot-ui simulate` and labels the result static / simulated",
+        "gives the real way to open the Studio (`bot-ui studio --project ... --screen <id>` URL) or the export-snapshot path when no port is reachable",
+        "says where the adapter is registered and that charging stays in the user's handler code"
+      ],
+      "critical_failures": [
+        "claims the Studio ran or a scenario passed without running it",
+        "presents the simulation as a live Telegram test",
+        "puts business logic (payment, stock) into the UI project"
+      ]
+    },
+    {
+      "id": "BUI2",
+      "area": "ui",
+      "lang": "ru",
+      "request": "Укороти checkout.payment.confirm.",
+      "context": "bot-ui project from the checkout template, locales ru and en",
+      "must": [
+        "finds the screen by exact ID with `bot-ui show checkout.payment.confirm --json` and names its file and incoming/outgoing links",
+        "shortens the text in every locale that has it, keeping {order.no}, {order.total} and {order.note}",
+        "keeps action IDs, callback_data and transitions; the diff touches only message text",
+        "writes with `--expected-revision` (dry run first), then runs validate and simulate checkout.happy, or states the honest status"
+      ],
+      "critical_failures": [
+        "edits a similarly named screen or only one locale without saying so",
+        "drops or renames a placeholder or callback_data",
+        "writes without a revision check"
+      ]
+    },
+    {
+      "id": "BUI3",
+      "area": "ui",
+      "lang": "ru",
+      "request": "Studio у меня открыта, а ты поменяй подпись на кнопке оплаты.",
+      "context": "the user saves a change to the same screen in the Studio while the agent prepares its patch",
+      "must": [
+        "reads the current revision with `bot-ui show --json` and writes with `--expected-revision`",
+        "on exit 3 (REVISION_CONFLICT) re-reads the screen and shows the user's value next to its own",
+        "uses `--rebase` only when fieldConflicts is empty; reports an overlap on the same field and asks which value wins",
+        "says the change is pending until the CLI reports written"
+      ],
+      "critical_failures": [
+        "overwrites the user's Studio save (retries blindly, edits the JSON file directly past the lock)",
+        "reports success after a conflict"
+      ]
+    },
+    {
+      "id": "BUI4",
+      "area": "ui",
+      "lang": "ru",
+      "request": "Возьми меню из моего aiogram-бота.",
+      "context": "existing aiogram 3.x bot with handlers, keyboard builders, a locale catalog and deep links",
+      "must": [
+        "inventories commands, callback handlers, keyboard builders, deep links and locales with file:symbol and a confidence per screen",
+        "keeps the existing callback_data in `callbackData`, commands and deep-link payloads in entryPoints",
+        "migrates one route first and compares its rendered payload with the old one; other handlers stay untouched",
+        "asks only where a mapping is ambiguous or a public key would change"
+      ],
+      "critical_failures": [
+        "rewrites the whole bot or its routing",
+        "renames callback_data or deep links to the new ID scheme without a migration"
+      ]
+    },
+    {
+      "id": "BUI5",
+      "area": "widgets",
+      "lang": "ru",
+      "request": "Виджет покажи в канале, как в локальном preview.",
+      "context": "bot-ui project with the order-status widget, production bot, a public channel",
+      "must": [
+        "checks the official widget availability (catalog or Widgets guide): channels never receive widgets, groups/forwards test server only",
+        "says the local preview or mock is not proof of client rendering",
+        "offers a supported surface for the same content: a channel post (Rich Message or text with a button) or the widget in the private chat",
+        "keeps the caption carrying the full meaning"
+      ],
+      "critical_failures": [
+        "sends or promises a widget in a channel",
+        "treats the browser preview as evidence that Telegram accepts it"
+      ]
+    },
+    {
+      "id": "BUI6",
+      "area": "ui",
+      "lang": "ru",
+      "request": "Сделай настройки пользователя в группе.",
+      "context": "bot-ui project targeting private chats; the bot is in a supergroup; Bot API 10.5",
+      "must": [
+        "keeps each member's settings visible only to them: ephemeral reply to the presser or a private-chat deep link, answerCallbackQuery always",
+        "checks from.id on the server for every press",
+        "adds group to project contexts only for shared screens and keeps group and private screens apart (AUDIENCE_MISMATCH)",
+        "states that the v1 project does not model ephemeral replies, so that part is code plus tests, not simulation; handles callbacks with inline_message_id or an inaccessible message"
+      ],
+      "critical_failures": [
+        "posts personal settings as a regular group message",
+        "falls back to a public message when the ephemeral send fails"
       ]
     }
   ]

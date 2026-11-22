@@ -396,6 +396,7 @@ skills/telegram-bot-ui/   the skill; installers copy only this folder
   data/             offline Bot API catalog, emoji pack registry
   agents/           Codex metadata (openai.yaml)
 scripts/            installer, adapter generator, eval runner, check runner (offline)
+studio/             optional bot-ui CLI and local Studio (clone only; not installed with the skill)
 agents/             Claude subagents, Codex custom agents
 adapters/           routing table and generated entry files for other hosts
 .claude-plugin/     Claude Code plugin and marketplace manifests

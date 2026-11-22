@@ -18,6 +18,7 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 - `references/redesign-orchestration.md` (Build and audit bot interfaces)
 - `references/bot-style-profile.md` (Build and audit bot interfaces)
 - `scripts/style_profile.py` (Build and audit bot interfaces)
+- `references/bot-ui-projects.md` (Build and audit bot interfaces)
 - `references/channel-post-design.md` (Publish to Telegram channels)
 - `references/publishing-pipeline.md` (Publish to Telegram channels)
 - `references/channels-and-broadcasting.md` (Publish to Telegram channels)
