@@ -331,6 +331,21 @@ def cmd_export_snapshot(args) -> int:
     return 0
 
 
+def cmd_inventory(args) -> int:
+    from .inventory import scan
+    if not os.path.isdir(args.source):
+        return _fail(args, "SOURCE_NOT_FOUND", f"{args.source} is not a folder", 2)
+    inv = scan(args.source)
+    lines = [f"{len(inv['entryPoints'])} command(s), {len(inv['callbacks'])} callback handler(s), "
+             f"{len(inv['buttons'])} button(s), {len(inv['dynamic'])} dynamic place(s) (static analysis, read-only)"]
+    for sc in inv["proposedScreens"]:
+        lines.append(f"  {sc['id']:32} {sc['confidence']:6} {sc['sourceHandler']}")
+    for d in inv["dynamic"]:
+        lines.append(f"  ? {d['file']}:{d['line']} {d['what']}")
+    _emit(args, {"ok": True, **inv}, chr(10).join(lines))
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="bot-ui", description=f"bot-ui {TOOL_VERSION} (project schemaVersion {SCHEMA_VERSION})")
     ap.add_argument("--version", action="version", version=f"bot-ui {TOOL_VERSION} schema {SCHEMA_VERSION}")
@@ -392,6 +407,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--output", required=True)
     p.add_argument("--format", choices=("html", "json"), default="html")
     p.add_argument("--screen", action="append", help="only these screens (default: all)")
+    p = sub.add_parser("inventory", help="read-only inventory of an existing aiogram bot (proposed screens)")
+    p.add_argument("--source", required=True)
+    p.add_argument("--json", action="store_true")
+    p.set_defaults(fn=cmd_inventory, project=None)
     args = ap.parse_args(argv)
     if not hasattr(args, "dry_run"):
         args.dry_run = False
