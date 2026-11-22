@@ -14,7 +14,7 @@
   <a href="https://github.com/hlibsuslov/telegram-bot-ui/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/hlibsuslov/telegram-bot-ui?color=3B82F6"></a>
   <a href="https://github.com/hlibsuslov/telegram-bot-ui/stargazers"><img alt="GitHub stars" src="https://img.shields.io/github/stars/hlibsuslov/telegram-bot-ui?style=flat&color=22C55E"></a>
   <a href="https://github.com/anthropics/skills"><img alt="Format: Agent Skills" src="https://img.shields.io/badge/format-Agent%20Skills-8A2BE2.svg"></a>
-  <a href="https://core.telegram.org/bots/api-changelog"><img alt="Telegram Bot API 10.4, verified 2026-11-15" src="https://img.shields.io/badge/Bot%20API-10.4%20verified%202026--11--15-26A5E4.svg"></a>
+  <a href="https://core.telegram.org/bots/api-changelog"><img alt="Telegram Bot API 10.5, verified 2026-11-22" src="https://img.shields.io/badge/Bot%20API-10.5%20verified%202026--11--22-26A5E4.svg"></a>
   <a href="https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml"><img alt="checks" src="https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml/badge.svg"></a>
   <img alt="Tools: Python standard library, no token" src="https://img.shields.io/badge/tools-stdlib%20%C2%B7%20offline%20%C2%B7%20no%20token-2ea44f.svg">
 </p>
@@ -100,7 +100,8 @@ The skill activates on its own — no API names needed. More hosts and options: 
 | 🤖 **Operate as an agent through a bot** | drive an agent from Telegram with an operator allowlist, approval buttons bound to one action, and inbound messages treated as data, not instructions (`agent_bridge` CLI, MCP server, Claude Code and Codex hooks, 10 recipes) |
 | 🧩 **Build HTML widgets** | Bot API 10.4 widgets inside messages: size limit, production context, caption and text fallback, live cards, shared polls, wallet flows (18 ready widgets, build and preview tools, 7 recipes) |
 | 💎 **Premium emoji** | one custom emoji pack across buttons, texts, rich messages and posts: real ids resolved from the pack, all-or-nothing fallback when the bot is not eligible (6 recipes) |
-| 📚 **Look up the whole Bot API** | methods, types and fields from a local catalog; validate a payload before sending; refuse to invent a field (193 methods, 425 types, refreshable from the official docs) |
+| 📚 **Look up the whole Bot API** | methods, types and fields from a local catalog; validate a payload before sending; refuse to invent a field (194 methods, 426 types, refreshable from the official docs) |
+| ⚙️ **Bot settings from code** | Bot API 10.5 `setMySettings`: topics with a sidebar, inline placeholder, privacy and the callback mode kept in the repository and applied with one diffed call; `getMe` read as `BotFullInfo`; owner invite links for testers |
 
 It also knows **when not to** use something: no widget for a three-button menu, no table for two
 facts, no group widgets in production (they are test-server only today), no publishing without a
@@ -259,7 +260,7 @@ telegram-bot-ui skill."*
 
 ## 🍳 Recipes and examples
 
-65 numbered recipes plus mini-recipes. The eight new product journeys (R80–R87) are
+66 numbered recipes plus mini-recipes. The eight new product journeys (R80–R87) are
 Python offline models with callback demos; their production integrations are explicitly pending.
 
 Agents search a catalog of 40 product families (`skills/telegram-bot-ui/recipes/use-cases.json`), reuse or compose
@@ -286,6 +287,7 @@ example, a composition or planned work.
 | [Wallet](skills/telegram-bot-ui/recipes/07-wallet.md) | pay and sign from a widget, honest payment states |
 | [Multi-topic bot](skills/telegram-bot-ui/recipes/08-multi-topic-bot.md) | parallel conversations, topic links |
 | [Tracker bot upgrade](skills/telegram-bot-ui/recipes/09-tracker-bot.md) | a real bot moved to the new API |
+| [Bot settings from code](skills/telegram-bot-ui/recipes/10-bot-settings.md) | settings in the repo, topic sidebar, callbacks without `message`, invite testers (10.5) |
 | [Mini-recipes](skills/telegram-bot-ui/recipes/mini-recipes.md) | gifts, communities, share themes, managed bots, verification |
 
 | Range | You get |
@@ -332,9 +334,9 @@ All offline, standard library, and none of them needs a bot token.
 
 | | |
 |---|---|
-| **Bot API** | verified against the official **Bot API 10.4** docs on **2026-11-15** — sources and dates in [`references/official-sources.md`](skills/telegram-bot-ui/references/official-sources.md) |
+| **Bot API** | verified against the official **Bot API 10.5** docs on **2026-11-22** — sources and dates in [`references/official-sources.md`](skills/telegram-bot-ui/references/official-sources.md) |
 | **Hosts** | skill paths, subagent and plugin manifests and rule files verified against each host's docs on **2026-11-15** ([`docs/hosts.md`](docs/hosts.md)); the Claude Code plugin passes `claude plugin validate --strict` |
-| **Tests** | **414 Python** and **31 TypeScript** tests run offline on Linux and Windows in CI, plus contract tests against the real aiogram and grammY packages |
+| **Tests** | **443 Python** and **31 TypeScript** tests run offline on Linux and Windows in CI, plus contract tests against the real aiogram and grammY packages |
 | **Drift** | host entry files are generated from `skills/telegram-bot-ui/SKILL.md` and one routing table by `scripts/build_adapters.py`; CI fails when they drift |
 
 What is **not** verified yet, said plainly:

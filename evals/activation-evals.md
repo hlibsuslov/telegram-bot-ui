@@ -66,7 +66,7 @@ description is updated.
 | P23 | "Our localized templates break MarkdownV2." | i18n + escaping | `localization-and-rtl.md` |
 | P24 | "Update the bot to the latest Bot API UI features." | capability migration | `ui-changelog.md` |
 
-## Positive — Bot API 10.3/10.4 and their server side (should activate)
+## Positive — Bot API 10.3-10.5 and their server side (should activate)
 
 | # | Request | Why it matches | Routes to |
 |---|---|---|---|
@@ -82,6 +82,9 @@ description is updated.
 | P35 | "Pick matching premium icons for all our buttons." | custom emoji family | `visual-language.md` |
 | P36 | "What should a price-alert bot look like on the new API?" | archetype | `bot-archetypes.md` |
 | P34 | "Link to the other topic of the chat with the bot." | topic links | `topics-and-contexts.md` |
+| P37 | "Turn on topics with a sidebar for our bot from code, not in BotFather." | `setMySettings`, `has_topic_sidebar` (10.5) | `bot-settings.md` |
+| P38 | "Кнопки в старых сообщениях бота перестали работать — колбэк приходит без message." | `callback_query_mode`, `inline_message_id` (10.5) | `bot-settings.md` |
+| P39 | "Let me invite our five testers to the bot and greet them." | botinvite link, `WriteAccessAllowed.inviter` (10.5) | `bot-settings.md`, `onboarding-and-first-run.md` |
 
 ## Negative (should NOT activate)
 

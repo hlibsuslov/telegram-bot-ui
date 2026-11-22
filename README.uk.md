@@ -14,7 +14,7 @@
   <a href="https://github.com/hlibsuslov/telegram-bot-ui/releases/latest"><img alt="Останній реліз" src="https://img.shields.io/github/v/release/hlibsuslov/telegram-bot-ui?color=3B82F6"></a>
   <a href="https://github.com/hlibsuslov/telegram-bot-ui/stargazers"><img alt="Зірки на GitHub" src="https://img.shields.io/github/stars/hlibsuslov/telegram-bot-ui?style=flat&color=22C55E"></a>
   <a href="https://github.com/anthropics/skills"><img alt="Формат: Agent Skills" src="https://img.shields.io/badge/format-Agent%20Skills-8A2BE2.svg"></a>
-  <a href="https://core.telegram.org/bots/api-changelog"><img alt="Telegram Bot API 10.4, перевірено 2026-11-15" src="https://img.shields.io/badge/Bot%20API-10.4%20verified%202026--11--15-26A5E4.svg"></a>
+  <a href="https://core.telegram.org/bots/api-changelog"><img alt="Telegram Bot API 10.5, перевірено 2026-11-22" src="https://img.shields.io/badge/Bot%20API-10.5%20verified%202026--11--22-26A5E4.svg"></a>
   <a href="https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml"><img alt="перевірки" src="https://github.com/hlibsuslov/telegram-bot-ui/actions/workflows/checks.yml/badge.svg"></a>
   <img alt="Інструменти: стандартна бібліотека Python, без токена" src="https://img.shields.io/badge/tools-stdlib%20%C2%B7%20offline%20%C2%B7%20no%20token-2ea44f.svg">
 </p>
@@ -101,7 +101,8 @@ python scripts/install.py --host all --scope user
 | 🤖 **Агент, що працює через бота** | керування агентом із Telegram: список дозволених операторів, кнопки підтвердження, привʼязані до однієї конкретної дії, вхідні повідомлення — це дані, а не інструкції (CLI `agent_bridge`, MCP-сервер, хуки Claude Code і Codex, 10 рецептів) |
 | 🧩 **HTML-віджети** | віджети Bot API 10.4 усередині повідомлень: ліміт розміру, контекст продакшену, підпис і текстовий запасний варіант, живі картки, спільні опитування, сценарії з гаманцем (18 готових віджетів, інструменти збирання й перегляду, 7 рецептів) |
 | 💎 **Преміум-емодзі** | один пак custom emoji на кнопках, у текстах, Rich Messages і постах: справжні id із паку, відкат на звичайні емодзі повністю, якщо бот не має права їх використовувати (6 рецептів) |
-| 📚 **Довідник усього Bot API** | методи, типи й поля з локального каталогу; перевірка payload перед надсиланням; жодних вигаданих полів (193 методи, 425 типів, оновлюється з офіційної документації) |
+| 📚 **Довідник усього Bot API** | методи, типи й поля з локального каталогу; перевірка payload перед надсиланням; жодних вигаданих полів (194 методи, 426 типів, оновлюється з офіційної документації) |
+| ⚙️ **Налаштування бота з коду** | `setMySettings` із Bot API 10.5: теми з бічною панеллю, підказка inline-режиму, режим приватності й режим колбеків зберігаються в репозиторії та застосовуються одним викликом лише зі змінами; `getMe` читається як `BotFullInfo`; посилання-запрошення власника для тестувальників |
 
 А ще скіл знає, **коли чогось не варто робити**: жодного віджета заради меню з трьох кнопок,
 жодної таблиці для двох фактів, жодних групових віджетів у продакшені (поки що вони працюють
@@ -260,7 +261,7 @@ python scripts/install.py --host all --scope user --dry-run
 
 ## 🍳 Рецепти й приклади
 
-65 нумерованих recipes і міні-рецепти. Вісім нових сценаріїв R80–R87 —
+66 нумерованих recipes і міні-рецепти. Вісім нових сценаріїв R80–R87 —
 офлайн-моделі Python із callback-інтерфейсом; production-інтеграції позначені окремо.
 
 Агент шукає основу в каталозі 40 сімейств сценаріїв (`skills/telegram-bot-ui/recipes/use-cases.json`), повторно
@@ -287,6 +288,7 @@ python skills/telegram-bot-ui/examples/python/recipes/r80_87_product_journeys.py
 | [Гаманець](skills/telegram-bot-ui/recipes/07-wallet.md) | оплата й підпис із віджета, чесні стани платежу |
 | [Бот із кількома темами](skills/telegram-bot-ui/recipes/08-multi-topic-bot.md) | паралельні розмови, посилання на теми |
 | [Оновлення бота-трекера](skills/telegram-bot-ui/recipes/09-tracker-bot.md) | справжній бот, перенесений на новий API |
+| [Налаштування бота з коду](skills/telegram-bot-ui/recipes/10-bot-settings.md) | налаштування в репозиторії, панель тем, колбеки без `message`, запрошення тестувальників (10.5) |
 | [Міні-рецепти](skills/telegram-bot-ui/recipes/mini-recipes.md) | подарунки, спільноти, теми для поширення, керовані боти, верифікація |
 
 | Діапазон | Що ви отримаєте |
@@ -333,9 +335,9 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 
 | | |
 |---|---|
-| **Bot API** | звірено з офіційною документацією **Bot API 10.4** станом на **2026-11-15** — джерела й дати в [`references/official-sources.md`](skills/telegram-bot-ui/references/official-sources.md) |
+| **Bot API** | звірено з офіційною документацією **Bot API 10.5** станом на **2026-11-22** — джерела й дати в [`references/official-sources.md`](skills/telegram-bot-ui/references/official-sources.md) |
 | **Середовища** | шляхи скілів, маніфести субагентів і плагінів та файли правил звірено з документацією кожного середовища станом на **2026-11-15** ([`docs/hosts.md`](docs/hosts.md)); плагін Claude Code проходить `claude plugin validate --strict` |
-| **Тести** | **414 на Python** і **31 на TypeScript** — запускаються офлайн у CI на Linux і Windows, плюс контрактні тести на справжніх пакетах aiogram і grammY |
+| **Тести** | **443 на Python** і **31 на TypeScript** — запускаються офлайн у CI на Linux і Windows, плюс контрактні тести на справжніх пакетах aiogram і grammY |
 | **Розбіжності** | файли входу для середовищ генеруються з `skills/telegram-bot-ui/SKILL.md` та єдиної таблиці маршрутизації скриптом `scripts/build_adapters.py`; CI падає, щойно вони розходяться |
 
 Що **поки не** перевірено — кажемо прямо:
