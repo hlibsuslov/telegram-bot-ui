@@ -113,6 +113,10 @@ export const KINDS = ["entry", "menu", "form", "confirmation", "result", "error"
 export const KEYBOARD_TYPES = ["inline", "reply", "force_reply", "remove", "none"];
 export const ACTION_TYPES = ["navigate", "back", "url", "answer", "handler", "disabled"];
 export const STYLES = ["", "primary", "success", "danger"];
+/** What Telegram clients paint for each Bot API button style. */
+export const STYLE_LABELS: Record<string, string> = {
+  "": "default (theme colour)", primary: "primary (blue)", success: "success (green)", danger: "danger (red)",
+};
 
 // ------------------------------------------------------------------ JSON helpers
 export const clone = <T,>(v: T): T => (v === undefined ? v : structuredClone(v));

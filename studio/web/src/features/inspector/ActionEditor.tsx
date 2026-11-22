@@ -3,7 +3,7 @@ import type { Diag } from "@/core/lint.ts";
 import type { Doc } from "@/core/render.ts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ACTION_TYPES, defaultLocale, fieldDomId, STYLES } from "@/lib/model";
+import { ACTION_TYPES, defaultLocale, fieldDomId, STYLE_LABELS, STYLES } from "@/lib/model";
 import { useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
 import { diagsAt, EnumSelect, Field, FieldDiags, LocaleText, Segmented, SelectField, TargetSelect } from "./fields";
@@ -168,7 +168,7 @@ export function ActionEditor({ sid, aid, action, placed, diags, selected }: { si
         disabled={!caps.text} diags={diags} onChange={setLocale("label")} hl={hl} />
       <div className="grid gap-2 sm:grid-cols-2">
         <SelectField id={fieldDomId(sid, `${ptr}/style`)} label="Button colour" value={action.style ?? ""} disabled={st}
-          options={STYLES.map((s) => ({ value: s, label: s || "default" }))} diags={diagsAt(diags, `${ptr}/style`)}
+          options={STYLES.map((s) => ({ value: s, label: STYLE_LABELS[s] ?? s }))} diags={diagsAt(diags, `${ptr}/style`)}
           onChange={(v) => update((a) => { if (v) a.style = v; else delete a.style; })} />
         {["navigate", "back", "handler"].includes(action.type) && (
           <SelectField id={fieldDomId(sid, `${ptr}/presentation`)} label="Presentation" value={action.presentation ?? ""} disabled={st}
