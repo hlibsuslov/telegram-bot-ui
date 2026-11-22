@@ -26,6 +26,8 @@ export interface Loaded {
 }
 
 export const SNAPSHOT_FORMAT = "bot-ui-snapshot/v1";
+/** Public demo (snapshot feature `demo`): where it sends people to run the Studio on their own bot. */
+export const DEMO_SITE = "/studio#run";
 export const STUDIO_FEATURES = {
   map: true, simulate: true, editText: true, editRule: true, exportPatch: false,
   save: true, widgets: true, createScreen: true, editStructure: true,
