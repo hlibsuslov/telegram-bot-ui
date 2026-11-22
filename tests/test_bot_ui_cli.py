@@ -110,10 +110,7 @@ class Cli(unittest.TestCase):
         src = os.path.join(self.tmp, "custom-bot")
         os.makedirs(src)
         with open(os.path.join(src, "app.py"), "w", encoding="utf-8") as fh:
-            fh.write("async def on_update(update):
-    if update.get('text') == '/start':
-        return 'hi'
-")
+            fh.write("async def on_update(update):\n    if update.get('text') == '/start':\n        return 'hi'\n")
         target = os.path.join(self.tmp, "imported", "bot-ui")
         code, doc, _ = self.j("import", "--source", src, "--into", target)
         self.assertEqual(code, 1)
