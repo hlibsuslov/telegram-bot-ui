@@ -66,9 +66,18 @@ export function DeviceStage({ device, onChange, onScale, children }: { device: D
   useEffect(() => {
     const el = stage.current;
     if (!el) return;
-    const ro = new ResizeObserver(([e]) => setAvail({ w: e.contentRect.width, h: e.contentRect.height }));
+    // The height that is really visible: banners above the page can push the stage below the
+    // window edge, so the box height alone would let the bottom bar (START, composer) fall off.
+    const measure = () => {
+      const r = el.getBoundingClientRect();
+      const visible = window.innerHeight - Math.max(0, r.top) - 8;
+      setAvail({ w: r.width, h: Math.max(160, Math.min(r.height, visible)) });
+    };
+    const ro = new ResizeObserver(measure);
     ro.observe(el);
-    return () => ro.disconnect();
+    window.addEventListener("resize", measure);
+    measure();
+    return () => { ro.disconnect(); window.removeEventListener("resize", measure); };
   }, []);
   const scale = Math.min(1, (avail.w - 28) / device.w, (avail.h - 28) / device.h);
   useEffect(() => { onScale(scale); }, [scale, onScale]);

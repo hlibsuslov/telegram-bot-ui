@@ -267,7 +267,7 @@ export function SimulatorView() {
           <DevicePresets device={device} onChange={setDevice} scale={scale} />
           <span className="ml-auto flex items-center gap-2">
             <Tip label={theme === "dark" ? "Telegram dark theme" : "Telegram light theme"}>
-              <span className="inline-flex"><SunMoonThemeToggle theme={theme} onThemeChange={setTheme} syncDocument={false} size={32} /></span>
+              <span className="inline-flex"><SunMoonThemeToggle theme={theme} onThemeChange={setTheme} syncDocument={false} sky={false} size={32} /></span>
             </Tip>
             <LocaleChip value={locale} options={ls} onChange={(v) => { setLocale(v); act({ locale: v }); }} />
             <ChatTypeSwitch value={chat} onChange={(v) => { setChat(v); act({ context: { chat: v } }); }} />
@@ -404,20 +404,21 @@ export function SimulatorView() {
                   </div>
                 )}
               </div>
-              <div className="mx-auto w-full" style={{ maxWidth: layout.wide ? layout.column : undefined }}>
               {!run ? (
-                <button type="button" onClick={begin} className="w-full bg-[var(--tg-theme-bg-color)] py-3.5 text-center text-[15px] font-semibold tracking-wide text-[var(--tg-theme-button-color)] uppercase hover:bg-[var(--tg-theme-secondary-bg-color)]">
+                // Telegram's START bar spans the whole chat width, whatever the device.
+                <button type="button" onClick={begin} className="block w-full shrink-0 border-t border-black/5 bg-[var(--tg-theme-bg-color)] py-3.5 text-center text-[15px] font-semibold tracking-wide text-[var(--tg-theme-button-color)] uppercase hover:bg-[var(--tg-theme-secondary-bg-color)]">
                   Start
                 </button>
               ) : (
+              <div className="mx-auto w-full" style={{ maxWidth: layout.wide ? layout.column : undefined }}>
                 <>
                   {forcePh && <ForceReplyBar placeholder={forcePh} />}
                   <Composer key={run.trace.length} placeholder={reply ? "Message or a key below" : "Message"}
                     onSend={(text) => { setMenu(false); act({ text }); }} onMenu={commands.length ? () => setMenu(!menu) : undefined} />
                   {reply && reply.keyboard.type === "reply" && <ReplyKeyboard logical={reply} onKey={(text) => act({ text })} />}
                 </>
-              )}
               </div>
+              )}
             </div>
             <figcaption className="flex flex-wrap justify-between gap-1 bg-background px-3 py-1.5 text-[11px] text-muted-foreground">
               <span className="font-medium">Local preview, not Telegram</span>
