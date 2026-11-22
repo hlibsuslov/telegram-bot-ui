@@ -221,3 +221,15 @@ export async function copyText(text: string): Promise<boolean> {
     return ok;
   }
 }
+
+/** Scroll an element into view inside its own panel (data-scroll-root), below any sticky header
+ * of that panel, without scrolling the page or the map. */
+export function scrollWithin(el: HTMLElement, align: "start" | "center" = "start") {
+  const root = el.closest<HTMLElement>("[data-scroll-root]");
+  if (!root) return;
+  const sticky = root.querySelector<HTMLElement>("[data-scroll-sticky]");
+  const offset = sticky ? sticky.offsetHeight : 0;
+  const top = el.getBoundingClientRect().top - root.getBoundingClientRect().top + root.scrollTop;
+  const room = root.clientHeight - offset;
+  root.scrollTo({ top: align === "center" ? top - offset - Math.max(0, (room - el.offsetHeight) / 2) : top - offset - 12, behavior: "smooth" });
+}

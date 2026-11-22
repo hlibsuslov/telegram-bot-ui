@@ -4,14 +4,13 @@ import type { Diag } from "@/core/lint.ts";
 import { keyboardRows, localized, type Doc } from "@/core/render.ts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select";
 import { ACTION_ID_RE, ACTION_TYPES, defaultLocale, fieldDomId, KEYBOARD_TYPES } from "@/lib/model";
 import { useStudio } from "@/lib/studio";
 import { defaultsForType } from "./ActionEditor";
-import { diagsAt, Field, FieldDiags, LocaleTexts, SelectField } from "./fields";
+import { diagsAt, EnumSelect, Field, FieldDiags, LocaleText, SelectField } from "./fields";
 
 export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Doc; diags: Diag[] }) {
-  const { store, loaded, caps } = useStudio();
+  const { store, loaded, caps, editLocale, setHighlight } = useStudio();
   const def = defaultLocale(loaded.project);
   const kb = screen.keyboard ?? { type: "none" };
   const rows = keyboardRows(screen);
@@ -23,10 +22,10 @@ export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Do
     store.updateScreen(sid, (doc) => {
       doc.keyboard = { ...(doc.keyboard ?? { type: "inline" }), rows: fn(keyboardRows(doc).map((r) => [...r])).filter((r) => r.length) };
     });
-  const label = (aid: string) => localized(actions[aid]?.label, def, def) ?? aid;
+  const label = (aid: string) => localized(actions[aid]?.label, editLocale, def) ?? aid;
   const hasRows = ["inline", "reply"].includes(kb.type);
   return (
-    <div className="space-y-3">
+    <div className="space-y-3" onFocus={() => setHighlight({ sid, part: "keyboard" })}>
       <SelectField id={fieldDomId(sid, "/keyboard/type")} label="Keyboard type" value={kb.type ?? "none"} disabled={st}
         options={KEYBOARD_TYPES.map((t) => ({ value: t, label: t }))} diags={diagsAt(diags, "/keyboard/type")}
         onChange={(v) => store.updateScreen(sid, (doc) => {
@@ -36,14 +35,14 @@ export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Do
           if (v !== "force_reply") delete doc.keyboard.placeholder;
         })} />
       {kb.type === "force_reply" && (
-        <LocaleTexts sid={sid} pointer="/keyboard/placeholder" label="Input placeholder" value={kb.placeholder} multiline={false}
-          disabled={!caps.text} diags={diags}
+        <LocaleText sid={sid} pointer="/keyboard/placeholder" label="Input placeholder" value={kb.placeholder} multiline={false}
+          disabled={!caps.text} diags={diags} hl={{ part: "input" }}
           onChange={(loc, text) => store.updateScreen(sid, (doc) => { doc.keyboard.placeholder = { ...(typeof doc.keyboard.placeholder === "object" ? doc.keyboard.placeholder : {}), [loc]: text }; }, `ph:${loc}`)} />
       )}
       {hasRows && (
         <ol className="space-y-2" aria-label="Keyboard rows">
           {rows.map((row, r) => (
-            <li key={r} className="rounded-md border p-2">
+            <li key={r} className="rounded-lg bg-muted/50 p-2">
               <div className="mb-1.5 flex items-center gap-1">
                 <span className="text-[11px] font-medium text-muted-foreground">Row {r + 1}</span>
                 {caps.structure && (
@@ -60,7 +59,7 @@ export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Do
               <ul className="flex flex-wrap gap-1.5">
                 {row.map((aid, c) => (
                   <li key={aid} id={fieldDomId(sid, `/keyboard/rows/${r}/${c}`)} tabIndex={-1}
-                    className="flex items-center gap-0.5 rounded-md border bg-muted/40 py-0.5 pr-0.5 pl-2 text-xs">
+                    className="flex items-center gap-0.5 rounded-md bg-background py-0.5 pr-0.5 pl-2 text-xs shadow-xs">
                     <span className="font-mono">{aid}</span>
                     <span className="max-w-32 truncate text-muted-foreground">· {label(aid)}</span>
                     {caps.structure && (
@@ -78,12 +77,10 @@ export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Do
               </ul>
               {row.map((_, c) => <FieldDiags key={c} list={diagsAt(diags, `/keyboard/rows/${r}/${c}`)} />)}
               {caps.structure && unplaced.length > 0 && (
-                <div className="mt-1.5">
-                  <label className="sr-only" htmlFor={`${sid}-addto-${r}`}>Add an action to row {r + 1}</label>
-                  <NativeSelect id={`${sid}-addto-${r}`} size="sm" value="" onChange={(e) => e.target.value && setRows((rs) => { rs[r].push(e.target.value); return rs; })}>
-                    <NativeSelectOption value="">+ Add to this row…</NativeSelectOption>
-                    {unplaced.map((a) => <NativeSelectOption key={a} value={a}>{a}</NativeSelectOption>)}
-                  </NativeSelect>
+                <div className="mt-1.5 w-56">
+                  <EnumSelect size="sm" label={`Add an action to row ${r + 1}`} value=""
+                    options={[{ value: "", label: "+ Add to this row…" }, ...unplaced.map((a) => ({ value: a, label: a }))]}
+                    onChange={(v) => v && setRows((rs) => { rs[r].push(v); return rs; })} />
                 </div>
               )}
             </li>
@@ -91,12 +88,10 @@ export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Do
         </ol>
       )}
       {hasRows && caps.structure && unplaced.length > 0 && (
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-muted-foreground" htmlFor={`${sid}-newrow`}>New row with</label>
-          <NativeSelect id={`${sid}-newrow`} size="sm" value="" onChange={(e) => e.target.value && setRows((rs) => [...rs, [e.target.value]])}>
-            <NativeSelectOption value="">Choose an action…</NativeSelectOption>
-            {unplaced.map((a) => <NativeSelectOption key={a} value={a}>{a}</NativeSelectOption>)}
-          </NativeSelect>
+        <div className="w-64">
+          <EnumSelect size="sm" label="New row with an action" value=""
+            options={[{ value: "", label: "+ New row with…" }, ...unplaced.map((a) => ({ value: a, label: a }))]}
+            onChange={(v) => v && setRows((rs) => [...rs, [v]])} />
         </div>
       )}
       <FieldDiags list={diagsAt(diags, "/keyboard", false)} />
@@ -105,7 +100,7 @@ export function KeyboardEditor({ sid, screen, diags }: { sid: string; screen: Do
 }
 
 export function NewAction({ sid, screen }: { sid: string; screen: Doc }) {
-  const { store, loaded } = useStudio();
+  const { store, loaded, editLocale } = useStudio();
   const def = defaultLocale(loaded.project);
   const [id, setId] = useState("");
   const [type, setType] = useState("navigate");
@@ -120,20 +115,18 @@ export function NewAction({ sid, screen }: { sid: string; screen: Doc }) {
       else if (!doc.keyboard || kt === "none") doc.keyboard = { type: "inline", rows: [[id]] };
     });
     setId("");
-    requestAnimationFrame(() => document.getElementById(fieldDomId(sid, `/actions/${id}/label/${def}`))?.focus());
+    requestAnimationFrame(() => document.getElementById(fieldDomId(sid, `/actions/${id}/label/${editLocale}`))?.focus());
   };
   return (
-    <form className="flex flex-wrap items-end gap-2 rounded-md border border-dashed p-2" onSubmit={(e) => { e.preventDefault(); add(); }}>
+    <form className="flex flex-wrap items-end gap-2 rounded-xl border border-dashed p-3" onSubmit={(e) => { e.preventDefault(); add(); }}>
       <Field label="New action ID" htmlFor={`${sid}-newaction`} className="min-w-40 flex-1">
         <Input id={`${sid}-newaction`} value={id} onChange={(e) => setId(e.target.value.trim())} placeholder="e.g. help" className="font-mono text-[13px]"
           aria-invalid={!!problem || undefined} aria-describedby={problem ? `${sid}-newaction-p` : undefined} />
       </Field>
-      <Field label="Type" htmlFor={`${sid}-newaction-type`}>
-        <NativeSelect id={`${sid}-newaction-type`} value={type} onChange={(e) => setType(e.target.value)}>
-          {ACTION_TYPES.map((t) => <NativeSelectOption key={t} value={t}>{t}</NativeSelectOption>)}
-        </NativeSelect>
+      <Field label="Type" className="w-36">
+        <EnumSelect label="New action type" value={type} onChange={setType} options={ACTION_TYPES.map((t) => ({ value: t, label: t }))} />
       </Field>
-      <Button type="submit" size="sm" variant="secondary" disabled={!id || !!problem}><Plus className="size-4" /> Add action</Button>
+      <Button type="submit" variant="secondary" disabled={!id || !!problem}><Plus className="size-4" /> Add action</Button>
       {problem && <p id={`${sid}-newaction-p`} className="w-full text-xs text-destructive">{problem}</p>}
     </form>
   );

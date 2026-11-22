@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { SidebarMenu, SidebarMenuItem } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { api, errorText } from "@/lib/api";
-import { embeddedSnapshot, fromProjectDocument, fromSnapshot, shortRev, type Loaded } from "@/lib/model";
+import { embeddedSnapshot, fromProjectDocument, fromSnapshot, locales, shortRev, type Loaded } from "@/lib/model";
 import { href, useRoute, type Section } from "@/lib/route";
 import { StudioProvider, useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
@@ -60,6 +60,29 @@ function Footer() {
   );
 }
 
+/** One editing language for every text field, label and preview; a dot marks locales with missing text. */
+function EditLocaleSwitch() {
+  const { loaded, editLocale, setEditLocale, diags } = useStudio();
+  const ls = locales(loaded.project);
+  if (ls.length < 2) return null;
+  const missing = (l: string) => diags.filter((d) => (d.code === "LOCALE_TEXT_MISSING" || d.code === "DEFAULT_LOCALE_TEXT_MISSING") && d.pointer.endsWith(`/${l}`)).length;
+  return (
+    <div role="radiogroup" aria-label="Editing language" className="flex items-center rounded-lg bg-muted p-0.5" title="Editing language">
+      {ls.map((l) => {
+        const n = missing(l);
+        return (
+          <button key={l} type="button" role="radio" aria-checked={editLocale === l} onClick={() => setEditLocale(l)}
+            aria-label={`${l}${n ? `, ${n} missing text${n === 1 ? "" : "s"}` : ""}`} title={n ? `${n} text(s) missing in ${l}` : `Edit ${l}`}
+            className="relative rounded-md px-2 py-0.5 font-mono text-xs uppercase text-muted-foreground aria-checked:bg-background aria-checked:text-foreground aria-checked:shadow-sm">
+            {l}
+            {n > 0 && <span className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-amber-500" aria-hidden />}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 function Toasts() {
   const { toasts } = useStudio();
   return (
@@ -109,6 +132,7 @@ function Shell() {
 
   const headerEnd = (
     <>
+      <EditLocaleSwitch />
       {validating && <Loader2 className="size-4 animate-spin text-muted-foreground" aria-label="Checking the draft" />}
       <span className="hidden rounded border px-1.5 py-0.5 text-[11px] text-muted-foreground sm:inline">{loaded.mode === "studio" ? "Local Studio" : "Artifact · offline"}</span>
       <Button size="icon" variant="ghost" className="size-8" onClick={() => store.undo()} disabled={!store.past.length} aria-label="Undo (Ctrl+Z)" title="Undo (Ctrl+Z)"><Undo2 className="size-4" /></Button>
@@ -123,7 +147,7 @@ function Shell() {
     case "widgets": body = <WidgetsView id={route.id} />; break;
     case "changes": body = <ChangesView />; break;
     case "about": body = <AboutView />; break;
-    default: body = <MapView />;
+    default: body = <MapView id={route.id} />;
   }
 
   return (

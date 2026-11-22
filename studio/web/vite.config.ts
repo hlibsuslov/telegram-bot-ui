@@ -20,7 +20,8 @@ export default defineConfig(({ mode }) => ({
     outDir: mode === "artifact" ? "dist-artifact" : "dist",
     emptyOutDir: true,
     modulePreload: false,
-    assetsInlineLimit: 0,
+    // Fonts: separate files for the Studio (font-src 'self'), data: URIs inside the one-file artifact.
+    assetsInlineLimit: mode === "artifact" ? 1_000_000 : 0,
     cssCodeSplit: false,
     chunkSizeWarningLimit: 1500,
     rollupOptions: { output: { inlineDynamicImports: true } },

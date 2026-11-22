@@ -3,10 +3,13 @@ import type { Snapshot } from "@/core/engine.ts";
 import { type Diag, lintAll } from "@/core/lint.ts";
 import { api } from "./api";
 import { DraftStore, useDraftVersion } from "./drafts";
-import { fieldDomId, fromProjectDocument, type Loaded } from "./model";
+import { copyText, defaultLocale, fieldDomId, fromProjectDocument, locales, scrollWithin, type Loaded } from "./model";
 import { go } from "./route";
 
 export interface Toast { id: number; text: string; tone: "info" | "success" | "error" }
+/** The part of a screen being edited: outlined in the panel preview and on its map node. */
+export interface Highlight { sid: string; part: "text" | "action" | "keyboard" | "input" | "title"; actionId?: string; state?: string }
+
 export interface Caps { text: boolean; rule: boolean; structure: boolean; create: boolean; save: boolean; widgets: boolean }
 
 interface Ctx {
@@ -28,6 +31,12 @@ interface Ctx {
   notify: (text: string, tone?: Toast["tone"]) => void;
   toasts: Toast[];
   focusField: (sid: string, pointer: string) => void;
+  editLocale: string;
+  setEditLocale: (l: string) => void;
+  highlight: Highlight | null;
+  setHighlight: (h: Highlight | null) => void;
+  copyId: (sid: string) => void;
+  copyRequest: (sid: string) => void;
 }
 
 const StudioContext = createContext<Ctx | null>(null);
@@ -153,14 +162,15 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
   }, []);
 
   const focusField = useCallback((sid: string, pointer: string) => {
-    go("screens", sid);
+    go("map", sid);
     let tries = 0;
     const attempt = () => {
       let p = pointer;
       while (p) {
         const el = document.getElementById(fieldDomId(sid, p));
         if (el) {
-          el.scrollIntoView({ block: "center", behavior: "smooth" });
+          if (el.closest("[data-scroll-root]")) scrollWithin(el as HTMLElement, "center");
+          else el.scrollIntoView({ block: "center", behavior: "smooth" });
           (el as HTMLElement).focus({ preventScroll: true });
           return;
         }
@@ -170,6 +180,28 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
     };
     requestAnimationFrame(attempt);
   }, []);
+
+  const [editLocale, setEditLocaleState] = useState(() => {
+    try {
+      const v = localStorage.getItem("bot-ui-studio:edit-locale");
+      if (v && locales(initial.project).includes(v)) return v;
+    } catch { /* storage blocked */ }
+    return defaultLocale(initial.project);
+  });
+  const setEditLocale = useCallback((l: string) => {
+    setEditLocaleState(l);
+    try { localStorage.setItem("bot-ui-studio:edit-locale", l); } catch { /* storage blocked */ }
+  }, []);
+  const [highlight, setHighlight] = useState<Highlight | null>(null);
+  const copyId = useCallback(async (sid: string) => {
+    notify(await copyText(sid) ? `Copied ${sid}` : "Copy failed: select the ID and copy it by hand", "success");
+  }, [notify]);
+  const copyRequest = useCallback(async (sid: string) => {
+    const text = editLocale === "ru"
+      ? `Измени экран ${sid} в bot-ui (studio/docs/contract.md): `
+      : `Change screen ${sid} in bot-ui (studio/docs/contract.md): `;
+    notify(await copyText(text) ? "Copied a request for your agent; paste it and describe the change" : "Copy failed", "success");
+  }, [notify, editLocale]);
 
   const f = loaded.features;
   const ro = loaded.readOnly;
@@ -185,6 +217,7 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
   const value: Ctx = {
     loaded, store, version, working, diags, validating, caps, pendingBase, adoptPendingBase, reload,
     replaceLoaded, saving, saveDiags, setSaveDiags, notify, toasts, focusField,
+    editLocale, setEditLocale, highlight, setHighlight, copyId, copyRequest,
   };
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>;
 }

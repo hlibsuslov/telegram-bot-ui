@@ -9,7 +9,7 @@ import { api, errorText } from "@/lib/api";
 import { copyText, download, getPointer, sha256Text, shortRev } from "@/lib/model";
 import { href } from "@/lib/route";
 import { useStudio } from "@/lib/studio";
-import { cn } from "@/lib/utils";
+import { CodeView } from "@/components/code-view";
 import { DiagLine } from "../inspector/fields";
 
 const show = (v: any) => (v === undefined ? "∅" : JSON.stringify(v));
@@ -27,24 +27,11 @@ export async function buildPatch(store: ReturnType<typeof useStudio>["store"], p
   return patch;
 }
 
-export function UnifiedDiff({ text }: { text: string }) {
-  if (!text) return <p className="text-sm text-muted-foreground">No byte changes: the files already hold this content.</p>;
-  return (
-    <pre className="max-h-[50svh] overflow-auto rounded-md border bg-muted/30 p-2 font-mono text-[12px] leading-5">
-      {text.split("\n").map((l, i) => (
-        <div key={i} className={cn(l.startsWith("+") && !l.startsWith("+++") && "bg-emerald-100 text-emerald-950 dark:bg-emerald-950 dark:text-emerald-100",
-          l.startsWith("-") && !l.startsWith("---") && "bg-red-100 text-red-950 dark:bg-red-950 dark:text-red-100",
-          l.startsWith("@@") && "text-sky-800 dark:text-sky-300")}>{l || " "}</div>
-      ))}
-    </pre>
-  );
-}
-
 function Ops({ patch }: { patch: Doc }) {
   return (
     <ul className="space-y-2">
       {patch.changes.map((c: Doc, i: number) => (
-        <li key={i} className="rounded-md border p-2 text-xs">
+        <li key={i} className="rounded-lg bg-muted/40 p-2.5 text-xs">
           <div className="font-mono font-semibold">{c.screenId ?? `widgets/${c.widgetId}/${c.file}`}{c.create ? " (new screen)" : ""}</div>
           {c.ops?.map((o: Doc, j: number) => (
             <div key={j} className="mt-1 grid gap-1 sm:grid-cols-[minmax(0,14rem)_1fr]">
@@ -194,7 +181,7 @@ export function ChangesView() {
         </Alert>
       )}
       {errors.length > 0 && count > 0 && !saveDiags.length && (
-        <p className="text-xs text-destructive">{errors.length} error{errors.length === 1 ? "" : "s"} in the project; a save with errors is refused. <a className="underline" href={href("screens", errors[0].screenId)} onClick={(e) => { if (errors[0].screenId) { e.preventDefault(); focusField(errors[0].screenId, errors[0].pointer); } }}>Show the first</a></p>
+        <p className="text-xs text-destructive">{errors.length} error{errors.length === 1 ? "" : "s"} in the project; a save with errors is refused. <a className="underline" href={href("map", errors[0].screenId)} onClick={(e) => { if (errors[0].screenId) { e.preventDefault(); focusField(errors[0].screenId, errors[0].pointer); } }}>Show the first</a></p>
       )}
 
       {count === 0 ? (
@@ -205,7 +192,7 @@ export function ChangesView() {
             <ul className="divide-y rounded-md border">
               {Object.keys(store.data.screens).sort().map((sid) => (
                 <li key={sid} className="flex items-center gap-2 px-3 py-2 text-sm">
-                  <a className="font-mono underline-offset-2 hover:underline" href={href("screens", sid)}>{sid}</a>
+                  <a className="font-mono underline-offset-2 hover:underline" href={href("map", sid)}>{sid}</a>
                   <span className="text-xs text-muted-foreground">{store.saved.screens[sid] ? "changed" : "new screen"}</span>
                   <Button size="sm" variant="ghost" className="ml-auto h-7" onClick={() => store.resetScreen(sid)}><RotateCcw className="size-3.5" /> Reset</Button>
                 </li>
@@ -224,7 +211,12 @@ export function ChangesView() {
             <section className="space-y-2" aria-label="Diff">
               <h3 className="text-sm font-semibold">Diff (dry run on the project) {preview?.files?.length ? <span className="font-normal text-muted-foreground">· {preview.files.join(", ")}</span> : null}</h3>
               {preview?.error && preview.error !== "conflict" && <p className="text-xs text-destructive">{preview.error}</p>}
-              {preview ? <UnifiedDiff text={preview.diff} /> : <p className="text-sm text-muted-foreground">Computing…</p>}
+              {preview ? (
+                <CodeView tabs={[
+                  { id: "diff", label: "Diff", code: preview.diff || "(no byte changes)", lang: "diff" },
+                  ...(patch ? [{ id: "patch", label: "Patch (bot-ui-patch/v1)", code: JSON.stringify(patch, null, 2), lang: "json" as const, filename: `bot-ui-patch-${loaded.projectId}-${shortRev(store.data.baseRevision)}.json` }] : []),
+                ]} />
+              ) : <p className="text-sm text-muted-foreground">Computing…</p>}
             </section>
           ) : (
             <section className="space-y-3" aria-label="Patch">
@@ -246,6 +238,7 @@ export function ChangesView() {
               )}
               <h3 className="text-sm font-semibold">Patch operations (bot-ui-patch/v1)</h3>
               {patch && <Ops patch={patch} />}
+              {patch && <CodeView tabs={[{ id: "patch", label: "Patch JSON", code: JSON.stringify(patch, null, 2), lang: "json", filename: `bot-ui-patch-${loaded.projectId}-${shortRev(store.data.baseRevision)}.json` }]} />}
             </section>
           )}
         </>

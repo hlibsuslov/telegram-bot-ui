@@ -1,226 +1,351 @@
 import {
-  Background, Controls, Handle, MarkerType, Position, ReactFlow,
-  type Edge, type EdgeChange, type Node, type NodeChange, type NodeProps,
+  Background, BaseEdge, EdgeLabelRenderer, Handle, MarkerType, MiniMap, Position, ReactFlow, ReactFlowProvider, useReactFlow,
+  type Edge, type EdgeChange, type EdgeProps, type Node, type NodeChange, type NodeProps,
 } from "@xyflow/react";
-import { ExternalLink, EyeOff, Map as MapIcon, Play } from "lucide-react";
-import { memo, useMemo, useState } from "react";
-import { localized, type Doc } from "@/core/render.ts";
-import { Badge } from "@/components/ui/badge";
+import { Bot, Copy, Maximize2, Minus, Play, Plus, Search, Zap } from "lucide-react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
+import { renderScreen, type Logical } from "@/core/render.ts";
 import { Button } from "@/components/ui/button";
-import { defaultLocale } from "@/lib/model";
-import { href } from "@/lib/route";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { defaultLocale, exampleValues, fieldDomId, scrollWithin } from "@/lib/model";
+import { go } from "@/lib/route";
 import { useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
-import { NavigateTarget } from "../inspector/ActionEditor";
-import { diagsAt, FieldDiags, TargetSelect, useScreenDiags } from "../inspector/fields";
-import { ScreenInspector } from "../inspector/ScreenInspector";
-import { entryLabels, layered, mapEdges, type MapEdge } from "./graph";
+import { firstLine } from "../inspector/fields";
+import { hlFor, ScreenEditor } from "../inspector/ScreenInspector";
+import { Bubble, ForceReplyBar, ReplyKeyboard, type Hl } from "../preview/Telegram";
+import { computeLayout, entryLabel, entryNodeId, layoutKey, mapEdges, midpoint, roundedPath, smoothPath, type Layout, type Pt } from "./graph";
 
-type ScreenData = { id: string; title: string; kind: string; entries: string[]; draft: boolean; errors: number };
+type ScreenData = {
+  sid: string; logical: Logical; kind: string; draft: boolean; errors: number; hl?: Hl; flash: boolean;
+  unplaced: { aid: string; label: string }[]; input: string | null;
+  onAction: (sid: string, aid: string) => void; onCopy: (sid: string) => void; onAsk: (sid: string) => void;
+};
 type ScreenNodeT = Node<ScreenData, "screen">;
+type EntryNodeT = Node<{ label: string; kind: string }, "entry">;
+
+const port = (id: string) => <Handle type="source" position={Position.Right} id={id} className="bui-port" style={{ right: -14 }} />;
 
 const ScreenNode = memo(function ScreenNode({ data }: NodeProps<ScreenNodeT>) {
-  const tone =
-    data.kind === "error" ? "border-red-600 bg-red-50 dark:bg-red-950/40"
-      : data.kind === "notification" ? "border-amber-500 border-dashed bg-amber-50 dark:bg-amber-950/40"
-        : "border-border bg-card";
+  const { sid, logical, kind, draft, errors, hl, unplaced, input, flash } = data;
+  const kt = logical.keyboard.type;
+  const tone = kind === "error" ? "bg-red-500" : kind === "notification" ? "bg-amber-500" : kind === "entry" ? "bg-sky-500" : "bg-slate-400";
   return (
-    <div className={cn("bui-node w-[230px] rounded-lg border-2 px-3 py-2 shadow-sm", tone)}>
-      <Handle type="target" position={Position.Left} className="!bg-muted-foreground" />
-      {data.entries.length > 0 && (
-        <div className="mb-1 flex flex-wrap gap-1">
-          {data.entries.map((e) => (
-            <span key={e} className="inline-flex items-center gap-0.5 rounded bg-sky-100 px-1 text-[10px] font-medium text-sky-900 dark:bg-sky-900 dark:text-sky-100">
-              <Play className="size-2.5" aria-hidden />{e}
+    <div className={cn("bui-node w-[300px] rounded-2xl bg-card p-2 shadow-[0_1px_3px_rgba(0,0,0,.08),0_8px_24px_-12px_rgba(0,0,0,.18)] transition-shadow", flash && "ring-4 ring-amber-300")}>
+      <Handle type="target" position={Position.Left} id="in" className="bui-port" style={{ top: 46, left: -6 }} />
+      <div className="flex items-center gap-1.5 px-1 pb-1.5">
+        <span className={cn("size-2 shrink-0 rounded-full", tone)} aria-hidden />
+        <span className="text-[10.5px] text-muted-foreground">{kind}</span>
+        <span className="min-w-0 flex-1 truncate font-mono text-[11.5px] font-semibold" title={sid}>{sid}</span>
+        {draft && <span className="rounded-full bg-amber-100 px-1.5 text-[10px] font-medium text-amber-900">draft</span>}
+        {errors > 0 && <span className="rounded-full bg-red-100 px-1.5 text-[10px] font-medium text-red-800">{errors}</span>}
+        <button type="button" className="nodrag rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Copy ID ${sid}`} title="Copy ID"
+          onClick={(e) => { e.stopPropagation(); data.onCopy(sid); }}><Copy className="size-3.5" /></button>
+        <button type="button" className="nodrag rounded p-0.5 text-muted-foreground hover:bg-muted hover:text-foreground" aria-label={`Copy a request for your agent about ${sid}`} title="Copy request for the agent"
+          onClick={(e) => { e.stopPropagation(); data.onAsk(sid); }}><Bot className="size-3.5" /></button>
+      </div>
+      <div className="tg tg-wallpaper overflow-hidden rounded-xl" data-theme="light">
+        <div className="relative py-2.5 pr-3 pl-3.5">
+          {input && kt !== "force_reply" && port("input")}
+          <Bubble logical={logical} widget={logical.widget} hl={hl} clampText tail
+            onPress={(aid) => data.onAction(sid, aid)} buttonSlot={kt === "inline" ? (aid) => port(`a:${aid}`) : undefined} />
+        </div>
+        {kt === "reply" && <ReplyKeyboard logical={logical} hl={hl} onKey={() => undefined} buttonSlot={(aid) => port(`a:${aid}`)} />}
+        {kt === "force_reply" && (
+          <div className="relative">
+            <ForceReplyBar placeholder={logical.keyboard.placeholder || "Reply…"} hl={hl?.input} />
+            {input && port("input")}
+          </div>
+        )}
+      </div>
+      {unplaced.length > 0 && (
+        <div className="mt-1.5 flex flex-wrap gap-1 px-1">
+          {unplaced.map((u) => (
+            <span key={u.aid} className="relative rounded-full bg-muted px-2 py-0.5 text-[10.5px] text-muted-foreground" title="Action not on the keyboard">
+              {u.label}{port(`u:${u.aid}`)}
             </span>
           ))}
         </div>
       )}
-      <div className="flex items-center gap-1">
-        <span className="min-w-0 flex-1 truncate font-mono text-[12px] font-semibold">{data.id}</span>
-        {data.draft && <span className="size-2 shrink-0 rounded-full bg-amber-500" title="Draft" />}
-      </div>
-      <div className="truncate text-[11px] text-muted-foreground">{data.title}</div>
-      <div className="mt-1 flex items-center gap-1">
-        <span className="rounded bg-muted px-1 text-[10px]">{data.kind}</span>
-        {data.errors > 0 && <span className="rounded bg-destructive/10 px-1 text-[10px] text-destructive">{data.errors} error{data.errors > 1 ? "s" : ""}</span>}
-      </div>
-      <Handle type="source" position={Position.Right} className="!bg-muted-foreground" />
     </div>
   );
 });
 
-const nodeTypes = { screen: ScreenNode };
+const EntryNode = memo(function EntryNode({ data }: NodeProps<EntryNodeT>) {
+  return (
+    <div className="bui-node flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-[12px] font-medium text-background shadow-sm">
+      {data.kind === "event" ? <Zap className="size-3.5" aria-hidden /> : <Play className="size-3.5" aria-hidden />}
+      <span className="font-mono">{data.label}</span>
+      <Handle type="source" position={Position.Right} id="out" className="bui-port" style={{ right: -4 }} />
+    </div>
+  );
+});
 
-export type Selection = { type: "node"; id: string } | { type: "edge"; id: string; from: string; actionId: string | null; via: string } | null;
+type RouteData = { label: string | null; dashed: boolean; dotted: boolean; hl: boolean; draft: boolean; points?: Pt[]; lane?: number };
 
-export function TransitionInspector({ from, actionId, via }: { from: string; actionId: string | null; via: string }) {
-  const { store, loaded, caps } = useStudio();
-  const diags = useScreenDiags(from);
-  const screen = store.screen(from);
-  if (!screen) return null;
+function RoutedEdge({ id, sourceX, sourceY, targetX, targetY, data, markerEnd, selected }: EdgeProps<Edge<RouteData>>) {
+  const d = data as RouteData;
+  const s = { x: sourceX, y: sourceY }, t = { x: targetX, y: targetY };
+  let path: string, mid: Pt;
+  if (d.lane !== undefined) {
+    const pts = [s, { x: s.x + 18, y: s.y }, { x: s.x + 18, y: d.lane }, { x: t.x - 22, y: d.lane }, { x: t.x - 22, y: t.y }, t];
+    path = roundedPath(pts, 14);
+    mid = { x: (s.x + t.x) / 2, y: d.lane };
+  } else {
+    const inner = (d.points ?? []).slice(1, -1).filter((p) => p.x > s.x + 20 && p.x < t.x - 20);
+    const pts = [s, { x: s.x + 16, y: s.y }, ...inner, { x: t.x - 16, y: t.y }, t];
+    path = smoothPath(pts);
+    mid = inner.length ? midpoint(inner.length > 1 ? inner : [inner[0], inner[0]]) : midpoint(pts);
+  }
+  const stroke = d.hl || selected ? "#d97706" : d.draft ? "#b45309" : "#7c8896";
+  return (
+    <>
+      <BaseEdge id={id} path={path} markerEnd={markerEnd} interactionWidth={14}
+        style={{ stroke, strokeWidth: d.hl || selected ? 2.6 : 1.5, strokeDasharray: d.dashed ? "6 5" : d.dotted ? "2 4" : undefined }} />
+      {d.label && (
+        <EdgeLabelRenderer>
+          <div className="nodrag nopan pointer-events-none absolute rounded-full px-2 py-0.5 font-mono text-[10.5px] shadow-sm"
+            style={{ transform: `translate(-50%, -50%) translate(${mid.x}px, ${mid.y}px)`, background: d.hl || selected ? "#fef3c7" : "var(--background)", color: "var(--foreground)" }}>
+            {d.label}
+          </div>
+        </EdgeLabelRenderer>
+      )}
+    </>
+  );
+}
+
+const nodeTypes = { screen: ScreenNode, entry: EntryNode };
+const edgeTypes = { routed: RoutedEdge };
+
+function MapSearch({ onPick }: { onPick: (sid: string) => void }) {
+  const { working, loaded, editLocale } = useStudio();
+  const [open, setOpen] = useState(false);
   const def = defaultLocale(loaded.project);
-  const act: Doc | undefined = actionId ? screen.actions?.[actionId] : undefined;
-  const update = (fn: (a: Doc) => void, key?: string) => actionId && store.updateScreen(from, (doc) => { fn(doc.actions[actionId]); }, key ? `${actionId}:${key}` : undefined);
-  const row = (k: string, v: React.ReactNode) => (
-    <div className="grid grid-cols-[6.5rem_1fr] gap-2 py-1 text-sm"><dt className="text-muted-foreground">{k}</dt><dd className="min-w-0 break-words">{v}</dd></div>
-  );
+  useEffect(() => {
+    const on = (e: KeyboardEvent) => {
+      if ((e.key === "k" && (e.ctrlKey || e.metaKey)) || (e.key === "/" && !(e.target as HTMLElement).closest("input, textarea, [contenteditable=true]"))) {
+        e.preventDefault();
+        setOpen(true);
+      }
+    };
+    addEventListener("keydown", on);
+    return () => removeEventListener("keydown", on);
+  }, []);
   return (
-    <div className="space-y-3">
-      <h2 className="text-base font-semibold">Transition</h2>
-      <dl className="divide-y rounded-md border px-3">
-        {row("From", <a className="font-mono underline" href={href("screens", from)}>{from}</a>)}
-        {via === "input" ? (
-          row("Trigger", <>text input into <span className="font-mono">{screen.input?.field}</span></>)
-        ) : (
-          <>
-            {row("Action", <><span className="font-mono">{actionId}</span> · {localized(act?.label, def, def)}</>)}
-            {row("Type", act?.type)}
-          </>
-        )}
-        {row("Via", <span className="font-mono">{via}</span>)}
-        {act?.rule && row("When", <span className="font-mono">{act.rule.when?.field} == {JSON.stringify(act.rule.when?.eq)}</span>)}
-        {act?.rule && row("Targets", <span className="font-mono">match → {act.rule.match}; otherwise → {act.rule.otherwise}</span>)}
-        {act?.to && row("Target", <span className="font-mono">{act.to}</span>)}
-        {act?.outcomes && row("Outcomes", <span className="font-mono">{Object.entries(act.outcomes).map(([k, v]) => `${k} → ${v}`).join("; ")}</span>)}
-        {act && ["navigate", "back", "handler"].includes(act.type) && row("Presentation", act.presentation ?? "default (edit for callbacks)")}
-      </dl>
-      {!caps.rule && <p className="text-xs text-muted-foreground">Targets and rules are read-only here.</p>}
-      {via === "input" && (
-        <TargetSelect sid={from} pointer="/input/to" label="Then go to" value={screen.input?.to} disabled={!caps.rule} diags={diags}
-          onChange={(to) => store.updateScreen(from, (doc) => { doc.input.to = to; })} />
-      )}
-      {act?.type === "navigate" && actionId && (
-        <NavigateTarget sid={from} aid={actionId} action={act} update={update} disabled={!caps.rule} diags={diags} />
-      )}
-      {act?.type === "back" && actionId && (
-        <TargetSelect sid={from} pointer={`/actions/${actionId}/fallback`} label="Fallback after a restart" value={act.fallback} allowEmpty="No fallback"
-          disabled={!caps.rule} diags={diags} onChange={(to) => update((a) => { if (to) a.fallback = to; else delete a.fallback; })} />
-      )}
-      {act?.type === "handler" && actionId && Object.keys(act.outcomes ?? {}).map((o) => (
-        <TargetSelect key={o} sid={from} pointer={`/actions/${actionId}/outcomes/${o}`} label={`On ${o}`} value={act.outcomes[o]}
-          disabled={!caps.rule} diags={diags} onChange={(to) => update((a) => { a.outcomes[o] = to; })} />
-      ))}
-      {actionId && <FieldDiags list={diagsAt(diags, `/actions/${actionId}`)} />}
-      <Button asChild size="sm" variant="outline"><a href={href("screens", from)}><ExternalLink className="size-3.5" /> Open {from}</a></Button>
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button type="button" variant="outline" className="h-9 w-[min(70vw,300px)] justify-start gap-2 bg-background/95 px-3 font-normal text-muted-foreground shadow-sm backdrop-blur">
+          <Search className="size-4" /> <span className="truncate">Find a screen by ID, title or text</span>
+          <kbd className="ml-auto hidden rounded bg-muted px-1.5 font-mono text-[10px] sm:inline">Ctrl K</kbd>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[min(92vw,26rem)] p-0" align="start">
+        <Command filter={(v, s) => (v.toLowerCase().includes(s.toLowerCase()) ? 1 : 0)}>
+          <CommandInput placeholder="checkout.payment, Оплата, …" />
+          <CommandList className="max-h-80">
+            <CommandEmpty>No screen matches.</CommandEmpty>
+            <CommandGroup>
+              {Object.keys(working.screens).sort().map((sid) => {
+                const s = working.screens[sid];
+                const text = typeof s.message?.text === "object" ? Object.values(s.message.text).join(" ") : String(s.message?.text ?? "");
+                return (
+                  <CommandItem key={sid} value={`${sid} ${s.title ?? ""} ${text}`} onSelect={() => { setOpen(false); onPick(sid); }}>
+                    <span className="min-w-0">
+                      <span className="block truncate font-mono text-[12.5px]">{sid}</span>
+                      <span className="block truncate text-[11px] text-muted-foreground">{s.title} — {firstLine(s, editLocale, def)}</span>
+                    </span>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function ZoomControls() {
+  const rf = useReactFlow();
+  const btn = "flex size-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground";
+  return (
+    <div className="absolute bottom-3 left-3 z-10 flex flex-col rounded-lg bg-background/95 p-0.5 shadow-sm ring-1 ring-border backdrop-blur">
+      <button type="button" className={btn} onClick={() => rf.zoomIn({ duration: 200 })} aria-label="Zoom in"><Plus className="size-4" /></button>
+      <button type="button" className={btn} onClick={() => rf.zoomOut({ duration: 200 })} aria-label="Zoom out"><Minus className="size-4" /></button>
+      <button type="button" className={btn} onClick={() => rf.fitView({ padding: 0.12, duration: 300 })} aria-label="Fit the whole map"><Maximize2 className="size-4" /></button>
     </div>
   );
 }
 
-function EdgeTable({ list, onPick, selected }: { list: MapEdge[]; onPick: (e: MapEdge) => void; selected: string | null }) {
-  return (
-    <div className="overflow-x-auto p-3">
-      <table className="w-full min-w-[520px] text-left text-sm">
-        <caption className="mb-2 text-left text-xs text-muted-foreground">Transitions ({list.length}); the map is hidden.</caption>
-        <thead className="text-xs text-muted-foreground"><tr><th className="py-1 pr-2">From</th><th className="pr-2">Label</th><th className="pr-2">Via</th><th>To</th></tr></thead>
-        <tbody>
-          {list.map((e) => (
-            <tr key={e.id} className={cn("border-t", selected === e.id && "bg-muted")}>
-              <td className="py-1 pr-2 font-mono text-xs">{e.from}</td>
-              <td className="pr-2"><button type="button" className="text-left underline-offset-2 hover:underline" onClick={() => onPick(e)}>{e.label}</button></td>
-              <td className="pr-2 font-mono text-xs">{e.via}</td>
-              <td className="font-mono text-xs">{e.to}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-export function MapView() {
-  const { working, loaded, store, diags } = useStudio();
-  const [sel, setSel] = useState<Selection>(null);
-  const [hidden, setHidden] = useState(false);
+function Canvas({ selected, selectedAction, onAction }: { selected: string | null; selectedAction: string | null; onAction: (sid: string, aid: string) => void }) {
+  const { working, loaded, store, diags, editLocale, highlight, copyId, copyRequest } = useStudio();
+  const rf = useReactFlow();
+  const [sizes, setSizes] = useState<Record<string, { width: number; height: number }>>({});
+  const [layout, setLayout] = useState<Layout | null>(null);
+  const [fitted, setFitted] = useState(false);
+  const [flash, setFlash] = useState<string | null>(null);
   const list = useMemo(() => mapEdges(working), [working]);
-  const savedEdgeIds = useMemo(() => new Set(mapEdges({ project: loaded.project, screens: loaded.screens }).map((e) => `${e.id}>${e.to}`)), [loaded]);
-  const pos = useMemo(() => layered(working, list), [working, list]);
-  const entries = useMemo(() => entryLabels(loaded.project), [loaded.project]);
+  const savedEdges = useMemo(() => new Set(mapEdges({ project: loaded.project, screens: loaded.screens }).map((e) => `${e.id}>${e.to}`)), [loaded]);
+  const entries = loaded.project.entryPoints ?? [];
+  const values = useMemo(() => exampleValues(loaded.project), [loaded.project]);
+  const def = defaultLocale(loaded.project);
+  const ids = useMemo(() => [
+    ...entries.filter((ep: any) => working.screens[ep.screen]).map((ep: any) => entryNodeId(ep.id)),
+    ...Object.keys(working.screens).sort(),
+  ], [working, entries]);
   const errorsBy = useMemo(() => {
     const m: Record<string, number> = {};
     for (const d of diags) if (d.severity === "error" && d.screenId) m[d.screenId] = (m[d.screenId] ?? 0) + 1;
     return m;
   }, [diags]);
 
-  const nodes: ScreenNodeT[] = Object.entries(working.screens).map(([id, s]) => ({
-    id, type: "screen", position: pos[id] ?? { x: 0, y: 0 },
-    data: { id, title: s.title ?? "", kind: s.kind ?? "", entries: entries[id] ?? [], draft: store.isDraft(id), errors: errorsBy[id] ?? 0 },
-    selected: sel?.type === "node" && sel.id === id,
-    ariaLabel: `Screen ${id}, ${s.kind ?? "screen"}${entries[id] ? `, entry point ${entries[id].join(", ")}` : ""}${store.isDraft(id) ? ", draft" : ""}`,
-  }));
-  const edges: Edge[] = list.filter((e) => working.screens[e.to]).map((e) => {
-    const draft = !savedEdgeIds.has(`${e.id}>${e.to}`);
-    const stroke = draft ? "#d97706" : e.via === "otherwise" ? "#6b7280" : "#475569";
+  const nodes: Node[] = ids.map((id) => {
+    const p = layout?.pos[id] ?? { x: 0, y: 0 };
+    const common = { id, position: p, measured: sizes[id], style: layout ? undefined : { opacity: 0 } };
+    if (id.startsWith("entry:")) {
+      const ep = entries.find((x: any) => entryNodeId(x.id) === id);
+      return { ...common, type: "entry", selectable: false, focusable: false, data: { label: entryLabel(ep), kind: ep.type }, ariaLabel: `Entry point ${entryLabel(ep)}` };
+    }
+    const s = working.screens[id];
+    const actions = s.actions ?? {};
+    const onKb = new Set((s.keyboard?.rows ?? []).flat());
+    const unplaced = Object.entries<any>(actions)
+      .filter(([aid, a]) => (!onKb.has(aid) || a.hidden) && list.some((e) => e.from === id && e.actionId === aid))
+      .map(([aid, a]) => ({ aid, label: (typeof a.label === "object" ? a.label[editLocale] ?? a.label[def] : a.label) ?? aid }));
+    const data: ScreenData = {
+      sid: id, logical: renderScreen(loaded.project, s, { locale: editLocale, values }), kind: s.kind ?? "", draft: store.isDraft(id),
+      errors: errorsBy[id] ?? 0, hl: hlFor(highlight, id) ?? (selected === id && selectedAction ? { actionId: selectedAction } : undefined),
+      flash: flash === id, unplaced, input: s.input?.field ?? null, onAction, onCopy: copyId, onAsk: copyRequest,
+    };
+    return { ...common, type: "screen", data, selected: selected === id, ariaLabel: `Screen ${id}, ${s.kind ?? "screen"}${store.isDraft(id) ? ", draft" : ""}. Enter opens the editor.` };
+  });
+
+  const hlAction = highlight?.part === "action" ? highlight.actionId : selectedAction;
+  const hlFrom = highlight?.sid ?? selected;
+  const edges: Edge<RouteData>[] = list.map((e) => {
+    const hl = !!hlAction && e.from === hlFrom && e.actionId === hlAction;
+    const draft = !e.entry && !savedEdges.has(`${e.id}>${e.to}`);
+    const stroke = hl ? "#d97706" : draft ? "#b45309" : "#7c8896";
     return {
-      id: e.id, source: e.from, target: e.to, label: e.label,
-      selected: sel?.type === "edge" && sel.id === e.id,
-      markerEnd: { type: MarkerType.ArrowClosed, color: stroke, width: 18, height: 18 },
-      style: { stroke, strokeWidth: 1.6, strokeDasharray: e.dashed ? "6 4" : e.dotted ? "2 3" : undefined },
-      labelStyle: { fontSize: 11, fill: "currentColor" },
-      labelBgStyle: { fill: "var(--background)", fillOpacity: 0.92 },
-      labelBgPadding: [4, 2] as [number, number],
-      ariaLabel: `Transition from ${e.from} to ${e.to}: ${e.label}${draft ? ", draft" : ""}`,
-      data: e,
+      id: e.id, source: e.from, target: e.to, sourceHandle: e.sourceHandle, targetHandle: "in", type: "routed",
+      zIndex: hl ? 5 : 0, focusable: !e.entry, selectable: !e.entry,
+      markerEnd: { type: MarkerType.ArrowClosed, color: stroke, width: 16, height: 16 },
+      ariaLabel: e.entry ? undefined : `Transition from ${e.from} to ${e.to}${e.label ? `: ${e.label}` : ""}${e.actionId ? ` (button ${e.actionId})` : ""}`,
+      data: { label: e.label, dashed: e.dashed, dotted: e.dotted, hl, draft, points: layout?.points[e.id], lane: layout?.lanes[e.id] },
     };
   });
 
-  const pickEdge = (e: MapEdge) => setSel({ type: "edge", id: e.id, from: e.from, actionId: e.actionId, via: e.via });
+  // Re-layout once React Flow has measured every node, and whenever a size or the graph changes.
+  useEffect(() => {
+    if (!ids.every((id) => sizes[id]?.width)) return;
+    const key = layoutKey(ids, list, sizes);
+    if (layout?.key === key) return;
+    setLayout(computeLayout(ids, list, sizes));
+  }, [ids, list, sizes, layout?.key]);
+
+  const centre = useCallback((sid: string) => {
+    const p = layout?.pos[sid], s = layout?.size[sid];
+    if (!p || !s) return;
+    rf.setCenter(p.x + s.width / 2, p.y + Math.min(s.height / 2, 220), { zoom: Math.max(rf.getZoom(), 0.9), duration: 450 });
+    setFlash(sid);
+    setTimeout(() => setFlash((f) => (f === sid ? null : f)), 1400);
+  }, [layout, rf]);
+
+  useEffect(() => {
+    if (!layout || fitted) return;
+    setFitted(true);
+    requestAnimationFrame(async () => {
+      if (selected && layout.pos[selected]) { centre(selected); return; }
+      await rf.fitView({ padding: 0.12 });
+      // A wide bot fits only at a tiny zoom: start readable at the entry points instead.
+      if (rf.getZoom() < 0.5) {
+        const el = document.querySelector(".react-flow") as HTMLElement | null;
+        const h = el?.clientHeight ?? 800;
+        const z = 0.62;
+        rf.setViewport({ x: 40 - layout.bounds.minX * z, y: h / 2 - ((layout.bounds.minY + layout.bounds.maxY) / 2) * z, zoom: z });
+      }
+    });
+  }, [layout, fitted, selected, centre, rf]);
+
+  // Wait a frame for the editor panel to take its width, then centre the selected screen.
+  useEffect(() => {
+    if (!fitted || !selected) return;
+    const t = setTimeout(() => centre(selected), 80);
+    return () => clearTimeout(t);
+  }, [selected, fitted, centre]);
+
   const onNodesChange = (changes: NodeChange[]) => {
-    for (const c of changes) if (c.type === "select" && c.selected) setSel({ type: "node", id: c.id });
+    const dims = changes.filter((c): c is Extract<NodeChange, { type: "dimensions" }> => c.type === "dimensions" && !!c.dimensions);
+    if (dims.length) setSizes((prev) => {
+      const next = { ...prev };
+      for (const c of dims) next[c.id] = { width: c.dimensions!.width, height: c.dimensions!.height };
+      return next;
+    });
+    for (const c of changes) if (c.type === "select" && c.selected && working.screens[c.id]) go("map", c.id);
   };
   const onEdgesChange = (changes: EdgeChange[]) => {
-    for (const c of changes) if (c.type === "select" && c.selected) { const e = list.find((x) => x.id === c.id); if (e) pickEdge(e); }
+    for (const c of changes) if (c.type === "select" && c.selected) {
+      const e = list.find((x) => x.id === c.id);
+      if (e?.actionId) onAction(e.from, e.actionId);
+      else if (e) go("map", e.from);
+    }
   };
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-      <div className="relative min-w-0 flex-1 border-b lg:border-r lg:border-b-0">
-        <div className="absolute top-2 left-2 z-10 flex gap-1">
-          <Button type="button" size="sm" variant="outline" className="h-8 bg-background" onClick={() => setHidden(!hidden)} aria-pressed={hidden}>
-            {hidden ? <><MapIcon className="size-3.5" /> Show map</> : <><EyeOff className="size-3.5" /> Hide map</>}
-          </Button>
+    <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes}
+      onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
+      onNodeClick={(_, n) => { if (n.type === "screen") go("map", n.id); }}
+      onEdgeClick={(_, e) => { const x = list.find((y) => y.id === e.id); if (x?.actionId) onAction(x.from, x.actionId); }}
+      nodesDraggable={false} nodesConnectable={false} nodesFocusable edgesFocusable elementsSelectable
+      minZoom={0.1} maxZoom={1.6} proOptions={{ hideAttribution: true }} onlyRenderVisibleElements={false}
+      ariaLabelConfig={{ "node.a11yDescription.default": "Press Enter to open the screen editor." }}
+      aria-label="Screen map" className="bg-muted/40">
+      <Background gap={22} size={1.2} color="var(--border)" />
+      <ZoomControls />
+      {ids.length > 12 && <MiniMap pannable zoomable className="!hidden md:!block" nodeColor={(n) => (n.type === "entry" ? "#0f172a" : "#cbd5e1")} maskColor="rgba(240,240,240,.6)" />}
+    </ReactFlow>
+  );
+}
+
+export function MapView({ id }: { id: string | null }) {
+  const { working, setHighlight } = useStudio();
+  const isMobile = useIsMobile();
+  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+  const selected = id && working.screens[id] ? id : null;
+  useEffect(() => { setSelectedAction(null); }, [selected]);
+  const onAction = useCallback((sid: string, aid: string) => {
+    go("map", sid);
+    requestAnimationFrame(() => {
+      setSelectedAction(aid);
+      setHighlight({ sid, part: "action", actionId: aid });
+      setTimeout(() => { const el = document.getElementById(`${fieldDomId(sid, `/actions/${aid}`)}-card`); if (el) scrollWithin(el); }, 60);
+    });
+  }, [setHighlight]);
+  const close = () => { setHighlight(null); go("map"); };
+  const editor = selected ? <ScreenEditor key={selected} sid={selected} selectedAction={selectedAction} onClose={close} /> : null;
+  return (
+    <ReactFlowProvider>
+      <div className="flex min-h-0 flex-1">
+        <div className="relative h-[calc(100svh-3.5rem)] min-w-0 flex-1">
+          <div className="absolute top-3 left-3 z-10"><MapSearch onPick={(sid) => go("map", sid)} /></div>
+          <Canvas selected={selected} selectedAction={selectedAction} onAction={onAction} />
         </div>
-        {hidden ? (
-          <div className="h-full pt-10"><EdgeTable list={list} onPick={pickEdge} selected={sel?.type === "edge" ? sel.id : null} /></div>
-        ) : (
-          <div className="h-[60svh] lg:h-[calc(100svh-3.5rem)]">
-            <ReactFlow
-              nodes={nodes} edges={edges} nodeTypes={nodeTypes}
-              onNodesChange={onNodesChange} onEdgesChange={onEdgesChange}
-              onPaneClick={() => setSel(null)}
-              nodesDraggable={false} nodesConnectable={false} nodesFocusable edgesFocusable elementsSelectable
-              fitView fitViewOptions={{ padding: 0.15 }} minZoom={0.2} proOptions={{ hideAttribution: true }}
-              ariaLabelConfig={{ "node.a11yDescription.default": "Press Enter or Space to inspect the screen." }}
-              aria-label="Screen map"
-            >
-              <Background gap={24} size={1} />
-              <Controls showInteractive={false} />
-            </ReactFlow>
-          </div>
+        {!isMobile && editor && (
+          <aside className="h-[calc(100svh-3.5rem)] w-[460px] shrink-0 border-l bg-background xl:w-[500px]" aria-label="Screen editor">{editor}</aside>
         )}
       </div>
-      <aside className="w-full shrink-0 overflow-y-auto p-3 sm:p-4 lg:h-[calc(100svh-3.5rem)] lg:w-[440px]" aria-label="Inspector">
-        {sel?.type === "node" && working.screens[sel.id] ? (
-          <div className="space-y-3">
-            <Button asChild size="sm" variant="outline"><a href={href("screens", sel.id)}><ExternalLink className="size-3.5" /> Open with preview</a></Button>
-            <ScreenInspector sid={sel.id} compact />
-          </div>
-        ) : sel?.type === "edge" ? (
-          <TransitionInspector from={sel.from} actionId={sel.actionId} via={sel.via} />
-        ) : (
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <p>Select a screen or an arrow to inspect it. Tab moves through screens and arrows; Enter selects.</p>
-            <ul className="space-y-1.5 text-xs">
-              <li className="flex items-center gap-2"><Badge variant="outline" className="border-sky-600">entry</Badge> screens with a <Play className="inline size-3" /> chip are entry points</li>
-              <li className="flex items-center gap-2"><span className="inline-block h-3 w-6 rounded border-2 border-red-600" /> error screens</li>
-              <li className="flex items-center gap-2"><span className="inline-block h-3 w-6 rounded border-2 border-dashed border-amber-500" /> notifications</li>
-              <li className="flex items-center gap-2"><svg width="28" height="6" aria-hidden><line x1="0" y1="3" x2="28" y2="3" stroke="currentColor" strokeDasharray="6 4" /></svg> back fallback</li>
-              <li className="flex items-center gap-2"><svg width="28" height="6" aria-hidden><line x1="0" y1="3" x2="28" y2="3" stroke="currentColor" strokeDasharray="2 3" /></svg> text input</li>
-              <li className="flex items-center gap-2"><svg width="28" height="6" aria-hidden><line x1="0" y1="3" x2="28" y2="3" stroke="#d97706" strokeWidth="2" /></svg> changed in your draft</li>
-            </ul>
-          </div>
-        )}
-      </aside>
-    </div>
+      {isMobile && (
+        <Sheet open={!!editor} onOpenChange={(o) => { if (!o) close(); }}>
+          <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-full [&>button:last-child]:hidden">
+            <SheetTitle className="sr-only">Screen editor</SheetTitle>
+            <SheetDescription className="sr-only">Edit the selected screen</SheetDescription>
+            <div className="flex h-full min-h-0 flex-col">{editor}</div>
+          </SheetContent>
+        </Sheet>
+      )}
+    </ReactFlowProvider>
   );
 }
