@@ -5,23 +5,17 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
-## Unreleased
+## 3.0.0 - 2026-11-23
 
-- bot-ui Studio: premium emoji library. The Emoji page imports a pack from its
-  `t.me/addemoji/...` link through the telegram-bot-ui resolver on the project site (no token;
-  only the pack name is sent; `BOT_UI_EMOJI_RESOLVER` changes or turns it off; the user's own
-  token or a saved getStickerSet response still work), shows every emoji with its picture, suggests icons for the ordinary
-  emoji the screens already use, and keeps the bot's icon map (one meaning per emoji) in
-  `emoji/library.json`. Text fields and button icons get an emoji picker; previews, the map and
-  the simulator draw the real pictures (adaptive emoji in the text colour); the offline artifact
-  inlines the pictures it needs.
-- Agent handoff: `bot-ui emoji brief [--json]` (icon map, placements, replaceable emoji, unknown
-  ids, rules) and a premium emoji section in the Changes prompt. `validate` adds
-  `CUSTOM_EMOJI_UNKNOWN`, `CUSTOM_EMOJI_FALLBACK_MISMATCH` and `CUSTOM_EMOJI_DOUBLE_ICON`.
+The skill now covers the whole interface of a Telegram bot, not one feature of it: screens,
+texts, keyboards, navigation, states, streaming replies, HTML widgets, premium emoji, posts and
+agent-operated flows. This release adds bot-ui projects (the interface as files by stable screen
+ID), the optional local bot-ui Studio, widget design profiles and a premium pass for polish
+requests. No breaking changes for existing installs: 3.0 marks the wider scope.
 
-## 2.4.0 - 2026-11-22
+### bot-ui projects and the local Studio
 
-bot-ui projects and the optional local Studio (`studio/`, not part of the skill install).
+The optional local Studio lives in `studio/` and is not part of the skill install.
 
 - bot-ui Studio opens one local project at a time. It maps screens and transitions, simulates
   Telegram conversations, edits messages and keyboards, and previews HTML widgets. It saves
@@ -56,6 +50,58 @@ bot-ui projects and the optional local Studio (`studio/`, not part of the skill 
   HTML and the `sendWidget` payload.
 - An offline one-file artifact for hosts without a local port: edit texts and rules, simulate,
   export a patch, apply it with the CLI.
+- bot-ui Studio: premium emoji library. The Emoji page imports a pack from its
+  `t.me/addemoji/...` link through the telegram-bot-ui resolver on the project site (no token;
+  only the pack name is sent; `BOT_UI_EMOJI_RESOLVER` changes or turns it off; the user's own
+  token or a saved getStickerSet response still work), shows every emoji with its picture, suggests icons for the ordinary
+  emoji the screens already use, and keeps the bot's icon map (one meaning per emoji) in
+  `emoji/library.json`. Text fields and button icons get an emoji picker; previews, the map and
+  the simulator draw the real pictures (adaptive emoji in the text colour); the offline artifact
+  inlines the pictures it needs.
+- Agent handoff: `bot-ui emoji brief [--json]` (icon map, placements, replaceable emoji, unknown
+  ids, rules) and a premium emoji section in the Changes prompt. `validate` adds
+  `CUSTOM_EMOJI_UNKNOWN`, `CUSTOM_EMOJI_FALLBACK_MISMATCH` and `CUSTOM_EMOJI_DOUBLE_ICON`.
+
+### Widget design profiles
+
+- `scripts/widget_design.py`: a widget's `design.json` compiles to CSS over the kit tokens and the
+  client button variables; six presets, per-theme or shared colours, a contrast check for light
+  and dark; the build applies it and reports its byte cost.
+- Studio: the Look step of a code widget has a Design panel (presets with light and dark
+  previews, block, motion, button, texts, chips, counter, bars and picture options, contrast and
+  byte cost). Visual-builder widgets keep their own Design step.
+
+### Premium pass
+
+Premium pass: what a person sees, checked. Ideas from 21 public Telegram skills, restated and
+verified (revisions and licenses: `references/official-sources.md`, "Community skills reviewed").
+
+- Routing: "make it premium / nicer / polished" now goes to the premium pass
+  (`references/visual-language.md` §7: first line and facts → buttons → color → icons, themes,
+  locales, custom emoji off, states, compatibility), not only to the emoji-pack recipes.
+- `SKILL.md` mode list: a polish request reads the premium pass first and covers empty, error
+  and stale states (a real agent run without it skipped them).
+- `validate_keyboard.py` warns on layout and meaning: styled or ✅/❌-marked navigation (red
+  Back, "❌ Close"; "Close account" is an action, not navigation), navigation above other
+  actions (a confirmation's red last row is allowed), a `danger` button sharing a row with any
+  other action (Back beside it is fine), labels that don't say what happens ("OK", "Yes",
+  "Submit", "Да", "Надіслати"), more than 8 rows; Ukrainian destructive words ("Скинути") now
+  count as destructive. Warnings only; tests in `tests/test_premium_pass.py`.
+- Found by those checks in our own examples and fixed (layout and labels only, same
+  `callback_data`): R35 Reject on its own row; `AgentBridge.approve(destructive=True)` (R40, MCP
+  `approve`) puts the red Approve alone in the last row so a mis-tap on Reject can't run it.
+- R03 (form): the submit button sits above Back/Cancel and says "Place order"
+  (`FormRunner(submit_label=...)`, default "Send answers"); Python, TypeScript and payload updated.
+- Shapes for stale screens (out of date + what is saved + one fresh entry) and notifications
+  (event and needed action in the ≤ ~80-char preview line, one fact per line, resolved in place)
+  in `microcopy-and-labels.md`; consent/peer-choice/escape style rules in `buttons-and-styles.md`;
+  page size by row density, no dead pager and a multi-select pattern in `inline-keyboards.md`;
+  no half-open markup in drafts (`streaming-and-editing.md`); strip test in the final review.
+- Worked set on one bot, same data before and after (menu, wizard, error, empty, stale tap,
+  notification): `examples-before-after.md` 17-20, `examples/premium-pass/before-after.json`.
+- Evals: UI5 (ru), UI6 (en) activation and B16 behavioural for the premium request.
+- `scripts/run_evals.py --execute` resolves the host CLI with `shutil.which` (Windows npm
+  installs `claude.cmd`, which `CreateProcess` can't start by name).
 
 ## 2.3.0 - 2026-11-22
 

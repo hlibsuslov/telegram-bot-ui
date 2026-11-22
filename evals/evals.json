@@ -678,6 +678,31 @@
       "why": "brand adaptation plus tuning knobs"
     },
     {
+      "id": "UI5",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Сделай меню бота премиальнее.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/visual-language.md"
+      ],
+      "why": "premium pass: copy and hierarchy before icons"
+    },
+    {
+      "id": "UI6",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Our bot looks cheap. Make the menus feel polished and premium.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/visual-language.md",
+        "references/buttons-and-styles.md"
+      ],
+      "why": "premium pass, not only an icon swap"
+    },
+    {
       "id": "UIN1",
       "area": "out-of-scope",
       "lang": "ru",
@@ -1362,6 +1387,26 @@
         "puts brand hex colours on buttons or fakes them with coloured emoji",
         "breaks old messages' buttons or published deep links",
         "changes callback_data without an M4 mandate and a migration"
+      ]
+    },
+    {
+      "id": "B16",
+      "area": "ui",
+      "lang": "ru",
+      "request": "Сделай меню бота премиальнее.",
+      "context": "aiogram bot with a main menu (6 buttons: two primary, emoji-only Help, red '❌ Close'), an order wizard whose Submit sits under Back/Cancel, 'Error 500' texts, en/uk locales, users holding old messages, owner Premium status unknown",
+      "must": [
+        "runs the premium pass (references/visual-language.md §7) in order: first line and facts, then buttons and grouping, then color, icons last",
+        "one primary, navigation last and unstyled, labels that name the outcome; validate_keyboard.py shows no warnings on the new screens",
+        "defines error, empty and stale-button states with an action",
+        "keeps callback_data, commands, deep links, placeholders and both locales; checks the longest (uk) label",
+        "custom emoji only from resolved ids with a working screen when they are off; says the owner's eligibility is unknown",
+        "states the evidence level (static/offline, not real clients)"
+      ],
+      "critical_failures": [
+        "only swaps Unicode emoji for premium icons and calls it done",
+        "invents custom_emoji_id values or colors buttons for decoration",
+        "changes callback_data or drops a locale during a cosmetic pass"
       ]
     },
     {
