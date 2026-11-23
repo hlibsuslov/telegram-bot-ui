@@ -100,6 +100,15 @@ flow: `wallet-and-ton.md` [H].
 - UNIQUE indexes on `payments.charge_id` (Stars) and `payments.tx_hash` / `msg_hash` (Gram) are the
   idempotency, not an optimisation. Store integers only; never floats [API] for "integer, not
   float".
+- **Authenticate updates.** A forged `callback_query` from an admin's id or a forged
+  `refunded_payment` is a refund or a revocation. Take updates from `getUpdates`, or from a webhook
+  set with `secret_token` whose `X-Telegram-Bot-Api-Secret-Token` header you compare in constant
+  time (`webhook_secret_ok()`) before anything is parsed [API] for the header, [H] for the rule.
+- Answer `pre_checkout_query` first: run refunds, reconciliation and other slow calls in a worker,
+  not in the loop that has to answer within 10 s [H].
+- `successful_payment` must match the order it names (payer and amount); a charge that does not —
+  or arrives for an order already fulfilled — is recorded unbound, not delivered, and sent to the
+  admin [H].
 - Refunds only from admin roles, re-checked on the confirmation tap, journaled with who asked and
   who approved. Secrets, full payment records and wallet keys never go into `chat_data`, logs or
   the repo. Gram addresses are linked through the `signData` challenge, not taken from a profile.
@@ -147,6 +156,12 @@ the answer, never before it.
   `unknown` until reconciliation sees the outgoing transaction with the same id [H]. A 400 →
   `failed`, the order returns to `delivered`; branch on `error_code`, not on `description` [API].
 - A partial Stars refund is impossible: offer the whole refund or a goodwill credit instead.
+- Refund state lives on the **charge**, not the order: a subscription has one order and a charge
+  per period, and each can be refunded once. A refund that wins the race against delivery blocks
+  it: delivery re-reads the order and the charge under the same lock that writes the entitlement.
+- An `unknown` refund that reconciliation shows never left can be closed by an admin
+  (`close_unknown_refund`) and requested again. Stray charges (no matching order) are refundable
+  by admins only.
 
 ```json
 {"method": "sendMessage", "params": {
@@ -195,16 +210,23 @@ create table products (id text primary key, kind text not null check (kind in
   rails text[] not null, active boolean not null default true);
 create table prices (product_id text references products, rail text not null, amount_int bigint not null,
   amount_nano bigint not null default 0, valid_from timestamptz not null, valid_to timestamptz);
+create table offers (id text primary key, product_id text not null, chat_id bigint not null,
+  amount bigint not null check (amount > 0), payload text not null, valid_until timestamptz not null);
 create table orders (id text primary key, user_id bigint, chat_id bigint not null, product_id text not null,
-  offer_id text, rail text not null, amount bigint not null check (amount > 0), status text not null,
-  payload text not null, valid_until timestamptz not null, lang text not null default 'en',
-  created_at timestamptz not null default now());
-create table payments (id bigserial primary key, order_id text references orders, rail text not null,
-  charge_id text unique, msg_hash text unique, tx_hash text unique, amount bigint not null,
-  nano bigint not null default 0, from_address text, paid_at timestamptz not null);
+  offer_id text references offers, currency text not null, amount bigint not null check (amount > 0),
+  status text not null check (status in ('draft','invoiced','pre_checkout','declined','expired','paid',
+  'delivered','refund_requested','refunded','chargeback')), payload text not null,
+  valid_until timestamptz not null, decline_reason text, lang text not null default 'en',
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now());
+create table payments (id bigserial primary key, order_id text references orders, user_id bigint not null,
+  currency text not null, amount bigint not null, nano bigint not null default 0,
+  charge_id text unique, provider_charge_id text, is_recurring boolean not null default false,
+  msg_hash text unique, tx_hash text unique, from_address text, paid_at timestamptz not null);
 create table refunds (id bigserial primary key, payment_id bigint not null references payments,
-  amount bigint not null, reason text not null, requested_by bigint not null, approved_by bigint,
-  status text not null, tx_hash text unique, created_at timestamptz not null default now());
+  amount bigint not null, reason text not null check (length(reason) <= 500), requested_by bigint not null,
+  approved_by bigint, status text not null check (status in
+  ('requested','sending','unknown','done','failed','canceled')), tx_hash text unique,
+  created_at timestamptz not null default now(), updated_at timestamptz not null default now());
 create unique index refunds_one_active on refunds (payment_id)
   where status in ('requested','sending','unknown','done');
 create table subscriptions (id text primary key, user_id bigint not null, product_id text not null,
@@ -222,8 +244,10 @@ create table reconciliation_runs (id bigserial primary key, at timestamptz not n
   diff_nano bigint not null, details jsonb not null);
 ```
 
-On Supabase: RLS on every table, writes only from the server role; the bot token and wallet keys
-stay out of the database. Ledger accounts: `user:<id>`, `bot:stars`, `bot:gram`, `fees`,
+On Supabase: enable RLS on every table and create **no** policies for `anon` or `authenticated`,
+so no client can read or write them; only server code with the service role touches payments.
+The bot token and wallet keys stay out of the database. Prune `events` older than 24 h (Telegram
+keeps an undelivered update at most that long, and `update_id` may restart after a quiet week). Ledger accounts: `user:<id>`, `bot:stars`, `bot:gram`, `fees`,
 `refunds`; every event posts a debit and a credit of the same amount.
 
 ## 8. Screens and microcopy
@@ -258,23 +282,35 @@ accounts and tokens.
 ## 9. Runtime (Stars)
 
 ```python
-from tgkit.payments import ALLOWED_UPDATES, Product, SqliteStore, StarsPayments
+from tgkit.payments import ALLOWED_UPDATES, Product, SqliteStore, StarsPayments, webhook_secret_ok
 
 catalog = {"credits50": Product("credits50", "digital", {"en": "50 AI credits"},
                                 {"en": "Credits for longer answers."}, 250)}
 pay = StarsPayments(transport, SqliteStore("payments.db"), catalog, secret=PAYLOAD_SECRET,
-                    admins={ADMIN_ID}, admin_chat_id=ADMIN_ID)
+                    admins={ADMIN_ID}, admin_chat_id=ADMIN_ID, on_deliver=add_credits)
 pay.invoice(user_id, chat_id, "credits50", lang="uk")      # order + sendInvoice
-for update in updates(allowed_updates=ALLOWED_UPDATES):
+
+def webhook(headers, update):                               # setWebhook(..., secret_token=WEBHOOK_SECRET)
+    if not webhook_secret_ok(headers, WEBHOOK_SECRET):
+        return 403
     if not pay.handle(update):                              # pre-checkout, payment, refund, subscription
         other_handlers(update)
-pay.reconcile(since=day_start, until=day_end, offset=last_offset)
+    return 200
+
+pay.reconcile(since=day_start, until=day_end, offset=last_offset)   # daily, in a worker
 ```
 
-Covered by tests on `FakeTransport`: double delivery of an update, forged and foreign payloads,
-a price change at pre-checkout, an expired order, a multi-use invoice in a group, a refund and a
-repeated refund, a lost refund answer, a `failed` subscription (one message), reconciliation with
-a chargeback and paging. Gram runtime (orders, `msg_hash`, `ChainVerifier`, refund transfers) is
+`on_deliver` runs inside the transaction that claims the delivery (the entitlement row, UNIQUE per
+charge): write its effects (credits, files) to the same database so they commit or roll back with
+the claim; anything external must be idempotent by `payment.charge_id`. Keep it short — it holds
+the write lock.
+
+Covered by tests on `FakeTransport`: double delivery of an update, a duplicate arriving mid-
+delivery, a crashed delivery and a crashed renewal resumed, forged and foreign payloads, a price
+change at pre-checkout, an expired order, stock and per-user limits with live holds, a multi-use
+invoice in a group, a stray charge, a refund and a repeated refund, a refund that wins the race
+against delivery, per-charge subscription refunds, a lost refund answer, a `failed` subscription
+(one message), reconciliation with a chargeback, paging and a re-run, the webhook secret. Gram runtime (orders, `msg_hash`, `ChainVerifier`, refund transfers) is
 the next stage; until then use `tgkit/wallet.py` and `wallet-and-ton.md`.
 
 Physical goods through a provider: documentation only here — `payments-and-stars.md#physical-goods-provider-payments`.

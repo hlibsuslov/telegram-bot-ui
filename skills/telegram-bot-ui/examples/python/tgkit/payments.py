@@ -35,6 +35,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import json
+import re
 import secrets
 import sqlite3
 import time
@@ -53,6 +54,8 @@ PRE_CHECKOUT_DEADLINE_S = 10
 SUBSCRIPTION_PERIOD_S = 2_592_000
 SUBSCRIPTION_MAX_STARS = 10_000
 TAG_HEX = 16                                   # 8 bytes of HMAC-SHA256
+REASON_MAX = 500                               # refund reason shown on the admin card
+EVENT_TTL_S = 86_400                           # Telegram keeps undelivered updates at most 24 h
 ALLOWED_UPDATES = ("message", "callback_query", "pre_checkout_query", "subscription")
 DIGITAL_KINDS = frozenset({"digital", "subscription", "paid_media"})
 KINDS = DIGITAL_KINDS | {"physical", "donation"}
@@ -136,7 +139,7 @@ TRANSITIONS: dict[OrderStatus, frozenset[OrderStatus]] = {
     S.EXPIRED: frozenset({S.PAID}),
     S.PAID: frozenset({S.DELIVERED, S.REFUND_REQUESTED, S.REFUNDED, S.CHARGEBACK}),
     S.DELIVERED: frozenset({S.REFUND_REQUESTED, S.REFUNDED, S.CHARGEBACK}),
-    S.REFUND_REQUESTED: frozenset({S.REFUNDED, S.DELIVERED, S.CHARGEBACK}),
+    S.REFUND_REQUESTED: frozenset({S.REFUNDED, S.DELIVERED, S.PAID, S.CHARGEBACK}),
     S.REFUNDED: frozenset(),
     S.CHARGEBACK: frozenset(),
 }
@@ -237,6 +240,14 @@ def parse_payload(secret: bytes, payload: str) -> tuple[str, str] | None:
         return None
     good = hmac.new(secret, body.encode(), hashlib.sha256).hexdigest()[:TAG_HEX]
     return (kind, ident) if hmac.compare_digest(tag, good) else None
+
+
+def webhook_secret_ok(headers: dict[str, str], secret: str) -> bool:
+    """True only when the request carries setWebhook's secret_token. Feed `handle()` only
+    updates from getUpdates or from a webhook that passed this check: otherwise anyone can
+    POST a forged refund tap or `refunded_payment`."""
+    got = next((v for k, v in headers.items() if k.lower() == "x-telegram-bot-api-secret-token"), "")
+    return bool(secret) and hmac.compare_digest(got.encode(), secret.encode())
 
 
 # ------------------------------------------------------------------ texts (ru / en / uk)
@@ -348,17 +359,19 @@ class PaymentStore(Protocol):
     def add_event(self, key: str, kind: str, at: int) -> None: ...
     def add_order(self, order: Order) -> None: ...
     def get_order(self, order_id: str) -> Order | None: ...
-    def move_order(self, order_id: str, to: OrderStatus, at: int, *, reason: str | None = None) -> bool: ...
+    def move_order(self, order_id: str, to: OrderStatus, at: int, *, reason: str | None = None,
+                   valid_until: int | None = None) -> bool: ...
     def open_child_order(self, offer_id: str, user_id: int) -> Order | None: ...
     def taken_count(self, product_id: str, now: int, exclude: str | None) -> int: ...
-    def user_bought_count(self, user_id: int, product_id: str) -> int: ...
+    def user_bought_count(self, user_id: int, product_id: str, now: int, exclude: str | None) -> int: ...
     def add_offer(self, offer: Offer) -> None: ...
     def get_offer(self, offer_id: str) -> Offer | None: ...
     def add_payment(self, payment: Payment) -> bool: ...
     def get_payment(self, charge_id: str) -> Payment | None: ...
     def get_payment_by_id(self, payment_id: int) -> Payment | None: ...
     def payments_between(self, since: int, until: int) -> list[Payment]: ...
-    def grant(self, user_id: int, product_id: str, payment_id: int, at: int, expires_at: int | None) -> None: ...
+    def grant(self, user_id: int, product_id: str, payment_id: int, at: int, expires_at: int | None) -> bool: ...
+    def has_entitlement(self, payment_id: int) -> bool: ...
     def revoke(self, payment_id: int, at: int) -> None: ...
     def has_access(self, user_id: int, product_id: str, now: int) -> bool: ...
     def add_refund(self, payment_id: int, amount: int, reason: str, requested_by: int, at: int) -> Refund | None: ...
@@ -460,6 +473,8 @@ class SqliteStore:
         return self._one("SELECT 1 FROM events WHERE key = ?", key) is not None
 
     def add_event(self, key, kind, at):
+        # update_id restarts at random after a week of silence: keep only the 24 h Telegram may redeliver
+        self.db.execute("DELETE FROM events WHERE received_at < ?", (at - EVENT_TTL_S,))
         self.db.execute("INSERT OR IGNORE INTO events (key, kind, received_at) VALUES (?, ?, ?)", (key, kind, at))
 
     def add_order(self, o):
@@ -472,11 +487,12 @@ class SqliteStore:
     def get_order(self, order_id):
         return _row(Order, self._one("SELECT * FROM orders WHERE id = ?", order_id))
 
-    def move_order(self, order_id, to, at, *, reason=None):
+    def move_order(self, order_id, to, at, *, reason=None, valid_until=None):
         frm = sources_of(to)
         cur = self.db.execute(
-            f"UPDATE orders SET status = ?, updated_at = ?, decline_reason = COALESCE(?, decline_reason)"
-            f" WHERE id = ? AND status IN ({','.join('?' * len(frm))})", (to.value, at, reason, order_id, *frm))
+            f"UPDATE orders SET status = ?, updated_at = ?, decline_reason = COALESCE(?, decline_reason),"
+            f" valid_until = COALESCE(?, valid_until) WHERE id = ? AND status IN ({','.join('?' * len(frm))})",
+            (to.value, at, reason, valid_until, order_id, *frm))
         return cur.rowcount == 1
 
     def open_child_order(self, offer_id, user_id):
@@ -491,9 +507,11 @@ class SqliteStore:
             product_id, exclude, now)
         return row[0]
 
-    def user_bought_count(self, user_id, product_id):
-        return self._one("SELECT COUNT(*) FROM orders WHERE user_id = ? AND product_id = ? AND status IN"
-                         " ('paid', 'delivered', 'refund_requested')", user_id, product_id)[0]
+    def user_bought_count(self, user_id, product_id, now, exclude):
+        return self._one(
+            "SELECT COUNT(*) FROM orders WHERE user_id = ? AND product_id = ? AND id IS NOT ? AND (status IN"
+            " ('paid', 'delivered', 'refund_requested') OR (status = 'pre_checkout' AND valid_until > ?))",
+            user_id, product_id, exclude, now)[0]
 
     def add_offer(self, o):
         self.db.execute("INSERT INTO offers (id, product_id, chat_id, amount, payload, valid_until) VALUES (?,?,?,?,?,?)",
@@ -523,8 +541,12 @@ class SqliteStore:
         return [_row(Payment, r) for r in rows]
 
     def grant(self, user_id, product_id, payment_id, at, expires_at):
-        self.db.execute("INSERT OR IGNORE INTO entitlements (user_id, product_id, payment_id, granted_at, expires_at)"
-                        " VALUES (?,?,?,?,?)", (user_id, product_id, payment_id, at, expires_at))
+        cur = self.db.execute("INSERT OR IGNORE INTO entitlements (user_id, product_id, payment_id, granted_at,"
+                              " expires_at) VALUES (?,?,?,?,?)", (user_id, product_id, payment_id, at, expires_at))
+        return cur.rowcount == 1
+
+    def has_entitlement(self, payment_id):
+        return self._one("SELECT 1 FROM entitlements WHERE payment_id = ?", payment_id) is not None
 
     def revoke(self, payment_id, at):
         self.db.execute("UPDATE entitlements SET revoked_at = ? WHERE payment_id = ? AND revoked_at IS NULL", (at, payment_id))
@@ -692,6 +714,8 @@ class StarsPayments:
         """A multi-use invoice (group, channel): anyone may pay, many times, and every
         payment becomes its own order. No start_parameter, so forwards keep the Pay button."""
         product = self._product(product_id)
+        if product.kind == "subscription":
+            raise ValueError("subscriptions are personal invoice links, not multi-use offers")
         oid = secrets.token_hex(6)
         offer = Offer(id=oid, product_id=product.id, chat_id=chat_id, amount=product.price,
                       payload=sign_payload(self._secret, "inv", oid), valid_until=self.now() + ttl_s)
@@ -718,7 +742,8 @@ class StarsPayments:
 
     def handle(self, update: dict[str, Any]) -> bool:
         """Route one update; False when it is not a payment update. A repeated
-        update_id is ignored (the charge id is still the real idempotency key)."""
+        update_id is ignored (the charge id is still the real idempotency key).
+        Pass only updates from getUpdates or a webhook checked with webhook_secret_ok()."""
         msg = update.get("message") or {}
         cq = update.get("callback_query") or {}
         if "pre_checkout_query" in update:
@@ -793,26 +818,27 @@ class StarsPayments:
                 return "expired", None, None
             product_id, amount, chat_id = offer.product_id, offer.amount, offer.chat_id
         product = self.catalog.get(product_id)
-        decline = None
-        if product is None or not product.active:
-            decline = "unavailable"
-        elif product.price != amount:
-            decline = "price_changed"
-        elif product.stock is not None and \
-                self.store.taken_count(product.id, now, order.id if order else None) >= product.stock:
-            decline = "sold_out"
-        elif product.per_user_limit is not None and \
-                self.store.user_bought_count(user_id, product.id) >= product.per_user_limit:
-            decline = "limit"
-        if decline:
-            if order is not None:
-                self.store.move_order(order.id, S.DECLINED, now, reason=decline)
-            return decline, order, product
-        with self.store.transaction():
+        with self.store.transaction():                        # check and hold atomically: no overselling
+            exclude = order.id if order else None
+            decline = None
+            if product is None or not product.active:
+                decline = "unavailable"
+            elif product.price != amount:
+                decline = "price_changed"
+            elif product.stock is not None and self.store.taken_count(product.id, now, exclude) >= product.stock:
+                decline = "sold_out"
+            elif product.per_user_limit is not None and \
+                    self.store.user_bought_count(user_id, product.id, now, exclude) >= product.per_user_limit:
+                decline = "limit"
+            if decline:
+                if order is not None:
+                    self.store.move_order(order.id, S.DECLINED, now, reason=decline)
+                return decline, order, product
             if order is None:                                 # multi-use invoice: one order per payment
                 order = self.store.open_child_order(ident, user_id) or self._new_order(
                     user_id, chat_id, product, lang, offer_id=ident, status=S.INVOICED)
-            self.store.move_order(order.id, S.PRE_CHECKOUT, now)
+            hold = now + self.ttl if order.offer_id else None   # a reused offer order gets a live hold
+            self.store.move_order(order.id, S.PRE_CHECKOUT, now, valid_until=hold)
         return None, order, product
 
     # ---------------------------------------------------------------- payment and delivery
@@ -822,36 +848,81 @@ class StarsPayments:
         if sp.get("currency") != XTR:
             return                                            # provider payments: not this rail
         user, now = msg["from"], self.now()
+        problem = None
         with self.store.transaction():
             payment = self.store.get_payment(sp["telegram_payment_charge_id"])
-            if payment is not None:                           # re-delivered: resume, never repeat
+            if payment is not None:                           # re-delivered: resume per payment, never repeat
                 order = self.store.get_order(payment.order_id) if payment.order_id else None
-                if order is None or order.status != S.PAID.value:
-                    return
             else:
                 order = self._order_for_payment(sp.get("invoice_payload", ""), user, msg["chat"]["id"])
                 payment = Payment(id=None, order_id=order.id if order else None, user_id=user["id"],
                                   currency=XTR, amount=sp["total_amount"], nano=0,
                                   charge_id=sp["telegram_payment_charge_id"],
                                   provider_charge_id=sp.get("provider_payment_charge_id", ""),
-                                  is_recurring=int(bool(sp.get("is_recurring"))), paid_at=now)
+                                  is_recurring=int(bool(sp.get("is_recurring"))),
+                                  paid_at=int(msg.get("date") or now))   # Telegram's clock, as in the statement
+                problem = self._payment_problem(order, payment)
+                if problem is not None:
+                    payment.order_id = order = None           # never bind a stray charge to a fulfilled order
                 if not self.store.add_payment(payment):       # another worker took it
                     return
                 self.store.post(now, "bot:stars", f"user:{user['id']}", payment.total_nano, payment.charge_id)
-                paid = order is not None and self.store.move_order(order.id, S.PAID, now)
-                renewal = (order is not None and order.status == S.DELIVERED.value
-                           and self.catalog[order.product_id].kind == "subscription")
-                if not (paid or renewal):
-                    order = None
-        if order is None:
-            self._tell_admin(f"Payment {payment.charge_id} (⭐{payment.amount}) matches no open order: "
-                             "nothing was delivered, check it and refund if needed.")
+                if order is not None and order.status != S.DELIVERED.value:
+                    self.store.move_order(order.id, S.PAID, now)
+                    order = self.store.get_order(order.id)
+        if problem is not None:
+            self._tell_admin(f"Payment {payment.charge_id} (⭐{payment.amount}) {problem}: nothing was "
+                             "delivered; refund it from the admin chat if needed.")
             return
-        product = self.catalog[order.product_id]
-        if product.kind == "subscription":
-            self._deliver_subscription(order, product, payment, sp)
-        else:
-            self._deliver(order, product, payment)
+        if order is not None:
+            self._deliver(order, self.catalog[order.product_id], payment, sp)
+
+    def _payment_problem(self, order: Order | None, payment: Payment) -> str | None:
+        """Why this payment must not be delivered, or None. Telegram's fields are trusted;
+        they still have to match the order this bot issued."""
+        if order is None:
+            return "matches no order"
+        if order.user_id != payment.user_id or order.amount != payment.amount:
+            return f"does not match order {order.id} (payer or amount)"
+        subscription = self.catalog[order.product_id].kind == "subscription"
+        allowed = {S.PAID.value} | OPEN_VALUES | {S.DECLINED.value, S.EXPIRED.value}
+        if subscription:
+            allowed.add(S.DELIVERED.value)                    # renewals land on the delivered order
+        if payment.id is not None and self.store.has_entitlement(payment.id):
+            return None                                       # delivered already; _deliver is a no-op
+        return None if order.status in allowed else f"arrived for order {order.id} in state {order.status}"
+
+    def _deliver(self, order: Order, product: Product, payment: Payment, sp: dict[str, Any]) -> None:
+        """Claim the delivery by inserting the entitlement (UNIQUE payment_id) in the same
+        transaction as the `on_deliver` hook: a concurrent duplicate waits for the lock and
+        then finds the claim taken; a hook that raises rolls the claim back for a retry.
+        Write the hook's effects to the same database, or make it idempotent by charge id."""
+        now = self.now()
+        subscription = product.kind == "subscription"
+        expires = int(sp.get("subscription_expiration_date") or now + SUBSCRIPTION_PERIOD_S) if subscription else None
+        with self.store.transaction():
+            current = self.store.get_order(order.id)          # re-read under the lock: a refund may have won
+            if self._payment_problem(current, payment) is not None or self._settled(payment):
+                return
+            if not self.store.grant(payment.user_id, product.id, payment.id, now, expires):
+                return                                        # another worker delivered this payment
+            sub = self.store.subscription_for_order(order.id) if subscription else None
+            if subscription and sub is None:
+                self.store.add_subscription(Subscription(id=payment.charge_id, user_id=payment.user_id,
+                                                         product_id=product.id, order_id=order.id,
+                                                         state="active", expires_at=expires))
+            elif sub is not None:
+                self.store.update_subscription(sub.id, state="active", expires_at=max(sub.expires_at, expires),
+                                               failed_notice_for=None)
+            if self.on_deliver:
+                self.on_deliver(order, product, payment)
+            first = self.store.move_order(order.id, S.DELIVERED, now)
+        title = self.title(product.id, order.lang)
+        if first:
+            self._send(payment.user_id, t("receipt", order.lang, amount=payment.amount, title=title, order=order.id))
+        elif sub is not None:
+            self._send(payment.user_id, t("renewed", order.lang, title=title, date=fmt_date(expires),
+                                          amount=payment.amount))
 
     def _order_for_payment(self, payload: str, user: dict[str, Any], chat_id: int) -> Order | None:
         parsed = parse_payload(self._secret, payload)
@@ -865,37 +936,6 @@ class StarsPayments:
             return None
         return self.store.open_child_order(ident, user["id"]) or self._new_order(
             user["id"], chat_id, self.catalog[offer.product_id], lang_of(user), offer_id=ident, status=S.INVOICED)
-
-    def _deliver(self, order: Order, product: Product, payment: Payment) -> None:
-        now = self.now()
-        self.store.grant(payment.user_id, product.id, payment.id, now, None)
-        if self.on_deliver:
-            self.on_deliver(order, product, payment)          # must be idempotent by payment.charge_id
-        if self.store.move_order(order.id, S.DELIVERED, now):  # exactly one receipt
-            self._send(payment.user_id, t("receipt", order.lang, amount=payment.amount,
-                                          title=self.title(product.id, order.lang), order=order.id))
-
-    def _deliver_subscription(self, order: Order, product: Product, payment: Payment, sp: dict[str, Any]) -> None:
-        now = self.now()
-        expires = int(sp.get("subscription_expiration_date") or now + SUBSCRIPTION_PERIOD_S)
-        with self.store.transaction():
-            sub = self.store.subscription_for_order(order.id)
-            if sub is None:
-                self.store.add_subscription(Subscription(id=payment.charge_id, user_id=payment.user_id,
-                                                         product_id=product.id, order_id=order.id,
-                                                         state="active", expires_at=expires))
-            else:
-                self.store.update_subscription(sub.id, state="active", expires_at=max(sub.expires_at, expires),
-                                               failed_notice_for=None)
-            self.store.grant(payment.user_id, product.id, payment.id, now, expires)
-        if self.on_deliver:
-            self.on_deliver(order, product, payment)
-        title = self.title(product.id, order.lang)
-        if self.store.move_order(order.id, S.DELIVERED, now):
-            self._send(payment.user_id, t("receipt", order.lang, amount=payment.amount, title=title, order=order.id))
-        elif sub is not None:
-            self._send(payment.user_id, t("renewed", order.lang, title=title, date=fmt_date(expires),
-                                          amount=payment.amount))
 
     # ---------------------------------------------------------------- subscriptions
 
@@ -931,33 +971,49 @@ class StarsPayments:
 
     # ---------------------------------------------------------------- refunds
 
+    def _settled(self, payment: Payment) -> bool:
+        """The payment's money already went back (refund done or chargeback)."""
+        refund = self.store.active_refund(payment.id)
+        return refund is not None and refund.status == "done"
+
     def request_refund(self, charge_id: str, *, by: int, reason: str, lang: str = "en") -> Refund | None:
         """Step 1: an admin or the payer asks; the admin chat gets a confirmation card.
         None when there is nothing to refund (unknown, already refunded or already requested).
-        Stars refunds are whole-payment only: there is no amount to choose."""
+        Stars refunds are whole-payment only: there is no amount to choose. Refunds are per
+        charge: one subscription order has a charge per period."""
         payment = self.store.get_payment(charge_id)
         if payment is None:
             return None
         if by not in self.admins and by != payment.user_id:
             raise PermissionError("refunds are requested by the payer or an admin")
+        if by not in self.admins and self.admin_chat_id is None:
+            raise ValueError("a payer's refund request needs admin_chat_id")
+        reason = (reason or "-").strip()[:REASON_MAX]
         order = self.store.get_order(payment.order_id) if payment.order_id else None
-        if order is None or order.status not in (S.PAID.value, S.DELIVERED.value):
+        one_off = order is not None and self.catalog[order.product_id].kind != "subscription"
+        if order is None and by not in self.admins:
+            return None                                       # a stray charge: admins only
+        if one_off and order.status not in (S.PAID.value, S.DELIVERED.value):
+            return None
+        if order is not None and not one_off and not self.store.has_entitlement(payment.id):
             return None
         now = self.now()
         with self.store.transaction():
             refund = self.store.add_refund(payment.id, payment.amount, reason, by, now)
             if refund is None:
                 return None
-            self.store.move_order(order.id, S.REFUND_REQUESTED, now)
+            if one_off:
+                self.store.move_order(order.id, S.REFUND_REQUESTED, now)
         p = self.policy
         if (by == payment.user_id and p.auto_within_s is not None and p.is_used is not None
                 and now - payment.paid_at <= p.auto_within_s and not p.is_used(payment)):
-            self.store.move_refund(refund.id, ("requested",), "sending", now, approved_by=0)   # 0 = auto rule
-            self._send_refund(refund, payment, lang)
+            if self.store.move_refund(refund.id, ("requested",), "sending", now, approved_by=0):  # 0 = auto rule
+                self._send_refund(refund, payment, lang)
             return self.store.get_refund(refund.id)
+        title = self.title(order.product_id, lang) if order else payment.charge_id
         self._send(self.admin_chat_id if self.admin_chat_id is not None else by,
-                   t("refund.ask", lang, amount=payment.amount, user=payment.user_id,
-                     title=self.title(order.product_id, lang), order=order.id, reason=reason),
+                   t("refund.ask", lang, amount=payment.amount, user=payment.user_id, title=title,
+                     order=order.id if order else "-", reason=reason),
                    {"inline_keyboard": [
                        [{"text": t("refund.confirm", lang, amount=payment.amount),
                          "callback_data": f"rf:ok:{refund.id}", "style": "danger"}],
@@ -972,14 +1028,14 @@ class StarsPayments:
                                                  "show_alert": True})
             return
         _, action, rid = (cq["data"].split(":", 2) + ["", ""])[:3]
-        refund = self.store.get_refund(int(rid)) if rid.isdigit() else None
+        refund = self.store.get_refund(int(rid)) if re.fullmatch(r"[0-9]{1,18}", rid) else None
         payment = self.store.get_payment_by_id(refund.payment_id) if refund else None
         now, admin = self.now(), cq["from"]["id"]
         if refund is None or payment is None:
             text = t("refund.handled", lang)
         elif action == "no":
             if self.store.move_refund(refund.id, ("requested",), "canceled", now, approved_by=admin):
-                self.store.move_order(payment.order_id, S.DELIVERED, now)
+                self._restore_order(payment, now)
                 text = t("refund.kept", lang, order=payment.order_id)
             else:
                 text = t("refund.handled", lang)
@@ -1002,39 +1058,65 @@ class StarsPayments:
             return t("refund.unknown", lang, order=payment.order_id)
         except TelegramError as err:
             self.store.move_refund(refund.id, ("sending",), "failed", self.now())
-            self.store.move_order(payment.order_id, S.DELIVERED, self.now())
+            self._restore_order(payment, self.now())
             return t("refund.failed", lang, code=err.error_code, order=payment.order_id)
         self.finalize_refund(payment)
         return t("refund.sent", lang, amount=payment.amount, order=payment.order_id)
 
+    def _restore_order(self, payment: Payment, now: int) -> None:
+        """Back from refund_requested to where the order was: delivered only if it was."""
+        if payment.order_id:
+            back = S.DELIVERED if self.store.has_entitlement(payment.id) else S.PAID
+            self.store.move_order(payment.order_id, back, now)
+
+    def close_unknown_refund(self, refund_id: int, *, by: int) -> bool:
+        """An admin closes a refund whose outcome stayed unknown after reconciliation showed no
+        outgoing transaction for it; the payment can then be refunded again."""
+        if by not in self.admins:
+            raise PermissionError("admin only")
+        refund = self.store.get_refund(refund_id)
+        payment = self.store.get_payment_by_id(refund.payment_id) if refund else None
+        if payment is None or not self.store.move_refund(refund.id, ("unknown",), "failed", self.now(), approved_by=by):
+            return False
+        self._restore_order(payment, self.now())
+        return True
+
     def on_refunded_payment(self, msg: dict[str, Any]) -> None:
-        payment = self.store.get_payment(msg["refunded_payment"]["telegram_payment_charge_id"])
+        charge = msg["refunded_payment"]["telegram_payment_charge_id"]
+        payment = self.store.get_payment(charge)
         if payment is not None:
             self.finalize_refund(payment)
+        else:
+            self._tell_admin(f"Telegram reports a refund of {charge}, a charge this bot never recorded.")
 
     def finalize_refund(self, payment: Payment) -> bool:
-        """Idempotent: close the order, revoke access, post the ledger, tell the user once."""
+        """Idempotent per charge: mark the refund done, revoke that charge's access, post the
+        ledger, close a one-off order or stop the subscription's renewal, tell the user once."""
         now = self.now()
         with self.store.transaction():
-            if not payment.order_id or not self.store.move_order(payment.order_id, S.REFUNDED, now):
+            if self._settled(payment):
                 return False
             refund = self.store.active_refund(payment.id) or \
                 self.store.add_refund(payment.id, payment.amount, "external", 0, now)   # refunded elsewhere
             self.store.move_refund(refund.id, ("requested", "sending", "unknown"), "done", now)
             self.store.revoke(payment.id, now)
             self.store.post(now, "refunds", "bot:stars", payment.total_nano, f"refund:{payment.charge_id}")
-            order = self.store.get_order(payment.order_id)
-            sub = self.store.subscription_for_order(order.id)
-            if sub is not None:
-                self.store.update_subscription(sub.id, state="refunded", expires_at=now)
-        if sub is not None:
+            order = self.store.get_order(payment.order_id) if payment.order_id else None
+            sub = self.store.subscription_for_order(order.id) if order else None
+            if sub is not None and sub.state != "refunded":
+                self.store.update_subscription(sub.id, state="refunded")
+            elif sub is None and order is not None:
+                self.store.move_order(order.id, S.REFUNDED, now)
+        if sub is not None and sub.state != "refunded":
             try:
                 self.tx.call("editUserStarSubscription", {"user_id": sub.user_id,
                                                           "telegram_payment_charge_id": sub.id, "is_canceled": True})
             except (OutcomeUnknown, TelegramError):
                 self._tell_admin(f"Stop renewal of subscription {sub.id} by hand: the call failed.")
-        self._send(payment.user_id, t("refund.done", order.lang, amount=payment.amount,
-                                      title=self.title(order.product_id, order.lang), order=order.id))
+        lang = order.lang if order else "en"
+        self._send(payment.user_id, t("refund.done", lang, amount=payment.amount,
+                                      title=self.title(order.product_id, lang) if order else payment.charge_id,
+                                      order=order.id if order else "-"))
         return True
 
     # ---------------------------------------------------------------- reconciliation
@@ -1091,7 +1173,7 @@ class StarsPayments:
         refund = self.store.active_refund(payment.id)
         if refund is not None and refund.status == "done":
             report.refunds_matched += 1
-        elif refund is not None:                               # we sent it; the answer was lost
+        elif refund is not None and refund.status in ("sending", "unknown"):   # sent, answer lost
             self.finalize_refund(payment)
             report.refunds_settled += 1
         else:                                                  # nobody here refunded it
@@ -1100,13 +1182,24 @@ class StarsPayments:
         return 0
 
     def _chargeback(self, payment: Payment) -> None:
+        """Record the reversal as a done refund row (so a re-run sees it settled), cancel a
+        refund that was only requested, revoke access by rule, post the ledger."""
         now = self.now()
         with self.store.transaction():
-            if not payment.order_id or not self.store.move_order(payment.order_id, S.CHARGEBACK, now):
+            active = self.store.active_refund(payment.id)
+            if active is not None and active.status == "done":
                 return
+            if active is not None:
+                self.store.move_refund(active.id, ("requested",), "canceled", now)
+            row = self.store.add_refund(payment.id, payment.amount, "chargeback", 0, now)
+            if row is not None:
+                self.store.move_refund(row.id, ("requested",), "done", now)
             if self.policy.revoke_on_chargeback:
                 self.store.revoke(payment.id, now)
             self.store.post(now, "refunds", "bot:stars", payment.total_nano, f"chargeback:{payment.charge_id}")
+            order = self.store.get_order(payment.order_id) if payment.order_id else None
+            if order is not None and self.catalog[order.product_id].kind != "subscription":
+                self.store.move_order(order.id, S.CHARGEBACK, now)
 
     # ---------------------------------------------------------------- helpers
 
@@ -1124,6 +1217,6 @@ class StarsPayments:
             self._send(self.admin_chat_id, text)
 
 
-__all__ = ["ALLOWED_UPDATES", "NANO", "XTR", "Offer", "Order", "OrderStatus", "Payment", "PaymentStore",
+__all__ = ["ALLOWED_UPDATES", "webhook_secret_ok", "NANO", "XTR", "Offer", "Order", "OrderStatus", "Payment", "PaymentStore",
            "Product", "RailVerdict", "ReconReport", "Refund", "RefundPolicy", "SqliteStore", "StarsPayments",
            "Subscription", "TEXTS", "TRANSITIONS", "check_rail", "parse_payload", "sign_payload"]

@@ -6,7 +6,7 @@ import _paths
 import tg_api_lookup as lookup
 import validate_payload as vp
 from tgkit.payments import (NANO, ReconReport, Product, RefundPolicy, SqliteStore, StarsPayments, check_rail,
-                            parse_payload, sign_payload)
+                            parse_payload, sign_payload, webhook_secret_ok)
 from tgkit.transport import FakeTransport, TelegramErrorResponse
 
 V = vp.Validator(lookup.Api().cat)
@@ -264,7 +264,7 @@ class Delivery(unittest.TestCase):
         b.paid(OLENA, "ord:ffffffffffff.0000000000000000", 250, "stxX")
         self.assertFalse(b.pay.has_access(OLENA, "credits50"))
         self.assertEqual(b.texts(OLENA), [])
-        self.assertIn("matches no open order", b.texts(ADMIN)[0])
+        self.assertIn("matches no order", b.texts(ADMIN)[0])
         self.assertIsNotNone(b.store.get_payment("stxX"))         # the money is still recorded
 
     def test_multi_use_invoice_in_a_group_is_one_order_per_payment(self):
@@ -485,6 +485,165 @@ class Reconciliation(unittest.TestCase):
         self.assertIsInstance(r, ReconReport)
         self.assertTrue(r.clean)
         self.assertEqual(b.texts(ADMIN), [])
+
+
+class ReviewRegressions(unittest.TestCase):
+    """Cases from the security reviews of the first version."""
+
+    def crash_once(self, b):
+        boom = [True]
+
+        def hook(*_):
+            if boom[0]:
+                boom[0] = False
+                raise RuntimeError("worker died")
+        b.pay.on_deliver = hook
+
+    def test_duplicate_arriving_mid_delivery_runs_the_hook_once(self):
+        b = Bot()
+        calls = []
+        order = b.pay.invoice(OLENA, OLENA, "credits50")
+        b.pre_checkout(OLENA, order.payload, 250)
+
+        def hook(o, p, pay):
+            calls.append(pay.charge_id)
+            if len(calls) == 1:                                # Telegram re-sends while we are still working
+                b.paid(OLENA, order.payload, 250, "stxD")
+        b.pay.on_deliver = hook
+        b.paid(OLENA, order.payload, 250, "stxD")
+        self.assertEqual(calls, ["stxD"])
+        self.assertEqual(len(b.texts(OLENA)), 1)
+
+    def test_crashed_renewal_is_resumed(self):
+        b = Bot()
+        order = Subscriptions().subscribe(b)
+        self.crash_once(b)
+        b.clock[0] = T0 + 2_592_001
+        renewal = dict(is_recurring=True, subscription_expiration_date=T0 + 2 * 2_592_000)
+        with self.assertRaises(RuntimeError):
+            b.paid(OLENA, order.payload, 300, "stxR2", **renewal)
+        self.assertFalse(b.pay.has_access(OLENA, "pro"))
+        b.paid(OLENA, order.payload, 300, "stxR2", **renewal)
+        self.assertTrue(b.pay.has_access(OLENA, "pro"))
+        self.assertEqual(sum("renewed" in x for x in b.texts(OLENA)), 1)
+
+    def test_refund_that_wins_the_race_blocks_delivery(self):
+        b = Bot()
+        order = b.pay.invoice(OLENA, OLENA, "credits50")
+        b.pre_checkout(OLENA, order.payload, 250)
+        deliver = b.pay._deliver
+
+        def refund_lands_first(*args):                           # the admin's refund commits between the
+            refund = b.pay.request_refund("stxW", by=ADMIN, reason="stuck order")   # payment and delivery
+            b.tap(ADMIN, f"rf:ok:{refund.id}")
+            deliver(*args)
+        b.pay._deliver = refund_lands_first
+        b.paid(OLENA, order.payload, 250, "stxW")
+        self.assertEqual(len(b.t.params_of("refundStarPayment")), 1)
+        self.assertFalse(b.pay.has_access(OLENA, "credits50"))
+        self.assertEqual(b.store.get_order(order.id).status, "refunded")
+
+    def test_cancelled_refund_returns_an_undelivered_order_to_paid(self):
+        b = Bot()
+        order = b.pay.invoice(OLENA, OLENA, "credits50")
+        b.pre_checkout(OLENA, order.payload, 250)
+        self.crash_once(b)
+        with self.assertRaises(RuntimeError):
+            b.paid(OLENA, order.payload, 250, "stxN")
+        refund = b.pay.request_refund("stxN", by=ADMIN, reason="x")
+        b.tap(ADMIN, f"rf:no:{refund.id}")
+        self.assertEqual(b.store.get_order(order.id).status, "paid")
+        b.paid(OLENA, order.payload, 250, "stxN")                # redelivery now completes it
+        self.assertTrue(b.pay.has_access(OLENA, "credits50"))
+
+    def test_stray_charge_is_unbound_and_refundable_by_admin(self):
+        b = Bot()
+        order = b.buy(OLENA, charge="stx1st")
+        b.paid(PETRO, order.payload, 250, "stxStray")            # wrong payer on a fulfilled personal order
+        stray = b.store.get_payment("stxStray")
+        self.assertIsNone(stray.order_id)
+        self.assertFalse(b.pay.has_access(PETRO, "credits50"))
+        self.assertIn("does not match order", b.texts(ADMIN)[-1])
+        self.assertIsNone(b.pay.request_refund("stxStray", by=PETRO, reason="mine"))
+        refund = b.pay.request_refund("stxStray", by=ADMIN, reason="stray")
+        b.tap(ADMIN, f"rf:ok:{refund.id}")
+        self.assertEqual(b.t.params_of("refundStarPayment")[-1]["telegram_payment_charge_id"], "stxStray")
+        self.assertEqual(b.store.get_order(order.id).status, "delivered")   # the real purchase is untouched
+        self.assertTrue(b.pay.has_access(OLENA, "credits50"))
+
+    def test_each_subscription_charge_is_refunded_on_its_own(self):
+        b = Bot()
+        order = Subscriptions().subscribe(b)
+        b.clock[0] = T0 + 2_592_001
+        b.paid(OLENA, order.payload, 300, "stxS2", is_recurring=True, subscription_expiration_date=T0 + 2 * 2_592_000)
+        for charge in ("stxS2", "stxS1"):
+            refund = b.pay.request_refund(charge, by=ADMIN, reason="x")
+            self.assertIsNotNone(refund, charge)
+            b.tap(ADMIN, f"rf:ok:{refund.id}")
+        self.assertEqual([p["telegram_payment_charge_id"] for p in b.t.params_of("refundStarPayment")],
+                         ["stxS2", "stxS1"])
+        self.assertEqual(len(b.t.params_of("editUserStarSubscription")), 1)   # renewal stopped once
+        self.assertFalse(b.pay.has_access(OLENA, "pro"))
+
+    def test_per_user_limit_counts_live_holds(self):
+        b = Bot(products=catalog(guide=Product("guide", "digital", {"en": "PDF"}, {"en": "PDF."}, 100, per_user_limit=1)))
+        first, second = b.pay.invoice(OLENA, OLENA, "guide"), b.pay.invoice(OLENA, OLENA, "guide")
+        b.pre_checkout(OLENA, first.payload, 100)
+        b.pre_checkout(OLENA, second.payload, 100)
+        self.assertEqual([a["ok"] for a in b.answers()], [True, False])
+
+    def test_reused_offer_order_gets_a_live_hold(self):
+        b = Bot(products=catalog(guide=Product("guide", "digital", {"en": "PDF"}, {"en": "PDF."}, 100, stock=1)))
+        offer = b.pay.offer(GROUP, "guide")
+        b.pre_checkout(OLENA, offer.payload, 100)
+        b.clock[0] += 3601                                         # Olena's hold lapsed
+        b.pre_checkout(OLENA, offer.payload, 100)                  # same child order, fresh hold
+        b.pre_checkout(PETRO, offer.payload, 100)
+        self.assertEqual([a["ok"] for a in b.answers()], [True, True, False])
+
+    def test_no_multi_use_offer_for_a_subscription(self):
+        with self.assertRaises(ValueError):
+            Bot().pay.offer(GROUP, "pro")
+
+    def test_malformed_refund_callbacks_are_answered(self):
+        b = Bot()
+        for data in ("rf:ok:١٢", "rf:ok:99999999999999999999999", "rf:ok", "rf:zz:1"):
+            b.tap(ADMIN, data)
+        self.assertEqual(len(b.t.params_of("answerCallbackQuery")), 4)
+        self.assertNotIn("refundStarPayment", b.t.methods())
+
+    def test_chargeback_cancels_a_requested_refund_and_reruns_are_idempotent(self):
+        b = Bot()
+        order = b.buy(OLENA, charge="stxQ")
+        b.pay.request_refund("stxQ", by=ADMIN, reason="asked")    # requested, never confirmed
+        statement = {"transactions": [tx("stxQ", 250, T0, **user_in()), tx("stxQ", 250, T0 + 1, **user_out())]}
+        b.t.script("getStarTransactions", statement, statement)
+        first = b.pay.reconcile(since=T0, until=T0 + 10)
+        second = b.pay.reconcile(since=T0, until=T0 + 10)
+        self.assertEqual((first.chargebacks, second.chargebacks, second.refunds_matched), (["stxQ"], [], 1))
+        self.assertEqual(b.store.get_order(order.id).status, "chargeback")
+        self.assertEqual(b.store.balance("bot:stars"), 0)          # posted once
+        self.assertNotIn("refundStarPayment", b.t.methods())
+
+    def test_paid_at_is_telegrams_time(self):
+        b = Bot()
+        order = b.pay.invoice(OLENA, OLENA, "credits50")
+        b.pre_checkout(OLENA, order.payload, 250)
+        b.clock[0] = T0 + 500                                      # handled late
+        u = b.update(message={"message_id": 1, "date": T0 + 3, "chat": {"id": OLENA, "type": "private"},
+                              "from": {"id": OLENA, "is_bot": False, "first_name": "O"},
+                              "successful_payment": {"currency": "XTR", "total_amount": 250,
+                                                     "invoice_payload": order.payload,
+                                                     "telegram_payment_charge_id": "stxT",
+                                                     "provider_payment_charge_id": "stxT"}})
+        b.pay.handle(u)
+        self.assertEqual(b.store.get_payment("stxT").paid_at, T0 + 3)
+
+    def test_webhook_secret(self):
+        self.assertTrue(webhook_secret_ok({"X-Telegram-Bot-Api-Secret-Token": "s3cret"}, "s3cret"))
+        self.assertFalse(webhook_secret_ok({"X-Telegram-Bot-Api-Secret-Token": "guess"}, "s3cret"))
+        self.assertFalse(webhook_secret_ok({}, "s3cret"))
+        self.assertFalse(webhook_secret_ok({"X-Telegram-Bot-Api-Secret-Token": ""}, ""))
 
 
 if __name__ == "__main__":
