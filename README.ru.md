@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <a href="https://telegram-bot-ui-site.vercel.app">Сайт</a> ·
+  <a href="https://telegram-bot-ui.hlixli.com">Сайт</a> ·
   <a href="#bot-ui-studio">Studio</a> ·
   <a href="#-быстрый-старт">Быстрый старт</a> ·
   <a href="#-что-умеет-агент">Возможности</a> ·
@@ -43,7 +43,7 @@
 ---
 
 <p align="center">
-  <a href="https://telegram-bot-ui-site.vercel.app"><img alt="Демо: одна фраза ИИ-агенту превращает перегруженное меню бота в чистый экран с цветными кнопками; затем bot-ui Studio показывает карту бота, редактор экрана с премиум-эмодзи и живой виджет отслеживания заказа" src="docs/assets/demo.gif" width="720"></a>
+  <a href="https://telegram-bot-ui.hlixli.com"><img alt="Демо: одна фраза ИИ-агенту превращает перегруженное меню бота в чистый экран с цветными кнопками; затем bot-ui Studio показывает карту бота, редактор экрана с премиум-эмодзи и живой виджет отслеживания заказа" src="docs/assets/demo.gif" width="720"></a>
 </p>
 
 ## ⚡ Быстрый старт
@@ -77,7 +77,7 @@ Telegram-бота»*. Скилл включится сам, названия м�
 
 ## bot-ui Studio
 
-<a href="https://telegram-bot-ui-site.vercel.app/studio">
+<a href="https://telegram-bot-ui.hlixli.com/studio">
   <img alt="Интерфейс бота Pulloa в bot-ui Studio. Карта показывает сообщения и переходы. Ниже — редактор экрана, оформление заказа в симуляторе и интерактивный трекер." src="docs/assets/studio-overview.png" width="100%">
 </a>
 
@@ -87,7 +87,7 @@ Telegram-бота»*. Скилл включится сам, названия м�
 
 В демо на сайте открывается Pulloa, бот заказа кофе навынос. Для своего бота соберите и запустите Studio на компьютере. Она открывает один проект на локальном адресе `127.0.0.1`. Для установки Studio понадобится копия репозитория.
 
-[Открыть демо](https://telegram-bot-ui-site.vercel.app/studio) · [Локальный запуск](studio/README.md) · [Формат проекта](studio/docs/contract.md)
+[Открыть демо](https://telegram-bot-ui.hlixli.com/studio) · [Локальный запуск](studio/README.md) · [Формат проекта](studio/docs/contract.md)
 
 ## ✨ Что изменится в вашем боте
 

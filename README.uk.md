@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <a href="https://telegram-bot-ui-site.vercel.app">Сайт</a> ·
+  <a href="https://telegram-bot-ui.hlixli.com">Сайт</a> ·
   <a href="#bot-ui-studio">Studio</a> ·
   <a href="#-швидкий-старт">Швидкий старт</a> ·
   <a href="#-що-вміє-ваш-агент">Можливості</a> ·
@@ -43,7 +43,7 @@
 ---
 
 <p align="center">
-  <a href="https://telegram-bot-ui-site.vercel.app"><img alt="Демо: одна фраза ШІ-агенту перетворює перевантажене меню бота на чистий екран з кольоровими кнопками; далі bot-ui Studio показує карту бота, редактор екрана з преміум-емодзі та живий віджет відстеження замовлення" src="docs/assets/demo.gif" width="720"></a>
+  <a href="https://telegram-bot-ui.hlixli.com"><img alt="Демо: одна фраза ШІ-агенту перетворює перевантажене меню бота на чистий екран з кольоровими кнопками; далі bot-ui Studio показує карту бота, редактор екрана з преміум-емодзі та живий віджет відстеження замовлення" src="docs/assets/demo.gif" width="720"></a>
 </p>
 
 ## ⚡ Швидкий старт
@@ -77,7 +77,7 @@ python scripts/install.py --host all --scope user
 
 ## bot-ui Studio
 
-<a href="https://telegram-bot-ui-site.vercel.app/studio">
+<a href="https://telegram-bot-ui.hlixli.com/studio">
   <img alt="Інтерфейс бота Pulloa в bot-ui Studio. Карта показує повідомлення й переходи. Нижче — редактор екрана, оформлення замовлення в симуляторі та інтерактивний трекер." src="docs/assets/studio-overview.png" width="100%">
 </a>
 
@@ -87,7 +87,7 @@ python scripts/install.py --host all --scope user
 
 У демо на сайті відкривається Pulloa, бот замовлення кави з собою. Для свого бота зберіть і запустіть Studio на комп’ютері. Вона відкриває один проєкт на локальній адресі `127.0.0.1`. Для встановлення Studio потрібна копія репозиторію.
 
-[Відкрити демо](https://telegram-bot-ui-site.vercel.app/studio) · [Локальний запуск](studio/README.md) · [Формат проєкту](studio/docs/contract.md)
+[Відкрити демо](https://telegram-bot-ui.hlixli.com/studio) · [Локальний запуск](studio/README.md) · [Формат проєкту](studio/docs/contract.md)
 
 ## ✨ Що зміниться у вашому боті
 
