@@ -265,6 +265,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 
 **Content rendering**
 - Choosing a format → `references/format-selection.md`; tables → `references/tables.md`
+- Data views (KPIs, reports, leaderboards, progress, statements, trackers) and long reports or notifications split into parts → `references/data-views.md`
 - Rich Messages and capability matrix → `references/telegram-capabilities.md`
 - HTML / MarkdownV2 / entities / captions → `references/regular-formatting.md`
 - Media, files, albums → `references/media-and-files.md`, `references/rich-media.md`

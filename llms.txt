@@ -36,6 +36,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [Consistency between screens and states, and the final review](skills/telegram-bot-ui/references/consistency-and-review.md): A bot feels "designed" when the same thing looks and is named the same everywhere. Most UX complaints about bots are consistency...
 - [Content-shape detection — recognizing what the text wants to be](skills/telegram-bot-ui/references/content-shape-detection.md): Heuristics of this skill (first written 2026-08-05, reviewed 2026-11-15). Surface choice (message, rich document, keyboard, widget, Mini...
 - [Custom emoji — on buttons and in text](skills/telegram-bot-ui/references/custom-emoji.md): Two different mechanisms, one eligibility rule:
+- [Data views: tables, leaderboards, progress, KPIs and reports in a bot](skills/telegram-bot-ui/references/data-views.md): How a bot shows numbers and records so a person gets the answer in one glance: which surface, which layout, which symbols, and what to...
 - [Dynamic feedback: streaming, progress, and loaders](skills/telegram-bot-ui/references/dynamic-feedback-and-streaming.md): A bot cannot animate arbitrary UI frame by frame. What "animation" actually means in a Telegram chat is one of these:
 - [Premium emoji in posts, long texts and rich messages](skills/telegram-bot-ui/references/emoji-in-posts.md): by bots that purchased additional usernames on Fragment or in the messages directly sent by the bot to private, group and supergroup...
 - [Emoji packs: choosing, resolving and applying a premium icon family](skills/telegram-bot-ui/references/emoji-packs.md): Use it whenever you build or restyle a bot, or compose a post, and icons/emoji are involved.
@@ -160,6 +161,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [audit_copy.py](skills/telegram-bot-ui/scripts/audit_copy.py): Audit a localized message catalog for interface consistency. Offline.
 - [audit_icons.py](skills/telegram-bot-ui/scripts/audit_icons.py): Audit a bot's icon system: one consistent custom-emoji family per bot.
 - [build_widget.py](skills/telegram-bot-ui/scripts/build_widget.py): Build a Telegram HTML widget (Bot API 10.4) from a source file and the widget kit.
+- [data_view.py](skills/telegram-bot-ui/scripts/data_view.py): Render a data view as ready Telegram messages, split by the limits (references/data-views.md).
 - [emoji_packs.py](skills/telegram-bot-ui/scripts/emoji_packs.py): Premium (custom) emoji packs for a bot: resolve, suggest, verify, capture, apply, strip.
 - [example_library.py](skills/telegram-bot-ui/scripts/example_library.py): Find examples by user intent and validate the use-case catalog offline.
 - [preview_widget.py](skills/telegram-bot-ui/scripts/preview_widget.py): Local preview of a Telegram HTML widget inside a MOCK of the widget runtime.

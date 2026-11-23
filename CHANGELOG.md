@@ -5,6 +5,24 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## Unreleased
+
+### Data views: tables, leaderboards, progress and long reports
+
+- `references/data-views.md`: which surface for which data, one visual grammar (numbers, money,
+  deltas, status with words, ranks, progress bars, sparklines, time, empty/stale states), a
+  catalog of 18 interfaces business bots need (KPI digest, report table, leaderboard, goal and
+  job progress, tracker, receipt, comparison, price list, statement, schedule, queue, alert,
+  inventory, funnel, poll results, checklist, countdown), and the ladder for a report or
+  notification that does not fit one message (shrink, summary + top N, split by rows with the
+  header repeated and one ping, file or widget page past ~3 parts).
+- `tgkit/dataview.py` and `scripts/data_view.py`: deterministic renderers for those views; Rich
+  table parts split by characters and the 500-block limit, a `<pre>` fallback aligned by display
+  width, parts numbered "(2/3) · continued" with the summary first and totals last.
+- Gallery widget `data-table`: one page of a report, sortable columns, status dots with words,
+  totals row, pager with centred chevrons, optional columns that hide under 280 px, and
+  "Full report in chat" that sends the Rich parts.
+
 ## 3.0.0 - 2026-11-23
 
 The skill now covers the whole interface of a Telegram bot, not one feature of it: screens,
