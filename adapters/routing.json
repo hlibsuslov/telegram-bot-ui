@@ -16,7 +16,8 @@
       "ux",
       "widgets",
       "channels",
-      "agent-skills"
+      "agent-skills",
+      "mini-apps"
     ],
     "marketplace": "telegram-bot-ui",
     "marketplace_description": "Marketplace for the telegram-bot-ui plugin."
@@ -26,7 +27,11 @@
     "default_prompt": "Use $telegram-bot-ui to audit this Telegram bot's screens and propose fixes.",
     "plugin_short_description": "The whole UI of a Telegram bot, updated for every Bot API release",
     "plugin_category": "Developer Tools",
-    "plugin_capabilities": ["Interactive", "Read", "Write"],
+    "plugin_capabilities": [
+      "Interactive",
+      "Read",
+      "Write"
+    ],
     "allow_implicit_invocation": true
   },
   "capabilities": [
@@ -95,6 +100,21 @@
         "scripts/build_widget.py",
         "scripts/preview_widget.py",
         "scripts/validate_widget.py"
+      ]
+    },
+    {
+      "id": "mini-apps",
+      "title": "Design, build and review Mini Apps",
+      "summary": "decide bot vs widget vs Mini App, launch points and startapp, Telegram.WebApp by version, a Telegram-native design system with named styles, components, layout rules for images, titles and prices, screen patterns, anti-slop lint, initData verification, mock preview",
+      "docs": [
+        "references/mini-apps/README.md",
+        "references/mini-apps/orchestration.md",
+        "references/mini-apps/design-system.md",
+        "references/mini-apps/layout-rules.md",
+        "references/mini-apps/screen-patterns.md",
+        "references/mini-apps/security.md",
+        "scripts/miniapp_lint.py",
+        "scripts/miniapp_layout.py"
       ]
     },
     {

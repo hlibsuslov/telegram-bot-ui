@@ -17,7 +17,8 @@
     "ux",
     "widgets",
     "channels",
-    "agent-skills"
+    "agent-skills",
+    "mini-apps"
   ],
   "icon": "./assets/icon.png",
   "privacyPolicyUrl": "https://github.com/hlibsuslov/telegram-bot-ui/blob/main/PRIVACY.md",

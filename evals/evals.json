@@ -9,6 +9,7 @@
     "agent-ops",
     "widgets",
     "api-lookup",
+    "mini-apps",
     "out-of-scope"
   ],
   "runs": [],
@@ -1156,6 +1157,253 @@
         "recipes/83-file-processing.md"
       ],
       "why": "reuse and user-project extension"
+    },
+    {
+      "id": "MA1",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Build a Telegram Mini App for our café: menu, cart and checkout.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/README.md",
+        "references/mini-apps/screen-patterns.md",
+        "recipes/93-mini-app-shop.md"
+      ],
+      "why": "new Mini App product"
+    },
+    {
+      "id": "MA2",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Our Telegram web app flashes white in dark mode and ignores the user's theme.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/design-system.md",
+        "references/mini-apps/telegram-design-guidelines.md"
+      ],
+      "why": "theme roles"
+    },
+    {
+      "id": "MA3",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "How do I verify initData from the Mini App on my Node server?",
+      "expect": "activate",
+      "names_method": true,
+      "routes_to": [
+        "references/mini-apps/security.md",
+        "recipes/92-init-data-session.md"
+      ],
+      "why": "server verification"
+    },
+    {
+      "id": "MA4",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Replace my fixed checkout button with Telegram.WebApp.MainButton.",
+      "expect": "activate",
+      "names_method": true,
+      "routes_to": [
+        "references/mini-apps/components.md",
+        "references/mini-apps/webapp-api.md"
+      ],
+      "why": "native controls"
+    },
+    {
+      "id": "MA5",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Our TMA goes fullscreen but the title hides under the notch and Telegram's buttons.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/telegram-design-guidelines.md",
+        "references/mini-apps/webapp-api.md"
+      ],
+      "why": "safe areas"
+    },
+    {
+      "id": "MA6",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Make our Mini App look less AI-generated and more like Telegram itself.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/anti-slop.md",
+        "references/mini-apps/design-system.md"
+      ],
+      "why": "anti-slop and craft pass"
+    },
+    {
+      "id": "MA7",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Where should the cover, title and price go on a book card in our Telegram mini app?",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/layout-rules.md",
+        "scripts/miniapp_layout.py"
+      ],
+      "why": "layout rules"
+    },
+    {
+      "id": "MA8",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Restyle the mini app to a dark fintech look with our brand blue.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/design-system.md",
+        "scripts/miniapp_style.py"
+      ],
+      "why": "styles"
+    },
+    {
+      "id": "MA9",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Сделай мини-апп в телеграме для записи к тренеру в спортзал.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/screen-patterns.md",
+        "references/mini-apps/layout-rules.md",
+        "recipes/94-mini-app-form-booking.md"
+      ],
+      "why": "booking pattern"
+    },
+    {
+      "id": "MA10",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Проверь initData на сервере для нашего Telegram Mini App.",
+      "expect": "activate",
+      "names_method": true,
+      "routes_to": [
+        "references/mini-apps/security.md"
+      ],
+      "why": "server verification"
+    },
+    {
+      "id": "MA11",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Как передать startapp, чтобы web app в телеграме открылся сразу на нужном заказе?",
+      "expect": "activate",
+      "names_method": true,
+      "routes_to": [
+        "references/mini-apps/launch-and-lifecycle.md"
+      ],
+      "why": "deep link into the app"
+    },
+    {
+      "id": "MA12",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Почему themeParams не применяются в моём мини-приложении в тёмной теме?",
+      "expect": "activate",
+      "names_method": true,
+      "routes_to": [
+        "references/mini-apps/design-system.md",
+        "references/mini-apps/webapp-api.md"
+      ],
+      "why": "theme"
+    },
+    {
+      "id": "MA13",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Сделай наше веб-приложение в Telegram красивым, как приложение банка.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/design-system.md"
+      ],
+      "why": "fintech style without naming it"
+    },
+    {
+      "id": "MA14",
+      "area": "mini-apps",
+      "lang": "uk",
+      "prompt": "Зроби міні-застосунок у Telegram для книжкового магазину з кошиком.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/screen-patterns.md",
+        "references/mini-apps/layout-rules.md"
+      ],
+      "why": "shop pattern"
+    },
+    {
+      "id": "MA15",
+      "area": "mini-apps",
+      "lang": "uk",
+      "prompt": "Перевір дизайн нашого Telegram Mini App на відповідність гайдлайнам.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/telegram-design-guidelines.md",
+        "scripts/miniapp_lint.py"
+      ],
+      "why": "review"
+    },
+    {
+      "id": "MA16",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Should this be a Mini App or can the bot do it with buttons?",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/decide.md",
+        "recipes/90-mini-app-or-bot.md"
+      ],
+      "why": "decision"
+    },
+    {
+      "id": "MAN1",
+      "area": "out-of-scope",
+      "lang": "en",
+      "prompt": "Build a PWA for our gym with offline mode and push notifications.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "web app outside Telegram"
+    },
+    {
+      "id": "MAN2",
+      "area": "out-of-scope",
+      "lang": "en",
+      "prompt": "Create a React landing page for our SaaS with a pricing section.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "marketing site"
+    },
+    {
+      "id": "MAN3",
+      "area": "out-of-scope",
+      "lang": "ru",
+      "prompt": "Сверстай адаптивный сайт книжного магазина на Next.js.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "website outside Telegram"
+    },
+    {
+      "id": "MAN4",
+      "area": "out-of-scope",
+      "lang": "uk",
+      "prompt": "Зроби нативний iOS-застосунок на SwiftUI зі списком тренувань.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "native app, not Telegram"
     }
   ],
   "behavioral": [
@@ -2031,6 +2279,109 @@
         "posts personal settings as a regular group message",
         "falls back to a public message when the ephemeral send fails"
       ]
+    },
+    {
+      "id": "B90",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Add a checkout button to our Mini App cart screen.",
+      "context": "vanilla JS Mini App; a custom position:fixed button at the bottom; Telegram 7.10+ clients",
+      "must": [
+        "uses the MainButton with the action and the price in its text, removes the own fixed button",
+        "shows progress on the MainButton while the request runs",
+        "keeps a browser-only fallback marked data-tma-fallback",
+        "runs miniapp_lint.py"
+      ],
+      "critical_failures": [
+        "adds another fixed bottom button",
+        "puts a buy button on every cart row"
+      ]
+    },
+    {
+      "id": "B91",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Our server takes the user id the Mini App sends in the JSON body.",
+      "context": "Express server, Mini App opened from the menu button",
+      "must": [
+        "verifies initData with HMAC on the server (every field except hash, signature stays in), constant-time compare",
+        "checks auth_date against a stated policy",
+        "sends initData as Authorization: tma <initData>",
+        "derives the user id from verified initData only"
+      ],
+      "critical_failures": [
+        "trusts initDataUnsafe or the body's user id",
+        "puts the bot token in client code"
+      ]
+    },
+    {
+      "id": "B92",
+      "area": "mini-apps",
+      "lang": "ru",
+      "request": "Сделай нормальную тёмную тему для нашего мини-аппа.",
+      "context": "CSS with #fff backgrounds and #000 text",
+      "must": [
+        "replaces literal colours with --tg-theme-* roles (or the kit's --tma-* roles)",
+        "sets header and background with setHeaderColor/setBackgroundColor keywords",
+        "checks light, dark and a custom theme in the preview"
+      ],
+      "critical_failures": [
+        "adds its own light/dark toggle",
+        "hard-codes a second dark palette"
+      ]
+    },
+    {
+      "id": "B93",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Add a header with a back arrow and the app name to our Mini App.",
+      "context": "Mini App with two screens",
+      "must": [
+        "explains Telegram draws the header; uses BackButton on level-2 screens with one navigation stack",
+        "colours the header with setHeaderColor",
+        "no own navbar"
+      ],
+      "critical_failures": [
+        "builds a custom navbar with a back arrow",
+        "calls history.back() from an own button"
+      ]
+    },
+    {
+      "id": "B94",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Review the catalogue screen of our bookstore Mini App and tell us what to fix.",
+      "context": "screenshot: 3-column grid at 390 px, square cropped covers, price above title in a blue pill, buy and share buttons on every card",
+      "must": [
+        "describes the screen and applies the layout rules (miniapp_layout.py review or L-rule ids)",
+        "recommends 2 columns, 2:3 covers contained, title then author then price, one control per card, the buy action in the MainButton on the detail screen",
+        "cites rule ids"
+      ],
+      "critical_failures": [
+        "recommends text on the images or star rows on cards",
+        "invents rules without ids"
+      ]
+    },
+    {
+      "id": "B95",
+      "area": "mini-apps",
+      "lang": "ru",
+      "request": "Сделай приложение для записи к тренеру прямо в телеграме, как у нормальных фитнес-клубов.",
+      "context": "new project; bot exists; no Mini App yet",
+      "must": [
+        "decides a Mini App is right (booking with slots) and keeps reminders in the bot",
+        "trainer rows with round photos, detail with portrait, day strip and slot grid, taken slots disabled not hidden",
+        "MainButton names the slot and price; confirmation and reminder from the bot"
+      ],
+      "critical_failures": [
+        "a month calendar as the only picker",
+        "hides taken slots",
+        "notifications only inside the app"
+      ],
+      "transfer": {
+        "of": "B94",
+        "variation": "another content type (trainers instead of books), Russian, no method names"
+      }
     }
   ]
 }
