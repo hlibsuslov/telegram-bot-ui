@@ -20,6 +20,7 @@ import base64
 import hashlib
 import hmac
 import json
+import re
 import time
 import urllib.parse
 
@@ -27,6 +28,8 @@ TELEGRAM_ED25519_PROD = "e7bf03a2fa4602af4580703d88dda5bb59f32ed8b02a56c187fe7d3
 TELEGRAM_ED25519_TEST = "40055058a4ee38156a06562e52eece92a771bcd8346a8c4615cb7376eddf72ec"
 JSON_FIELDS = ("user", "receiver", "chat")
 CLOCK_SKEW = 60
+KEY = re.compile(r"[a-z_]{1,64}")
+SIGNATURE = re.compile(r"[A-Za-z0-9_-]{86}(?:==)?")  # 64 bytes in base64url, padding optional
 
 
 class InitDataError(ValueError):
@@ -39,6 +42,8 @@ def parse(init_data: str) -> dict[str, str]:
     """Strict query-string parse: no duplicate keys, no empty input."""
     if not isinstance(init_data, str) or not init_data or len(init_data) > 16384:
         raise InitDataError("empty or oversized initData")
+    if init_data.startswith("?") or any("=" not in part for part in init_data.split("&")):
+        raise InitDataError("initData is not a query string")  # same grammar as the TypeScript twin
     try:
         pairs = urllib.parse.parse_qsl(init_data, keep_blank_values=True, strict_parsing=True)
     except ValueError as exc:
@@ -47,6 +52,10 @@ def parse(init_data: str) -> dict[str, str]:
     for key, value in pairs:
         if key in fields:
             raise InitDataError(f"duplicate field {key!r}")
+        # The check string joins key=value pairs with newlines: a newline inside a value (%0A) could fold the
+        # next field into this one without changing the signed text. Telegram never sends one (JSON escapes it).
+        if not KEY.fullmatch(key) or "\n" in value or "\r" in value:
+            raise InitDataError("malformed field name or value")
         fields[key] = value
     return fields
 
@@ -68,7 +77,7 @@ def _decode(fields: dict[str, str]) -> dict:
 
 def _check_age(fields: dict[str, str], max_age: int | None, now: float | None) -> None:
     raw = fields.get("auth_date", "")
-    if not raw.isdigit():
+    if not re.fullmatch(r"[0-9]{1,12}", raw):
         raise InitDataError("auth_date missing or not a number")
     now = time.time() if now is None else now
     age = now - int(raw)
@@ -113,8 +122,10 @@ def verify_ed25519(init_data: str, bot_id: int, public_key_hex: str = TELEGRAM_E
     sig_b64 = fields.get("signature", "")
     if not sig_b64:
         raise InitDataError("signature missing")
+    if not SIGNATURE.fullmatch(sig_b64):
+        raise InitDataError("signature or public key malformed")
     try:
-        signature = base64.urlsafe_b64decode(sig_b64 + "=" * (-len(sig_b64) % 4))
+        signature = base64.b64decode(sig_b64 + "=" * (-len(sig_b64) % 4), altchars=b"-_", validate=True)
         public_key = bytes.fromhex(public_key_hex)
     except (ValueError, TypeError) as exc:
         raise InitDataError("signature or public key malformed") from exc
@@ -162,7 +173,7 @@ def _equal(a, b) -> bool:
 def _recover_x(y: int, sign: int) -> int | None:
     if y >= _P:
         return None
-    x2 = (y * y - 1) * pow(_D * y * y + 1, _P - 2, _P)
+    x2 = (y * y - 1) * pow(_D * y * y + 1, _P - 2, _P) % _P
     if x2 == 0:
         return None if sign else 0
     x = pow(x2, (_P + 3) // 8, _P)
@@ -196,6 +207,8 @@ def ed25519_verify(public_key: bytes, message: bytes, signature: bytes) -> bool:
     r = _decompress(signature[:32])
     s = int.from_bytes(signature[32:], "little")
     if a is None or r is None or s >= _L:
+        return False
+    if _equal(_mul(8, a), (0, 1, 1, 0)):  # identity or small-order key: never a real Telegram key
         return False
     k = int.from_bytes(hashlib.sha512(signature[:32] + public_key + message).digest(), "little") % _L
     return _equal(_mul(s, _G), _add(r, _mul(k, a)))

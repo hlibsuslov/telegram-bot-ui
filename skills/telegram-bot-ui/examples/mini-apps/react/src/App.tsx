@@ -44,6 +44,7 @@ export function App({ haptic }: { haptic: Haptic }) {
   const [size, setSize] = useState<'S' | 'M' | 'L'>('M');
   const [cart, setCart] = useState<Line[]>([]);
   const [placed, setPlaced] = useState<number | null>(null);
+  const [placing, setPlacing] = useState(false);
   const select = () => haptic.selectionChanged.isAvailable() && haptic.selectionChanged();
   const total = useMemo(() => cart.reduce((s, l) => s + l.drink.prices[l.size] * l.qty, 0), [cart]);
 
@@ -53,18 +54,27 @@ export function App({ haptic }: { haptic: Haptic }) {
   const add = useMemo(() => () => {
     if (!drink) return;
     setCart((c) => [...c, { drink, size, qty: 1 }]);
+    setPlaced(null); // a new order starts once something is added after the last one
     if (haptic.notificationOccurred.isAvailable()) haptic.notificationOccurred('success');
     setDrink(null);
   }, [drink, size, haptic]);
   const place = useMemo(() => async () => {
-    await new Promise((r) => setTimeout(r, 500)); // your API, with Authorization: tma <initData>
-    setPlaced(1042); setCart([]);
-    if (haptic.notificationOccurred.isAvailable()) haptic.notificationOccurred('success');
-  }, [haptic]);
+    if (placing) return; // one order per tap: ignore taps while the request runs
+    setPlacing(true);
+    if (mainButton.showLoader.isAvailable()) mainButton.showLoader();
+    try {
+      await new Promise((r) => setTimeout(r, 500)); // your API, with Authorization: tma <initData>
+      setPlaced(1042); setCart([]);
+      if (haptic.notificationOccurred.isAvailable()) haptic.notificationOccurred('success');
+    } finally {
+      if (mainButton.hideLoader.isAvailable()) mainButton.hideLoader();
+      setPlacing(false);
+    }
+  }, [haptic, placing]);
 
   useMainButton(
     drink ? { text: `Add to order · ${money.format(drink.prices[size])}`, onClick: add }
-      : tab === 'order' && cart.length ? { text: `Place order · ${money.format(total)}`, onClick: place }
+      : tab === 'order' && cart.length ? { text: `Place order · ${money.format(total)}`, enabled: !placing, onClick: place }
         : null,
   );
 

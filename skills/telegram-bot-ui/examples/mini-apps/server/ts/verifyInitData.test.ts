@@ -80,3 +80,19 @@ test('Authorization header helper', () => {
   assert.throws(() => fromAuthorization(`Bearer ${V.init_data}`, V.bot_token), /Authorization/);
   assert.throws(() => fromAuthorization(undefined, V.bot_token), /Authorization/);
 });
+
+test('a newline inside a value cannot fold the next field into it (same signed text)', () => {
+  const p = new URLSearchParams(V.init_data);
+  const user = p.get('user')!;
+  p.delete('user');
+  p.set('start_param', `${p.get('start_param')}\nuser=${user}`);
+  assert.throws(() => verifyHmac(p.toString(), opts), /malformed/);
+  assert.throws(() => verifyEd25519(p.toString(), edOpts), /malformed/);
+  assert.throws(() => verifyHmac(`${V.init_data}&Bad-Key=1`, opts), /malformed/);
+});
+
+test('signature spelling is strict', () => {
+  const p = new URLSearchParams(V.init_data);
+  p.set('signature', `${p.get('signature')}!`);
+  assert.throws(() => verifyEd25519(p.toString(), edOpts), /malformed/);
+});

@@ -164,10 +164,12 @@ $('demo-popup').onclick = () => {
   }, (id) => { if (id === 'cancel') toast('Order cancelled'); });
 };
 $('demo-snack').onclick = () => toast('Saved to favourites');
+let toastTimer = 0;
 function toast(text: string): void {
   const s = $('snackbar');
   s.textContent = text; s.hidden = false;
-  window.setTimeout(() => { s.hidden = true; }, 2200);
+  clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => { s.hidden = true; }, 2200);
 }
 
 /* QR slot: a decorative sample pattern (clearly labelled in the markup) */

@@ -33,6 +33,10 @@ Rules on top **[Heuristic]**:
 
 - Reject a string with a repeated key, an empty or non-hex `hash`, or no `auth_date`; a parser that keeps
   the last duplicate verifies something other than what you read.
+- Reject field names outside `[a-z_]` and any value that contains a newline. The check string joins
+  `key=value` pairs with `\n`, so a value with `%0A` could fold the next field into it (dropping `user`, for
+  example) while the signed text stays the same. Telegram never sends a raw newline: JSON escapes it.
+- Decode `signature` strictly (base64url, 86 characters, optional `==`); never use it as an identifier.
 - Use the decoded `user` JSON only after the check; read `user.id` as a 64-bit integer (up to 52
   significant bits) **[Official]**.
 - The token comes from the environment and stays on the server; store only the derived `secret_key` in
@@ -79,8 +83,11 @@ Telegram sets no lifetime; it only says to check the field "to prevent the use o
   cookie there and may be blocked; prefer the header. **[Heuristic]**
 - Authorise every request on the server: the resource belongs to the verified `user.id`, the action is
   allowed in its current state. A hidden button is not authorisation. **[Heuristic]**
-- `query_id` is single use: answer it once (`answerWebAppQuery`), store that you did, reject a replay.
-  **[Heuristic]**
+- `query_id` is single use: answer it once (`answerWebAppQuery`), record it in a durable store shared by all
+  workers only after the call succeeded, reject a replay. Build the answer on the server: it appears in the
+  chat under the bot's name, so client-supplied text there is a phishing vector. **[Heuristic]**
+- A verified `initData` works like a bearer credential until it expires: actions that move money or change
+  state also carry an idempotency key. **[Heuristic]**
 
 ```js
 // Client: one fetch wrapper for every API call.

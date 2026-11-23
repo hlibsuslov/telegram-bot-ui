@@ -296,6 +296,9 @@ button.tma-cell:active, a.tma-cell:active, label.tma-cell:active { background: v
 }
 .tma-figure__minor { font-size: .6em; color: var(--tma-hint); font-weight: 600; }
 .tma-figure.is-loading { color: transparent; }
+/* the change pill sits apart from the figure and the next block (design-system.md section 4) */
+.tma-figure + .tma-delta { margin-top: var(--tma-s3); }
+.tma-delta + .tma-chart, .tma-delta + .tma-actions { margin-top: var(--tma-s5); }
 .tma-delta {
   display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px;
   font-size: var(--tma-fs-subhead); font-weight: 500; font-variant-numeric: tabular-nums;

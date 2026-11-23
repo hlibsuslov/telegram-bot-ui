@@ -31,6 +31,7 @@ If the served folder has a build.mjs (the skill's examples), it runs `node build
 from __future__ import annotations
 
 import argparse
+import html
 import json
 import mimetypes
 import os
@@ -676,7 +677,14 @@ def check_entry(html: str) -> list[str]:
 
 def safe_path(root: str, rel: str) -> str | None:
     """Resolve a URL path inside root; None for anything that escapes it."""
-    rel = urllib.parse.unquote(rel).lstrip("/")
+    rel = urllib.parse.unquote(rel)
+    # No backslashes, NULs, drive letters or UNC forms: on Windows os.path.join would replace the root, and
+    # realpath would touch the outside path before the containment check.
+    if any(c in rel for c in ("\\", "\x00", ":")) or rel.startswith("//"):
+        return None
+    rel = rel.lstrip("/")
+    if any(part.startswith(".") for part in rel.split("/") if part):
+        return None  # dotfiles and dot-folders (.env, .git) are never served
     full = os.path.realpath(os.path.join(root, *[p for p in rel.split("/") if p not in ("", ".")]))
     root_real = os.path.realpath(root)
     if full != root_real and not full.startswith(root_real + os.sep):
@@ -688,10 +696,10 @@ def stand_html(app_url: str, title: str) -> str:
     with open(CATALOG, encoding="utf-8") as fh:
         meta = json.load(fh)["meta"]
     versions = ["6.0", "6.1", "6.2", "6.9", "7.0", "7.2", "7.10", "8.0", "9.0", "9.5", "9.6", "10.1"]
-    config = {"app": app_url, "title": title, "themes": THEMES, "devices": DEVICES,
+    config = {"app": app_url, "title": html.escape(title), "themes": THEMES, "devices": DEVICES,
               "heights": {str(k): v for k, v in HEIGHTS.items()}, "versions": versions,
               "catalog": {"fetched_at": meta["fetched_at"], "newest": meta["newest_member_version"]}}
-    return STAND_HTML.replace("__CONFIG__", json.dumps(config))
+    return STAND_HTML.replace("__CONFIG__", json.dumps(config).replace("<", "\\u003c"))
 
 
 def mock_js() -> str:
@@ -719,6 +727,10 @@ def make_handler(root: str, app_rel: str, title: str):
             self.wfile.write(body)
 
         def do_GET(self):  # noqa: N802
+            # DNS rebinding guard: only answer requests addressed to the loopback name we serve on.
+            port = self.server.server_address[1]
+            if (self.headers.get("Host") or "") not in (f"127.0.0.1:{port}", f"localhost:{port}"):
+                return self._send(403, b"forbidden host", "text/plain")
             path = urllib.parse.urlsplit(self.path).path
             if path in ("/", "/index.html"):
                 return self._send(200, stand_html(app_url, title).encode(), "text/html; charset=utf-8")
@@ -760,7 +772,8 @@ def build_if_needed(root: str) -> str | None:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="Mini App preview stand (mock Telegram client)")
     ap.add_argument("app", help="the Mini App folder (with index.html) or its HTML entry")
-    ap.add_argument("--root", help="folder to serve (default: the entry's parent's parent, so ../ paths resolve)")
+    ap.add_argument("--root", help="folder to serve (default: the app folder, or its parent in a kit project "
+                                   "with ../_kit or build.mjs); dotfiles are never served")
     ap.add_argument("--serve", type=int, metavar="PORT", help="serve on 127.0.0.1:PORT")
     ap.add_argument("--title", default=None, help="bot name in the mock header")
     ap.add_argument("--no-build", action="store_true", help="do not run node build.mjs")
@@ -768,7 +781,11 @@ def main(argv=None) -> int:
     args = ap.parse_args(argv)
 
     entry = find_entry(args.app)
-    root = os.path.abspath(args.root) if args.root else os.path.dirname(os.path.dirname(entry))
+    app_dir = os.path.dirname(entry)
+    parent = os.path.dirname(app_dir)
+    # Serve the parent only for a kit project (shared ../_kit or a build.mjs); otherwise just the app's folder.
+    kit_project = os.path.isdir(os.path.join(parent, "_kit")) or os.path.isfile(os.path.join(parent, "build.mjs"))
+    root = os.path.abspath(args.root) if args.root else (parent if kit_project else app_dir)
     if safe_path(root, os.path.relpath(entry, root).replace(os.sep, "/")) is None:
         print(f"the entry {entry} is outside --root {root}")
         return 2

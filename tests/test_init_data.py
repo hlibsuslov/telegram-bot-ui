@@ -116,6 +116,35 @@ class Ed25519(unittest.TestCase):
         self.assertEqual(v.TELEGRAM_ED25519_TEST, "40055058a4ee38156a06562e52eece92a771bcd8346a8c4615cb7376eddf72ec")
 
 
+class FieldFolding(unittest.TestCase):
+    """A newline inside a value would let anyone holding a valid initData fold the next field into the previous
+    one: the signed text stays identical (security review finding). Parsing must refuse it."""
+
+    def folded(self):
+        pairs = urllib.parse.parse_qsl(V["init_data"], keep_blank_values=True)
+        d = dict(pairs)
+        user = d.pop("user")
+        d["start_param"] = d["start_param"] + "\nuser=" + user
+        return urllib.parse.urlencode(d, quote_via=urllib.parse.quote)
+
+    def test_folded_field_is_refused_by_both_checks(self):
+        raw = self.folded()
+        fields = dict(urllib.parse.parse_qsl(raw, keep_blank_values=True))
+        same = "\n".join(f"{k}={val}" for k, val in sorted(fields.items()) if k != "hash")
+        self.assertEqual(same, V["hmac_check_string"])  # the attack really keeps the signed text
+        with self.assertRaisesRegex(v.InitDataError, "malformed"):
+            v.verify_hmac(raw, V["bot_token"], now=V["now"])
+        with self.assertRaisesRegex(v.InitDataError, "malformed"):
+            v.verify_ed25519(raw, V["bot_id"], V["ed25519_public_key"], now=V["now"])
+
+    def test_bad_key_and_loose_base64(self):
+        with self.assertRaises(v.InitDataError):
+            v.verify_hmac(V["init_data"] + "&Bad-Key=1", V["bot_token"], now=V["now"])
+        sig = v.parse(V["init_data"])["signature"]
+        with self.assertRaises(v.InitDataError):
+            v.verify_ed25519(mutate(V["init_data"], "signature", sig + "!"), V["bot_id"], V["ed25519_public_key"], now=V["now"])
+
+
 class Vectors(unittest.TestCase):
     def test_vectors_file_is_reproducible(self):
         res = subprocess.run([sys.executable, os.path.join(SERVER, "make_vectors.py"), "--check"],

@@ -202,7 +202,7 @@ function openBook(b: Book): void {
 /* ---------------------------------------------------------------- trainer detail: portrait, gallery, booking (L16) */
 function openTrainer(t: Trainer): void {
   const days = [...Array(7)].map((_, i) => new Date(Date.now() + i * 86400000));
-  let day = 0;
+  let day = Math.max(0, days.findIndex((d) => d.getDay() !== 0)); // never start on a closed day
   let slot = '';
   const taken = (d: number, s: string) => (d * 7 + s.charCodeAt(1) + s.charCodeAt(3)) % 4 === 0;
   const SLOTS = ['07:00', '08:00', '09:00', '12:00', '13:00', '17:00', '18:00', '19:00'];
@@ -306,9 +306,11 @@ function openPlans(): void {
   openScreen('detail', draw, () => back('detail', 'root'));
 }
 
+let toastTimer = 0;
 function toast(text: string): void {
   const s = $('snackbar'); s.textContent = text; s.hidden = false;
-  window.setTimeout(() => { s.hidden = true; }, 2400);
+  clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => { s.hidden = true; }, 2400);
 }
 
 tma.chrome({ header: 'secondary_bg_color', background: 'secondary_bg_color', bottomBar: 'secondary_bg_color' });

@@ -23,9 +23,14 @@ export interface Options {
 
 export function parse(raw: string): Map<string, string> {
   if (typeof raw !== 'string' || !raw || raw.length > 16384) throw new InitDataError('empty or oversized initData');
+  // Same grammar as the Python twin: no leading '?', every pair has '='.
+  if (raw.startsWith('?') || raw.split('&').some((p) => !p.includes('='))) throw new InitDataError('initData is not a query string');
   const out = new Map<string, string>();
   for (const [key, value] of new URLSearchParams(raw)) {
     if (out.has(key)) throw new InitDataError(`duplicate field ${key}`);
+    // The check string joins key=value with newlines: a newline inside a value (%0A) could fold the next field
+    // into this one without changing the signed text. Telegram never sends one (JSON escapes it).
+    if (!/^[a-z_]{1,64}$/.test(key) || /[\r\n]/.test(value)) throw new InitDataError('malformed field name or value');
     out.set(key, value);
   }
   return out;
@@ -48,8 +53,11 @@ function decode(fields: Map<string, string>): Record<string, unknown> {
 
 function checkAge(fields: Map<string, string>, opts: Options): void {
   const raw = fields.get('auth_date') ?? '';
-  if (!/^\d+$/.test(raw)) throw new InitDataError('auth_date missing or not a number');
+  if (!/^[0-9]{1,12}$/.test(raw)) throw new InitDataError('auth_date missing or not a number');
   const now = opts.now ?? Date.now() / 1000;
+  if (!Number.isFinite(now) || (opts.maxAge !== undefined && opts.maxAge !== null && !Number.isFinite(opts.maxAge))) {
+    throw new InitDataError('now and maxAge must be finite numbers'); // NaN would silently disable expiry
+  }
   const age = now - Number(raw);
   if (age < -CLOCK_SKEW) throw new InitDataError('auth_date is in the future');
   const maxAge = opts.maxAge === undefined ? 86400 : opts.maxAge;
@@ -79,7 +87,8 @@ export function verifyEd25519(raw: string, opts: Options & { botId: number; publ
   const fields = parse(raw);
   const sig = fields.get('signature');
   if (!sig) throw new InitDataError('signature missing');
-  const signature = Buffer.from(sig, 'base64url');
+  if (!/^[A-Za-z0-9_-]{86}(?:==)?$/.test(sig)) throw new InitDataError('signature or public key malformed');
+  const signature = Buffer.from(sig.replace(/=+$/, ''), 'base64url');
   const pub = Buffer.from(opts.publicKeyHex ?? TELEGRAM_ED25519_PROD, 'hex');
   if (signature.length !== 64 || pub.length !== 32) throw new InitDataError('signature or public key malformed');
   const key = createPublicKey({ key: Buffer.concat([SPKI_ED25519, pub]), format: 'der', type: 'spki' });

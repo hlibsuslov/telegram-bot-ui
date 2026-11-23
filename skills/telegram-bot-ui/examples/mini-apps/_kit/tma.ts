@@ -9,7 +9,9 @@
 export type Scheme = 'light' | 'dark';
 export type PlatformClass = 'ios' | 'android' | 'desktop' | 'web' | 'unknown';
 export type Perf = 'low' | 'average' | 'high' | 'unknown';
-export type ChromeColor = 'bg_color' | 'secondary_bg_color' | 'bottom_bar_bg_color' | `#${string}`;
+export type SurfaceColor = 'bg_color' | 'secondary_bg_color' | `#${string}`;
+/** setBottomBarColor also takes bottom_bar_bg_color (7.10). */
+export type ChromeColor = SurfaceColor | 'bottom_bar_bg_color';
 
 export interface BottomButtonLike {
   setParams(p: Record<string, unknown>): unknown;
@@ -184,12 +186,17 @@ export function createTma(env: Env = {}) {
   }
 
   /* -- chrome colours: keywords follow the theme; literals are re-applied on themeChanged */
-  let chromeSpec: { header?: ChromeColor; background?: ChromeColor; bottomBar?: ChromeColor } = {};
+  let chromeSpec: { header?: SurfaceColor; background?: SurfaceColor; bottomBar?: ChromeColor } = {};
+  const isHex = (c: string) => c.startsWith('#');
+  /** One failing setter must not stop the others or the caller (a throw would also repeat on every themeChanged). */
+  const attempt = (fn: () => void) => { try { fn(); } catch (err) { console.warn('[tma] chrome colour not applied', err); } };
   function applyChrome(): void {
     if (!tg) return;
-    if (chromeSpec.header && has('6.1')) tg.setHeaderColor?.(chromeSpec.header);
-    if (chromeSpec.background && has('6.1')) tg.setBackgroundColor?.(chromeSpec.background);
-    if (chromeSpec.bottomBar && has('7.10')) tg.setBottomBarColor?.(chromeSpec.bottomBar);
+    const { header, background, bottomBar } = chromeSpec;
+    // setHeaderColor takes any #RRGGBB only from 6.9; before that only the bg / secondary_bg keywords.
+    if (header && has('6.1') && (!isHex(header) || has('6.9'))) attempt(() => tg.setHeaderColor?.(header));
+    if (background && has('6.1')) attempt(() => tg.setBackgroundColor?.(background));
+    if (bottomBar && has('7.10')) attempt(() => tg.setBottomBarColor?.(bottomBar));
   }
   function chrome(spec: typeof chromeSpec): void {
     chromeSpec = { ...chromeSpec, ...spec };
@@ -209,8 +216,10 @@ export function createTma(env: Env = {}) {
   };
 
   /* -- bottom buttons: one spec per screen; progress while the handler runs */
+  type Slot = { cb: (() => void) | null; spec: MainButtonSpec | null; busy: boolean };
   function bindBottom(btn: BottomButtonLike | undefined, spec: MainButtonSpec | null, extra: Record<string, unknown>,
-                      prev: { cb: (() => void) | null }, flag?: string): void {
+                      prev: Slot, flag?: string): void {
+    prev.spec = spec;
     if (!btn) return;
     if (prev.cb) btn.offClick(prev.cb);
     prev.cb = null;
@@ -226,9 +235,17 @@ export function createTma(env: Env = {}) {
     if (spec.iconCustomEmojiId && has('9.5')) params.icon_custom_emoji_id = spec.iconCustomEmojiId;
     btn.setParams(params);
     const cb = async () => {
+      if (prev.busy) return; // a second tap while the first one runs (double orders) is ignored
+      prev.busy = true;
       haptic.tap();
       btn.showProgress(false);
-      try { await spec.onClick(); } finally { btn.hideProgress(); }
+      try { await spec.onClick(); } finally {
+        btn.hideProgress();
+        // hideProgress() re-enables the button in Telegram's script: restore what the CURRENT spec wants,
+        // which the handler (or a tap meanwhile) may have changed.
+        if (prev.spec) btn.setParams({ is_active: prev.spec.active !== false });
+        prev.busy = false;
+      }
     };
     prev.cb = () => { void cb(); };
     btn.onClick(prev.cb);
@@ -241,13 +258,22 @@ export function createTma(env: Env = {}) {
     fallback.hidden = !spec;
     fallback.textContent = spec ? spec.text : '';
     fallback.disabled = spec ? spec.active === false : true;
-    fallback.onclick = spec ? () => { void spec.onClick(); } : null;
+    fallback.onclick = spec ? async () => {
+      if (fallbackBusy) return;
+      fallbackBusy = true;
+      fallback.disabled = true;
+      try { await spec.onClick(); } finally {
+        fallbackBusy = false;
+        fallback.disabled = mainPrev.spec ? mainPrev.spec.active === false : true;
+      }
+    } : null;
   }
-  const mainPrev = { cb: null as (() => void) | null };
-  const secondaryPrev = { cb: null as (() => void) | null };
+  let fallbackBusy = false;
+  const mainPrev: Slot = { cb: null, spec: null, busy: false };
+  const secondaryPrev: Slot = { cb: null, spec: null, busy: false };
   function mainButton(spec: MainButtonSpec | null): void {
-    if (!inTelegram) bindFallback(spec);
     bindBottom(tg?.MainButton, spec, {}, mainPrev, 'tmaMainButton');
+    if (!inTelegram) bindFallback(spec);
   }
   /** SecondaryButton is 7.10+. Returns false on older clients: render the action in the content instead. */
   function secondaryButton(spec: SecondaryButtonSpec | null): boolean {
@@ -283,11 +309,15 @@ export function createTma(env: Env = {}) {
   };
 
   /* -- settings item in the ⋯ menu (7.0+) */
+  let settingsCb: (() => void) | null = null;
   function settings(cb: (() => void) | null): void {
     if (!tg?.SettingsButton || !has('7.0')) return;
-    if (cb) { tg.SettingsButton.onClick(cb); tg.SettingsButton.show(); subs.push(() => tg.SettingsButton?.offClick(cb)); }
+    if (settingsCb) tg.SettingsButton.offClick(settingsCb); // one handler at a time
+    settingsCb = cb;
+    if (cb) { tg.SettingsButton.onClick(cb); tg.SettingsButton.show(); }
     else tg.SettingsButton.hide();
   }
+  subs.push(() => { if (settingsCb) tg?.SettingsButton?.offClick(settingsCb); });
 
   /* -- unsaved input */
   function closingConfirmation(on: boolean): void {
@@ -308,7 +338,8 @@ export function createTma(env: Env = {}) {
   function wrap(s: StorageLike | undefined, since: string) {
     if (!s || !has(since)) return null;
     return {
-      get: (k: string) => new Promise<string | null>((res, rej) => s.getItem(k, (e, v) => (e ? rej(e) : res(v ?? null)))),
+      // CloudStorage returns '' for a missing key: normalise to null like the in-memory fallback
+      get: (k: string) => new Promise<string | null>((res, rej) => s.getItem(k, (e, v) => (e ? rej(e) : res(v ? v : null)))),
       set: (k: string, v: string) => new Promise<void>((res, rej) => s.setItem(k, v, (e) => (e ? rej(e) : res()))),
       remove: (k: string) => new Promise<void>((res, rej) => s.removeItem(k, (e) => (e ? rej(e) : res()))),
     };

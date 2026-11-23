@@ -40,7 +40,7 @@ class MiniAppBot:
 
     def link(self, start_param: str | None = None, *, mode: str | None = None) -> str:
         """Main Mini App (`t.me/<bot>?startapp`) or a named app (`t.me/<bot>/<app>?startapp`)."""
-        if start_param is not None and not START_PARAM.match(start_param):
+        if start_param is not None and not START_PARAM.fullmatch(start_param):
             raise ValueError("start_param: 1-512 characters of A-Z a-z 0-9 _ -")
         if mode not in (None, "compact", "fullscreen"):
             raise ValueError("mode: compact or fullscreen")
@@ -75,11 +75,16 @@ class MiniAppBot:
     # ------------------------------------------------------------- results back to the chat
 
     def answer_query_once(self, query_id: str, result: dict) -> bool:
-        """answerWebAppQuery exactly once per query_id (taken from VERIFIED initData). False on a replay."""
+        """answerWebAppQuery once per query_id (taken from VERIFIED initData). False on a replay.
+
+        `result` is built on the server: the message appears in the chat under the bot's name, so client-supplied
+        text in it would be a phishing vector. The answered set here is in memory for the example; in production
+        use a durable store shared by all workers (an atomic insert with a TTL), written only after the call
+        succeeds, so a failed call does not burn the query id."""
         if not query_id or query_id in self.answered_queries:
             return False
-        self.answered_queries.add(query_id)
         self.t.call("answerWebAppQuery", {"web_app_query_id": query_id, "result": result})
+        self.answered_queries.add(query_id)
         return True
 
     def on_web_app_data(self, message: dict, schema: Callable[[dict], dict]) -> dict | None:
@@ -89,8 +94,11 @@ class MiniAppBot:
         if len(data.encode()) > 4096:
             return None
         try:
-            parsed = schema(json.loads(data))
-        except (ValueError, KeyError, TypeError):
+            payload = json.loads(data)
+            if not isinstance(payload, dict):
+                raise TypeError("an object is expected")
+            parsed = schema(payload)
+        except (ValueError, KeyError, TypeError, RecursionError):
             self.t.call("sendMessage", {"chat_id": chat_id, "text": "That did not come through. Open the form again."})
             return None
         return parsed
@@ -117,7 +125,9 @@ class MiniAppBot:
         """The bot writes first only with permission; otherwise the app shows it in place."""
         if user_id not in self.write_allowed:
             return False
-        self.t.call("sendMessage", {"chat_id": user_id, "text": text, **extra})
+        if "chat_id" in extra:
+            raise ValueError("chat_id comes from the write-access gate, not from extra")
+        self.t.call("sendMessage", {**extra, "text": text, "chat_id": user_id})
         return True
 
     def join_request(self, update: dict, *, verify_in_app: bool = True) -> Any:
@@ -134,10 +144,10 @@ class MiniAppBot:
 
 def parse_start_param(raw: str | None, routes: dict[str, re.Pattern]) -> tuple[str, re.Match] | None:
     """Server-side twin of the kit's parseStartParam: the first matching route, else None."""
-    if not raw or not START_PARAM.match(raw):
+    if not raw or not START_PARAM.fullmatch(raw):
         return None
     for name, pattern in routes.items():
-        m = pattern.match(raw)
+        m = pattern.fullmatch(raw)
         if m:
             return name, m
     return None

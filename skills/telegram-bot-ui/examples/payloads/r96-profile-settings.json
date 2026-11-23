@@ -8,8 +8,8 @@
     {
       "method": "sendMessage",
       "params": {
-        "chat_id": 279058397,
-        "text": "Order notifications are on. Turn them off in the app's settings."
+        "text": "Order notifications are on. Turn them off in the app's settings.",
+        "chat_id": 279058397
       }
     },
     {

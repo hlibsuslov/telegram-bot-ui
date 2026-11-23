@@ -67,5 +67,16 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets), `tma.ts` (no-dependency kit), `icons.svg` |
 | `examples/mini-apps/gallery` | every kit element on one page: open it in the stand and switch platform, theme, width, style |
 
+## Not covered yet
+
+- **Studio.** The local bot-ui Studio does not model Mini Apps yet. Next step: `web_app` buttons and the menu
+  button as nodes of the screen map, and a simulator tap that opens `scripts/preview_miniapp.py` with the
+  node's `start_param` and the chat's theme. Until then, preview Mini Apps with the stand directly.
+- **The preview stand and the real bridge.** The stand mocks `window.Telegram.WebApp`; apps that talk to
+  Telegram only through `@tma.js/sdk` (the React example) build and type-check but need the Telegram test
+  environment or a device to show native chrome.
+- **Real devices.** Every screenshot in this branch is a mock preview; check iOS, Android and Desktop clients
+  before shipping ([performance-and-testing.md](performance-and-testing.md) §5).
+
 Refresh after a Telegram release: `py -3 scripts/webapp_lookup.py sync --fetch` prints the diff;
 add `--write` to update the catalog, then re-run the tests.

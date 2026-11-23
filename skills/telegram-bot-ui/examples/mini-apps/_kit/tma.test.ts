@@ -16,7 +16,7 @@ function fakeButton(name: string, calls: Call[]) {
     onClick(cb: () => void) { handlers.add(cb); },
     offClick(cb: () => void) { handlers.delete(cb); },
     showProgress() { calls.push([`${name}.showProgress`]); },
-    hideProgress() { calls.push([`${name}.hideProgress`]); },
+    hideProgress() { calls.push([`${name}.hideProgress`]); this.setParams({ is_active: true }); }, // like the real script
     show() { calls.push([`${name}.show`]); },
     hide() { calls.push([`${name}.hide`]); },
     click() { for (const h of [...handlers]) h(); },
@@ -140,7 +140,7 @@ test('MainButton shows progress while the handler runs and replaces the old hand
   tg.MainButton.click();
   await new Promise((r) => setTimeout(r, 0));
   assert.deepEqual([first, second], [0, 1]);
-  const last = calls.filter((c) => c[0] === 'MainButton.setParams').at(-1)![1] as Record<string, unknown>;
+  const last = calls.filter((c) => c[0] === 'MainButton.setParams' && 'text' in (c[1] as object)).at(-1)![1] as Record<string, unknown>;
   assert.equal(last.icon_custom_emoji_id, '5368324170671202286');
   assert.ok(calls.some((c) => c[0] === 'MainButton.showProgress'));
   assert.ok(calls.some((c) => c[0] === 'MainButton.hideProgress'));
@@ -196,6 +196,7 @@ test('storage: CloudStorage from 6.9, in memory outside Telegram, Device/Secure 
   const tma = createTma(env(tg));
   await tma.store().set('draft', '{"n":1}');
   assert.equal(await tma.store().get('draft'), '{"n":1}');
+  assert.equal(await tma.store().get('missing'), null); // '' from CloudStorage is null
   assert.equal(tma.deviceStore(), null);
   assert.equal(tma.secureStore(), null);
   const outside = createTma(env(null));
@@ -223,4 +224,40 @@ test('dispose removes every subscription', () => {
   tma.on('activated', () => {});
   tma.dispose();
   for (const set of events.values()) assert.equal(set.size, 0);
+});
+
+test('hex header colour waits for 6.9; one failing setter does not stop the others', () => {
+  const old = fakeWebApp('6.2', { setBackgroundColor: () => { throw new Error('boom'); } });
+  const tma = createTma(env(old.tg));
+  tma.chrome({ header: '#123456', background: 'bg_color' });
+  assert.equal(old.calls.filter((c) => c[0] === 'setHeaderColor').length, 0);
+  const cur = fakeWebApp('6.9');
+  createTma(env(cur.tg)).chrome({ header: '#123456' });
+  assert.deepEqual(cur.calls.find((c) => c[0] === 'setHeaderColor'), ['setHeaderColor', '#123456']);
+});
+
+test('a second tap while the handler runs is ignored and the current spec wins after progress', async () => {
+  const { tg, calls } = fakeWebApp('8.0');
+  const tma = createTma(env(tg));
+  let runs = 0;
+  let release: () => void = () => {};
+  tma.mainButton({ text: 'Book', onClick: () => new Promise<void>((r) => { runs++; release = r; }) });
+  tg.MainButton.click();
+  tg.MainButton.click();
+  tma.mainButton({ text: 'Choose a time', active: false, onClick: () => {} }); // the screen changed meanwhile
+  release();
+  await new Promise((r) => setTimeout(r, 0));
+  assert.equal(runs, 1);
+  const last = calls.filter((c) => c[0] === 'MainButton.setParams').at(-1)![1] as Record<string, unknown>;
+  assert.equal(last.is_active, false);
+});
+
+test('settings keeps one handler', () => {
+  const { tg } = fakeWebApp('7.0');
+  const tma = createTma(env(tg));
+  tma.settings(() => {});
+  tma.settings(() => {});
+  assert.equal(tg.SettingsButton.handlers.size, 1);
+  tma.settings(null);
+  assert.equal(tg.SettingsButton.handlers.size, 0);
 });

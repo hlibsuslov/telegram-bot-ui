@@ -50,7 +50,7 @@ function renderHome(): void {
     b.innerHTML = `<span class="tma-avatar"></span><span class="tma-cell__body"><span class="tma-cell__title"></span><span class="tma-cell__subtitle"></span></span><span class="tma-cell__after"><strong></strong><span></span></span>`;
     (b.querySelector('.tma-avatar') as HTMLElement).textContent = a.name[0];
     (b.querySelector('.tma-cell__title') as HTMLElement).textContent = a.name;
-    (b.querySelector('.tma-cell__subtitle') as HTMLElement).textContent = `${a.unit} · ${a.rate} pts each`;
+    (b.querySelector('.tma-cell__subtitle') as HTMLElement).textContent = a.rate === 1 ? 'Base unit' : `${a.rate} pts each`;
     (b.querySelector('.tma-cell__after strong') as HTMLElement).textContent = hidden ? '••••' : `${num.format(a.amount)} ${a.unit}`;
     const ch = b.querySelector('.tma-cell__after span') as HTMLElement;
     ch.textContent = a.change ? `${pct.format(a.change)} %` : 'no change';
@@ -119,7 +119,7 @@ function openAsset(a: Asset): void {
   current = a;
   ($('a-icon')).textContent = a.name[0];
   $('a-name').textContent = a.name;
-  $('a-sub').textContent = `${a.rate} pts each`;
+  $('a-sub').textContent = a.rate === 1 ? 'Base unit' : `${a.rate} pts each`;
   figure($('a-value'), a.amount, a.unit);
   delta($('a-delta'), a.change, 'this week');
   $('a-about').textContent = a.about;
@@ -127,6 +127,9 @@ function openAsset(a: Asset): void {
   void store.get(`watch-${a.id}`).then((v) => $('watch').setAttribute('aria-pressed', String(v === '1')));
   show('asset');
   tma.nav.push({ id: 'asset', kind: 'screen', onBack: closeAsset });
+  if ($('onboarding').hidden) assetButtons(a); // the onboarding sheet owns the bottom bar while it is open
+}
+function assetButtons(a: Asset): void {
   tma.mainButton({ text: `Redeem ${a.name.toLowerCase()}`, onClick: () => { tma.haptic.success(); toast('Show the pay code at the counter'); } });
   tma.secondaryButton({ text: 'Send', position: 'left', onClick: () => toast('Sending is not part of this demo') });
 }
@@ -162,7 +165,7 @@ for (const b of document.querySelectorAll<HTMLElement>('[data-go]')) {
 function closeOnboarding(): void {
   tma.nav.pop('onboarding');
   $('onboarding').hidden = true; $('scrim').hidden = true;
-  tma.mainButton(null);
+  if (current) assetButtons(current); else tma.mainButton(null); // give the layer below its buttons back
   tma.chrome({ bottomBar: 'secondary_bg_color' });
   void store.set('onboarded', '1');
 }
@@ -180,9 +183,11 @@ $('ob-terms').addEventListener('click', (e) => {
   (tma.tg as unknown as { openLink(u: string): void }).openLink((e.currentTarget as HTMLAnchorElement).href);
 });
 
+let toastTimer = 0;
 function toast(text: string): void {
   const s = $('snackbar'); s.textContent = text; s.hidden = false;
-  window.setTimeout(() => { s.hidden = true; }, 2200);
+  clearTimeout(toastTimer);
+  toastTimer = window.setTimeout(() => { s.hidden = true; }, 2200);
 }
 
 /* ---------------------------------------------------------------- start */

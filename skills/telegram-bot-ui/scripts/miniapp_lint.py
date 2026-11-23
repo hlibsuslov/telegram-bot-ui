@@ -163,8 +163,11 @@ def _css_rules(css: str):
         yield m.group(1).strip(), m.group(2), m.start()
 
 
-def is_server(path: str) -> bool:
-    parts = set(re.split(r"[\\/]", path.lower()))
+def is_server(path: str, root: str | None = None) -> bool:
+    """Server code by folder name, judged on the path RELATIVE to the lint root (a project that itself lives
+    under C:/work/api/... is not all server code)."""
+    rel = os.path.relpath(path, root) if root else os.path.basename(path)
+    parts = set(re.split(r"[\\/]", rel.lower())[:-1])
     return path.endswith(".py") or bool(parts & {"server", "bot", "api", "backend"})
 
 
@@ -186,7 +189,8 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
     calls_ready = False
     for path, text in files.items():
         ext = os.path.splitext(path)[1].lower()
-        server = is_server(path)
+        server = is_server(path, root)
+        in_kit = "_kit" in re.split(r"[\\/]", os.path.relpath(path, root) if root else path)
         css_parts: list[tuple[str, int]] = []
         if ext == ".css":
             css_parts.append((text, 0))
@@ -203,7 +207,8 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
         code = COMMENT_JS.sub(lambda m: " " * len(m.group(0)), js) if js else ""
         if "Telegram.WebApp" in text or "createTma" in text or "@tma.js" in text:
             uses_webapp = uses_webapp or not server
-        if re.search(r"\.ready\s*\(\s*\)", code) or re.search(r"\bready\s*\(\s*\)", code) and "tma" in code:
+        # the kit's own tg.ready() wrapper does not count: the app must call it (tma.ready() / WebApp.ready())
+        if not in_kit and re.search(r"\.ready\s*\(\s*\)", code):
             calls_ready = True
 
         # ---- security
@@ -273,7 +278,9 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
         for css, offset in css_parts:
             clean = COMMENT_CSS.sub(lambda m: " " * len(m.group(0)), css)
             all_css.append(clean)
-            allowed = _strip_allowed_colors(clean)
+            # selectors are not colours (#add, #face): blank them, keep offsets
+            no_selectors = re.sub(r"[^{}]*\{", lambda m: " " * (len(m.group(0)) - 1) + "{", clean)
+            allowed = _strip_allowed_colors(no_selectors)
             for m in COLOR.finditer(allowed):
                 if not _neutral(m.group(0)):
                     add("MA05", path, text, offset + m.start(), f"hard-coded colour {m.group(0)}: a --tg-theme-* role or a derived color-mix()")

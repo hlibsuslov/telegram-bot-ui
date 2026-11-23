@@ -86,7 +86,8 @@ Android uses a 16 px root with the same ratios. Nothing below 11 px.
 | `.tma-figure` + `.tma-figure__minor` | `--tma-figure-size` (≈ 48-64) | 600 | balances and prices: `tabular-nums`, fraction and currency at 60 % in hint colour |
 
 Figures: one locale format (`Intl.NumberFormat`), tabular figures, a skeleton while loading, "—" on error,
-never a fake "0.00".
+never a fake "0.00". The figure block breathes: label → figure → 12 px → change pill → 20-24 px → the next
+block (quick actions or a chart); the kit sets these gaps (`.tma-figure + .tma-delta`).
 
 Every role also exists as a plain utility, regular and emphasized: `.tma-text-large-title`, `-title1`,
 `-title2`, `-title3`, `-headline`, `-body`, `-callout`, `-subhead`, `-footnote`, `-caption1`, `-caption2`, plus

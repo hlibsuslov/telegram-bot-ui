@@ -138,6 +138,9 @@ def css(profile: dict, data: dict) -> str:
     if profile.get("glass") is False or (profile.get("base") == "dense" and profile.get("glass") is not True):
         lines.append(".tma-glass { background: var(--tma-surface); -webkit-backdrop-filter: none; "
                      "backdrop-filter: none; box-shadow: 0 1px 0 var(--tma-separator); }")
+    if profile.get("base") == "dense":
+        lines.append(':root[data-tma-platform="android"] .tma-list { border-radius: 0; '
+                     "margin-inline: calc(-1 * var(--tma-safe-left)); }")
     return "\n".join(lines) + "\n"
 
 

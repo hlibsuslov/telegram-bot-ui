@@ -101,9 +101,10 @@ def price_cart(lines: list[dict]) -> int:
     """Prices from the server's menu; the client sends ids and quantities only."""
     total = 0
     for line in lines:
-        if line["qty"] not in range(1, 10) or line["size"] not in MENU.get(line["id"], {}):
+        qty = line.get("qty")
+        if type(qty) is not int or not 1 <= qty <= 9 or line.get("size") not in MENU.get(line.get("id"), {}):
             raise ValueError("bad line")
-        total += MENU[line["id"]][line["size"]] * line["qty"]
+        total += MENU[line["id"]][line["size"]] * qty
     return total
 
 
@@ -121,7 +122,10 @@ def r93(t: FakeTransport | None = None):
                                                                      "invoice_payload": "o:1042",
                                                                      "telegram_payment_charge_id": "stxTEST1042"}}}
     sp = paid["message"]["successful_payment"]
-    if sp["invoice_payload"] == "o:1042" and sp["total_amount"] == stars:
+    fulfilled: set[str] = set()  # charge ids already fulfilled (durable in production: updates can repeat)
+    if (sp["currency"] == "XTR" and sp["invoice_payload"] == "o:1042" and sp["total_amount"] == stars
+            and sp["telegram_payment_charge_id"] not in fulfilled):
+        fulfilled.add(sp["telegram_payment_charge_id"])
         t.call("sendMessage", {"chat_id": USER, "text": f"Paid ⭐ {stars}. Order 1042: 2 × Flat white, pickup 10:30."})
     return t, cents, stars, link
 
@@ -129,9 +133,11 @@ def r93(t: FakeTransport | None = None):
 # ------------------------------------------------------------------ R94 form / booking
 
 def booking_schema(d: dict) -> dict:
-    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}", d["slot"]) or not 1 <= int(d["people"]) <= 8:
+    people, slot, name = d.get("people"), d.get("slot"), d.get("name")
+    if type(people) is not int or not 1 <= people <= 8 or not isinstance(slot, str) \
+            or not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}", slot) or not isinstance(name, str):
         raise ValueError("bad booking")
-    return {"slot": d["slot"], "people": int(d["people"]), "name": str(d["name"])[:40]}
+    return {"slot": slot, "people": people, "name": name.strip()[:40]}
 
 
 def r94(t: FakeTransport | None = None):
