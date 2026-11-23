@@ -19,17 +19,19 @@ TON wallet: [../wallet-and-ton.md](../wallet-and-ton.md). Widgets inside a messa
 | Open a Mini App from a button, link, menu or profile; `startapp`; hosting | [launch-and-lifecycle.md](launch-and-lifecycle.md) | recipe 91 |
 | "Does `Telegram.WebApp` have X, since which version?" | [webapp-api.md](webapp-api.md), `scripts/webapp_lookup.py` | — |
 | Verify `initData`, sessions, what to trust | [security.md](security.md) | recipe 92 |
-| Make it look like Telegram in light and dark, iOS and Android | [telegram-design-guidelines.md](telegram-design-guidelines.md), [design-sources.md](design-sources.md), `design-system.md` | `examples/mini-apps/_kit` |
-| Build a screen: shop, form, dashboard, settings, game, editor | `screen-patterns.md`, `components.md` | recipes 93-99 |
-| "It looks generated / web-like / off" | `anti-slop.md`, `scripts/miniapp_lint.py` | — |
-| Speed, weak Android, how to test without a phone | `performance-and-testing.md`, `scripts/preview_miniapp.py` | — |
+| Make it look like Telegram in light and dark, iOS and Android | [telegram-design-guidelines.md](telegram-design-guidelines.md), [design-sources.md](design-sources.md), [design-system.md](design-system.md) | `examples/mini-apps/_kit` |
+| "Make it look like X", "use our brand", "calmer / denser / fintech", restyle an existing app | [design-system.md](design-system.md) §9 styles, `scripts/miniapp_style.py` | `data/mini-apps/styles.json` |
+| Build a screen: shop, form, dashboard, settings, game, editor | `screen-patterns.md`, [components.md](components.md) | recipes 93-99 |
+| "It looks generated / web-like / off", "make it premium" | [anti-slop.md](anti-slop.md), `scripts/miniapp_lint.py` | — |
+| Speed, weak Android, how to test without a phone | [performance-and-testing.md](performance-and-testing.md), `scripts/preview_miniapp.py` | — |
 
 ## Reading order for a new Mini App
 
 1. [decide.md](decide.md): is it a Mini App, which entry point, what the bot says before and after.
 2. [launch-and-lifecycle.md](launch-and-lifecycle.md): start sequence, `ready()`, visibility, hosting.
 3. [security.md](security.md): the server contract, before any API route exists.
-4. [telegram-design-guidelines.md](telegram-design-guidelines.md) G1-G7, then the design system and kit.
+4. [telegram-design-guidelines.md](telegram-design-guidelines.md) G1-G7, then [design-system.md](design-system.md):
+   pick a style (§9), use the kit, check [anti-slop.md](anti-slop.md).
 5. The closest screen pattern and recipe; then build, lint, preview, test on a device.
 
 ## Sources and labels
@@ -51,7 +53,12 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `data/mini-apps/webapp-catalog.json` | every `Telegram.WebApp` member with version, evidence and anchor URL |
 | `data/mini-apps/theme-params.json` | `themeParams` key → CSS variable → role → fallbacks |
 | `data/mini-apps/design-sources.json` | iOS 27 colours, type scale, glass, sizes; mapping to theme roles |
+| `data/mini-apps/styles.json` | named design styles: intent, tokens, components, do and don't |
 | `scripts/webapp_lookup.py` | `show`, `search`, `since`, `gates`, `theme`, `sync` over the catalog |
+| `scripts/miniapp_style.py` | `presets`, `show`, `css`, `check` for styles and custom brand profiles |
+| `scripts/miniapp_lint.py` | 24 rules: security, native controls, theme, motion, labels, slop (`--json`, `--strict`) |
+| `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions |
+| `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets) and `tma.ts` (no-dependency kit) |
 
 Refresh after a Telegram release: `py -3 scripts/webapp_lookup.py sync --fetch` prints the diff;
 add `--write` to update the catalog, then re-run the tests.

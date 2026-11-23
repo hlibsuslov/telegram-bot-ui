@@ -34,8 +34,12 @@ Labels: **[Official]** the Mini Apps page; **[API]** the Bot API page; **[Heuris
 
 ## 2. Gate by version, degrade on purpose
 
-Every member newer than 6.0 needs a gate. Calling an unsupported method logs a warning in the script and
-does nothing, so a missing gate becomes a silent dead button. **[Heuristic]**
+Every member newer than 6.0 needs a gate. On an older client most such **methods** (`showPopup`,
+`requestFullscreen`, `shareMessage`, `openInvoice`, `requestContact`, `requestChat`, `downloadFile`…) log an
+error and **throw** `Error('WebAppMethodUnsupported')`, so an ungated call breaks the tap handler it runs in.
+Objects and setters (`BackButton`, `HapticFeedback`, `setBackgroundColor`, `setBottomBarColor`, vertical
+swipes, closing confirmation) only log a warning and do nothing: a silent dead control. (Read in
+`telegram-web-app.js` on 2026-11-23.) **[Official]**/**[Heuristic]**
 
 ```js
 const tg = window.Telegram.WebApp;

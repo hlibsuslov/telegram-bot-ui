@@ -129,4 +129,4 @@ other sites that call `Telegram.WebApp`, no redirects to another domain mid-sess
   debugging and WebView debugging in Telegram's settings → `chrome://inspect`. Telegram Desktop and macOS
   betas have their own debug switches. **[Official]**
 - The local preview stand (`scripts/preview_miniapp.py`) mocks the client for layout work; it proves nothing
-  about real clients (`performance-and-testing.md`).
+  about real clients ([performance-and-testing.md](performance-and-testing.md)).

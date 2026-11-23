@@ -1,0 +1,481 @@
+/* Mini App kit: roles, scales and primitives ("TMA profile 1"). No dependencies.
+   Every colour resolves from a Telegram theme variable (--tg-theme-*); the --tma-fb-* palette is the
+   fallback for keys an older client does not send and for a plain browser (iOS 27 system colours).
+   tma.ts sets data-tma-scheme / -platform / -perf on <html>. Reference:
+   references/mini-apps/design-system.md; values: data/mini-apps/theme-params.json, design-sources.json. */
+
+/* ---------------------------------------------------------------- fallback palette (light) */
+:root {
+  --tma-fb-bg: #ffffff;
+  --tma-fb-page: #f2f2f7;
+  --tma-fb-surface: #ffffff;
+  --tma-fb-text: #000000;
+  --tma-fb-hint: #8e8e93;
+  --tma-fb-accent: #0088ff;
+  --tma-fb-on-accent: #ffffff;
+  --tma-fb-danger: #ff383c;
+  --tma-fb-success: #34c759;
+  --tma-fb-separator: rgb(0 0 0 / .12);
+  --tma-fb-overlay: rgb(0 0 0 / .2);
+  --tma-fb-seg-on: #ffffff;
+  --tma-fb-knob: #ffffff;
+  color-scheme: light;
+}
+/* dark fallback: Telegram's scheme when known, the OS scheme in a plain browser */
+:root[data-tma-scheme="dark"] {
+  --tma-fb-bg: #000000;
+  --tma-fb-page: #000000;
+  --tma-fb-surface: #1c1c1e;
+  --tma-fb-text: #ffffff;
+  --tma-fb-hint: #8e8e93;
+  --tma-fb-accent: #0091ff;
+  --tma-fb-danger: #ff4245;
+  --tma-fb-success: #30d158;
+  --tma-fb-separator: rgb(255 255 255 / .17);
+  --tma-fb-overlay: rgb(0 0 0 / .48);
+  --tma-fb-seg-on: rgb(255 255 255 / .27);
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tma-scheme]) {
+    --tma-fb-bg: #000000;
+    --tma-fb-page: #000000;
+    --tma-fb-surface: #1c1c1e;
+    --tma-fb-text: #ffffff;
+    --tma-fb-accent: #0091ff;
+    --tma-fb-danger: #ff4245;
+    --tma-fb-success: #30d158;
+    --tma-fb-separator: rgb(255 255 255 / .17);
+    --tma-fb-overlay: rgb(0 0 0 / .48);
+    --tma-fb-seg-on: rgb(255 255 255 / .27);
+    color-scheme: dark;
+  }
+}
+
+/* ---------------------------------------------------------------- roles */
+:root {
+  --tma-bg: var(--tg-theme-bg-color, var(--tma-fb-bg));
+  --tma-page: var(--tg-theme-secondary-bg-color, var(--tg-theme-bg-color, var(--tma-fb-page)));
+  --tma-surface: var(--tg-theme-section-bg-color, var(--tg-theme-bg-color, var(--tma-fb-surface)));
+  --tma-text: var(--tg-theme-text-color, var(--tma-fb-text));
+  --tma-hint: var(--tg-theme-hint-color, var(--tma-fb-hint));
+  --tma-subtitle: var(--tg-theme-subtitle-text-color, var(--tma-hint));
+  --tma-section-header: var(--tg-theme-section-header-text-color, var(--tma-hint));
+  --tma-link: var(--tg-theme-link-color, var(--tma-fb-accent));
+  --tma-accent: var(--tg-theme-button-color, var(--tma-fb-accent));
+  --tma-on-accent: var(--tg-theme-button-text-color, var(--tma-fb-on-accent));
+  --tma-accent-text: var(--tg-theme-accent-text-color, var(--tma-link));
+  --tma-danger: var(--tg-theme-destructive-text-color, var(--tma-fb-danger));
+  --tma-success: var(--tma-fb-success);
+  --tma-separator: var(--tg-theme-section-separator-color, var(--tma-fb-separator));
+  --tma-bottom-bar: var(--tg-theme-bottom-bar-bg-color, var(--tma-page));
+  /* derived: tints of a role, never new hues */
+  --tma-fill: color-mix(in srgb, var(--tma-text) 8%, transparent);
+  --tma-fill-strong: color-mix(in srgb, var(--tma-text) 14%, transparent);
+  --tma-tonal: color-mix(in srgb, var(--tma-accent) 14%, transparent);
+  --tma-raised: color-mix(in srgb, var(--tma-surface) 94%, var(--tma-text));
+  --tma-success-tint: color-mix(in srgb, var(--tma-success) 16%, transparent);
+  --tma-danger-tint: color-mix(in srgb, var(--tma-danger) 14%, transparent);
+  --tma-overlay: var(--tma-fb-overlay);
+  --tma-seg-on: var(--tma-fb-seg-on);
+  /* brand: one moment per screen (hero header, promo); a style profile sets it, else the accent */
+  --tma-brand: var(--tma-accent);
+  --tma-on-brand: var(--tma-on-accent);
+
+  /* type: iOS 27 scale in rem of a 17 px body; Roboto metrics on Android come from the system font */
+  --tma-font: system-ui, -apple-system, "SF Pro Text", Roboto, "Segoe UI", "Helvetica Neue", sans-serif;
+  --tma-fs-large-title: 2rem;        /* 34/41 */
+  --tma-fs-title1: 1.647rem;         /* 28/34 */
+  --tma-fs-title2: 1.294rem;         /* 22/28 */
+  --tma-fs-title3: 1.176rem;         /* 20/25 */
+  --tma-fs-body: 1rem;               /* 17/22 */
+  --tma-fs-callout: .941rem;         /* 16/21 */
+  --tma-fs-subhead: .882rem;         /* 15/20 */
+  --tma-fs-footnote: .765rem;        /* 13/18 */
+  --tma-fs-caption1: max(12px, .706rem);
+  --tma-fs-caption2: max(11px, .647rem); /* nothing below 11 px */
+
+  /* space on a 4 px step, shape, touch */
+  --tma-s1: 4px; --tma-s2: 8px; --tma-s3: 12px; --tma-s4: 16px; --tma-s5: 20px; --tma-s6: 24px; --tma-s8: 32px;
+  --tma-margin: 16px;
+  --tma-r-group: 26px;               /* inset groups and cards on iPhone; check on device */
+  --tma-r-inner: 14px;               /* nested: outer radius minus padding */
+  --tma-r-sheet: 38px;
+  --tma-row: 52px;
+  --tma-row-2: 68px;
+  --tma-target: 44px;
+  --tma-avatar: 40px;                /* avatar and icon tile in rows */
+  --tma-gap-section: 24px;
+  --tma-figure-size: clamp(2.8rem, 13vw, 3.75rem);
+
+  /* motion: one ease-out curve */
+  --tma-ease: cubic-bezier(.2, .8, .2, 1);
+  --tma-dur: 220ms;
+  --tma-dur-short: 150ms;
+
+  /* safe areas: device + Telegram's own controls (fullscreen); 0 in the normal mode */
+  --tma-safe-top: calc(var(--tg-safe-area-inset-top, 0px) + var(--tg-content-safe-area-inset-top, 0px));
+  --tma-safe-bottom: calc(var(--tg-safe-area-inset-bottom, 0px) + var(--tg-content-safe-area-inset-bottom, 0px));
+  --tma-safe-left: max(var(--tma-margin), var(--tg-safe-area-inset-left, 0px));
+  --tma-safe-right: max(var(--tma-margin), var(--tg-safe-area-inset-right, 0px));
+  --tma-tabbar-space: 0px;           /* set when a floating tab bar is shown */
+}
+:root[data-tma-platform="android"] {
+  --tma-r-group: 16px;
+  --tma-r-inner: 10px;
+  --tma-target: 48px;
+}
+:root[data-tma-perf="low"] { --tma-dur: 120ms; --tma-dur-short: 90ms; }
+
+/* ---------------------------------------------------------------- base and browser surfaces */
+html {
+  font-size: 106.25%;                /* 17 px body */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+@supports (font: -apple-system-body) {
+  :root[data-tma-platform="ios"] { font: -apple-system-body; } /* follows Dynamic Type; check on device */
+}
+:root[data-tma-platform="android"] { font-size: 100%; }
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: var(--tg-viewport-stable-height, 100svh);
+  background: var(--tma-page);
+  color: var(--tma-text);
+  font-family: var(--tma-font);
+  font-size: var(--tma-fs-body);
+  line-height: 1.294;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
+  overflow-x: clip;                  /* screen pushes slide in from the side */
+}
+body.tma-flat { background: var(--tma-bg); }
+::selection { background: color-mix(in srgb, var(--tma-accent) 28%, transparent); }
+input, textarea { caret-color: var(--tma-accent); }
+a { color: var(--tma-link); text-underline-offset: .18em; }
+:focus-visible { outline: 2px solid var(--tma-accent); outline-offset: 2px; }
+:focus:not(:focus-visible) { outline: none; }
+* { scrollbar-width: thin; scrollbar-color: var(--tma-fill-strong) transparent; }
+img { max-width: 100%; display: block; }
+.tma-num { font-variant-numeric: tabular-nums; }
+.tma-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+/* ---------------------------------------------------------------- type roles */
+.tma-large-title { font-size: var(--tma-fs-large-title); line-height: 1.206; font-weight: 700; letter-spacing: .01em; margin: 0; }
+.tma-title1 { font-size: var(--tma-fs-title1); line-height: 1.214; font-weight: 600; margin: 0; }
+.tma-title2 { font-size: var(--tma-fs-title2); line-height: 1.273; font-weight: 600; margin: 0; }
+.tma-title3 { font-size: var(--tma-fs-title3); line-height: 1.25; font-weight: 600; margin: 0; }
+.tma-headline { font-size: var(--tma-fs-body); font-weight: 600; }
+.tma-callout { font-size: var(--tma-fs-callout); line-height: 1.3125; }
+.tma-subhead { font-size: var(--tma-fs-subhead); line-height: 1.333; }
+.tma-footnote { font-size: var(--tma-fs-footnote); line-height: 1.385; color: var(--tma-hint); }
+.tma-caption { font-size: var(--tma-fs-caption1); line-height: 1.333; color: var(--tma-hint); }
+.tma-hint { color: var(--tma-hint); }
+
+/* ---------------------------------------------------------------- page and screens */
+.tma-page {
+  padding: calc(var(--tma-safe-top) + var(--tma-s2)) var(--tma-safe-right)
+           calc(var(--tma-safe-bottom) + var(--tma-tabbar-space) + var(--tma-s6)) var(--tma-safe-left);
+  min-height: var(--tg-viewport-stable-height, 100svh);
+}
+.tma-page[hidden], .tma-screen[hidden] { display: none; }
+.tma-screen { animation: tma-push var(--tma-dur) var(--tma-ease); }
+.tma-screen.is-back { animation-name: tma-pop; }
+@keyframes tma-push { from { transform: translateX(24px); opacity: 0; } }
+@keyframes tma-pop { from { transform: translateX(-24px); opacity: 0; } }
+.tma-header { padding: var(--tma-s2) 0 var(--tma-s4); }
+.tma-stack > * + * { margin-top: var(--tma-gap-section); }
+
+/* ---------------------------------------------------------------- section, list, cell */
+.tma-section { margin: 0; }
+.tma-section + .tma-section { margin-top: var(--tma-gap-section); }
+.tma-section__header {
+  display: flex; align-items: baseline; justify-content: space-between; gap: var(--tma-s3);
+  padding: 0 var(--tma-s4) var(--tma-s2);
+  color: var(--tma-section-header); font-size: var(--tma-fs-footnote); line-height: 1.385;
+}
+.tma-section__header strong { color: var(--tma-text); font-size: var(--tma-fs-title3); font-weight: 600; }
+.tma-section__footer { padding: var(--tma-s2) var(--tma-s4) 0; color: var(--tma-hint); font-size: var(--tma-fs-footnote); line-height: 1.385; }
+.tma-list {
+  list-style: none; margin: 0; padding: 0;
+  background: var(--tma-surface); border-radius: var(--tma-r-group); overflow: hidden;
+}
+:root[data-tma-platform="android"] .tma-list.is-full { border-radius: 0; margin-inline: calc(-1 * var(--tma-safe-left)); }
+.tma-cell {
+  --tma-cell-text: var(--tma-s4);    /* where the separator starts: the text column */
+  position: relative; display: flex; align-items: center; gap: var(--tma-s3);
+  width: 100%; min-height: var(--tma-row); padding: var(--tma-s2) var(--tma-s4);
+  background: none; border: 0; color: inherit; font: inherit; text-align: start; text-decoration: none;
+}
+.tma-cell:has(.tma-avatar, .tma-icon-tile) { --tma-cell-text: calc(var(--tma-s4) + var(--tma-avatar) + var(--tma-s3)); }
+.tma-cell.is-2 { min-height: var(--tma-row-2); }
+.tma-list > li + li > .tma-cell::before, .tma-list > .tma-cell + .tma-cell::before {
+  content: ""; position: absolute; top: 0; inset-inline: var(--tma-cell-text) 0;
+  border-top: 1px solid var(--tma-separator); transform: scaleY(.5); transform-origin: top;
+}
+button.tma-cell, a.tma-cell, label.tma-cell { cursor: pointer; transition: background-color var(--tma-dur-short) var(--tma-ease); }
+button.tma-cell:active, a.tma-cell:active, label.tma-cell:active { background: var(--tma-fill); }
+.tma-cell__body { flex: 1; min-width: 0; }
+.tma-cell__title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tma-cell__subtitle { display: block; color: var(--tma-subtitle); font-size: var(--tma-fs-subhead); line-height: 1.333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tma-cell__after { flex: none; color: var(--tma-hint); text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tma-cell__after strong { display: block; color: var(--tma-text); font-weight: 500; }
+.tma-cell__chevron { flex: none; width: 8px; height: 13px; color: var(--tma-fill-strong); }
+.tma-cell.is-button { color: var(--tma-accent-text); }
+.tma-cell.is-danger { color: var(--tma-danger); }
+
+/* ---------------------------------------------------------------- avatar, icon tile, badge */
+.tma-avatar {
+  flex: none; width: var(--tma-avatar); height: var(--tma-avatar); border-radius: 50%; object-fit: cover;
+  display: grid; place-items: center; background: var(--tma-fill); color: var(--tma-hint);
+  font-size: var(--tma-fs-subhead); font-weight: 600;
+}
+.tma-avatar.is-48 { width: 48px; height: 48px; }
+.tma-avatar.is-56 { width: 56px; height: 56px; }
+.tma-icon-tile {
+  flex: none; width: var(--tma-avatar); height: var(--tma-avatar); border-radius: 50%; display: grid; place-items: center;
+  background: var(--tma-tonal); color: var(--tma-accent-text);
+}
+.tma-icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.tma-badge {
+  display: inline-grid; place-items: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+  background: var(--tma-accent); color: var(--tma-on-accent); font-size: var(--tma-fs-caption1); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.tma-tag { color: var(--tma-hint); font-size: var(--tma-fs-caption1); }
+
+/* ---------------------------------------------------------------- buttons in content */
+.tma-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--tma-s2);
+  min-height: 34px; padding: 0 var(--tma-s4); border: 0; border-radius: 999px;
+  background: var(--tma-fill); color: var(--tma-text); font: inherit; font-size: var(--tma-fs-subhead); font-weight: 500;
+  cursor: pointer; text-decoration: none; white-space: nowrap;
+  transition: transform var(--tma-dur-short) var(--tma-ease), background-color var(--tma-dur-short) var(--tma-ease);
+}
+.tma-btn:active { transform: scale(.97); }
+.tma-btn.is-sm { min-height: 28px; padding: 0 var(--tma-s3); font-size: var(--tma-fs-subhead); }
+.tma-btn.is-lg { min-height: 50px; padding: 0 var(--tma-s5); font-size: var(--tma-fs-body); }
+.tma-btn.is-wide { width: 100%; }
+.tma-btn.is-filled { background: var(--tma-accent); color: var(--tma-on-accent); }
+.tma-btn.is-tonal { background: var(--tma-tonal); color: var(--tma-accent-text); }
+.tma-btn.is-plain { background: none; color: var(--tma-accent-text); padding-inline: var(--tma-s2); }
+.tma-btn.is-danger { background: var(--tma-danger-tint); color: var(--tma-danger); }
+.tma-btn:disabled, .tma-btn[aria-disabled="true"] { opacity: .45; cursor: default; transform: none; }
+.tma-icon-btn {
+  display: grid; place-items: center; width: var(--tma-target); height: var(--tma-target);
+  border: 0; border-radius: 50%; background: var(--tma-fill); color: var(--tma-text); cursor: pointer;
+}
+/* own fixed bottom button: only as the MainButton fallback outside Telegram (tma.ts shows it) */
+[data-tma-fallback="main-button"] {
+  position: fixed; inset-inline: var(--tma-safe-left) var(--tma-safe-right); bottom: calc(var(--tma-safe-bottom) + var(--tma-s3));
+  z-index: 20;
+}
+[data-tma-fallback="main-button"][hidden] { display: none; }
+
+/* ---------------------------------------------------------------- quick actions */
+.tma-actions { display: grid; grid-template-columns: repeat(var(--tma-cols, 4), minmax(0, 1fr)); gap: var(--tma-s2); }
+.tma-action {
+  display: grid; justify-items: center; gap: 6px; padding: var(--tma-s2) 0;
+  background: none; border: 0; color: var(--tma-accent-text); font: inherit; font-size: var(--tma-fs-caption1); font-weight: 500;
+  cursor: pointer; min-height: var(--tma-target);
+}
+.tma-action__icon {
+  display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%;
+  background: var(--tma-accent); color: var(--tma-on-accent);
+  transition: transform var(--tma-dur-short) var(--tma-ease);
+}
+.tma-action:active .tma-action__icon { transform: scale(.94); }
+
+/* ---------------------------------------------------------------- figures and deltas */
+.tma-figure {
+  display: flex; align-items: baseline; gap: 2px; margin: 0;
+  font-size: var(--tma-figure-size); line-height: 1.05; font-weight: 600; letter-spacing: -.01em;
+  font-variant-numeric: tabular-nums;
+}
+.tma-figure__minor { font-size: .6em; color: var(--tma-hint); font-weight: 600; }
+.tma-figure.is-loading { color: transparent; }
+.tma-delta {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px;
+  font-size: var(--tma-fs-subhead); font-weight: 500; font-variant-numeric: tabular-nums;
+  background: var(--tma-fill); color: var(--tma-hint);
+}
+.tma-delta.is-up { background: var(--tma-success-tint); color: var(--tma-success); }
+.tma-delta.is-down { background: var(--tma-danger-tint); color: var(--tma-danger); }
+
+/* ---------------------------------------------------------------- chips, pills, segmented, tabs */
+.tma-chip {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 var(--tma-s3);
+  border: 0; border-radius: 999px; background: var(--tma-fill); color: var(--tma-text);
+  font: inherit; font-size: var(--tma-fs-subhead); cursor: pointer;
+}
+.tma-chip[aria-pressed="true"] { background: var(--tma-tonal); color: var(--tma-accent-text); }
+.tma-chip.is-success { background: var(--tma-success-tint); color: var(--tma-success); }
+.tma-segmented {
+  display: flex; padding: 2px; border-radius: 999px; background: var(--tma-fill); min-height: 32px;
+}
+.tma-segmented > button {
+  flex: 1; min-height: 28px; border: 0; border-radius: 999px; background: none; color: var(--tma-text);
+  font: inherit; font-size: var(--tma-fs-subhead); font-weight: 500; cursor: pointer;
+  transition: background-color var(--tma-dur-short) var(--tma-ease);
+}
+.tma-segmented > button[aria-selected="true"] { background: var(--tma-seg-on); box-shadow: 0 1px 3px rgb(0 0 0 / .12); }
+.tma-scroll-x { display: flex; gap: var(--tma-s2); overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * var(--tma-safe-left)); padding-inline: var(--tma-safe-left); }
+.tma-scroll-x::-webkit-scrollbar { display: none; }
+
+/* floating tab bar: a sibling of Telegram's glass chrome; hidden while the MainButton is visible */
+.tma-tabbar {
+  position: fixed; z-index: 10; left: 50%; transform: translateX(-50%);
+  bottom: calc(var(--tg-safe-area-inset-bottom, 0px) + var(--tma-s3));
+  display: flex; gap: 2px; padding: 4px; min-height: 56px; width: min(100% - 2 * var(--tma-margin), 420px);
+  border-radius: 999px;
+}
+.tma-tabbar > button {
+  flex: 1; display: grid; justify-items: center; align-content: center; gap: 1px; min-height: 48px;
+  border: 0; border-radius: 999px; background: none; color: var(--tma-text);
+  font: inherit; font-size: var(--tma-fs-caption2); font-weight: 500; cursor: pointer;
+}
+.tma-tabbar > button[aria-selected="true"] { background: var(--tma-fill); color: var(--tma-accent-text); }
+:root[data-tma-main-button="visible"] .tma-tabbar { display: none; }
+:root:has(.tma-tabbar:not([hidden])):not([data-tma-main-button="visible"]) { --tma-tabbar-space: 80px; }
+
+/* ---------------------------------------------------------------- glass: floating controls only */
+.tma-glass {
+  background: color-mix(in srgb, var(--tma-surface) 62%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(1.8);
+  backdrop-filter: blur(16px) saturate(1.8);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), inset 0 -1px 0 rgb(0 0 0 / .08), 0 8px 24px rgb(0 0 0 / .14);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .tma-glass { background: var(--tma-surface); }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .tma-glass { background: var(--tma-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+:root[data-tma-glass="off"] .tma-glass { background: var(--tma-surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--tma-separator); }
+:root[data-tma-perf="low"] .tma-glass { background: var(--tma-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+
+/* ---------------------------------------------------------------- cards, banner, placeholder */
+.tma-card { background: var(--tma-surface); border-radius: var(--tma-r-group); padding: var(--tma-s4); }
+.tma-card > * + * { margin-top: var(--tma-s3); }
+.tma-banner {
+  position: relative; display: grid; grid-template-columns: 1fr auto; gap: var(--tma-s3); align-items: center;
+  padding: var(--tma-s4); border-radius: var(--tma-r-group); background: var(--tma-surface); overflow: hidden;
+}
+.tma-banner__close { position: absolute; top: var(--tma-s2); inset-inline-end: var(--tma-s2); width: 32px; height: 32px; }
+.tma-placeholder { display: grid; justify-items: center; gap: var(--tma-s2); padding: var(--tma-s8) var(--tma-s6); text-align: center; }
+.tma-placeholder__title { font-size: var(--tma-fs-title3); font-weight: 600; margin: 0; }
+.tma-placeholder__text { color: var(--tma-hint); margin: 0; max-width: 32ch; }
+
+/* ---------------------------------------------------------------- inputs */
+.tma-field { display: grid; gap: 6px; }
+.tma-field__label { padding: 0 var(--tma-s4); color: var(--tma-section-header); font-size: var(--tma-fs-footnote); }
+.tma-field__error { padding: 0 var(--tma-s4); color: var(--tma-danger); font-size: var(--tma-fs-footnote); }
+.tma-input {
+  width: 100%; min-height: var(--tma-row); padding: 0 var(--tma-s4); border: 0; border-radius: var(--tma-r-inner);
+  background: var(--tma-surface); color: var(--tma-text); font: inherit; font-size: var(--tma-fs-body);
+}
+.tma-list .tma-input { border-radius: 0; background: none; }
+textarea.tma-input { min-height: 104px; padding: 14px var(--tma-s4); resize: vertical; line-height: 1.294; }
+.tma-input::placeholder { color: var(--tma-hint); opacity: 1; }
+.tma-input[aria-invalid="true"] { box-shadow: inset 0 0 0 1.5px var(--tma-danger); }
+select.tma-input { appearance: none; background-image: none; }
+.tma-search {
+  display: flex; align-items: center; gap: var(--tma-s2); min-height: 36px; padding: 0 var(--tma-s3);
+  border-radius: 999px; background: var(--tma-fill); color: var(--tma-hint);
+}
+.tma-search input { flex: 1; min-width: 0; border: 0; background: none; color: var(--tma-text); font: inherit; font-size: var(--tma-fs-body); }
+.tma-switch {
+  appearance: none; flex: none; position: relative; width: 51px; height: 31px; margin: 0; border-radius: 999px;
+  background: var(--tma-fill-strong); cursor: pointer; transition: background-color var(--tma-dur) var(--tma-ease);
+}
+.tma-switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%;
+  background: var(--tma-fb-knob); box-shadow: 0 2px 6px rgb(0 0 0 / .2); transition: transform var(--tma-dur) var(--tma-ease);
+}
+.tma-switch:checked { background: var(--tma-success); }
+.tma-switch:checked::after { transform: translateX(20px); }
+:root[dir="rtl"] .tma-switch:checked::after { transform: translateX(-20px); }
+.tma-check { appearance: none; flex: none; width: 22px; height: 22px; margin: 0; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--tma-fill-strong); cursor: pointer; }
+.tma-check:checked { background: var(--tma-accent); box-shadow: inset 0 0 0 6px var(--tma-accent), inset 0 0 0 11px var(--tma-on-accent); }
+.tma-slider { width: 100%; accent-color: var(--tma-accent); }
+.tma-stepper { display: inline-flex; align-items: center; border-radius: 999px; background: var(--tma-fill); }
+.tma-stepper > button { width: 44px; height: 34px; border: 0; background: none; color: var(--tma-text); font: inherit; font-size: 1.2rem; cursor: pointer; }
+.tma-stepper > output { min-width: 2ch; text-align: center; font-variant-numeric: tabular-nums; font-weight: 500; }
+
+/* ---------------------------------------------------------------- feedback: skeleton, spinner, progress, snackbar */
+.tma-skeleton {
+  display: block; border-radius: 8px; color: transparent;
+  background: linear-gradient(90deg, var(--tma-fill) 0%, var(--tma-fill-strong) 50%, var(--tma-fill) 100%) 0 0 / 200% 100%;
+  animation: tma-shimmer 1.4s linear infinite;
+}
+@keyframes tma-shimmer { to { background-position: -200% 0; } }
+.tma-avatar.tma-skeleton, .tma-icon-tile.tma-skeleton { border-radius: 50%; }
+.tma-spinner {
+  width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--tma-fill-strong); border-top-color: var(--tma-accent);
+  animation: tma-spin .8s linear infinite;
+}
+@keyframes tma-spin { to { transform: rotate(1turn); } }
+.tma-progress { height: 4px; border-radius: 2px; background: var(--tma-fill); overflow: hidden; }
+.tma-progress > i { display: block; height: 100%; background: var(--tma-accent); border-radius: 2px; transform-origin: left; }
+.tma-snackbar {
+  position: fixed; z-index: 30; inset-inline: var(--tma-safe-left) var(--tma-safe-right);
+  bottom: calc(var(--tma-safe-bottom) + var(--tma-tabbar-space) + var(--tma-s3));
+  display: flex; align-items: center; gap: var(--tma-s3); padding: var(--tma-s3) var(--tma-s4);
+  border-radius: var(--tma-r-inner); background: var(--tma-text); color: var(--tma-bg); font-size: var(--tma-fs-subhead);
+  animation: tma-rise var(--tma-dur) var(--tma-ease);
+}
+.tma-snackbar[hidden] { display: none; }
+@keyframes tma-rise { from { transform: translateY(12px); opacity: 0; } }
+.tma-coachmark {
+  position: relative; padding: var(--tma-s3) var(--tma-s4); border-radius: var(--tma-r-inner);
+  background: var(--tma-accent); color: var(--tma-on-accent); font-size: var(--tma-fs-subhead);
+}
+
+/* ---------------------------------------------------------------- bottom sheet */
+.tma-scrim { position: fixed; inset: 0; z-index: 40; background: var(--tma-overlay); animation: tma-fade var(--tma-dur) var(--tma-ease); }
+.tma-scrim[hidden], .tma-sheet[hidden] { display: none; }
+@keyframes tma-fade { from { opacity: 0; } }
+.tma-sheet {
+  position: fixed; z-index: 41; inset-inline: 0; bottom: 0; max-height: calc(var(--tg-viewport-stable-height, 100svh) - var(--tma-safe-top) - 24px);
+  overflow: auto; padding: var(--tma-s2) var(--tma-safe-right) calc(var(--tma-safe-bottom) + var(--tma-s6)) var(--tma-safe-left);
+  border-radius: var(--tma-r-sheet) var(--tma-r-sheet) 0 0; background: var(--tma-surface);
+  animation: tma-sheet-in var(--tma-dur) var(--tma-ease);
+}
+.tma-sheet::before { content: ""; display: block; width: 36px; height: 5px; margin: 0 auto var(--tma-s3); border-radius: 3px; background: var(--tma-fill-strong); }
+@keyframes tma-sheet-in { from { transform: translateY(100%); } }
+.tma-sheet__head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; margin-bottom: var(--tma-s4); }
+.tma-sheet__title { text-align: center; font-weight: 600; font-size: var(--tma-fs-body); }
+
+/* ---------------------------------------------------------------- chart */
+.tma-chart { display: block; width: 100%; height: 180px; color: var(--tma-success); }
+.tma-chart.is-down { color: var(--tma-danger); }
+.tma-chart__grid { stroke: var(--tma-separator); stroke-width: 1; }
+.tma-chart__line { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.tma-chart__label { fill: var(--tma-hint); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+/* ---------------------------------------------------------------- style presets (data/mini-apps/styles.json)
+   <html data-tma-style="fintech|soft|dense">; "native" is the default above. Shape, density and type only:
+   colours stay the user's theme. A custom profile compiles with scripts/miniapp_style.py css. */
+:root[data-tma-style="fintech"] { --tma-r-group: 22px; --tma-row-2: 64px; --tma-avatar: 44px; --tma-figure-size: clamp(3rem, 15vw, 4rem); }
+:root[data-tma-style="soft"] { --tma-r-group: 30px; --tma-r-inner: 18px; --tma-row: 56px; --tma-row-2: 72px; --tma-avatar: 48px; --tma-gap-section: 28px; }
+:root[data-tma-style="dense"] { --tma-r-group: 12px; --tma-r-inner: 8px; --tma-row: 44px; --tma-row-2: 56px; --tma-avatar: 32px; --tma-gap-section: 16px; --tma-fs-body: .941rem; }
+:root[data-tma-style="dense"] .tma-glass { background: var(--tma-surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--tma-separator); }
+:root[data-tma-platform="android"][data-tma-style="dense"] .tma-list { border-radius: 0; margin-inline: calc(-1 * var(--tma-safe-left)); }
+
+/* brand moment: a hero block in the brand colour; the header follows it (tma.ts chrome) */
+.tma-hero {
+  margin: calc(-1 * var(--tma-safe-top) - var(--tma-s2)) calc(-1 * var(--tma-safe-right)) 0 calc(-1 * var(--tma-safe-left));
+  padding: calc(var(--tma-safe-top) + var(--tma-s4)) var(--tma-safe-right) var(--tma-s8) var(--tma-safe-left);
+  background: linear-gradient(var(--tma-brand) calc(100% - var(--tma-s8)), var(--tma-page)); /* fades into the page below the text */
+  color: var(--tma-on-brand);
+}
+.tma-hero .tma-hint, .tma-hero .tma-figure__minor { color: color-mix(in srgb, var(--tma-on-brand) 72%, transparent); }
+
+/* ---------------------------------------------------------------- motion and accessibility preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; }
+  .tma-skeleton { animation: none; }
+}
+:root[data-tma-perf="low"] .tma-screen { animation: none; }
