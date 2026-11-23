@@ -316,7 +316,8 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
         if path:
             add("MA18", path, files[path], 0, "ready() is never called: Telegram shows its loading screen until the page fully loads")
     for path, code in client_js:
-        if not gates or re.search(r"isVersionAtLeast|versionAtLeast|\bhas\(\s*['\"]\d", code):
+        # Gates: Telegram.WebApp.isVersionAtLeast, the kit's has('x.y'), @tma.js/sdk's isAvailable()/ifAvailable()
+        if not gates or re.search(r"isVersionAtLeast|versionAtLeast|\bhas\(\s*['\"]\d|\.isAvailable\(\)|\.ifAvailable\(", code):
             continue
         used = sorted({m.group(1) for m in re.finditer(r"\.(" + "|".join(map(re.escape, gates)) + r")\b", code)})
         if used:

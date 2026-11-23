@@ -112,7 +112,7 @@ not proof of how real clients render.
 | MA12 glass-fallback | warning | `backdrop-filter` without a solid fallback | §3 |
 | MA13 emoji-ui | warning | Unicode emoji in buttons, navigation, headings, bottom-button text | §3 |
 | MA14 local-storage | warning | `localStorage`, `sessionStorage` | security §6 |
-| MA15 version-gate | warning | a member newer than 6.0 used with no `isVersionAtLeast` in the file | webapp-api §2 |
+| MA15 version-gate | warning | a member newer than 6.0 used with no gate in the file (`isVersionAtLeast`, the kit's `has()`, or `@tma.js/sdk` `isAvailable()` / `ifAvailable()`) | webapp-api §2 |
 | MA16 web-font | warning | `@font-face`, web-font CDNs | §3 |
 | MA17 reduced-motion | warning | motion with no `prefers-reduced-motion` rule | G4 |
 | MA18 ready | warning | `ready()` never called | Official |
