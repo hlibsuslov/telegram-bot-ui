@@ -15,6 +15,7 @@ TON wallet: [../wallet-and-ton.md](../wallet-and-ton.md). Widgets inside a messa
 
 | The task | Read | Then |
 |---|---|---|
+| "Create a Mini App" or "improve / restyle / fix this one": the whole order of work | [orchestration.md](orchestration.md) | the steps link the rest |
 | "Should this be a Mini App?" | [decide.md](decide.md) | recipe 90 |
 | Open a Mini App from a button, link, menu or profile; `startapp`; hosting | [launch-and-lifecycle.md](launch-and-lifecycle.md) | recipe 91 |
 | "Does `Telegram.WebApp` have X, since which version?" | [webapp-api.md](webapp-api.md), `scripts/webapp_lookup.py` | — |
@@ -54,11 +55,14 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `data/mini-apps/theme-params.json` | `themeParams` key → CSS variable → role → fallbacks |
 | `data/mini-apps/design-sources.json` | iOS 27 colours, type scale, glass, sizes; mapping to theme roles |
 | `data/mini-apps/styles.json` | named design styles: intent, tokens, components, do and don't |
+| `data/mini-apps/components.json` | 97 elements (structure, navigation, actions, settings, input, display, media, tables, overlays) with variants, states, kit class, native replacement and status |
+| `data/mini-apps/icons.json` | 81 kit icons mapped to SF Symbol and Material names |
 | `scripts/webapp_lookup.py` | `show`, `search`, `since`, `gates`, `theme`, `sync` over the catalog |
 | `scripts/miniapp_style.py` | `presets`, `show`, `css`, `check` for styles and custom brand profiles |
 | `scripts/miniapp_lint.py` | 24 rules: security, native controls, theme, motion, labels, slop (`--json`, `--strict`) |
 | `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions |
-| `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets) and `tma.ts` (no-dependency kit) |
+| `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets), `tma.ts` (no-dependency kit), `icons.svg` |
+| `examples/mini-apps/gallery` | every kit element on one page: open it in the stand and switch platform, theme, width, style |
 
 Refresh after a Telegram release: `py -3 scripts/webapp_lookup.py sync --fetch` prints the diff;
 add `--write` to update the catalog, then re-run the tests.

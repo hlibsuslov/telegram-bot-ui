@@ -68,7 +68,7 @@ class MiniAppReferences(unittest.TestCase):
             self.assertEqual(ver, expected, name)
 
     def test_cited_bot_api_methods_exist(self):
-        client = {m["name"] for m in WEB.cat["members"].values()} | {"getUserMedia"}  # browser API
+        client = {m["name"] for m in WEB.cat["members"].values()} | {"getUserMedia", "createTma"}  # browser API, kit factory
         verbs = ("send", "get", "set", "edit", "delete", "answer", "create", "save", "refund")
         pat = re.compile(r"`(" + "|".join(verbs) + r")([A-Z][A-Za-z]*)`")
         for path in refs():

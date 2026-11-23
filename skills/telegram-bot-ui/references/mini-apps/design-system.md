@@ -88,6 +88,13 @@ Android uses a 16 px root with the same ratios. Nothing below 11 px.
 Figures: one locale format (`Intl.NumberFormat`), tabular figures, a skeleton while loading, "—" on error,
 never a fake "0.00".
 
+Every role also exists as a plain utility, regular and emphasized: `.tma-text-large-title`, `-title1`,
+`-title2`, `-title3`, `-headline`, `-body`, `-callout`, `-subhead`, `-footnote`, `-caption1`, `-caption2`, plus
+`.is-em` for the emphasized weight. Long text (help, terms, articles) goes in `.tma-prose`, which maps
+semantic headings onto the scale: h1 → Title 1 bold, h2 → Title 2, h3 → Title 3, h4 → Headline, h5 →
+Subheadline semibold, h6 → Footnote semibold in hint colour; lists, code, rules and `.tma-quote` included,
+65ch measure. Use real heading levels for structure and the scale for size; never skip levels to get a size.
+
 ## 5. Space, shape, touch
 
 | Variable | Default (iOS / Android) | Notes |
@@ -250,7 +257,13 @@ Primitives: `.tma-page`, `.tma-screen`, `.tma-section` (`__header`, `__footer`),
 `.tma-chip`, `.tma-segmented`, `.tma-tabbar`, `.tma-glass`, `.tma-card`, `.tma-banner`, `.tma-hero`,
 `.tma-placeholder`, `.tma-field`, `.tma-input`, `.tma-search`, `.tma-switch`, `.tma-check`, `.tma-slider`,
 `.tma-stepper`, `.tma-skeleton`, `.tma-spinner`, `.tma-progress`, `.tma-snackbar`, `.tma-coachmark`,
-`.tma-scrim` + `.tma-sheet`, `.tma-chart`. Anatomy and states: [components.md](components.md).
+`.tma-scrim` + `.tma-sheet`, `.tma-chart`; text utilities `.tma-text-*`, `.tma-prose`, `.tma-quote`, `.tma-code`;
+tables `.tma-table`, `.tma-kv`, `.tma-rank`; settings `.tma-cell__check`, `.tma-pill-select`, `.tma-popup-trigger`;
+overlays `.tma-menu`, `.tma-action-sheet`; media `.tma-media`, `.tma-gallery`, `.tma-carousel`, `.tma-dots`,
+`.tma-audio`, `.tma-file__icon`, `.tma-avatar-stack`, `.tma-moment`, `.tma-map`, `.tma-qr`; structure
+`.tma-accordion`, `.tma-steps`; input `.tma-rating`, `.tma-pin`, `.tma-file-drop`. Icons: `_kit/icons.svg`
+(81, mapped to SF Symbols and Material in `data/mini-apps/icons.json`). Anatomy and states:
+[components.md](components.md); every element rendered: `examples/mini-apps/gallery`.
 
 ## 11. Checklist
 

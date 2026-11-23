@@ -1,0 +1,413 @@
+{
+ "$comment": "Kit icon ids (examples/mini-apps/_kit/icons.svg, an own line set) mapped to the SF Symbol and Material Symbols names with the same meaning. The names help translate a design that cites those libraries; their artwork is not shipped (Apple and Google licences). Unicode emoji are never UI icons (anti-slop.md).",
+ "grid": 24,
+ "stroke": 1.8,
+ "checked": "2026-11-23",
+ "icons": {
+  "home": {
+   "sf_symbol": "house",
+   "material": "home",
+   "use": "tab: home section"
+  },
+  "search": {
+   "sf_symbol": "magnifyingglass",
+   "material": "search",
+   "use": "search field, search tab"
+  },
+  "settings": {
+   "sf_symbol": "gearshape",
+   "material": "settings",
+   "use": "settings screen entry (in content; the app menu uses SettingsButton)"
+  },
+  "person": {
+   "sf_symbol": "person",
+   "material": "person",
+   "use": "profile, account"
+  },
+  "people": {
+   "sf_symbol": "person.2",
+   "material": "group",
+   "use": "contacts, members, referrals"
+  },
+  "bell": {
+   "sf_symbol": "bell",
+   "material": "notifications",
+   "use": "notification settings, alerts"
+  },
+  "cart": {
+   "sf_symbol": "cart",
+   "material": "shopping_cart",
+   "use": "cart"
+  },
+  "bag": {
+   "sf_symbol": "bag",
+   "material": "shopping_bag",
+   "use": "order, purchases"
+  },
+  "wallet": {
+   "sf_symbol": "wallet.bifold",
+   "material": "account_balance_wallet",
+   "use": "wallet, balance"
+  },
+  "card": {
+   "sf_symbol": "creditcard",
+   "material": "credit_card",
+   "use": "payment method"
+  },
+  "coins": {
+   "sf_symbol": "circle.stack",
+   "material": "toll",
+   "use": "points, balance, rewards"
+  },
+  "gift": {
+   "sf_symbol": "gift",
+   "material": "redeem",
+   "use": "gifts, bonuses"
+  },
+  "star": {
+   "sf_symbol": "star",
+   "material": "star",
+   "use": "favourite, rating, Stars (with the word)"
+  },
+  "heart": {
+   "sf_symbol": "heart",
+   "material": "favorite",
+   "use": "like, wishlist"
+  },
+  "bookmark": {
+   "sf_symbol": "bookmark",
+   "material": "bookmark",
+   "use": "saved items"
+  },
+  "share": {
+   "sf_symbol": "square.and.arrow.up",
+   "material": "ios_share",
+   "use": "share (prefer shareMessage)"
+  },
+  "link": {
+   "sf_symbol": "link",
+   "material": "link",
+   "use": "links, referral link"
+  },
+  "copy": {
+   "sf_symbol": "doc.on.doc",
+   "material": "content_copy",
+   "use": "copy a value"
+  },
+  "plus": {
+   "sf_symbol": "plus",
+   "material": "add",
+   "use": "add, create, top up"
+  },
+  "minus": {
+   "sf_symbol": "minus",
+   "material": "remove",
+   "use": "stepper minus"
+  },
+  "close": {
+   "sf_symbol": "xmark",
+   "material": "close",
+   "use": "close a sheet or banner"
+  },
+  "check": {
+   "sf_symbol": "checkmark",
+   "material": "check",
+   "use": "selected row, done"
+  },
+  "chevron-right": {
+   "sf_symbol": "chevron.right",
+   "material": "chevron_right",
+   "use": "navigation row (mirrored in RTL)"
+  },
+  "chevron-left": {
+   "sf_symbol": "chevron.left",
+   "material": "chevron_left",
+   "use": "carousel previous (never as an own back button)"
+  },
+  "chevron-down": {
+   "sf_symbol": "chevron.down",
+   "material": "expand_more",
+   "use": "expand, pop-up menu"
+  },
+  "chevron-up": {
+   "sf_symbol": "chevron.up",
+   "material": "expand_less",
+   "use": "collapse"
+  },
+  "arrow-up": {
+   "sf_symbol": "arrow.up",
+   "material": "arrow_upward",
+   "use": "send money, sort ascending, gain (with sign)"
+  },
+  "arrow-down": {
+   "sf_symbol": "arrow.down",
+   "material": "arrow_downward",
+   "use": "receive, sort descending, loss (with sign)"
+  },
+  "arrow-left": {
+   "sf_symbol": "arrow.left",
+   "material": "arrow_back",
+   "use": "previous step inside content"
+  },
+  "arrow-right": {
+   "sf_symbol": "arrow.right",
+   "material": "arrow_forward",
+   "use": "next step inside content"
+  },
+  "arrow-up-right": {
+   "sf_symbol": "arrow.up.right",
+   "material": "north_east",
+   "use": "external link, trend up"
+  },
+  "swap": {
+   "sf_symbol": "arrow.left.arrow.right",
+   "material": "swap_horiz",
+   "use": "exchange, swap"
+  },
+  "refresh": {
+   "sf_symbol": "arrow.clockwise",
+   "material": "refresh",
+   "use": "retry, reload"
+  },
+  "history": {
+   "sf_symbol": "clock.arrow.circlepath",
+   "material": "history",
+   "use": "history, past orders"
+  },
+  "filter": {
+   "sf_symbol": "line.3.horizontal.decrease",
+   "material": "filter_list",
+   "use": "filters"
+  },
+  "sort": {
+   "sf_symbol": "arrow.up.arrow.down",
+   "material": "sort",
+   "use": "sort order"
+  },
+  "more": {
+   "sf_symbol": "ellipsis",
+   "material": "more_horiz",
+   "use": "more actions on an item (opens a sheet or showPopup)"
+  },
+  "edit": {
+   "sf_symbol": "pencil",
+   "material": "edit",
+   "use": "edit"
+  },
+  "trash": {
+   "sf_symbol": "trash",
+   "material": "delete",
+   "use": "delete (destructive, confirm first)"
+  },
+  "info": {
+   "sf_symbol": "info.circle",
+   "material": "info",
+   "use": "explanation, source note"
+  },
+  "warning": {
+   "sf_symbol": "exclamationmark.triangle",
+   "material": "warning",
+   "use": "warning state"
+  },
+  "error": {
+   "sf_symbol": "xmark.circle",
+   "material": "cancel",
+   "use": "error state"
+  },
+  "success": {
+   "sf_symbol": "checkmark.circle",
+   "material": "check_circle",
+   "use": "success state"
+  },
+  "help": {
+   "sf_symbol": "questionmark.circle",
+   "material": "help",
+   "use": "help, how it works"
+  },
+  "lock": {
+   "sf_symbol": "lock",
+   "material": "lock",
+   "use": "secure, locked, biometrics"
+  },
+  "unlock": {
+   "sf_symbol": "lock.open",
+   "material": "lock_open",
+   "use": "unlocked"
+  },
+  "eye": {
+   "sf_symbol": "eye",
+   "material": "visibility",
+   "use": "show value"
+  },
+  "eye-off": {
+   "sf_symbol": "eye.slash",
+   "material": "visibility_off",
+   "use": "hide value (balance privacy)"
+  },
+  "calendar": {
+   "sf_symbol": "calendar",
+   "material": "calendar_today",
+   "use": "date, booking"
+  },
+  "clock": {
+   "sf_symbol": "clock",
+   "material": "schedule",
+   "use": "time, slot, countdown"
+  },
+  "location": {
+   "sf_symbol": "mappin",
+   "material": "location_on",
+   "use": "address, pickup point"
+  },
+  "map": {
+   "sf_symbol": "map",
+   "material": "map",
+   "use": "map view"
+  },
+  "phone": {
+   "sf_symbol": "phone",
+   "material": "call",
+   "use": "phone number"
+  },
+  "mail": {
+   "sf_symbol": "envelope",
+   "material": "mail",
+   "use": "email"
+  },
+  "chat": {
+   "sf_symbol": "bubble.left",
+   "material": "chat_bubble",
+   "use": "chat, support"
+  },
+  "send": {
+   "sf_symbol": "paperplane",
+   "material": "send",
+   "use": "send a message or transfer"
+  },
+  "camera": {
+   "sf_symbol": "camera",
+   "material": "photo_camera",
+   "use": "take a photo"
+  },
+  "image": {
+   "sf_symbol": "photo",
+   "material": "image",
+   "use": "image, gallery"
+  },
+  "video": {
+   "sf_symbol": "video",
+   "material": "videocam",
+   "use": "video"
+  },
+  "play": {
+   "sf_symbol": "play",
+   "material": "play_arrow",
+   "use": "play media"
+  },
+  "pause": {
+   "sf_symbol": "pause",
+   "material": "pause",
+   "use": "pause media"
+  },
+  "mic": {
+   "sf_symbol": "mic",
+   "material": "mic",
+   "use": "voice input"
+  },
+  "document": {
+   "sf_symbol": "doc",
+   "material": "description",
+   "use": "file, document"
+  },
+  "download": {
+   "sf_symbol": "square.and.arrow.down",
+   "material": "download",
+   "use": "download (downloadFile)"
+  },
+  "upload": {
+   "sf_symbol": "square.and.arrow.up.on.square",
+   "material": "upload",
+   "use": "upload a file"
+  },
+  "qr": {
+   "sf_symbol": "qrcode",
+   "material": "qr_code",
+   "use": "show a QR code"
+  },
+  "scan": {
+   "sf_symbol": "qrcode.viewfinder",
+   "material": "qr_code_scanner",
+   "use": "scan (showScanQrPopup)"
+  },
+  "chart-line": {
+   "sf_symbol": "chart.line.uptrend.xyaxis",
+   "material": "show_chart",
+   "use": "analytics, price chart"
+  },
+  "chart-bar": {
+   "sf_symbol": "chart.bar",
+   "material": "bar_chart",
+   "use": "statistics"
+  },
+  "globe": {
+   "sf_symbol": "globe",
+   "material": "public",
+   "use": "public, web"
+  },
+  "moon": {
+   "sf_symbol": "moon",
+   "material": "dark_mode",
+   "use": "night (never a theme toggle: Telegram owns the theme)"
+  },
+  "sun": {
+   "sf_symbol": "sun.max",
+   "material": "light_mode",
+   "use": "day"
+  },
+  "cup": {
+   "sf_symbol": "cup.and.saucer",
+   "material": "local_cafe",
+   "use": "café, drinks"
+  },
+  "ticket": {
+   "sf_symbol": "ticket",
+   "material": "confirmation_number",
+   "use": "tickets, events"
+  },
+  "trophy": {
+   "sf_symbol": "trophy",
+   "material": "emoji_events",
+   "use": "leaderboard, achievements"
+  },
+  "flag": {
+   "sf_symbol": "flag",
+   "material": "flag",
+   "use": "report, milestone"
+  },
+  "list": {
+   "sf_symbol": "list.bullet",
+   "material": "list",
+   "use": "list view"
+  },
+  "grid": {
+   "sf_symbol": "square.grid.2x2",
+   "material": "grid_view",
+   "use": "grid view, categories"
+  },
+  "logout": {
+   "sf_symbol": "rectangle.portrait.and.arrow.right",
+   "material": "logout",
+   "use": "sign out of a linked account (a Mini App has no own login)"
+  },
+  "language": {
+   "sf_symbol": "character.bubble",
+   "material": "translate",
+   "use": "language"
+  },
+  "sticker": {
+   "sf_symbol": "face.smiling",
+   "material": "sticky_note_2",
+   "use": "stickers, emoji status"
+  }
+ }
+}

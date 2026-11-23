@@ -2,7 +2,9 @@
 
 Every component a Mini App screen needs, with its anatomy, kit class, states, the native Telegram control
 that replaces it when one exists, platform differences and the matching TelegramUI component for projects
-that already use that library. Tokens: [design-system.md](design-system.md). Labels: **[Official]**,
+that already use that library. Tokens: [design-system.md](design-system.md). Machine-readable inventory (97 entries, with
+status kit / native / pattern / avoid): `data/mini-apps/components.json`; every kit entry is rendered in
+`examples/mini-apps/gallery`; the order of work: [orchestration.md](orchestration.md). Labels: **[Official]**,
 **[Heuristic]**.
 
 States column: **D** default, **P** pressed, **X** disabled, **L** loading, **E** error, **0** empty,
@@ -93,6 +95,64 @@ Unsaved input turns on `enableClosingConfirmation()`; it goes off after saving. 
 | Skeleton | `.tma-skeleton` | S | the real layout's shapes; stops on reduced motion |
 | Coachmark | `.tma-coachmark` | shown once | points at a new feature once; "seen" stored in `CloudStorage` |
 | Snackbar | `.tma-snackbar` | shown | confirms an off-screen change; ~2 s; above the tab bar and insets |
+
+## 6a. Media
+
+| Component | Kit | Variants | Rules |
+|---|---|---|---|
+| Image | `.tma-media` + `<img>` | 16:9 default, `.is-square`, `.is-portrait` (4:5), `.is-circle`, `.is-fill` (edge to edge), `.is-contain` | `alt` (`alt=""` for decoration), `width`/`height`, `loading="lazy"` below the fold, sized for the slot |
+| Video | `.tma-media` + `<video poster>` + `.tma-media__play` + `.tma-media__badge` | poster with play and duration | `playsinline`; autoplay only muted and silent; pause on `deactivated` |
+| Photo grid | `.tma-gallery` | 3 columns, 2 px gaps | tap opens a full view screen with BackButton |
+| Carousel | `.tma-carousel` + `.tma-dots` | snap, 86 % cards | no auto-advance with reduced motion or Android `LOW`; dots are decoration (`aria-hidden`) |
+| Audio | `.tma-audio` in a cell | play, track, duration | play button with a label naming the clip and its length |
+| File | `.tma-file__icon` in a two-line cell | name, size, download icon | `downloadFile` (8.0) in a tap; the server sends `Content-Disposition` and CORS |
+| Sticker moment | `.tma-moment` | TGS, WEBM, Lottie, static fallback | one per screen; static on reduced motion and `LOW`; `role="img"` + label |
+| Map | `.tma-map` | static image, interactive | `disableVerticalSwipes` only while the user pans; location via `LocationManager` (8.0) |
+| QR code | `.tma-qr` | show; scan via `showScanQrPopup` (6.4) | white quiet zone in both themes (scanners need contrast) |
+| Avatar stack | `.tma-avatar-stack` | 2-4 faces | label the count ("3 friends") |
+
+## 6b. Tables
+
+A table only when people compare values across columns; two to five facts read once stay a list or a
+key-value list. **[Heuristic]**
+
+| Component | Kit | Rules |
+|---|---|---|
+| Data table | `.tma-table-wrap` > `table.tma-table` with `<caption>` | numbers right-aligned (`.is-num`), tabular figures, header in hint colour; scrolls sideways inside its group, never the page |
+| Compact table | `.tma-table.is-compact` | dense style screens; rows still ≥ 32 px with 44 px tap targets on interactive rows |
+| Sortable header | `th[aria-sort]` | `aria-sort` on the active column, a sort control in the header |
+| Sticky first column | `tbody th[scope="row"]` | wide comparisons; the row label stays visible |
+| Leaderboard | `.tma-rank` + `tr.is-me` | the user's own row tinted and present even when outside the top |
+| Key-value list | `dl.tma-kv` | receipts, order details |
+| Comparison (plans) | data table with check icons and text | never colour alone for yes/no |
+
+## 6c. Icons
+
+`examples/mini-apps/_kit/icons.svg` is an own line set: 81 icons on a 24 px grid, stroke 1.8, round caps,
+drawn with `currentColor`. `data/mini-apps/icons.json` maps every id to the SF Symbol and Material Symbols
+name with the same meaning, so a brief that names "magnifyingglass" or "shopping_cart" maps to
+`i-search` or `i-cart`. Apple's and Google's glyphs are not shipped (licences). **[Heuristic]**
+
+- One set per app, one size per context (22 in rows and tabs, 16 inline in chips and pills).
+- Icon-only buttons carry `aria-label`; decorative icons `aria-hidden="true"`.
+- Unicode emoji are never UI icons; animated or premium emoji only as the one moment ([anti-slop.md](anti-slop.md) §3).
+- An icon the set lacks: draw it on the same grid and stroke, add it to `icons.svg` and `icons.json`.
+
+## 6d. Settings rows (iOS 27 trailing types)
+
+| Trailing | Kit | Example |
+|---|---|---|
+| Default detail | `.tma-cell__after` | Language · English |
+| Disclosure | `.tma-cell__chevron` (+ detail) | Payment methods · 2 › |
+| Button | `.tma-cell.is-button` / `.is-danger` | Invite a friend; Delete history |
+| Date / time / value pill | `.tma-pill-select` over a native `input type=date|time` or `select` | Pickup time · 10:30 |
+| Pop-up menu | `.tma-popup-trigger` + `.tma-menu` | Default size · Medium ⌄ |
+| Stepper | `.tma-stepper` | Extra shots − 1 + |
+| Toggle | `.tma-switch` (`role="switch"`) | Order is ready ● |
+| Checkmark | `.tma-cell__check` in `role="option"` rows | Whole milk ✓ |
+
+Every element above is rendered in `examples/mini-apps/gallery` (open it in the preview stand) and listed in
+`data/mini-apps/components.json` with its status, variants, states and native replacement.
 
 ## 7. Overlays
 

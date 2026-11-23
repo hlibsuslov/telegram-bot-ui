@@ -199,5 +199,71 @@ class KitFiles(unittest.TestCase):
             self.assertIn(row["kit_var"] + ":", css, row["kit_var"])
 
 
+class Catalogue(unittest.TestCase):
+    """data/mini-apps/components.json, icons.json, the kit and the gallery stay in sync."""
+    cat = _paths.load("data", "mini-apps", "components.json")
+    icons = _paths.load("data", "mini-apps", "icons.json")
+
+    @staticmethod
+    def read(*parts):
+        with open(os.path.join(KIT, *parts), encoding="utf-8") as fh:
+            return fh.read()
+
+    @staticmethod
+    def tokens(selector):
+        """Class names and attribute selectors a kit entry names (`.tma-cell.is-button`, `th[aria-sort]`)."""
+        return re.findall(r"\.([a-z][\w-]*)", selector) + re.findall(r"\[([^\]=]+)", selector)
+
+    def test_every_entry_is_complete(self):
+        groups = set(self.cat["groups"])
+        self.assertGreaterEqual(len(self.cat["components"]), 90)
+        for key, c in self.cat["components"].items():
+            self.assertIn(c["group"], groups, key)
+            self.assertIn(c["status"], {"kit", "native", "pattern", "avoid"}, key)
+            self.assertTrue(c["sources"], key)
+            if c["status"] == "kit":
+                self.assertTrue(c["kit"], key)
+            if c["status"] == "native":
+                self.assertTrue(c["native"], key)
+            if c["status"] == "avoid":
+                self.assertTrue(c["note"], f"{key}: an avoided element names its replacement")
+        self.assertIn("Not read and not represented", self.cat["$comment"])  # unread kits are never claimed
+
+    def test_kit_entries_exist_in_css_and_gallery(self):
+        css = self.read("_kit", "tma.css")
+        gallery = self.read("gallery", "index.html") + self.read("gallery", "app.ts")
+        for key, c in self.cat["components"].items():
+            if c["status"] != "kit":
+                continue
+            for token in self.tokens(c["kit"]):
+                with self.subTest(component=key, token=token):
+                    if token.startswith("tma-") or token.startswith("is-"):
+                        self.assertIn(token, css)
+                    self.assertIn(token, gallery)
+
+    def test_every_type_role_has_a_utility(self):
+        css = self.read("_kit", "tma.css")
+        for role in self.cat["typography"]["roles"]:
+            self.assertIn(f".tma-text-{role} ", css, role)
+        for level in range(1, 7):
+            self.assertIn(f".tma-prose h{level} ", css)
+            self.assertIn(f"<h{level}>", self.read("gallery", "index.html"))
+
+    def test_icons_match_the_sprite_and_examples_use_known_ids(self):
+        sprite = self.read("_kit", "icons.svg")
+        ids = re.findall(r'<symbol id="i-([a-z-]+)"', sprite)
+        self.assertEqual(sorted(ids), sorted(self.icons["icons"]))
+        self.assertGreaterEqual(len(ids), 80)
+        for name, row in self.icons["icons"].items():
+            self.assertTrue(row["sf_symbol"] and row["material"] and row["use"], name)
+        used = set(re.findall(r"icons\.svg#i-([a-z-]+)", self.read("gallery", "index.html")))
+        self.assertTrue(used <= set(ids), sorted(used - set(ids)))
+
+    def test_gallery_is_clean_and_built_like_the_others(self):
+        rep = lint_dir(os.path.join(KIT, "gallery"))
+        self.assertEqual([f.text() for f in rep.findings], [])
+        self.assertIn("gallery/app.ts", self.read("build.mjs"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -5,6 +5,7 @@
       open http://127.0.0.1:8790/                 one device with Telegram chrome, controls, call log
       open http://127.0.0.1:8790/?view=matrix     iOS/Android x light/dark x 320/390/430 + fullscreen
       open http://127.0.0.1:8790/?platform=android&scheme=dark&width=390&mode=fullscreen&version=8.0
+      add &height=1600 for a taller device (long screens in one screenshot)
   py -3 scripts/preview_miniapp.py examples/mini-apps/vanilla --check   # static checks, no server
 
 The stand serves the app's folder (by default its parent, so `../_kit/tma.css` resolves) on
@@ -610,7 +611,7 @@ window.addEventListener('message', (ev) => {
 
 function opts(over) {
   return Object.assign({ platform: $('c-platform').value, scheme: $('c-scheme').value, width: +$('c-width').value,
-    mode: $('c-mode').value, version: verSel.value, start: $('c-start').value.trim(), perf: $('c-perf').value, style: $('c-style').value }, over);
+    mode: $('c-mode').value, version: verSel.value, start: $('c-start').value.trim(), perf: $('c-perf').value, style: $('c-style').value, height: +qs.get('height') || undefined }, over);
 }
 function render() {
   const root = $('root'); root.replaceChildren(); Device.all = [];

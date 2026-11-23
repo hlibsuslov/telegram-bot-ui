@@ -1,0 +1,183 @@
+// Kit gallery: renders every kit component and wires the native controls so each can be checked in the
+// preview stand (platforms, schemes, widths, fullscreen, versions, styles) and on a real device.
+import { createTma } from '../_kit/tma.ts';
+
+const tma = createTma();
+const $ = (id: string) => document.getElementById(id) as HTMLElement;
+const ICONS = '../_kit/icons.svg';
+const GROUPS = ['text', 'structure', 'navigation', 'actions', 'settings', 'input', 'display', 'media', 'tables', 'overlays', 'icons'];
+const icon = (id: string) => `<svg class="tma-icon" aria-hidden="true"><use href="${ICONS}#i-${id}"/></svg>`;
+
+/* type scale: every role, regular and emphasized */
+const ROLES: Array<[string, string]> = [['large-title', '34/41'], ['title1', '28/34'], ['title2', '22/28'], ['title3', '20/25'],
+  ['headline', '17/22'], ['body', '17/22'], ['callout', '16/21'], ['subhead', '15/20'], ['footnote', '13/18'],
+  ['caption1', '12/16'], ['caption2', '11/13']];
+$('type-scale').replaceChildren(...ROLES.map(([role, size]) => {
+  const row = document.createElement('p');
+  row.style.margin = '0 0 var(--tma-s2)';
+  row.innerHTML = `<span class="tma-text-${role}">${role}</span> <span class="tma-text-${role} is-em">emphasized</span> <span class="tma-caption">${size}</span>`;
+  return row;
+}));
+
+/* colour roles: swatch + the resolved value, live */
+const ROLE_VARS = ['--tma-page', '--tma-surface', '--tma-text', '--tma-hint', '--tma-subtitle', '--tma-accent', '--tma-accent-text',
+  '--tma-link', '--tma-danger', '--tma-success', '--tma-separator', '--tma-fill', '--tma-tonal', '--tma-brand'];
+function renderRoles(): void {
+  $('roles').replaceChildren(...ROLE_VARS.map((v) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<div class="tma-cell"><span class="tma-avatar" style="background:var(${v});box-shadow:inset 0 0 0 1px var(--tma-separator)"></span>
+      <span class="tma-cell__body"><span class="tma-cell__title tma-code" style="background:none;padding:0">${v}</span></span>
+      <span class="tma-cell__after tma-caption"></span></div>`;
+    // the resolved value comes from the client's theme: set it as text, never as markup
+    li.querySelector('.tma-cell__after')!.textContent = getComputedStyle(document.documentElement).getPropertyValue(v).trim().slice(0, 22);
+    return li;
+  }));
+}
+renderRoles();
+tma.on('themeChanged', renderRoles);
+
+/* group filter chips */
+let group = 'all';
+function renderGroups(): void {
+  $('groups').replaceChildren(...['all', ...GROUPS].map((g) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tma-chip'; b.setAttribute('role', 'tab');
+    b.setAttribute('aria-pressed', String(g === group));
+    b.textContent = g === 'all' ? 'All' : g[0].toUpperCase() + g.slice(1);
+    b.onclick = () => { if (g !== group) { group = g; tma.haptic.select(); renderGroups(); filter(); } };
+    return b;
+  }));
+}
+function filter(): void {
+  for (const s of document.querySelectorAll<HTMLElement>('[data-group]')) s.hidden = group !== 'all' && s.dataset.group !== group;
+}
+renderGroups();
+
+/* icons grid from the sprite */
+fetch(ICONS).then((r) => r.text()).then((svg) => {
+  const ids = [...svg.matchAll(/<symbol id="i-([a-z-]+)"/g)].map((m) => m[1]);
+  $('icon-count').textContent = `${ids.length} icons`;
+  $('icons').replaceChildren(...ids.map((id) => {
+    const d = document.createElement('div');
+    d.style.cssText = 'display:grid;justify-items:center;gap:4px;text-align:center';
+    d.innerHTML = `${icon(id)}<span class="tma-caption" style="overflow-wrap:anywhere">${id}</span>`;
+    return d;
+  }));
+}).catch(() => { $('icon-count').textContent = 'icons.svg did not load'; });
+
+/* selection controls */
+for (const seg of document.querySelectorAll<HTMLElement>('.tma-segmented')) {
+  seg.addEventListener('click', (e) => {
+    const b = (e.target as HTMLElement).closest('button');
+    if (!b || b.getAttribute('aria-selected') === 'true') return;
+    for (const x of seg.querySelectorAll('button')) x.setAttribute('aria-selected', String(x === b));
+    tma.haptic.select();
+  });
+}
+$('milk').addEventListener('click', (e) => {
+  const b = (e.target as HTMLElement).closest('[role="option"]');
+  if (!b) return;
+  for (const x of $('milk').querySelectorAll('[role="option"]')) x.setAttribute('aria-selected', String(x === b));
+  tma.haptic.select();
+});
+for (const b of document.querySelectorAll<HTMLButtonElement>('[data-step]')) {
+  b.onclick = () => { const o = $('shots'); o.textContent = String(Math.min(4, Math.max(0, Number(o.textContent) + Number(b.dataset.step)))); tma.haptic.select(); };
+}
+const fmt = (id: string, out: string, f: (v: string) => string) => {
+  const input = $(id) as HTMLInputElement;
+  input.onchange = () => { if (input.value) $(out).textContent = f(input.value); tma.haptic.select(); };
+};
+fmt('date-in', 'date-v', (v) => new Date(v).toLocaleDateString(undefined, { day: 'numeric', month: 'short' }));
+fmt('time-in', 'time-v', (v) => v);
+const slider = $('f5') as HTMLInputElement;
+slider.oninput = () => { $('f5o').textContent = slider.value; };
+$('rating').replaceChildren(...[1, 2, 3, 4, 5].map((n) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.setAttribute('aria-label', `${n} of 5`); b.setAttribute('aria-pressed', String(n <= 4));
+  b.innerHTML = icon('star');
+  b.onclick = () => { for (const x of $('rating').children) x.setAttribute('aria-pressed', String(Number(x.getAttribute('aria-label')![0]) <= n)); tma.haptic.select(); };
+  return b;
+}));
+for (const pin of document.querySelectorAll<HTMLInputElement>('.tma-pin input')) {
+  pin.addEventListener('input', () => { (pin.nextElementSibling as HTMLInputElement | null)?.focus(); });
+}
+
+/* pop-up menu */
+const trigger = $('size-trigger');
+const menu = $('size-menu');
+trigger.onclick = () => { menu.hidden = !menu.hidden; trigger.setAttribute('aria-expanded', String(!menu.hidden)); };
+menu.addEventListener('click', (e) => {
+  const b = (e.target as HTMLElement).closest('button');
+  if (!b) return;
+  trigger.firstChild!.textContent = b.textContent;
+  menu.hidden = true; trigger.setAttribute('aria-expanded', 'false'); tma.haptic.select();
+});
+
+/* banner dismissal is remembered */
+const store = tma.store();
+void store.get('promo-hidden').then((v) => { if (v === '1') $('promo').hidden = true; });
+$('promo').querySelector('button')!.addEventListener('click', () => { $('promo').hidden = true; void store.set('promo-hidden', '1'); });
+
+/* level-2 screen with BackButton */
+function closeDetail(): void { tma.nav.pop('detail'); $('detail').hidden = true; $('home').hidden = false; $('tabbar').hidden = false; }
+$('open-screen').onclick = () => {
+  $('home').hidden = true; $('detail').hidden = false; $('tabbar').hidden = true;
+  tma.nav.push({ id: 'detail', kind: 'screen', onBack: closeDetail });
+};
+
+/* native buttons and haptics */
+$('demo-main').onclick = () => {
+  tma.mainButton({ text: 'Pay 120 points', onClick: async () => { await new Promise((r) => setTimeout(r, 600)); tma.haptic.success(); toast('Paid with points'); tma.mainButton(null); tma.secondaryButton(null); } });
+  if (!tma.secondaryButton({ text: 'Later', position: 'left', onClick: () => { tma.mainButton(null); tma.secondaryButton(null); } })) toast('SecondaryButton needs Bot API 7.10');
+};
+$('demo-haptics').onclick = () => { tma.haptic.select(); setTimeout(() => tma.haptic.tap(), 250); setTimeout(() => tma.haptic.success(), 500); };
+$('demo-delete').onclick = async () => {
+  const ok = await tma.confirm('Delete your order history? Points stay.', async () => true);
+  if (ok) { tma.haptic.warning(); toast('Order history deleted'); }
+};
+$('demo-file').onclick = () => {
+  if (tma.has('8.0')) (tma.tg as unknown as { downloadFile(p: { url: string; file_name: string }): void }).downloadFile({ url: `${location.origin}/receipt-1042.pdf`, file_name: 'Receipt 1042.pdf' });
+  else toast('Downloads need Bot API 8.0');
+};
+$('ext-link').addEventListener('click', (e) => {
+  if (!tma.inTelegram) return;
+  e.preventDefault();
+  (tma.tg as unknown as { openLink(u: string): void }).openLink((e.currentTarget as HTMLAnchorElement).href);
+});
+
+/* overlays */
+function openLayer(id: string): void {
+  $('scrim').hidden = false; $(id).hidden = false;
+  ($(id).querySelector('button') as HTMLButtonElement | null)?.focus();
+  tma.nav.push({ id, kind: 'sheet', onBack: () => closeLayer(id) });
+}
+function closeLayer(id: string): void { tma.nav.pop(id); $(id).hidden = true; $('scrim').hidden = true; }
+$('demo-sheet').onclick = () => openLayer('sheet');
+$('demo-actions').onclick = () => openLayer('actions');
+for (const id of ['sheet', 'actions']) $(id).addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('[data-close]')) closeLayer(id); });
+$('scrim').onclick = () => { for (const id of ['sheet', 'actions']) if (!$(id).hidden) closeLayer(id); };
+$('demo-popup').onclick = () => {
+  if (!tma.has('6.2')) { toast('Popups need Bot API 6.2'); return; }
+  (tma.tg as unknown as { showPopup(p: unknown, cb: (id: string) => void): void }).showPopup({
+    title: 'Cancel order 1042?', message: 'The barista has not started it yet. Your points come back.',
+    buttons: [{ id: 'keep', type: 'default', text: 'Keep order' }, { id: 'cancel', type: 'destructive', text: 'Cancel order' }],
+  }, (id) => { if (id === 'cancel') toast('Order cancelled'); });
+};
+$('demo-snack').onclick = () => toast('Saved to favourites');
+function toast(text: string): void {
+  const s = $('snackbar');
+  s.textContent = text; s.hidden = false;
+  window.setTimeout(() => { s.hidden = true; }, 2200);
+}
+
+/* QR slot: a decorative sample pattern (clearly labelled in the markup) */
+const cells: string[] = [];
+for (let y = 0; y < 21; y++) for (let x = 0; x < 21; x++) {
+  const finder = (x < 8 && y < 8) || (x > 12 && y < 8) || (x < 8 && y > 12);
+  if (!finder && ((x * 7 + y * 13 + x * y) % 5 < 2)) cells.push(`M${x} ${y}h1v1h-1z`);
+}
+$('qr-path').setAttribute('d', 'M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2z' + cells.join(''));
+($('qr-path') as unknown as SVGPathElement).setAttribute('fill-rule', 'evenodd');
+
+tma.chrome({ header: 'secondary_bg_color', background: 'secondary_bg_color', bottomBar: 'secondary_bg_color' });
+tma.ready();

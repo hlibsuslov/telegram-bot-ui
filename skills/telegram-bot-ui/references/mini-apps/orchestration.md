@@ -1,0 +1,69 @@
+# Orchestrating a Mini App: create or rework
+
+The order an agent follows when a person asks to **create** a Mini App or to **improve, restyle or fix**
+an existing one, with the file or tool for each step. Every step ends with something checkable. Use it
+with the closest recipe (90-99) and the screen pattern for the product type.
+
+## 1. What to load, by request
+
+| Request | Load first | Then |
+|---|---|---|
+| "Build a Mini App for X" | [decide.md](decide.md), the screen pattern for X, the recipe | [design-system.md](design-system.md), [components.md](components.md) |
+| "Make it look like X / use our brand / calmer / denser" | [design-system.md](design-system.md) §9 | `scripts/miniapp_style.py` |
+| "It looks generated / web-like / cheap", "make it premium" | [anti-slop.md](anti-slop.md) §5 | `scripts/miniapp_lint.py` |
+| "Add a screen / a table / settings / a gallery" | `data/mini-apps/components.json`, [components.md](components.md) | the kit gallery for the markup |
+| "Verify the user on the server" | [security.md](security.md) | `examples/mini-apps/server` |
+| "Does the API have X?" | `scripts/webapp_lookup.py show X` | [webapp-api.md](webapp-api.md) |
+| "Open it from the bot / a button / a link" | [launch-and-lifecycle.md](launch-and-lifecycle.md) | [../mini-apps-bridge.md](../mini-apps-bridge.md) |
+
+## 2. Create
+
+1. **Decide the surface and the entry** ([decide.md](decide.md)): Mini App or not; reply keyboard, inline or
+   menu button, Main Mini App, direct link; what the bot says before and after.
+2. **Map the screens**: tab roots (2-5) and level-2 screens; for each screen its one primary action
+   (MainButton or none), its states (loading, empty, error, success), its `startapp` route if any.
+3. **Pick the components** from `data/mini-apps/components.json` (status `kit` first, `native` where
+   Telegram draws it, never `avoid`). Copy markup from `examples/mini-apps/gallery/index.html`.
+4. **Pick the style** (design-system §9.2) and say why in one line; brand colour only as one moment.
+5. **Write the server contract first** ([security.md](security.md)): `initData` verification, `auth_date`
+   policy, the routes and who may call them.
+6. **Build** on the kit: `_kit/tma.css`, `_kit/tma.ts` (`createTma`, `nav`, `mainButton`, `haptic`,
+   `store`), icons from `_kit/icons.svg` (names: `data/mini-apps/icons.json`).
+7. **Check**: `py -3 scripts/miniapp_lint.py <app> --strict`; unit tests; the preview matrix
+   (`scripts/preview_miniapp.py <app> --serve 8790`, `/?view=matrix`, then the Style switch).
+8. **Report**: screens, style and why, components used, evidence level (lint, tests, mock preview, test
+   server, devices), what is not verified.
+
+## 3. Rework an existing Mini App
+
+1. **Inventory**: screens, entry points, the components each screen uses, colours and fonts in use, how it
+   authenticates. Run the lint and keep the report as the baseline.
+2. **Rank the defects**: security (MA01-MA02) → broken native behaviour (own header, own back, own bottom
+   CTA, missing `ready()`) → missing states → theme (literal colours, `100vh`) → slop → polish.
+3. **Fix structure before style**: native buttons, one navigation stack, grouped lists, states.
+4. **Replace literals with kit roles**; delete web fonts, gradient text, glows, emoji icons.
+5. **Apply the style** the request names (preset or checked profile).
+6. **Re-check**: lint `--strict`, preview matrix in every style the app ships, both themes, fullscreen.
+7. **Report** the before/after lint counts, what changed per screen, what was left alone and why.
+
+Contracts stay frozen while reworking: API routes, `startapp` values, CloudStorage keys, analytics events.
+
+## 4. Coverage map: every element and where it lives
+
+| Need | Catalogue entry (`components.json`) | Kit | Reference |
+|---|---|---|---|
+| Text roles, h1-h6, long text | `typography`, `prose`, `quote`, `code` | `.tma-text-*`, `.tma-prose` | design-system §4 |
+| Lists, rows, settings | `list`, `cell`, `row-*` (detail, disclosure, button, picker pill, pop-up, stepper, toggle, check) | `.tma-list`, `.tma-cell`, … | components §2, §5 |
+| Navigation | `tab-bar`, `segmented`, `chips-row`, `search-field`, `page-dots`; native `back`, `header` | `.tma-tabbar`, … | components §3 |
+| Actions | `main-button`, `secondary-button`, `button`, `glass-button`, `quick-actions`, `chip` | `.tma-btn`, … | components §4 |
+| Input | `text-field`, `select`, `date-time`, `switch`, `slider`, `stepper`, `pin`, `file-input`, `rating` | `.tma-input`, … | components §5 |
+| Display and data | `figure`, `delta`, `chart`, `progress`, `skeleton`, `banner`, `hero`, `coachmark`, `snackbar` | `.tma-figure`, … | components §6 |
+| Media | `image`, `video`, `gallery`, `carousel`, `audio`, `file`, `sticker-moment`, `map`, `qr` | `.tma-media`, … | components §6a |
+| Tables | `data-table`, `compact-table`, `sortable-table`, `sticky-column-table`, `leaderboard`, `comparison` | `.tma-table`, `.tma-kv` | components §6b |
+| Overlays | native `popup`, `qr-scanner`; `sheet`, `action-sheet`, `menu` | `.tma-sheet`, `.tma-menu` | components §7 |
+| Icons | 81 ids with SF Symbol and Material equivalents | `_kit/icons.svg` | components §6c |
+
+What is not covered and why: anything the read sources did not show and Telegram does not need (wheel
+date pickers: the native input; numbered pagination, breadcrumbs, hamburger menus, bottom toolbars,
+floating action buttons, fullscreen modals: replaced, see `avoid` entries). Not read at all: the Telegram UI
+community Figma kit and Appetite UI; nothing in the skill comes from them.
