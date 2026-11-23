@@ -5,6 +5,33 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## Unreleased
+
+### Mini Apps branch
+
+A new skill branch for Telegram Mini Apps (`references/mini-apps/README.md`), verified against
+Bot API 10.5 and https://core.telegram.org/bots/webapps on 2026-11-23.
+
+- Decide messages, widget or Mini App; every launch point and its `initData`; `startapp` and modes;
+  start sequence, visibility, hosting on an own domain or Telegram Serverless; the 10.2 origin lockdown.
+- `Telegram.WebApp` by task with versions and fallbacks, from an offline catalog of 286 members
+  (`data/mini-apps/webapp-catalog.json`, `scripts/webapp_lookup.py`, also reached by `tg_api_lookup.py show`).
+- A Telegram-native design system: theme roles, the iOS 27 type scale (every role, regular and
+  emphasized, h1-h6 in long text), space, platforms, motion and haptics, states; named styles
+  (`native`, `fintech`, `soft`, `dense`) and checked brand profiles (`scripts/miniapp_style.py`).
+- A catalogue of 113 elements with variants, states, native replacements and status
+  (`data/mini-apps/components.json`), 81 own line icons mapped to SF Symbols and Material names.
+- Layout rules L01-L25 for images, titles, prices, ratings, availability, galleries, filters, forms,
+  booking and plans across 16 content types, with `scripts/miniapp_layout.py show / review`;
+  screen patterns for shops, gyms and trainers, bookstores, SaaS dashboards, clinics, events and more.
+- Anti-slop rules with a 24-rule lint (`scripts/miniapp_lint.py`), security (`initData` HMAC and
+  Ed25519, freshness, sessions, storage, CSP), performance and testing.
+- A no-dependency kit (`examples/mini-apps/_kit`), examples (coffee pickup, catalogue, points
+  portfolio, kit gallery, React 19 with `@tma.js/sdk-react`), server-side `initData` verification in
+  Python stdlib and `node:crypto` with shared vectors, the bot side, and a mock preview stand
+  (`scripts/preview_miniapp.py`: platforms, themes, widths, fullscreen, versions, styles).
+- Recipes 90-99, evals for the `mini-apps` area, five Mini App product families in the use-case catalog.
+
 ## 3.0.0 - 2026-11-23
 
 The skill now covers the whole interface of a Telegram bot, not one feature of it: screens,
