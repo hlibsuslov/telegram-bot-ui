@@ -22,7 +22,8 @@ TON wallet: [../wallet-and-ton.md](../wallet-and-ton.md). Widgets inside a messa
 | Verify `initData`, sessions, what to trust | [security.md](security.md) | recipe 92 |
 | Make it look like Telegram in light and dark, iOS and Android | [telegram-design-guidelines.md](telegram-design-guidelines.md), [design-sources.md](design-sources.md), [design-system.md](design-system.md) | `examples/mini-apps/_kit` |
 | "Make it look like X", "use our brand", "calmer / denser / fintech", restyle an existing app | [design-system.md](design-system.md) §9 styles, `scripts/miniapp_style.py` | `data/mini-apps/styles.json` |
-| Build a screen: shop, form, dashboard, settings, game, editor | `screen-patterns.md`, [components.md](components.md) | recipes 93-99 |
+| Build a screen: shop, gym and trainers, bookstore, SaaS dashboard, form, booking, game, editor | [screen-patterns.md](screen-patterns.md), [components.md](components.md) | recipes 93-99 |
+| Where the image, title, price, rating go; galleries, filters, booking, plans; review a screen | [layout-rules.md](layout-rules.md), `scripts/miniapp_layout.py` | `examples/mini-apps/catalog` |
 | "It looks generated / web-like / off", "make it premium" | [anti-slop.md](anti-slop.md), `scripts/miniapp_lint.py` | — |
 | Speed, weak Android, how to test without a phone | [performance-and-testing.md](performance-and-testing.md), `scripts/preview_miniapp.py` | — |
 
@@ -58,6 +59,8 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `data/mini-apps/components.json` | 97 elements (structure, navigation, actions, settings, input, display, media, tables, overlays) with variants, states, kit class, native replacement and status |
 | `data/mini-apps/icons.json` | 81 kit icons mapped to SF Symbol and Material names |
 | `scripts/webapp_lookup.py` | `show`, `search`, `since`, `gates`, `theme`, `sync` over the catalog |
+| `data/mini-apps/layouts.json` | layout rules L01-L25 and 16 content types (image ratio, card slots, price, primary action, detail order) |
+| `scripts/miniapp_layout.py` | `entities`, `show`, `rules`, `review` a screen description, `example` |
 | `scripts/miniapp_style.py` | `presets`, `show`, `css`, `check` for styles and custom brand profiles |
 | `scripts/miniapp_lint.py` | 24 rules: security, native controls, theme, motion, labels, slop (`--json`, `--strict`) |
 | `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions |

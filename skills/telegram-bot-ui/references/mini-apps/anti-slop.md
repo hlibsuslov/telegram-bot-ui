@@ -47,6 +47,7 @@ adapted). A Mini App is almost always an **Operate** product (people come to do 
 | "No coloured gradients" vs a brand header and CTA | only a tonal gradient of one hue on one moment (hero, promo), fading into the page; buttons solid; cross-hue gradients and gradient text banned |
 | "No glass as decoration" vs Telegram's glass chrome on iOS | glass only on floating controls over scrolling content (tab bar, side circle), with a solid fallback; cards and cells solid |
 | "No NEW badges" vs a coachmark in the reference | a one-time coachmark naming the new feature, remembered; no permanent badges |
+| Stars prices ("⭐ 250") vs "no emoji in labels" | `⭐` directly before an amount is the Telegram Stars currency sign (as in Telegram's own payment UI): allowed in prices and MainButton text; every other emoji in a label stays slop (lint MA13 makes the same exception) |
 | "Primary is off-white on dark" | in a Mini App the primary action is the MainButton in the theme's `button_color` |
 | "Own typeface for an own world" | a Mini App operates inside Telegram: system font; a brand face only inside the one moment |
 | Corner ribbons on cards (reference) | a quiet tag text, one per card |

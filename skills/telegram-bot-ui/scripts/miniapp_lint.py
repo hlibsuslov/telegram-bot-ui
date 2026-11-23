@@ -67,6 +67,7 @@ RULES = {
 TOKEN = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b|\bBOT_TOKEN\b|\bTELEGRAM_BOT_TOKEN\b")
 COLOR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\([^)]*\)")
 EMOJI = re.compile("[\U0001F300-\U0001FAFF\U0001F000-\U0001F2FF\u2600-\u27BF\u2B50\u2B55]")
+STARS_AMOUNT = re.compile(r"⭐️?\s*(?:\d|\$\{)")  # the Telegram Stars currency sign before an amount is not decoration
 TG_SCRIPT = re.compile(r"<script\b[^>]*\bsrc=[\"']https://telegram\.org/js/telegram-web-app\.js", re.I)
 STYLE_BLOCK = re.compile(r"<style[^>]*>(.*?)</style>", re.S | re.I)
 COMMENT_CSS = re.compile(r"/\*.*?\*/", re.S)
@@ -242,7 +243,7 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
                 add("MA23", path, text, 0, "no <meta name=\"viewport\">")
             for m in re.finditer(r"<(button|nav|h[1-6]|a)\b[^>]*>(.*?)</\1>", text, re.S | re.I):
                 inner = re.sub(r"<[^>]+>", "", m.group(2))
-                if EMOJI.search(inner):
+                if EMOJI.search(STARS_AMOUNT.sub("", inner)):
                     add("MA13", path, text, m.start(), f"emoji in <{m.group(1)}> {inner.strip()[:30]!r}: a line icon or text")
             own_back = re.search(r"history\.back\s*\(|<(?:button|a)[^>]*(?:class|id)=[\"'][^\"']*(?:back-btn|btn-back|back-button|nav-back)", text, re.I)
             if own_back:
@@ -265,7 +266,7 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
         # ---- bottom-button labels with emoji (JS)
         if code:
             for m in re.finditer(r"(?:setText\s*\(|\btext\s*:)\s*[`'\"]([^`'\"]*)", code):
-                if EMOJI.search(m.group(1)):
+                if EMOJI.search(STARS_AMOUNT.sub("", m.group(1))):
                     add("MA13", path, text, m.start(), f"emoji in a button label {m.group(1)[:30]!r}: use iconCustomEmojiId (9.5) or plain text")
 
         # ---- CSS

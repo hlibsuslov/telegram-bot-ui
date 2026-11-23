@@ -231,15 +231,16 @@ class Catalogue(unittest.TestCase):
 
     def test_kit_entries_exist_in_css_and_gallery(self):
         css = self.read("_kit", "tma.css")
-        gallery = self.read("gallery", "index.html") + self.read("gallery", "app.ts")
+        gallery = (self.read("gallery", "index.html") + self.read("gallery", "app.ts")
+                   + self.read("catalog", "index.html") + self.read("catalog", "app.ts"))
         for key, c in self.cat["components"].items():
             if c["status"] != "kit":
                 continue
             for token in self.tokens(c["kit"]):
                 with self.subTest(component=key, token=token):
                     if token.startswith("tma-") or token.startswith("is-"):
-                        self.assertIn(token, css)
-                    self.assertIn(token, gallery)
+                        self.assertTrue(token in css, "missing in tma.css")
+                    self.assertTrue(token in gallery, "not shown in the gallery or catalogue example")
 
     def test_every_type_role_has_a_utility(self):
         css = self.read("_kit", "tma.css")

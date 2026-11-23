@@ -555,6 +555,7 @@ select.tma-input {
 .tma-media__play { position: absolute; inset: 0; margin: auto; width: 56px; height: 56px; border: 0; border-radius: 50%; display: grid; place-items: center; background: rgb(0 0 0 / .45); color: var(--tma-fb-knob); cursor: pointer; }
 .tma-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; border-radius: var(--tma-r-inner); overflow: hidden; }
 .tma-gallery > * { aspect-ratio: 1; border-radius: 0; width: 100%; height: 100%; object-fit: cover; }
+.tma-gallery > * > img { width: 100%; height: 100%; object-fit: cover; display: block; } /* tappable cells wrap the image */
 .tma-carousel { display: flex; gap: var(--tma-s3); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin-inline: calc(-1 * var(--tma-safe-left)); padding-inline: var(--tma-safe-left); }
 .tma-carousel::-webkit-scrollbar { display: none; }
 .tma-carousel > * { flex: 0 0 86%; scroll-snap-align: center; }
@@ -597,6 +598,70 @@ select.tma-input {
 .tma-file-drop { position: relative; display: grid; justify-items: center; gap: var(--tma-s2); padding: var(--tma-s6); border-radius: var(--tma-r-group); border: 1.5px dashed var(--tma-fill-strong); color: var(--tma-hint); text-align: center; cursor: pointer; }
 .tma-file-drop > input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .tma-file-drop:focus-within { border-color: var(--tma-accent); }
+
+/* ---------------------------------------------------------------- catalogue layout (data/mini-apps/layouts.json, layout-rules.md)
+   grid tiles (L09), media cards, row thumbnails by content type (L02-L04), price (L06), meta, favourite (L19) */
+.tma-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--tma-s4) var(--tma-s3); }
+@media (min-width: 560px) { .tma-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tma-tile { position: relative; display: grid; align-content: start; gap: 4px; min-width: 0; color: inherit; text-decoration: none; }
+.tma-tile > .tma-media { margin-bottom: 4px; }
+.tma-tile.is-wide { padding-bottom: var(--tma-s1); }
+.tma-tile.is-card { padding: var(--tma-s3); border-radius: var(--tma-r-group); background: var(--tma-surface); }
+.tma-tile.is-card > .tma-media { margin: calc(-1 * var(--tma-s3)) calc(-1 * var(--tma-s3)) 4px; border-radius: var(--tma-r-group) var(--tma-r-group) 0 0; }
+.tma-tile[aria-disabled="true"] { opacity: .5; }
+.tma-tile__title { display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: var(--tma-fs-subhead); font-weight: 500; line-height: 1.333; }
+.tma-tile.is-wide .tma-tile__title { font-size: var(--tma-fs-body); font-weight: 600; }
+.tma-meta { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--tma-hint); font-size: var(--tma-fs-footnote); }
+.tma-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.tma-price { display: inline-flex; align-items: baseline; gap: 6px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--tma-text); }
+.tma-price.is-lg { font-size: var(--tma-fs-title1); line-height: 1.2; }
+.tma-price__old { color: var(--tma-hint); font-weight: 400; font-size: .88em; text-decoration: line-through; }
+.tma-price__from, .tma-price__period { color: var(--tma-hint); font-weight: 400; font-size: .88em; }
+.tma-rating-inline { color: var(--tma-hint); font-size: var(--tma-fs-footnote); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tma-avail { font-size: var(--tma-fs-footnote); color: var(--tma-hint); }
+.tma-avail.is-low { color: var(--tma-accent-text); }
+.tma-avail.is-out { color: var(--tma-danger); }
+.tma-media__tag { position: absolute; top: var(--tma-s2); inset-inline-start: var(--tma-s2); padding: 2px 8px; border-radius: 999px; background: var(--tma-surface); color: var(--tma-text); font-size: var(--tma-fs-caption1); font-weight: 500; }
+.tma-fav { position: absolute; top: 4px; inset-inline-end: 4px; z-index: 1; display: grid; place-items: center; width: var(--tma-target); height: var(--tma-target); border: 0; background: none; color: var(--tma-fb-knob); cursor: pointer; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .45)); }
+.tma-fav[aria-pressed="true"] .tma-icon { fill: currentColor; }
+.tma-row-thumb { flex: none; width: 56px; height: 56px; border-radius: 10px; object-fit: cover; background: var(--tma-fill); }
+.tma-row-thumb.is-cover { width: 48px; height: 72px; border-radius: 4px; object-fit: contain; }
+.tma-row-thumb.is-wide { width: 96px; height: 54px; border-radius: 8px; }
+.tma-row-thumb.is-round { border-radius: 50%; }
+.tma-cell:has(.tma-row-thumb) { --tma-cell-text: calc(var(--tma-s4) + 56px + var(--tma-s3)); }
+.tma-cell:has(.tma-row-thumb.is-cover) { --tma-cell-text: calc(var(--tma-s4) + 48px + var(--tma-s3)); }
+.tma-cell:has(.tma-row-thumb.is-wide) { --tma-cell-text: calc(var(--tma-s4) + 96px + var(--tma-s3)); }
+.tma-cell__time { flex: none; width: 3.2em; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* booking (L16): day strip, slot grid, summary */
+.tma-days { display: flex; gap: var(--tma-s2); overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * var(--tma-safe-left)); padding: 2px var(--tma-safe-left); }
+.tma-days::-webkit-scrollbar { display: none; }
+.tma-days > button { flex: none; display: grid; justify-items: center; gap: 2px; min-width: 52px; padding: var(--tma-s2) 0; border: 0; border-radius: var(--tma-r-inner); background: var(--tma-surface); color: var(--tma-text); font: inherit; cursor: pointer; }
+.tma-days > button span:first-child { color: var(--tma-hint); font-size: var(--tma-fs-caption1); }
+.tma-days > button span:last-child { font-size: var(--tma-fs-title3); font-weight: 600; font-variant-numeric: tabular-nums; }
+.tma-days > button[aria-pressed="true"] { background: var(--tma-accent); color: var(--tma-on-accent); }
+.tma-days > button[aria-pressed="true"] span:first-child { color: inherit; }
+.tma-days > button:disabled { opacity: .4; cursor: default; }
+.tma-slots { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--tma-s2); }
+@media (max-width: 340px) { .tma-slots { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.tma-slots > button { min-height: var(--tma-target); border: 0; border-radius: var(--tma-r-inner); background: var(--tma-surface); color: var(--tma-text); font: inherit; font-variant-numeric: tabular-nums; cursor: pointer; }
+.tma-slots > button[aria-pressed="true"] { background: var(--tma-accent); color: var(--tma-on-accent); }
+.tma-slots > button:disabled { background: none; color: var(--tma-hint); text-decoration: line-through; cursor: default; box-shadow: inset 0 0 0 1px var(--tma-separator); }
+.tma-summary { padding: var(--tma-s3) var(--tma-s4); border-radius: var(--tma-r-inner); background: var(--tma-tonal); color: var(--tma-accent-text); font-size: var(--tma-fs-subhead); }
+
+/* plans (L25) and feature lists */
+.tma-plan { display: grid; gap: var(--tma-s2); }
+.tma-plan[aria-checked="true"] { box-shadow: inset 0 0 0 2px var(--tma-accent); }
+.tma-checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.tma-checks > li { display: flex; gap: var(--tma-s2); align-items: baseline; }
+.tma-checks > li::before { content: ""; flex: none; width: 10px; height: 6px; margin-inline-end: 2px; border-left: 2px solid var(--tma-accent-text); border-bottom: 2px solid var(--tma-accent-text); transform: translateY(-3px) rotate(-45deg); }
+.tma-checks > li.is-no { color: var(--tma-hint); }
+.tma-checks > li.is-no::before { width: 8px; height: 0; border-left: 0; transform: none; border-bottom-color: var(--tma-hint); }
+
+/* photo viewer (L12): a pushed screen with the image contained and a counter */
+.tma-viewer { display: grid; gap: var(--tma-s3); }
+.tma-viewer__count { text-align: center; color: var(--tma-hint); font-size: var(--tma-fs-footnote); font-variant-numeric: tabular-nums; }
+.tma-content-cap { max-width: 600px; margin-inline: auto; }
 
 /* ---------------------------------------------------------------- style presets (data/mini-apps/styles.json)
    <html data-tma-style="fintech|soft|dense">; "native" is the default above. Shape, density and type only:

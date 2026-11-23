@@ -88,7 +88,7 @@ receipts and reminders are the bot's job.
 | Editor | long document, preview, media | a short text |
 | Wallet / portfolio | balance, history, charts | a transfer notice |
 
-Screens, states, native buttons and bot messages for each: `screen-patterns.md` (this folder).
+Screens, states, native buttons and bot messages for each: [screen-patterns.md](screen-patterns.md); where the image, title and price go: [layout-rules.md](layout-rules.md).
 
 ## 7. Anti-patterns
 

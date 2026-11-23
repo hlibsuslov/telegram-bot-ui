@@ -140,7 +140,7 @@ $('demo-file').onclick = () => {
   else toast('Downloads need Bot API 8.0');
 };
 $('ext-link').addEventListener('click', (e) => {
-  if (!tma.inTelegram) return;
+  if (!tma.inTelegram || !tma.has('6.1')) return;
   e.preventDefault();
   (tma.tg as unknown as { openLink(u: string): void }).openLink((e.currentTarget as HTMLAnchorElement).href);
 });

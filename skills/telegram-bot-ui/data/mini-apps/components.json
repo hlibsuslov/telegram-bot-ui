@@ -1,5 +1,5 @@
 {
- "$comment": "Every element a Mini App screen may need: what the read Figma sources show (ios27 = Apple iOS and iPadOS 27 kit, tgkit = Telegram Mini Apps UI Kit (Community); both read 2026-11-23), what Telegram draws natively (telegram), the TelegramUI library inventory (tgui), the reference screenshots (ref) and this skill's additions (skill). Not read and not represented: the Telegram UI community kit 1348989725141777736 and Appetite UI. status: kit = drawn by examples/mini-apps/_kit/tma.css and shown in examples/mini-apps/gallery; native = Telegram draws it; pattern = composed from kit parts; avoid = not for Mini Apps (see note). Reference: references/mini-apps/components.md.",
+ "$comment": "Every element a Mini App screen may need: what the read Figma sources show (ios27 = Apple iOS and iPadOS 27 kit, tgkit = Telegram Mini Apps UI Kit (Community); both read 2026-11-23), what Telegram draws natively (telegram), the TelegramUI library inventory (tgui), the reference screenshots (ref) and this skill's additions (skill). Not read and not represented: the Telegram UI community kit 1348989725141777736 and Appetite UI. status: kit = drawn by examples/mini-apps/_kit/tma.css and shown in examples/mini-apps/gallery or examples/mini-apps/catalog; native = Telegram draws it; pattern = composed from kit parts; avoid = not for Mini Apps (see note). Reference: references/mini-apps/components.md.",
  "version": 1,
  "checked": "2026-11-23",
  "groups": [
@@ -1785,6 +1785,305 @@
    "native": null,
    "status": "avoid",
    "note": "push a screen with BackButton"
+  },
+  "grid": {
+   "group": "tables",
+   "title": "Catalogue grid",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "2 columns to 559 px",
+    "3 from 560 px"
+   ],
+   "states": [
+    "D",
+    "S",
+    "0"
+   ],
+   "kit": ".tma-grid",
+   "native": null,
+   "status": "kit",
+   "note": "L09"
+  },
+  "tile": {
+   "group": "display",
+   "title": "Tile / media card",
+   "sources": [
+    "skill",
+    "ios27"
+   ],
+   "variants": [
+    "grid tile",
+    "wide media card",
+    "card surface"
+   ],
+   "states": [
+    "D",
+    "P",
+    "X",
+    "S"
+   ],
+   "kit": ".tma-tile",
+   "native": null,
+   "status": "kit",
+   "note": "image on top, title clamped to 2 lines (L04, L05)"
+  },
+  "price": {
+   "group": "display",
+   "title": "Price",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "plain",
+    "old price struck",
+    "from",
+    "period",
+    "large"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-price",
+   "native": null,
+   "status": "kit",
+   "note": "L06"
+  },
+  "meta-line": {
+   "group": "display",
+   "title": "Meta line",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "dot-separated"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-meta",
+   "native": null,
+   "status": "kit",
+   "note": "one line, hint colour"
+  },
+  "rating-inline": {
+   "group": "display",
+   "title": "Inline rating",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "★ 4.8 (120)"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-rating-inline",
+   "native": null,
+   "status": "kit",
+   "note": "L07"
+  },
+  "availability": {
+   "group": "display",
+   "title": "Availability text",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "in stock",
+    "low",
+    "out"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-avail",
+   "native": null,
+   "status": "kit",
+   "note": "L08: text, not colour only"
+  },
+  "media-tag": {
+   "group": "display",
+   "title": "Tag on media",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "top start"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-media__tag",
+   "native": null,
+   "status": "kit",
+   "note": "one per card (L18)"
+  },
+  "row-thumb": {
+   "group": "media",
+   "title": "Row thumbnail",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "square 56",
+    "cover 48 x 72",
+    "wide 96 x 54",
+    "round"
+   ],
+   "states": [
+    "D",
+    "S"
+   ],
+   "kit": ".tma-row-thumb",
+   "native": null,
+   "status": "kit",
+   "note": "by content type (L02)"
+  },
+  "favourite": {
+   "group": "actions",
+   "title": "Favourite on media",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "on",
+    "off"
+   ],
+   "states": [
+    "D",
+    "pressed"
+   ],
+   "kit": ".tma-fav",
+   "native": null,
+   "status": "kit",
+   "note": "the one card control (L19)"
+  },
+  "day-strip": {
+   "group": "input",
+   "title": "Day strip",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "7-14 days"
+   ],
+   "states": [
+    "D",
+    "selected",
+    "X"
+   ],
+   "kit": ".tma-days",
+   "native": null,
+   "status": "kit",
+   "note": "L16"
+  },
+  "slot-grid": {
+   "group": "input",
+   "title": "Time slot grid",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "3-4 columns"
+   ],
+   "states": [
+    "D",
+    "selected",
+    "X taken"
+   ],
+   "kit": ".tma-slots",
+   "native": null,
+   "status": "kit",
+   "note": "taken slots disabled, not hidden (L16)"
+  },
+  "booking-summary": {
+   "group": "display",
+   "title": "Choice summary",
+   "sources": [
+    "skill"
+   ],
+   "variants": [],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-summary",
+   "native": null,
+   "status": "kit",
+   "note": "one line before the MainButton"
+  },
+  "plan-card": {
+   "group": "display",
+   "title": "Plan card",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "recommended",
+    "selected"
+   ],
+   "states": [
+    "D",
+    "selected"
+   ],
+   "kit": ".tma-plan",
+   "native": null,
+   "status": "kit",
+   "note": "stacked on phones (L25)"
+  },
+  "check-list": {
+   "group": "display",
+   "title": "Feature list with checks",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "included",
+    "not included"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-checks",
+   "native": null,
+   "status": "kit",
+   "note": "icon and text, never colour only"
+  },
+  "photo-viewer": {
+   "group": "media",
+   "title": "Photo viewer screen",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "counter",
+    "previous / next"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-viewer",
+   "native": null,
+   "status": "kit",
+   "note": "pushed screen with BackButton (L12)"
+  },
+  "content-cap": {
+   "group": "structure",
+   "title": "Content width cap",
+   "sources": [
+    "skill"
+   ],
+   "variants": [
+    "600 px"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-content-cap",
+   "native": null,
+   "status": "kit",
+   "note": "tablets and desktop (L24)"
   }
  }
 }

@@ -12,6 +12,8 @@ with the closest recipe (90-99) and the screen pattern for the product type.
 | "Make it look like X / use our brand / calmer / denser" | [design-system.md](design-system.md) §9 | `scripts/miniapp_style.py` |
 | "It looks generated / web-like / cheap", "make it premium" | [anti-slop.md](anti-slop.md) §5 | `scripts/miniapp_lint.py` |
 | "Add a screen / a table / settings / a gallery" | `data/mini-apps/components.json`, [components.md](components.md) | the kit gallery for the markup |
+| "Check this screen", "where should the price / photo go", "make the catalogue better" | [layout-rules.md](layout-rules.md) | `scripts/miniapp_layout.py show / review` |
+| "What does an app for X look like" (gym, bookstore, SaaS, clinic, events…) | [screen-patterns.md](screen-patterns.md) | the matching example |
 | "Verify the user on the server" | [security.md](security.md) | `examples/mini-apps/server` |
 | "Does the API have X?" | `scripts/webapp_lookup.py show X` | [webapp-api.md](webapp-api.md) |
 | "Open it from the bot / a button / a link" | [launch-and-lifecycle.md](launch-and-lifecycle.md) | [../mini-apps-bridge.md](../mini-apps-bridge.md) |
@@ -20,9 +22,9 @@ with the closest recipe (90-99) and the screen pattern for the product type.
 
 1. **Decide the surface and the entry** ([decide.md](decide.md)): Mini App or not; reply keyboard, inline or
    menu button, Main Mini App, direct link; what the bot says before and after.
-2. **Map the screens**: tab roots (2-5) and level-2 screens; for each screen its one primary action
+2. **Map the screens** from the closest pattern in [screen-patterns.md](screen-patterns.md): tab roots (2-5) and level-2 screens; for each screen its one primary action
    (MainButton or none), its states (loading, empty, error, success), its `startapp` route if any.
-3. **Pick the components** from `data/mini-apps/components.json` (status `kit` first, `native` where
+3. **Lay out each content type** with [layout-rules.md](layout-rules.md) (`miniapp_layout.py show <entity>`), then **pick the components** from `data/mini-apps/components.json` (status `kit` first, `native` where
    Telegram draws it, never `avoid`). Copy markup from `examples/mini-apps/gallery/index.html`.
 4. **Pick the style** (design-system §9.2) and say why in one line; brand colour only as one moment.
 5. **Write the server contract first** ([security.md](security.md)): `initData` verification, `auth_date`
@@ -38,13 +40,14 @@ with the closest recipe (90-99) and the screen pattern for the product type.
 
 1. **Inventory**: screens, entry points, the components each screen uses, colours and fonts in use, how it
    authenticates. Run the lint and keep the report as the baseline.
-2. **Rank the defects**: security (MA01-MA02) → broken native behaviour (own header, own back, own bottom
+2. **Describe each screen** as a screen JSON and run `miniapp_layout.py review`; keep the findings with the lint report.
+3. **Rank the defects**: security (MA01-MA02) → broken native behaviour (own header, own back, own bottom
    CTA, missing `ready()`) → missing states → theme (literal colours, `100vh`) → slop → polish.
-3. **Fix structure before style**: native buttons, one navigation stack, grouped lists, states.
-4. **Replace literals with kit roles**; delete web fonts, gradient text, glows, emoji icons.
-5. **Apply the style** the request names (preset or checked profile).
-6. **Re-check**: lint `--strict`, preview matrix in every style the app ships, both themes, fullscreen.
-7. **Report** the before/after lint counts, what changed per screen, what was left alone and why.
+4. **Fix structure before style**: native buttons, one navigation stack, grouped lists, states.
+5. **Replace literals with kit roles**; delete web fonts, gradient text, glows, emoji icons.
+6. **Apply the style** the request names (preset or checked profile).
+7. **Re-check**: lint `--strict`, preview matrix in every style the app ships, both themes, fullscreen.
+8. **Report** the before/after lint counts, what changed per screen, what was left alone and why.
 
 Contracts stay frozen while reworking: API routes, `startapp` values, CloudStorage keys, analytics events.
 
