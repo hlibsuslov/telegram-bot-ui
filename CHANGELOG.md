@@ -5,6 +5,20 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## Unreleased
+
+### Existing bots keep their premium emoji packs
+
+- `bot-ui import` records every custom emoji id the bot's code uses (`<tg-emoji>` in strings and
+  catalogs, `icon_custom_emoji_id=`, `custom_emoji_id=`, ids in emoji/icon maps) in
+  `import-map.json`.
+- `bot-ui emoji import-used` and the Studio's "Packs your bot already uses" find the pack of each
+  id with `getCustomEmojiStickers` (batches of 200), import every pack, and adopt the button
+  icons into the icon map by meaning. One failing pack does not stop the others; ids of deleted
+  packs are listed with where they are used. `import --emoji-packs` runs it right after import.
+- The resolver gets `GET /api/emoji-pack/by-id?ids=...`; an older resolver without it answers
+  `RESOLVER_NO_IDS` and the command asks for a bot token (the bot's own works).
+
 ## 3.0.0 - 2026-11-23
 
 The skill now covers the whole interface of a Telegram bot, not one feature of it: screens,

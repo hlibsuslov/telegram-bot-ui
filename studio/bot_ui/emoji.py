@@ -198,7 +198,7 @@ class _Bot:
         return str(text).replace(self._token, "<token>")
 
     def call(self, method: str, params: dict) -> Any:
-        if method not in ("getStickerSet", "getFile"):
+        if method not in ("getStickerSet", "getFile", "getCustomEmojiStickers"):
             raise EmojiError("METHOD_REFUSED", method)
         req = urllib.request.Request(f"{API_HOST}/bot{self._token}/{method}",
                                      data=json.dumps(params).encode("utf-8"), headers={"Content-Type": "application/json"})
@@ -282,6 +282,22 @@ class _Resolver:
             err = (doc.get("error") if isinstance(doc, dict) else None) or {}
             raise EmojiError(str(err.get("code") or "RESOLVER_ERROR"), str(err.get("message") or f"HTTP {status}"))
         return doc
+
+    def sets_of(self, ids: list[str]) -> dict[str, str]:
+        """{custom emoji id: its pack name} through GET <base>/by-id?ids=1,2,3 (ids Telegram knows only)."""
+        status, _, body = self._get(f"{self.base}/by-id?ids={','.join(ids)}", BODY_MAX)
+        try:
+            doc = json.loads(body.decode("utf-8")) if len(body) <= BODY_MAX else None
+        except (UnicodeDecodeError, ValueError):
+            doc = None
+        if status in (400, 404) and (not isinstance(doc, dict) or (doc.get("error") or {}).get("code") in ("PACK_NAME", "PACK_NOT_FOUND", None)):
+            raise EmojiError("RESOLVER_NO_IDS", f"the emoji resolver ({self.host}) cannot look up packs by emoji id yet: "
+                                                f"set {' or '.join(TOKEN_ENV)} (the bot's own token works) and run again")
+        if status != 200 or not isinstance(doc, dict) or not doc.get("ok") or not isinstance(doc.get("emoji"), list):
+            err = (doc.get("error") if isinstance(doc, dict) else None) or {}
+            raise EmojiError(str(err.get("code") or "RESOLVER_ERROR"), str(err.get("message") or f"HTTP {status}"))
+        return {e["id"]: e["set"] for e in doc["emoji"] if isinstance(e, dict) and isinstance(e.get("id"), str)
+                and isinstance(e.get("set"), str) and PACK_NAME.match(e["set"])}
 
     def picture(self, path: Any) -> tuple[str, bytes] | None:
         if not isinstance(path, str) or not PICTURE_PATH.match(path):
@@ -429,6 +445,142 @@ def import_pack(root: str, *, link: str | None = None, token: str | None = None,
     update_library(root, merge)
     return {"ok": True, "pack": name, "title": pack["title"], "count": len(pack["emoji"]), "source": source,
             "previews": saved, "previewsFailed": failed}
+
+
+IDS_BATCH = 200  # getCustomEmojiStickers takes at most 200 ids
+IMPORT_MAP = "import-map.json"
+
+
+def source_ids(root: str) -> dict[str, str]:
+    """Custom emoji ids `bot-ui import` found in the bot's code ({id: file:line}), kept in import-map.json."""
+    try:
+        with open(os.path.join(root, IMPORT_MAP), encoding="utf-8") as fh:
+            found = json.load(fh).get("customEmoji")
+    except (OSError, ValueError, AttributeError):
+        return {}
+    if not isinstance(found, dict):
+        return {}
+    return {k: str(v)[:200] for k, v in found.items() if isinstance(k, str) and EMOJI_ID.match(k)}
+
+
+def used_ids(snap: Snapshot) -> dict[str, list[str]]:
+    """Every custom emoji the bot uses: its screens and, after `bot-ui import`, its code. {id: [where]}"""
+    out: dict[str, list[str]] = {}
+    for u in usage(snap):
+        out.setdefault(u["id"], []).append(f"{u['screenId']}{u['pointer']}")
+    for cid, where in source_ids(snap.root).items() if snap.root else ():
+        out.setdefault(cid, []).append(where)
+    return out
+
+
+def missing_ids(snap: Snapshot, lib: dict) -> list[str]:
+    """Ids the bot uses whose pack is not in the library yet."""
+    known = emoji_index({**lib, "icons": {}})  # an icon set by hand still has no pack
+    return [cid for cid in used_ids(snap) if cid not in known]
+
+
+def _transport(token: str | None, bot: Any, resolver: Any) -> tuple[Any, Any]:
+    """(bot, resolver) the same way import_pack picks them: a given token or bot, else the
+    resolver, else a token from the environment."""
+    if bot is not None or resolver is not None:
+        return bot, resolver
+    if token:
+        return _Bot(token), None
+    base = resolver_url()
+    if base:
+        return None, _Resolver(base)
+    env = token_from_env()[0]
+    if not env:
+        raise EmojiError("TOKEN_NEEDED", f"the emoji resolver is off ({RESOLVER_ENV}): looking up packs needs any bot "
+                                         f"token (read-only getCustomEmojiStickers): set {' or '.join(TOKEN_ENV)}; "
+                                         "it is never saved")
+    return _Bot(env), None
+
+
+def sets_of(ids: list[str], *, bot: Any = None, resolver: Any = None) -> dict[str, str]:
+    """{custom emoji id: pack name}; ids Telegram does not know (or whose pack is gone) are left out."""
+    out: dict[str, str] = {}
+    for i in range(0, len(ids), IDS_BATCH):
+        chunk = ids[i:i + IDS_BATCH]
+        if resolver is not None:
+            out.update({k: v for k, v in resolver.sets_of(chunk).items() if k in chunk})
+            continue
+        for s in bot.call("getCustomEmojiStickers", {"custom_emoji_ids": chunk}) or []:
+            cid, name = (s.get("custom_emoji_id"), s.get("set_name")) if isinstance(s, dict) else (None, None)
+            if isinstance(cid, str) and cid in chunk and isinstance(name, str) and PACK_NAME.match(name):
+                out[cid] = name
+    return out
+
+
+def adopt_icons(root: str, snap: Snapshot) -> list[dict]:
+    """Button icons of the bot become slots of the icon map by their emoji's meaning, so new
+    screens reuse them. Only a free slot whose first emoji is the pack emoji's own; never a
+    second meaning for one emoji."""
+    vocab = [v for v in vocabulary() if v.get("unicode")]
+    buttons = list(dict.fromkeys(u["id"] for u in usage(snap) if u["where"] == "button"))
+
+    def plan(lib: dict) -> list[dict]:
+        idx, icons, out = emoji_index({**lib, "icons": {}}), dict(lib["icons"]), []
+        for cid in buttons:
+            e = idx.get(cid)
+            if e is None or not e["fallback"] or any(i.get("id") == cid for i in icons.values()):
+                continue
+            slot = next((v["slot"] for v in vocab if v["slot"] not in icons and same_emoji(v["unicode"][0], e["fallback"])), None)
+            if slot:
+                icons[slot] = {"id": cid}
+                out.append({"slot": slot, "id": cid, "fallback": e["fallback"], "set": e["pack"]})
+        return out
+
+    if not buttons or not vocab or not plan(load_library(root)):
+        return []
+
+    def change(lib: dict) -> list[dict]:
+        todo = plan(lib)
+        for a in todo:
+            _set_icon(lib, a["slot"], a["id"], "adopted from the bot's buttons", None)
+        return todo
+
+    return update_library(root, change)[1]
+
+
+def import_used(root: str, snap: Snapshot, *, token: str | None = None, bot: Any = None, resolver: Any = None,
+                map_icons: bool = True) -> dict:
+    """Import every pack the bot already uses: find the pack of each custom emoji id (screens and
+    code) with getCustomEmojiStickers, import those packs, then adopt the button icons into the
+    icon map. One bad pack does not stop the others; ids without a pack are reported."""
+    lib = load_library(root)
+    used = used_ids(snap)
+    missing = missing_ids(snap, lib)
+    result: dict[str, Any] = {"ok": True, "used": len(used), "missing": len(missing), "packs": [], "failed": [],
+                              "unresolved": [], "adopted": []}
+    if missing:
+        bot, resolver = _transport(token, bot, resolver)
+        found = sets_of(missing, bot=bot, resolver=resolver)
+        result["unresolved"] = [{"id": cid, "where": used[cid][:3]} for cid in missing if cid not in found]
+        for name in sorted(set(found.values())):
+            try:
+                res = import_pack(root, link=name, bot=bot, resolver=resolver)
+                result["packs"].append({k: res[k] for k in ("pack", "title", "count", "previews")}
+                                       | {"ids": sum(1 for v in found.values() if v == name)})
+            except EmojiError as err:
+                result["failed"].append({"pack": name, **err.to_json()})
+    if map_icons:
+        result["adopted"] = adopt_icons(root, snap)
+    return result
+
+
+def import_used_markdown(res: dict) -> str:
+    if not res["used"]:
+        return "the bot uses no custom emoji: nothing to import"
+    lines = [f"{res['used']} custom emoji in use, {res['missing']} were not in {LIBRARY}"]
+    lines += [f"  + {p['title']} ({p['pack']}): {p['count']} emoji, {p['ids']} used by the bot, {p['previews']} previews"
+              for p in res["packs"]]
+    lines += [f"  ! {f['pack']}: {f.get('code')} {f.get('message', '')}" for f in res["failed"]]
+    if res["unresolved"]:
+        lines.append(f"  ? {len(res['unresolved'])} id(s) Telegram does not know (deleted pack or not an emoji id): "
+                     + ", ".join(f"{u['id']} ({'; '.join(u['where'])})" for u in res["unresolved"][:10]))
+    lines += [f"  = icon map: {a['slot']} <- {a['fallback']} {a['id']} ({a['set']})" for a in res["adopted"]]
+    return "\n".join(lines)
 
 
 def remove_pack(root: str, name: str) -> dict:
@@ -709,6 +861,7 @@ def client_document(root: str, snap: Snapshot) -> dict:
         base = None
     return {"library": lib, "previews": previews(root), "usage": usage(snap), "vocabulary": vocabulary(),
             "suggestions": suggest_icons(snap, lib) if not error else [], "tokenEnv": env if token else None,
+            "missing": missing_ids(snap, lib) if not error else [],
             "resolver": _Resolver(base).host if base else None, "error": error}
 
 
