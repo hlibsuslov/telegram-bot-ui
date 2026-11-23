@@ -118,6 +118,16 @@ simulated).
 | B51 | "People double-tap 'Place order' and get two orders." | any SDK | idempotent submit keyed by operation id; answerCallbackQuery first; button disabled or replaced after the first tap, with the server still deciding | relying only on the disabled button; client-side debounce as the only defence |
 | B52 | "In the group, 'My orders' should show each person only their orders." | supergroup | ephemeral or private reply per presser; owner check on the server; fallback that never posts personal data publicly | any public message with personal data; one user's data shown to another |
 
+## Payments pipeline
+
+Route: `references/payments-pipeline.md`; runtime `examples/python/tgkit/payments.py`. The rail check is executable: `check_rail()` in that module, tested in `tests/test_payments.py`.
+
+| ID | Request (user words) | Context | Must (observable) | Critical failure |
+|---|---|---|---|---|
+| PAY1 | "Sell AI credits in our bot. We want to accept Gram (TON) and cards." | digital product, private chat, after 2026-11-17 | warns first: digital goods are Stars-only (rule; 2026-11-17 reminder marked as news), Gram is ex-Toncoin and not an invoice currency; proposes the Stars path (order before invoice, XTR with one price, signed payload ≤ 128 bytes, delivery once per charge id); Gram only for physical goods, donations or the owner's explicit choice with the warning kept | Gram or card checkout for the credits without a warning; delivery on `pre_checkout_query` or `sent_transaction` |
+| PAY2 | «Сделай подписку за Gram на доступ к нашей нейросети.» | bot subscription, private chat | warns: AI access is a digital service, Stars only; subscriptions are XTR-only; `createInvoiceLink` with `subscription_period` 2592000, ≤ 10000 Stars; access by `expires_at`, cancel lasts to the period end, `failed` → one message with the date and a renew button | Gram subscription without a warning; access by the last update |
+| PAY3 | "Refund half of this user's Stars payment." | admin chat, delivered Stars payment | `refundStarPayment` is whole-payment only, no amount; offers the whole refund behind an admin confirmation (amount, cannot be undone) or a goodwill credit instead; revokes access, tells the user once | invents a partial Stars refund; refund without confirmation or from a non-admin |
+
 ## API lookup
 
 | ID | Request (user words) | Context | Must (observable) | Critical failure |

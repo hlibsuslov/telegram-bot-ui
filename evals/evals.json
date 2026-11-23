@@ -1550,6 +1550,31 @@
         "references/mini-apps/materials-and-trends.md"
       ],
       "why": "glass materials and trends in a Mini App"
+    },
+    {
+      "id": "PAY-A1",
+      "area": "use-cases",
+      "lang": "en",
+      "prompt": "We want to sell AI credits in the bot and take TON and card payments for them.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/payments-pipeline.md",
+        "references/payments-and-stars.md"
+      ],
+      "why": "digital good on the wrong rail: Stars-only rule"
+    },
+    {
+      "id": "PAY-A2",
+      "area": "use-cases",
+      "lang": "ru",
+      "prompt": "Нужна платная подписка на бота и возвраты, когда пользователь жалуется.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/payments-pipeline.md"
+      ],
+      "why": "subscription and refund screens, states and microcopy"
     }
   ],
   "behavioral": [
@@ -2696,6 +2721,54 @@
       "critical_failures": [
         "storing whole ChatFullInfo dumps or username history",
         "user colours applied to buttons or app chrome"
+      ]
+    },
+    {
+      "id": "PAY1",
+      "area": "use-cases",
+      "lang": "en",
+      "request": "Sell AI credits in our bot. We want to accept Gram (TON) and cards.",
+      "context": "digital product, private chat, Bot API 10.5, after 2026-11-17",
+      "must": [
+        "warns before designing anything that digital goods inside Telegram are Stars-only (Telegram rule, 2026-11-17 reminder labelled as news) and that Gram is ex-Toncoin, not an invoice currency",
+        "proposes the Stars path instead: order before the invoice, sendInvoice in XTR with one price, HMAC-signed payload ≤ 128 bytes, delivery on successful_payment once per telegram_payment_charge_id",
+        "keeps Gram only for physical goods, donations or tips, or as the owner's explicit choice with the warning repeated (check_rail)"
+      ],
+      "critical_failures": [
+        "designs a Gram or card checkout for the digital credits without a warning",
+        "delivers on pre_checkout_query or on sent_transaction"
+      ]
+    },
+    {
+      "id": "PAY2",
+      "area": "use-cases",
+      "lang": "ru",
+      "request": "Сделай подписку за Gram на доступ к нашей нейросети.",
+      "context": "bot subscription, private chat",
+      "must": [
+        "предупреждает: доступ к ИИ-модели — цифровая услуга, только Stars; подписки в Bot API только в XTR",
+        "предлагает createInvoiceLink с subscription_period 2592000 и ценой ≤ 10000 Stars",
+        "доступ по expires_at, отмена действует до конца периода, failed — одно сообщение с датой и кнопкой продления"
+      ],
+      "critical_failures": [
+        "подписка за Gram без предупреждения",
+        "доступ по последнему апдейту вместо expires_at"
+      ]
+    },
+    {
+      "id": "PAY3",
+      "area": "use-cases",
+      "lang": "en",
+      "request": "Refund half of this user's Stars payment.",
+      "context": "admin chat, Stars payment delivered",
+      "must": [
+        "says refundStarPayment refunds the whole payment and has no amount parameter",
+        "offers the whole refund behind an admin confirmation with the amount and 'cannot be undone' stated, or a non-refund goodwill (credits) instead",
+        "revokes access after the refund and tells the user once"
+      ],
+      "critical_failures": [
+        "invents an amount parameter or a partial Stars refund",
+        "refunds without a confirmation step or from a non-admin"
       ]
     }
   ]

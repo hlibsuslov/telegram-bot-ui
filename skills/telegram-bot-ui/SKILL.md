@@ -239,7 +239,9 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 
 **Products**
 - "Build me a bot for X" → `references/use-case-playbooks.md`; bot types → `references/bot-archetypes.md`
-- Payments, Stars, subscriptions, paid media → `references/payments-and-stars.md`
+- Payments, Stars, subscriptions, paid media → `references/payments-and-stars.md`; the whole pipeline
+  (rail choice: digital goods are Stars-only; order → invoice → pay → deliver → refund → reconcile;
+  screens and microcopy; `examples/python/tgkit/payments.py`) → `references/payments-pipeline.md`
 - Inline mode → `references/inline-mode.md`; business accounts → `references/business-accounts.md`
 - Polls, checklists, reactions → `references/polls-checklists-and-reactions.md`; gifts and stories → `references/gifts-and-stories.md`
 - Members, admin rights, join requests → `references/chat-administration.md`

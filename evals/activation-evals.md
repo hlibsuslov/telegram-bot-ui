@@ -158,6 +158,8 @@ description is updated.
 | U3 | en | "In our group the 'My cart' button shows someone else's cart." | no | `references/use-case-playbooks.md`, `references/ephemeral-and-personal.md` |
 | U4 | ru | "Сделай бота для записи к мастеру: выбор услуги, времени и подтверждение." | no | `references/use-case-playbooks.md`, `recipes/03-multi-step-form.md` |
 | U5 | ru | "Люди дважды жмут «Оформить» и получают два заказа." | no | `references/use-case-playbooks.md`, `references/errors-and-fallbacks.md` |
+| PAY-A1 | en | "We want to sell AI credits in the bot and take TON and card payments for them." | no | `references/payments-pipeline.md`, `references/payments-and-stars.md` |
+| PAY-A2 | ru | "Нужна платная подписка на бота и возвраты, когда пользователь жалуется." | no | `references/payments-pipeline.md` |
 
 ## Positive — Bot API lookup (should activate)
 

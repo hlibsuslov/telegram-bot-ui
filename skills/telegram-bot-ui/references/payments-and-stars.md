@@ -2,13 +2,16 @@
 
 Selling digital goods and services (Stars, `XTR`), physical goods (a payment
 provider), subscriptions, paid media, refunds and the bot's own Star ledger.
-Checked against Bot API 10.4 on **2026-11-15**: https://core.telegram.org/bots/api#payments
+Checked against Bot API 10.5 on **2026-11-23**: https://core.telegram.org/bots/api#payments
 and https://core.telegram.org/bots/payments-stars. Look up any shape offline with
 `py -3 scripts/tg_api_lookup.py show <name>`; every JSON block below passes
-`scripts/validate_payload.py`.
+`scripts/validate_payload.py`. The whole pipeline across both rails (rail choice, states,
+refunds, reconciliation, screens and microcopy, runtime `tgkit/payments.py`):
+`payments-pipeline.md`.
 
 Labels: **[API]** = stated in the Bot API spec; **[Official]** = Telegram's payments
-guide or terms; **[Heuristic]** = this skill's design advice.
+guide or terms; **[News]** = press or announcements, not an official spec;
+**[Heuristic]** = this skill's design advice.
 
 ## What it is for
 
@@ -25,6 +28,14 @@ guide or terms; **[Heuristic]** = this skill's design advice.
 - **[Official]** Digital goods and services sold inside Telegram apps must be paid in
   Telegram Stars (`XTR`); third-party providers and crypto are not allowed for them
   (app-store rules). Physical goods may use providers and real currencies.
+- **[News, 2026-11-17]** Telegram reminded bot and Mini App developers: bot subscriptions,
+  paid tools, access to third-party AI models and credits for them are Stars-only; in-app
+  card payments for digital services go away. Exception named: VPN bots in "authoritarian
+  countries". No effective date or sanctions given. When asked for Gram or a card for a
+  digital product, warn first and design the Stars path (`payments-pipeline.md` §1,
+  `check_rail()`).
+- **[API]** Gram (ex-Toncoin) is not an invoice currency: `currency` is `XTR` or an ISO 4217
+  code. Gram payments go through the widget wallet flow (`wallet-and-ton.md`).
 - **[API]** For Stars, `provider_token` is an empty string or omitted, and `prices`
   must contain **exactly one** item. `need_*`, `send_*_to_provider` and `is_flexible`
   are ignored for Stars.
@@ -135,6 +146,8 @@ sendInvoice / createInvoiceLink ──► user taps Pay ──► Update.pre_che
 - **[API]** `editUserStarSubscription(user_id, telegram_payment_charge_id, is_canceled)`:
   `true` stops renewal (access must last to the end of the paid period); `false`
   re-enables a subscription the **bot** cancelled.
+- **[API]** `BotSubscriptionUpdated` has only `user`, `invoice_payload` and `state`, no
+  charge id. Put the order id in the subscription's payload and find the subscription by it.
 - **State**: keep `subscription_id = first telegram_payment_charge_id`, `user_id`,
   `expires_at` (from `subscription_expiration_date`), `state`. Grant access by
   `expires_at`, not by the last update you saw. **[Heuristic]**
@@ -204,8 +217,16 @@ plan link. Do not spam on every retry. **[Heuristic]**
   `other`.
 - **[API]** Amounts can have a fractional part: `StarAmount` / `StarTransaction` carry
   `nanostar_amount` (1/10⁹ Star). Store both integers; never floats.
+- **[API]** `refundStarPayment` takes only `user_id` and `telegram_payment_charge_id`: a Stars
+  refund is always the **whole** payment. "Refund half" is impossible; offer the whole
+  refund or a goodwill credit. Gram refunds are outgoing transfers instead (`wallet-and-ton.md`).
+- **[API]** For `invoice_payment` transactions `TransactionPartnerUser` can carry
+  `invoice_payload` (and `subscription_period`), a second key to match against orders.
 - **[API]** Chargebacks at Apple/Google/provider level can debit your balance later; this
-  is outside Telegram's control. Reconcile periodically. **[Official]**
+  is outside Telegram's control. Reconcile periodically. **[Official]** The exact shape of
+  a chargeback transaction is not documented; this skill treats an outgoing transaction
+  with a known charge id the bot never refunded as a chargeback **[Heuristic]**
+  (`payments-pipeline.md` §6).
 - `getMyStarBalance` (9.1) returns the bot's `StarAmount`.
 
 ## Physical goods (provider payments)
@@ -272,7 +293,8 @@ plan link. Do not spam on every retry. **[Heuristic]**
   cancelled it. Expect the late call to fail and tell the user to try again.
   **[Heuristic]** (exact error text not verified offline).
 - Check your own order state before `refundStarPayment`; a second refund of the same
-  charge is rejected. Branch on `ok`/`error_code`, never on the `description` text,
+  charge is rejected. After a timeout the outcome is unknown: do not call it again;
+  reconcile (`payments-pipeline.md` §5). Branch on `ok`/`error_code`, never on the `description` text,
   which Telegram may change. **[API]** for "contents of error_code are subject to
   change"; the rest **[Heuristic]**.
 - Flood control (429) carries `parameters.retry_after`; see
