@@ -21,7 +21,7 @@
 
 <p align="center">
   <b>An Agent Skill that makes your Telegram bot look, feel and run like a well-designed product.</b><br>
-  The whole bot interface: screens, texts and keyboards · navigation and states · streaming AI answers · HTML widgets · channel publishing · agent-operated bots · premium emoji · bot-ui Studio · the whole Bot API, offline.
+  The whole bot interface: screens, texts and keyboards · navigation and states · streaming AI answers · HTML widgets · Mini Apps · channel publishing · agent-operated bots · premium emoji · bot-ui Studio · the whole Bot API, offline.
 </p>
 
 <p align="center">
@@ -30,6 +30,7 @@
   <a href="#-quick-start">Quick start</a> ·
   <a href="#-what-your-agent-can-do">Capabilities</a> ·
   <a href="#-html-widgets">Widgets</a> ·
+  <a href="#-mini-apps">Mini Apps</a> ·
   <a href="#-install">Install</a> ·
   <a href="#-recipes-and-examples">Recipes</a> ·
   <a href="#-tools-you-can-use-without-an-agent">Tools</a> ·
@@ -116,6 +117,7 @@ The website demo opens the Pulloa coffee pickup bot in your browser. To work on 
 | 🧩 **Build HTML widgets** | Bot API 10.4 widgets inside messages: size limit, production context, caption and text fallback, live cards, shared polls, wallet flows (18 ready widgets, build and preview tools, 7 recipes) |
 | 💎 **Premium emoji** | one custom emoji pack across buttons, texts, rich messages and posts: real ids resolved from the pack, all-or-nothing fallback when the bot is not eligible (6 recipes) |
 | 📚 **Look up the whole Bot API** | methods, types and fields from a local catalog; validate a payload before sending; refuse to invent a field (194 methods, 426 types, refreshable from the official docs) |
+| 📱 **Build and rework Mini Apps** | decide bot, widget or Mini App; `Telegram.WebApp` by version; a Telegram-native design system (theme roles, iOS 27 type scale, named styles, Apple system palettes); layout rules for images, titles and prices; Stars payments and gifts drawn the way Telegram draws them; `initData` verification; a lint, a mock client and a staged plan for turning a web-style app into classic Telegram design (10 recipes) |
 | ⚙️ **Bot settings from code** | Bot API 10.5 `setMySettings`: topics with a sidebar, inline placeholder, privacy and the callback mode kept in the repository and applied with one diffed call; `getMe` read as `BotFullInfo`; owner invite links for testers |
 
 It also knows **when not to** use something: no widget for a three-button menu, no table for two
@@ -142,6 +144,29 @@ python skills/telegram-bot-ui/scripts/build_widget.py skills/telegram-bot-ui/exa
 python skills/telegram-bot-ui/scripts/preview_widget.py --gallery -o preview.html   # every widget and state, light and dark
 ```
 
+## 📱 Mini Apps
+
+Web apps that open inside Telegram and look like part of it: Telegram's header, BackButton and MainButton
+instead of an own top bar and a fixed "Buy" button; the user's theme instead of a fixed palette; grouped
+lists, one surface level, SVG icons, no emoji; Stars prices and gifts as Telegram shows them.
+
+| A generated web-style app | The same app after the skill's rework |
+|---|---|
+| <img alt="A generated gym-booking Mini App with an own top bar and burger menu, a purple gradient hero with stat cards, emoji in every heading, a three-column class grid with price pills and a gradient Book Now button" src="docs/assets/mini-apps/rework-before.jpg" width="300"> | <img alt="The same app reworked: a large Classes title, today's classes as rows with the time first, prices with a gold Stars sign, a full class dimmed, and Telegram's tab bar at the bottom" src="docs/assets/mini-apps/rework-after.jpg" width="300"> |
+
+<sub>Both rendered in the skill's mock client (<code>preview_miniapp.py</code>), not a real Telegram app. The rework was
+done by an agent that had only the skill; its log of where the skill fell short, and the fixes, are in
+<code>examples/mini-apps/rework/FRICTION.md</code>.</sub>
+
+```bash
+python skills/telegram-bot-ui/scripts/miniapp_rework.py plan path/to/app   # staged plan, colour and type maps
+python skills/telegram-bot-ui/scripts/miniapp_lint.py path/to/app --strict   # 35 rules: native chrome, theme, emoji, security
+python skills/telegram-bot-ui/scripts/preview_miniapp.py path/to/app --serve 8790   # iOS/Android, light/dark, 320-430 px
+```
+
+Start in [`references/mini-apps/README.md`](skills/telegram-bot-ui/references/mini-apps/README.md); a whole redesign follows
+[`rework.md`](skills/telegram-bot-ui/references/mini-apps/rework.md).
+
 ## 💬 Ask your agent
 
 No API names needed. In your bot's repository:
@@ -153,6 +178,7 @@ No API names needed. In your bot's repository:
 | Channels | *"Post this release note to our channel tomorrow at 9:00 — show me the preview first."* · *"Every Monday, publish a digest of last week's releases without duplicates."* |
 | Agent through a bot | *"Let me drive my coding agent from Telegram, and only me."* · *"Make the agent ask for approval with buttons before anything risky."* |
 | Widgets | *"Turn the order status into one card that updates."* · *"Our widget is too big to send — make it fit."* |
+| Mini Apps | *"Make a Mini App for booking trainers at our gym."* · *"Rework our Mini App so it looks like Telegram."* · *"Sell the Pro plan for Stars inside the app."* |
 | Bot API lookup | *"Which update tells my bot that the user stopped the answer?"* · *"Can a bot delete a message for just one user?"* |
 
 You can also call it by name: `/telegram-bot-ui` (Claude Code), `$telegram-bot-ui` (Codex), the
@@ -275,7 +301,7 @@ telegram-bot-ui skill."*
 
 ## 🍳 Recipes and examples
 
-66 numbered recipes plus mini-recipes. The eight new product journeys (R80–R87) are
+76 numbered recipes plus mini-recipes. The eight new product journeys (R80–R87) are
 Python offline models with callback demos; their production integrations are explicitly pending.
 
 Agents search a catalog of 40 product families (`skills/telegram-bot-ui/recipes/use-cases.json`), reuse or compose
@@ -312,6 +338,7 @@ example, a composition or planned work.
 | [40–49 · Agent through its bot](skills/telegram-bot-ui/references/agent-operated-bots.md) | deploy approval, live build status, nightly digest, ask and continue, streamed research with Stop, job topics, team group, incident alerts, coding-agent hooks |
 | [50–56 · Widgets](skills/telegram-bot-ui/references/widget-patterns.md) | monitoring dashboard, booking, shop card, shared quiz, job progress, design a widget from words, REST data browser |
 | [70–75 · Premium emoji](skills/telegram-bot-ui/references/emoji-packs.md) | restyle to one pack, icons from zero, channel series, mixed eligibility, Premium lapse, pack migration |
+| [90–99 · Mini Apps](skills/telegram-bot-ui/references/mini-apps/README.md) | bot or Mini App, minimal app, `initData` session, shop with checkout, form and booking, dashboard, profile and subscription, fullscreen game, share a result, editor |
 
 Full index by task, API symbol, version and context: [`recipes/README.md`](skills/telegram-bot-ui/recipes/README.md).
 
@@ -334,6 +361,8 @@ All offline, standard library, and none of them needs a bot token.
 | `python skills/telegram-bot-ui/scripts/validate_payload.py request.json` | structural check against the Bot API catalog |
 | `python skills/telegram-bot-ui/scripts/audit_icons.py icon-map.json` | one icon family? animated mixed in? |
 | `python skills/telegram-bot-ui/scripts/audit_copy.py strings.json` | translations: placeholders, symbols, label length |
+| `python skills/telegram-bot-ui/scripts/miniapp_lint.py app/ --strict` | Mini App: native chrome, theme roles, emoji, surfaces, payments, `initData` |
+| `python skills/telegram-bot-ui/scripts/miniapp_rework.py plan app/` | Mini App rework plan with colour and type maps |
 
 | Build and explore | |
 |---|---|
@@ -341,6 +370,7 @@ All offline, standard library, and none of them needs a bot token.
 | `python skills/telegram-bot-ui/scripts/tg_post.py preview post.json` | render a channel post (publishing is opt-in) |
 | `python skills/telegram-bot-ui/scripts/build_widget.py src.html --strict` | build a widget from the kit, report its size |
 | `python skills/telegram-bot-ui/scripts/preview_widget.py widget.html` | mock preview page (not a real client) |
+| `python skills/telegram-bot-ui/scripts/preview_miniapp.py app/ --serve 8790` | Mini App in a mock Telegram client (not a real client) |
 | `python skills/telegram-bot-ui/scripts/emoji_packs.py capture` | how to collect real custom emoji ids |
 | `python scripts/install.py --host all --dry-run` | where the skill would be installed |
 | `python scripts/run_checks.py` | every check in this repository |

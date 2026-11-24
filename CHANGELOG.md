@@ -5,9 +5,15 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
-## Unreleased
+## 3.1.0 - 2026-11-24
 
-### Mini Apps branch
+The skill now builds and reworks Telegram Mini Apps, not only bots: when to build one, how to launch it,
+the client API by version, a Telegram-native design system with strict visual rules, layout rules for real
+products, payments inside the app, Telegram's own elements (Stars, grams, gifts), `initData` security, and
+a procedure, tools and an acceptance score for turning a web-style app into classic Telegram design. No
+breaking changes: bot-side references, recipes and tools work as before.
+
+### Mini Apps
 
 A new skill branch for Telegram Mini Apps (`references/mini-apps/README.md`), verified against
 Bot API 10.5 and https://core.telegram.org/bots/webapps on 2026-11-23.

@@ -4,7 +4,7 @@ description: "UI/UX for a Telegram bot's whole interface, kept current with the 
 license: MIT
 metadata:
   author: hlibsuslov
-  version: "3.0.0"
+  version: "3.1.0"
 ---
 
 # Telegram Bot UI
