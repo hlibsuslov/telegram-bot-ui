@@ -31,8 +31,9 @@ import time
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EVALS = os.path.join(ROOT, "evals", "evals.json")
-CAPABILITY_AREAS = ("ui", "use-cases", "publishing", "agent-ops", "widgets", "api-lookup")
-LANGS = ("en", "ru")
+CAPABILITY_AREAS = ("ui", "use-cases", "publishing", "agent-ops", "widgets", "api-lookup", "mini-apps")
+LANGS = ("en", "ru")              # every area needs positives in these
+ALLOWED_LANGS = LANGS + ("uk",)    # extra languages a case may use
 REQUIRED_BEHAVIORAL = ("B20", "B21", "B22", "B30", "B31", "B32", "B40", "B41", "B42",
                        "B50", "B51", "B52", "B60")
 TRANSFER_AREAS = ("publishing", "agent-ops", "widgets", "use-cases", "api-lookup")
@@ -75,8 +76,8 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
         cid = check_id(a, "activation")
         if a.get("area") not in areas:
             errors.append(f"{cid}: unknown area {a.get('area')!r}")
-        if a.get("lang") not in LANGS:
-            errors.append(f"{cid}: lang must be one of {LANGS}")
+        if a.get("lang") not in ALLOWED_LANGS:
+            errors.append(f"{cid}: lang must be one of {ALLOWED_LANGS}")
         if not _nonempty_str(a.get("prompt")):
             errors.append(f"{cid}: empty prompt")
         if a.get("expect") not in ("activate", "skip"):
@@ -109,8 +110,8 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
         behavioral_ids[cid] = b
         if b.get("area") not in areas or b.get("area") == "out-of-scope":
             errors.append(f"{cid}: behavioural area must be a capability area")
-        if b.get("lang") not in LANGS:
-            errors.append(f"{cid}: lang must be one of {LANGS}")
+        if b.get("lang") not in ALLOWED_LANGS:
+            errors.append(f"{cid}: lang must be one of {ALLOWED_LANGS}")
         for key in ("request", "context"):
             if not _nonempty_str(b.get(key)):
                 errors.append(f"{cid}: empty {key}")
