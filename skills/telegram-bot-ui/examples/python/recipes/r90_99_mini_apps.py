@@ -8,6 +8,8 @@ Run:  py -3 examples/python/recipes/r90_99_mini_apps.py            # all ten
 """
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
 import os
 import re
@@ -27,8 +29,7 @@ USER = 279058397
 APP = "https://coffee.example.com/app"
 with open(os.path.join(MINI, "server", "vectors.json"), encoding="utf-8") as fh:
     VECTORS = json.load(fh)
-MENU = {"flat-white": {"M": 420, "L": 480}, "cappuccino": {"M": 390, "L": 450}}  # cents, server-side
-STARS_PER_EURO = 50
+MENU = {"flat-white": {"M": 420, "L": 480}, "cappuccino": {"M": 390, "L": 450}}  # euro cents, server-side
 
 
 def bot(t: FakeTransport, **kw) -> MiniAppBot:
@@ -108,26 +109,88 @@ def price_cart(lines: list[dict]) -> int:
     return total
 
 
+class Orders:
+    """Server-side orders for the Mini App checkout (references/mini-apps/payments.md section 2).
+
+    The payload carries a signed order reference bound to the order's owner; pre-checkout re-checks owner,
+    expiry and amount; delivery is unique per telegram_payment_charge_id. In production this is the payments
+    pipeline (references/payments-and-stars.md) with a database; here it is in memory for the offline run."""
+
+    def __init__(self, secret: bytes, clock):
+        self.secret, self.clock = secret, clock
+        self.rows: dict[str, dict] = {}
+        self.charges: set[str] = set()
+        self.seq = 1041
+
+    def _sign(self, order_id: str) -> str:
+        return hmac.new(self.secret, order_id.encode(), hashlib.sha256).hexdigest()[:20]
+
+    def checkout(self, user_id: int, lines: list[dict]) -> dict:
+        cents = price_cart(lines)
+        key = (user_id, json.dumps(sorted((l["id"], l["size"], l["qty"]) for l in lines)))
+        for row in self.rows.values():  # the same cart again before it expires: the same order and link
+            if row["key"] == key and row["status"] == "open" and row["valid_until"] > self.clock():
+                return row
+        self.seq += 1
+        oid = str(self.seq)
+        row = {"id": oid, "user": user_id, "lines": lines, "amount": cents, "currency": "EUR", "status": "open",
+               "valid_until": self.clock() + 900, "key": key, "payload": f"ord:{oid}.{self._sign(oid)}"}
+        self.rows[oid] = row
+        return row
+
+    def pre_checkout(self, query: dict) -> tuple[bool, str]:
+        m = re.fullmatch(r"ord:(\d{1,12})\.([0-9a-f]{20})", query.get("invoice_payload", ""))
+        row = self.rows.get(m.group(1)) if m else None
+        if not row or not hmac.compare_digest(m.group(2), self._sign(row["id"])):
+            return False, "This order is not valid any more. Open the cart and try again."
+        if query["from"]["id"] != row["user"]:
+            return False, "This payment link belongs to another account."
+        if row["valid_until"] <= self.clock() or row["status"] != "open":
+            return False, "This order has expired. Open the cart to see current prices."
+        if query["currency"] != row["currency"] or query["total_amount"] != row["amount"]:
+            return False, "The total changed. Open the cart to see the new total."
+        return True, ""
+
+    def paid(self, sp: dict) -> bool:
+        """successful_payment: the only fact of payment. True when this charge delivered the order now."""
+        oid = sp["invoice_payload"].split(":")[1].split(".")[0]
+        row = self.rows.get(oid)
+        if not row or sp["telegram_payment_charge_id"] in self.charges:
+            return False
+        self.charges.add(sp["telegram_payment_charge_id"])
+        row["status"] = "paid"
+        return True
+
+
 def r93(t: FakeTransport | None = None):
+    """Coffee is a physical good: a payment provider in EUR (Stars are for digital goods), priced on the server."""
     t = t or FakeTransport()
     t.script("createInvoiceLink", "https://t.me/$order-1042-invoice")
-    cart = [{"id": "flat-white", "size": "M", "qty": 2, "price": 1}]  # the client's price is ignored
-    cents = price_cart(cart)
-    stars = round(cents / 100 * STARS_PER_EURO)
-    link = t.call("createInvoiceLink", {"title": "Order 1042", "description": "2 × Flat white, pickup 10:30",
-                                         "payload": "o:1042", "currency": "XTR",
-                                         "prices": [{"label": "Order 1042", "amount": stars}]})
-    # The app calls WebApp.openInvoice(link); the order counts as paid only on successful_payment.
-    paid = {"message": {"chat": {"id": USER}, "successful_payment": {"currency": "XTR", "total_amount": stars,
-                                                                     "invoice_payload": "o:1042",
-                                                                     "telegram_payment_charge_id": "stxTEST1042"}}}
-    sp = paid["message"]["successful_payment"]
-    fulfilled: set[str] = set()  # charge ids already fulfilled (durable in production: updates can repeat)
-    if (sp["currency"] == "XTR" and sp["invoice_payload"] == "o:1042" and sp["total_amount"] == stars
-            and sp["telegram_payment_charge_id"] not in fulfilled):
-        fulfilled.add(sp["telegram_payment_charge_id"])
-        t.call("sendMessage", {"chat_id": USER, "text": f"Paid ⭐ {stars}. Order 1042: 2 × Flat white, pickup 10:30."})
-    return t, cents, stars, link
+    now = [1795400000]
+    orders = Orders(b"test-secret-from-env", lambda: now[0])
+    cart = [{"id": "flat-white", "size": "M", "qty": 2, "price": 1}]   # the client's price is ignored
+    order = orders.checkout(USER, cart)
+    again = orders.checkout(USER, cart)                                # double tap: same order, no new invoice
+    link = t.call("createInvoiceLink", {"title": f"Order {order['id']}", "description": "2 × Flat white, pickup 10:30",
+                                         "payload": order["payload"], "currency": "EUR",
+                                         "provider_token": "PROVIDER_TOKEN_FROM_ENV",
+                                         "prices": [{"label": "2 × Flat white", "amount": order["amount"]}]})
+    # The app calls tma.pay(link) (WebApp.openInvoice) and then tma.watchOrder(); the bot gets these updates:
+    base = {"currency": "EUR", "total_amount": order["amount"], "invoice_payload": order["payload"]}
+    checks = {
+        "owner": orders.pre_checkout({**base, "from": {"id": USER}}),
+        "stranger": orders.pre_checkout({**base, "from": {"id": 999}}),
+        "forged": orders.pre_checkout({**base, "invoice_payload": f"ord:{order['id']}.{'0' * 20}", "from": {"id": USER}}),
+        "changed_total": orders.pre_checkout({**base, "total_amount": 1, "from": {"id": USER}}),
+    }
+    sp = {**base, "telegram_payment_charge_id": "TEST-CHARGE-1042", "provider_payment_charge_id": "prov_1042"}
+    delivered = [orders.paid(sp), orders.paid(sp)]                    # a redelivered update delivers nothing
+    if delivered[0]:
+        t.call("sendMessage", {"chat_id": USER, "text": f"Paid €8.40. Order {order['id']}: 2 × Flat white, "
+                                                         "pickup 10:30 at Central. Problems with the payment: /paysupport"})
+    now[0] += 1000
+    expired = orders.pre_checkout({**base, "from": {"id": USER}})
+    return t, order, again, link, checks, delivered, expired
 
 
 # ------------------------------------------------------------------ R94 form / booking
@@ -266,12 +329,17 @@ def main() -> None:
         c.check(len(t.params_of("answerWebAppQuery")) == 1, "exactly one answer per query")
         c.check(third == VECTORS["expect"]["user_id"], "third-party Ed25519 check without the token")
     if "r93" in which:
-        t, cents, stars, link = r93()
+        t, order, again, link, checks, delivered, expired = r93()
         c.dump(t, "R93 shop checkout")
-        c.check(cents == 840 and stars == 420, "the server prices the cart; the client's price is ignored")
+        c.check(order["amount"] == 840, "the server prices the cart; the client's price is ignored")
+        c.check(again is order and len(t.params_of("createInvoiceLink")) == 1, "a repeated checkout reuses the open order")
         inv = t.params_of("createInvoiceLink")[0]
-        c.check(inv["currency"] == "XTR" and len(inv["prices"]) == 1, "Stars invoice: XTR, one price")
-        c.check(len(t.params_of("sendMessage")) == 1, "the receipt follows successful_payment only")
+        c.check(inv["currency"] == "EUR" and inv["provider_token"], "a physical good goes through a provider, not Stars")
+        c.check(re.fullmatch(r"ord:\d+\.[0-9a-f]{20}", inv["payload"]) is not None, "the payload is a signed order reference")
+        c.check(checks["owner"][0] and not checks["stranger"][0] and not checks["forged"][0] and not checks["changed_total"][0],
+                "pre-checkout refuses another payer, a forged payload and a changed total")
+        c.check(delivered == [True, False] and len(t.params_of("sendMessage")) == 1, "one delivery and one receipt per charge")
+        c.check(not expired[0], "an expired order is refused")
     if "r94" in which:
         t, booked, rejected = r94()
         c.dump(t, "R94 booking form")

@@ -1872,13 +1872,14 @@
       "symbols": [
         "createInvoiceLink",
         "successful_payment",
+        "pre_checkout_query",
         "LabeledPrice"
       ],
       "versions": [
         "6.1",
         "10.5"
       ],
-      "contexts": "private chat for the receipt; Stars for digital goods",
+      "contexts": "private chat for the receipt; physical goods through a provider, digital goods in Stars",
       "payload": "examples/payloads/r93-mini-app-shop.json",
       "fixture": null,
       "python": "examples/python/recipes/r90_99_mini_apps.py",

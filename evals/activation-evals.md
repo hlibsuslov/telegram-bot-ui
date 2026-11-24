@@ -202,6 +202,8 @@ description is updated.
 | MA14 | uk | "Зроби міні-застосунок у Telegram для книжкового магазину з кошиком." | no | `references/mini-apps/screen-patterns.md`, `references/mini-apps/layout-rules.md` |
 | MA15 | uk | "Перевір дизайн нашого Telegram Mini App на відповідність гайдлайнам." | no | `references/mini-apps/telegram-design-guidelines.md`, `scripts/miniapp_lint.py` |
 | MA16 | en | "Should this be a Mini App or can the bot do it with buttons?" | no | `references/mini-apps/decide.md`, `recipes/90-mini-app-or-bot.md` |
+| MA17 | en | "Add Stars payments to my Mini App for AI credits." | yes | `references/mini-apps/payments.md`, `recipes/93-mini-app-shop.md` |
+| MA18 | ru | "Подключи оплату картой в нашем мини-аппе доставки кофе." | no | `references/mini-apps/payments.md` |
 
 ## Negative — Mini App boundaries (should NOT activate)
 

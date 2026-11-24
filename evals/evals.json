@@ -1404,6 +1404,31 @@
       "names_method": false,
       "routes_to": [],
       "why": "native app, not Telegram"
+    },
+    {
+      "id": "MA17",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Add Stars payments to my Mini App for AI credits.",
+      "expect": "activate",
+      "names_method": true,
+      "routes_to": [
+        "references/mini-apps/payments.md",
+        "recipes/93-mini-app-shop.md"
+      ],
+      "why": "payments in a Mini App"
+    },
+    {
+      "id": "MA18",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Подключи оплату картой в нашем мини-аппе доставки кофе.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/payments.md"
+      ],
+      "why": "provider rail for physical goods"
     }
   ],
   "behavioral": [
@@ -2382,6 +2407,22 @@
         "of": "B94",
         "variation": "another content type (trainers instead of books), Russian, no method names"
       }
+    },
+    {
+      "id": "B96",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "When invoiceClosed says paid, unlock the premium section right away.",
+      "context": "Mini App sells AI credits; server exists; bot receives updates by webhook",
+      "must": [
+        "explains invoiceClosed is a hint; unlocks only from the server's order after successful_payment",
+        "uses tma.pay then tma.watchOrder (or polls GET /orders/<id>) and maps each status to a screen",
+        "keeps Stars for digital goods and the price on the server"
+      ],
+      "critical_failures": [
+        "unlocks in the invoiceClosed handler",
+        "adds a card form for digital credits"
+      ]
     }
   ]
 }

@@ -174,7 +174,7 @@ way forward (`openSettings`). **[Heuristic]**
 |---|---|---|
 | `WebApp.openLink(url[, options])` | 6.1 | external browser; the app stays open; user gesture only (`try_instant_view` option since 6.4) |
 | `WebApp.openTelegramLink(url)` | 6.1 | `t.me` links; since 7.0 the app stays open |
-| `WebApp.openInvoice(url[, callback])` | 6.1 | Stars and card invoices: [payments-and-stars.md](../payments-and-stars.md) |
+| `WebApp.openInvoice(url[, callback])` | 6.1 | Stars and card invoices: [payments.md](payments.md) (app side), [payments-and-stars.md](../payments-and-stars.md) (bot side) |
 | `WebApp.sendData(data)` | 6.0 | reply-keyboard launches only; ≤ 4096 bytes; closes the app |
 | `WebApp.switchInlineQuery(query[, choose_chat_types])` | 6.7 | back to inline mode with a query (bot needs inline mode) |
 | `WebApp.shareMessage(msg_id[, callback])` | 8.0 | needs a `PreparedInlineMessage` id from the bot |

@@ -20,6 +20,7 @@ TON wallet: [../wallet-and-ton.md](../wallet-and-ton.md). Widgets inside a messa
 | Open a Mini App from a button, link, menu or profile; `startapp`; hosting | [launch-and-lifecycle.md](launch-and-lifecycle.md) | recipe 91 |
 | "Does `Telegram.WebApp` have X, since which version?" | [webapp-api.md](webapp-api.md), `scripts/webapp_lookup.py` | — |
 | Verify `initData`, sessions, what to trust | [security.md](security.md) | recipe 92 |
+| Take payments: Stars, subscriptions, cards for physical goods, every `invoiceClosed` status | [payments.md](payments.md) | recipes 93, 96 |
 | Make it look like Telegram in light and dark, iOS and Android | [telegram-design-guidelines.md](telegram-design-guidelines.md), [design-sources.md](design-sources.md), [design-system.md](design-system.md) | `examples/mini-apps/_kit` |
 | "Make it look like X", "use our brand", "calmer / denser / fintech", restyle an existing app | [design-system.md](design-system.md) §9 styles, `scripts/miniapp_style.py` | `data/mini-apps/styles.json` |
 | Build a screen: shop, gym and trainers, bookstore, SaaS dashboard, form, booking, game, editor | [screen-patterns.md](screen-patterns.md), [components.md](components.md) | recipes 93-99 |
@@ -62,7 +63,7 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `data/mini-apps/layouts.json` | layout rules L01-L25 and 16 content types (image ratio, card slots, price, primary action, detail order) |
 | `scripts/miniapp_layout.py` | `entities`, `show`, `rules`, `review` a screen description, `example` |
 | `scripts/miniapp_style.py` | `presets`, `show`, `css`, `check` for styles and custom brand profiles |
-| `scripts/miniapp_lint.py` | 24 rules: security, native controls, theme, motion, labels, slop (`--json`, `--strict`) |
+| `scripts/miniapp_lint.py` | 27 rules: security, native controls, theme, motion, labels, slop (`--json`, `--strict`) |
 | `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions |
 | `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets), `tma.ts` (no-dependency kit), `icons.svg` |
 | `examples/mini-apps/gallery` | every kit element on one page: open it in the stand and switch platform, theme, width, style |

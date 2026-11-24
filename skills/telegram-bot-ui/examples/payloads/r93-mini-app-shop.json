@@ -10,12 +10,13 @@
       "params": {
         "title": "Order 1042",
         "description": "2 × Flat white, pickup 10:30",
-        "payload": "o:1042",
-        "currency": "XTR",
+        "payload": "ord:1042.794c76ea3de43e735d71",
+        "currency": "EUR",
+        "provider_token": "PROVIDER_TOKEN_FROM_ENV",
         "prices": [
           {
-            "label": "Order 1042",
-            "amount": 420
+            "label": "2 × Flat white",
+            "amount": 840
           }
         ]
       }
@@ -24,7 +25,7 @@
       "method": "sendMessage",
       "params": {
         "chat_id": 279058397,
-        "text": "Paid ⭐ 420. Order 1042: 2 × Flat white, pickup 10:30."
+        "text": "Paid €8.40. Order 1042: 2 × Flat white, pickup 10:30 at Central. Problems with the payment: /paysupport"
       }
     }
   ]

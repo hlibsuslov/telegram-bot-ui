@@ -39,6 +39,10 @@ in references/mini-apps/anti-slop.md#linter-rules):
     MA22 small-text       G5  font-size below 11 px
     MA23 viewport-meta    G2  HTML entry without <meta name="viewport">
     MA24 label            G5  <input> without a label or aria-label, <img> without alt
+    MA25 pay-form         P   own card fields (autocomplete cc-*, card number / CVV inputs): the provider's sheet collects cards
+  payment warnings (P = references/mini-apps/payments.md)
+    MA26 client-price     P   price / amount / total sent to a checkout, invoice or order endpoint: the server prices the cart
+    MA27 paid-unlock      P   unlocking on invoice status "paid" without asking the server (watchOrder or /orders)
 """
 from __future__ import annotations
 
@@ -63,6 +67,7 @@ RULES = {
     "MA16": ("warn", "web-font"), "MA17": ("warn", "reduced-motion"), "MA18": ("warn", "ready"),
     "MA19": ("warn", "own-back"), "MA20": ("warn", "web-login"), "MA21": ("warn", "hover-only"),
     "MA22": ("warn", "small-text"), "MA23": ("warn", "viewport-meta"), "MA24": ("warn", "label"),
+    "MA25": ("error", "pay-form"), "MA26": ("warn", "client-price"), "MA27": ("warn", "paid-unlock"),
 }
 TOKEN = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b|\bBOT_TOKEN\b|\bTELEGRAM_BOT_TOKEN\b")
 COLOR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\([^)]*\)")
@@ -231,6 +236,18 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
             for m in re.finditer(r"history\.back\s*\(", code):
                 add("MA19", path, text, m.start(), "history.back(): drive Telegram's BackButton from one navigation stack")
             client_js.append((path, code))
+        if not server and ext in (".html", ".htm", ".js", ".mjs", ".ts", ".tsx", ".jsx"):
+            card = re.search(r"autocomplete\s*=\s*[\"']cc-|\b(name|id)\s*=\s*[\"'][^\"']*(card-?number|cardnumber|\bcvv\b|\bcvc\b)", text, re.I)
+            if card:
+                add("MA25", path, text, card.start(), "own card fields: open the server's invoice link with openInvoice")
+        if code and not server:
+            m = re.search(r"fetch\(\s*[`'\"][^`'\"]*(checkout|invoice|orders?)\b[^`'\"]*[`'\"]\s*,\s*\{.{0,400}?\b(price|amount|total)\b\s*:",
+                          code, re.S | re.I)
+            if m:
+                add("MA26", path, text, m.start(), f"'{m.group(2)}' sent to a {m.group(1)} endpoint: send ids and quantities, price on the server")
+            paid = re.search(r"(===?|==)\s*['\"]paid['\"]|['\"]paid['\"]\s*(===?|==)", code)
+            if paid and not re.search(r"watchOrder|/orders?\b|orderStatus|getOrder", code):
+                add("MA27", path, text, paid.start(), "invoice status 'paid' is a hint: ask the server for the order before unlocking")
         if not server and re.search(r"telegram-widget\.js|oauth\.telegram\.org|Login with Telegram", text, re.I):
             m = re.search(r"telegram-widget\.js|oauth\.telegram\.org|Login with Telegram", text, re.I)
             add("MA20", path, text, m.start(), "web login inside a Mini App: initData already identifies the user")

@@ -122,7 +122,8 @@ or personal data. `scripts/miniapp_lint.py` flags it.
 - `web_app_data.data` (≤ 4096 bytes): parse JSON with a size limit and a schema; the user can send any
   string through a modified client.
 - Prices and totals: the client sends item ids and quantities; the server prices them and creates the
-  invoice link (`createInvoiceLink`). Digital goods are sold in Stars ([../payments-and-stars.md](../payments-and-stars.md)).
+  invoice link (`createInvoiceLink`). Digital goods are sold in Stars; the whole Mini App payment flow, with
+  a signed payload bound to the user: [payments.md](payments.md).
 - Rendering user or model text in the app: text nodes or a sanitiser; never `innerHTML` with raw input.
 
 ## 8. Hosting, headers and origins

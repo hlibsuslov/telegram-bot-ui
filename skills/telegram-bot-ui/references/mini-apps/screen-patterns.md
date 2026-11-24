@@ -23,8 +23,9 @@ notifications, receipts and reminders.
 | Bot before / after | promo or restock alert with a link to the product · receipt and order status updates |
 | Mistakes | prices taken from the client · cart lost on reload (keep it in `CloudStorage` or the server) · hidden sold-out items · a checkout that asks for the name Telegram already gave |
 
-Payment: the server creates the invoice (`createInvoiceLink`; digital goods in Stars) and the app opens it
-with `openInvoice`; the order is paid only on `successful_payment` ([../payments-and-stars.md](../payments-and-stars.md)). Recipe 93.
+Payment: the server creates the invoice (`createInvoiceLink`; digital goods in Stars, physical goods through a
+provider) and the app opens it with `openInvoice`; the order is paid only on `successful_payment`. Flow,
+statuses and screens: [payments.md](payments.md). Recipe 93.
 
 ### Food and drink ordering (café, restaurant, delivery)
 | | |

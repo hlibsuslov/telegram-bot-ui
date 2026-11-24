@@ -122,3 +122,6 @@ not proof of how real clients render.
 | MA22 small-text | warning | font size below 11 px | G5 |
 | MA23 viewport-meta | warning | no `<meta name="viewport">` | G2 |
 | MA24 label | warning | `<input>` without a label, `<img>` without `alt` | G5 |
+| MA25 pay-form | error | own card fields (`autocomplete="cc-*"`, card number or CVV inputs) | payments §4 |
+| MA26 client-price | warning | `price` / `amount` / `total` sent to a checkout, invoice or order endpoint | payments §2 |
+| MA27 paid-unlock | warning | unlocking on invoice status `paid` without asking the server for the order | payments §3 |

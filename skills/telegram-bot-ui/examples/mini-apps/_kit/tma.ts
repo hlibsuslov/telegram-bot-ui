@@ -41,6 +41,7 @@ export interface WebAppLike {
   disableClosingConfirmation?(): void;
   showConfirm?(msg: string, cb: (ok: boolean) => void): void;
   showPopup?(p: Record<string, unknown>, cb: (id: string) => void): void;
+  openInvoice?(url: string, cb: (status: string) => void): void;
   MainButton?: BottomButtonLike;
   SecondaryButton?: BottomButtonLike;
   BackButton?: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void };
@@ -146,6 +147,14 @@ export interface MainButtonSpec {
 
 export interface SecondaryButtonSpec extends MainButtonSpec {
   position?: 'left' | 'right' | 'top' | 'bottom';
+}
+
+/** Telegram's invoice status: a HINT only. The order is paid when the server says so (successful_payment). */
+export type InvoiceStatus = 'paid' | 'cancelled' | 'failed' | 'pending' | 'unsupported';
+
+export interface WatchOptions {
+  timeoutMs?: number;                       // stop polling after this long (default 60 s)
+  sleep?: (ms: number) => Promise<void>;    // injectable for tests
 }
 
 export interface Layer {
@@ -359,6 +368,47 @@ export function createTma(env: Env = {}) {
   const deviceStore = () => wrap(tg?.DeviceStorage, '9.0');
   const secureStore = () => wrap(tg?.SecureStorage, '9.0');
 
+  /* -- payments (references/mini-apps/payments.md): open the server's invoice link, then ask the server */
+  /** Opens an invoice link from a tap. Resolves with Telegram's status, which is only a hint: never unlock
+      anything from it; call watchOrder() and draw the server's order state. */
+  function pay(link: string): Promise<InvoiceStatus> {
+    if (!tg?.openInvoice || !has('6.1')) return Promise.resolve('unsupported');
+    return new Promise((resolve) => {
+      try {
+        tg.openInvoice!(link, (status) => {
+          resolve((['paid', 'cancelled', 'failed', 'pending'] as const).includes(status as InvoiceStatus)
+            ? (status as InvoiceStatus) : 'failed');
+        });
+      } catch {
+        resolve('failed'); // invalid link or an old client: the caller shows the server's state anyway
+      }
+    });
+  }
+
+  /** Polls the server's view of an order until `isFinal` holds or the timeout passes. Backs off from 1 s to
+      10 s; a return to the app (activated) triggers an immediate check. */
+  async function watchOrder<T>(fetchState: () => Promise<T>, isFinal: (state: T) => boolean,
+                               opts: WatchOptions = {}): Promise<{ state: T | null; timedOut: boolean }> {
+    const timeout = opts.timeoutMs ?? 60000;
+    let wake: (() => void) | null = null;
+    const nap = opts.sleep ?? ((ms: number) => new Promise<void>((r) => { const t = setTimeout(r, ms); wake = () => { clearTimeout(t); r(); }; }));
+    const offActive = on('activated', () => wake?.());
+    const started = Date.now();
+    let delay = 1000;
+    let state: T | null = null;
+    try {
+      while (true) {
+        try { state = await fetchState(); } catch { /* a failed check is retried, not fatal */ }
+        if (state !== null && isFinal(state)) return { state, timedOut: false };
+        if (Date.now() - started + delay > timeout) return { state, timedOut: true };
+        await nap(delay);
+        delay = Math.min(delay * 2, 10000);
+      }
+    } finally {
+      offActive();
+    }
+  }
+
   /** Call once the first useful screen is drawn (Telegram then hides its loading screen). */
   function ready(): void { tg?.ready(); }
 
@@ -370,7 +420,7 @@ export function createTma(env: Env = {}) {
 
   return {
     tg, inTelegram, launch, has, on, chrome, haptic, mainButton, secondaryButton, nav, settings,
-    closingConfirmation, confirm, store, deviceStore, secureStore, ready, dispose,
+    closingConfirmation, confirm, store, deviceStore, secureStore, pay, watchOrder, ready, dispose,
     get initData(): string { return tg?.initData ?? ''; },
   };
 }

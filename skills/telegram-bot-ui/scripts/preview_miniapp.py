@@ -14,7 +14,8 @@ The stand serves the app's folder (by default its parent, so `../_kit/tma.css` r
 header (Close or Back, title, menu), the bottom bar with MainButton / SecondaryButton, native
 popups, the fullscreen controls and safe areas. Controls: platform, colour scheme, width, mode
 (compact, full, fullscreen), client version, Android performance class, style preset (to see any
-app in native / fintech / soft / dense), start_param. Every call
+app in native / fintech / soft / dense), the invoice outcome (paid, cancelled, failed, pending:
+`?invoice=paid`), start_param. Every call
 (haptics, popups, chrome colours, storage, links, unsupported members) is logged.
 
 Versions come from data/mini-apps/webapp-catalog.json: a member newer than the selected client
@@ -298,7 +299,12 @@ MOCK_JS = r"""/* MOCK of window.Telegram.WebApp for the local preview stand. Not
     closeScanQrPopup: function () { ok('WebApp.closeScanQrPopup', 'closeScanQrPopup'); },
     openLink: function (u, o) { ok('WebApp.openLink', 'openLink'); log('link', 'openLink', u); },
     openTelegramLink: function (u) { ok('WebApp.openTelegramLink', 'openTelegramLink'); log('link', 'openTelegramLink', u); },
-    openInvoice: function (u, cb) { ok('WebApp.openInvoice', 'openInvoice'); log('payment', 'openInvoice (mock: never paid)', u); setTimeout(function () { emit('invoiceClosed', { url: u, status: 'cancelled' }); cb && cb('cancelled'); }, 300); },
+    openInvoice: function (u, cb) {
+      ok('WebApp.openInvoice', 'openInvoice');
+      var status = ['paid', 'cancelled', 'failed', 'pending'].indexOf(cfg.invoice) >= 0 ? cfg.invoice : 'cancelled';
+      log('payment', 'openInvoice (mock: no money moves; status ' + status + ')', u);
+      setTimeout(function () { emit('invoiceClosed', { url: u, status: status }); cb && cb(status); }, 300);
+    },
     shareMessage: function (id, cb) { ok('WebApp.shareMessage', 'shareMessage'); log('call', 'shareMessage', id); setTimeout(function () { emit('shareMessageSent'); cb && cb(true); }, 200); },
     shareToStory: function (u, p) { ok('WebApp.shareToStory', 'shareToStory'); log('call', 'shareToStory', u); },
     switchInlineQuery: function (q, t) { ok('WebApp.switchInlineQuery', 'switchInlineQuery'); log('call', 'switchInlineQuery', [q, t]); },
@@ -397,6 +403,7 @@ STAND_HTML = r"""<!doctype html>
   <label>Mode <select id="c-mode"><option>full</option><option>compact</option><option>fullscreen</option></select></label>
   <label>Version <select id="c-version"></select></label>
   <label>Style <select id="c-style"><option value="">app's own</option><option>native</option><option>fintech</option><option>soft</option><option>dense</option></select></label>
+  <label>Invoice <select id="c-invoice"><option>cancelled</option><option>paid</option><option>failed</option><option>pending</option></select></label>
   <label>Android class <select id="c-perf"><option>HIGH</option><option>AVERAGE</option><option>LOW</option></select></label>
   <label>start_param <input id="c-start" size="14" placeholder="none"></label>
   <button id="c-reload" type="button">Reload</button>
@@ -411,7 +418,7 @@ const $ = (id) => document.getElementById(id);
 const verSel = $('c-version');
 CONFIG.versions.forEach(v => { const o = document.createElement('option'); o.textContent = v; verSel.append(o); });
 verSel.value = CONFIG.versions[CONFIG.versions.length - 1];
-for (const k of ['platform', 'scheme', 'width', 'mode', 'version', 'perf', 'start', 'style']) if (qs.get(k)) $('c-' + k).value = qs.get(k);
+for (const k of ['platform', 'scheme', 'width', 'mode', 'version', 'perf', 'start', 'style', 'invoice']) if (qs.get(k)) $('c-' + k).value = qs.get(k);
 
 function themeFor(platform, scheme) { return CONFIG.themes[(platform === 'android' ? 'android' : 'ios') + '-' + scheme]; }
 function demoInitData(start) {
@@ -450,7 +457,7 @@ class Device {
     const p = new URLSearchParams({
       tgWebAppData: demoInitData(this.o.start), tgWebAppVersion: this.o.version, tgWebAppPlatform: this.o.platform,
       tgWebAppThemeParams: JSON.stringify(this.theme),
-      tgWebAppMock: JSON.stringify({ scheme: this.o.scheme, mode: this.o.mode, fullscreen: this.fullscreen, safe: ins.safe, content: ins.content, perf: this.o.perf, style: this.o.style === 'native' ? '' : this.o.style }),
+      tgWebAppMock: JSON.stringify({ scheme: this.o.scheme, mode: this.o.mode, fullscreen: this.fullscreen, safe: ins.safe, content: ins.content, perf: this.o.perf, style: this.o.style === 'native' ? '' : this.o.style, invoice: this.o.invoice }),
     });
     if (this.fullscreen) p.set('tgWebAppFullscreen', '1');
     let url = CONFIG.app;
@@ -612,7 +619,7 @@ window.addEventListener('message', (ev) => {
 
 function opts(over) {
   return Object.assign({ platform: $('c-platform').value, scheme: $('c-scheme').value, width: +$('c-width').value,
-    mode: $('c-mode').value, version: verSel.value, start: $('c-start').value.trim(), perf: $('c-perf').value, style: $('c-style').value, height: +qs.get('height') || undefined }, over);
+    mode: $('c-mode').value, version: verSel.value, start: $('c-start').value.trim(), perf: $('c-perf').value, style: $('c-style').value, invoice: $('c-invoice').value, height: +qs.get('height') || undefined }, over);
 }
 function render() {
   const root = $('root'); root.replaceChildren(); Device.all = [];
@@ -635,7 +642,7 @@ function render() {
   Stand.logEl = side.querySelector('#log');
   new Device(devHost, opts());
 }
-for (const id of ['c-platform', 'c-scheme', 'c-width', 'c-mode', 'c-version', 'c-perf', 'c-style']) $(id).onchange = render;
+for (const id of ['c-platform', 'c-scheme', 'c-width', 'c-mode', 'c-version', 'c-perf', 'c-style', 'c-invoice']) $(id).onchange = render;
 $('c-reload').onclick = render;
 render();
 </script>

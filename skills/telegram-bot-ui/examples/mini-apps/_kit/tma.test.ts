@@ -261,3 +261,28 @@ test('settings keeps one handler', () => {
   tma.settings(null);
   assert.equal(tg.SettingsButton.handlers.size, 0);
 });
+
+test('pay() gates on 6.1, passes the status through and maps unknown values to failed', async () => {
+  const old = fakeWebApp('6.0', { openInvoice: () => { throw new Error('unsupported'); } });
+  assert.equal(await createTma(env(old.tg)).pay('https://t.me/$x'), 'unsupported');
+  for (const status of ['paid', 'cancelled', 'failed', 'pending', 'weird']) {
+    const { tg } = fakeWebApp('8.0', { openInvoice: (_u: string, cb: (s: string) => void) => cb(status) });
+    assert.equal(await createTma(env(tg)).pay('https://t.me/$x'), status === 'weird' ? 'failed' : status);
+  }
+  const throwing = fakeWebApp('8.0', { openInvoice: () => { throw new Error('bad link'); } });
+  assert.equal(await createTma(env(throwing.tg)).pay('nope'), 'failed');
+});
+
+test('watchOrder polls with back-off until the server says final, or times out', async () => {
+  const { tg } = fakeWebApp('8.0');
+  const tma = createTma(env(tg));
+  const naps: number[] = [];
+  const states = ['awaiting_payment', 'paid', 'delivered'];
+  const res = await tma.watchOrder(async () => states.shift()!, (s) => s === 'delivered',
+    { sleep: async (ms) => { naps.push(ms); } });
+  assert.deepEqual(res, { state: 'delivered', timedOut: false });
+  assert.deepEqual(naps, [1000, 2000]);
+  const slow = await tma.watchOrder(async () => 'pending', (s) => s === 'delivered',
+    { timeoutMs: 5000, sleep: async () => {} });
+  assert.equal(slow.timedOut, true);
+});

@@ -24,8 +24,12 @@ Bot API 10.5 and https://core.telegram.org/bots/webapps on 2026-11-23.
 - Layout rules L01-L25 for images, titles, prices, ratings, availability, galleries, filters, forms,
   booking and plans across 16 content types, with `scripts/miniapp_layout.py show / review`;
   screen patterns for shops, gyms and trainers, bookstores, SaaS dashboards, clinics, events and more.
-- Anti-slop rules with a 24-rule lint (`scripts/miniapp_lint.py`), security (`initData` HMAC and
+- Anti-slop rules with a 27-rule lint (`scripts/miniapp_lint.py`), security (`initData` HMAC and
   Ed25519, freshness, sessions, storage, CSP), performance and testing.
+- Payments inside a Mini App (`references/mini-apps/payments.md`): rail by goods (Stars for digital,
+  subscriptions, a provider for physical goods), the cart-to-receipt flow with a signed payload bound to the
+  user, a screen for every `invoiceClosed` status, the "My plan" screen; kit `pay()` and `watchOrder()`,
+  the stand's invoice outcome switch.
 - A no-dependency kit (`examples/mini-apps/_kit`), examples (coffee pickup, catalogue, points
   portfolio, kit gallery, React 19 with `@tma.js/sdk-react`), server-side `initData` verification in
   Python stdlib and `node:crypto` with shared vectors, the bot side, and a mock preview stand
