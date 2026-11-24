@@ -1034,10 +1034,10 @@
     "D",
     "selected"
    ],
-   "kit": ".tma-rating",
+   "kit": ".tma-rate .tma-rating .is-on",
    "native": null,
    "status": "kit",
-   "note": "labels per star"
+   "note": "question above, five 44 px stars centred (radio group, arrow keys), chosen stars filled in the Stars gold, the value in words below"
   },
   "color-input": {
    "group": "input",

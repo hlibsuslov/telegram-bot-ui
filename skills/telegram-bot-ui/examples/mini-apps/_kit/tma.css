@@ -645,10 +645,22 @@ select.tma-input {
 .tma-steps > li:not(:last-child)::after { content: ""; position: absolute; inset-inline-start: 11px; top: 22px; bottom: 2px; width: 2px; background: var(--tma-fill-strong); }
 .tma-steps > li.is-done::before { background: var(--tma-accent); box-shadow: none; }
 .tma-steps > li.is-current::before { box-shadow: inset 0 0 0 4px var(--tma-accent); }
-.tma-rating { display: inline-flex; gap: 2px; color: var(--tma-fill-strong); }
-.tma-rating > button { border: 0; background: none; padding: 4px; color: inherit; cursor: pointer; min-width: 40px; min-height: 40px; }
-.tma-rating > button[aria-pressed="true"] { color: var(--tma-accent); }
-.tma-rating > button[aria-pressed="true"] .tma-icon { fill: currentColor; }
+/* rating input: a centred block - question, five stars (44 px targets), the chosen value in words.
+   Empty stars are outlines in the hint colour; chosen ones are the filled Stars glyph in --tma-star. */
+.tma-rate { display: grid; justify-items: center; gap: var(--tma-s2); text-align: center; }
+.tma-card.tma-rate > * + * { margin-top: 0; }
+.tma-rate__title { margin: 0; font-size: var(--tma-fs-body); font-weight: 600; }
+.tma-rate__value { margin: 0; min-height: 1.3em; color: var(--tma-hint); font-size: var(--tma-fs-footnote); }
+.tma-rating { display: flex; justify-content: center; gap: var(--tma-s1); color: var(--tma-hint); }
+.tma-rating > button {
+  display: grid; place-items: center; width: var(--tma-target); height: var(--tma-target); padding: 0; border: 0;
+  border-radius: 50%; background: none; color: inherit; cursor: pointer; transition: transform var(--tma-dur-short) var(--tma-ease);
+}
+.tma-rating > button:active { transform: scale(.88); }
+.tma-rating > button:focus-visible { outline-offset: -2px; }
+.tma-rating .tma-icon { width: 30px; height: 30px; stroke-width: 1.6; }
+.tma-rating > button.is-on { color: var(--tma-star); }
+.tma-rating > button.is-on .tma-icon { fill: currentColor; stroke: currentColor; }
 .tma-pin { display: flex; justify-content: center; gap: var(--tma-s2); }
 .tma-pin > input { width: 44px; height: 52px; border: 0; border-radius: var(--tma-r-inner); background: var(--tma-surface); color: var(--tma-text); text-align: center; font: inherit; font-size: var(--tma-fs-title2); font-variant-numeric: tabular-nums; }
 .tma-file-drop { position: relative; display: grid; justify-items: center; gap: var(--tma-s2); padding: var(--tma-s6); border-radius: var(--tma-r-group); border: 1.5px dashed var(--tma-fill-strong); color: var(--tma-hint); text-align: center; cursor: pointer; }

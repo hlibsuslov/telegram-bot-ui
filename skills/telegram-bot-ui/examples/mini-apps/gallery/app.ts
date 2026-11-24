@@ -143,13 +143,31 @@ fmt('date-in', 'date-v', (v) => new Date(v).toLocaleDateString(undefined, { day:
 fmt('time-in', 'time-v', (v) => v);
 const slider = $('f5') as HTMLInputElement;
 slider.oninput = () => { $('f5o').textContent = slider.value; };
+/* rating: a radio group of five stars; the chosen value is also said in words */
+const RATE_WORDS = ['Poor', 'Fair', 'Good', 'Very good', 'Excellent'];
+function setRating(value: number): void {
+  for (const [i, x] of [...$('rating').children].entries()) {
+    x.classList.toggle('is-on', i < value);
+    x.setAttribute('aria-checked', String(i + 1 === value));
+    x.setAttribute('tabindex', i + 1 === (value || 1) ? '0' : '-1');
+  }
+  $('rate-v').textContent = value ? `${RATE_WORDS[value - 1]} · ${value} of 5` : 'Tap a star to rate';
+}
 $('rating').replaceChildren(...[1, 2, 3, 4, 5].map((n) => {
   const b = document.createElement('button');
-  b.type = 'button'; b.setAttribute('aria-label', `${n} of 5`); b.setAttribute('aria-pressed', String(n <= 4));
+  b.type = 'button'; b.setAttribute('role', 'radio'); b.setAttribute('aria-label', `${n} of 5`);
   b.innerHTML = icon('star');
-  b.onclick = () => { for (const x of $('rating').children) x.setAttribute('aria-pressed', String(Number(x.getAttribute('aria-label')![0]) <= n)); tma.haptic.select(); };
+  b.onclick = () => { setRating(n); tma.haptic.select(); };
+  b.onkeydown = (e) => {
+    const step = e.key === 'ArrowRight' || e.key === 'ArrowUp' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowDown' ? -1 : 0;
+    if (!step) return;
+    e.preventDefault();
+    const next = Math.min(5, Math.max(1, n + step));
+    setRating(next); ($('rating').children[next - 1] as HTMLElement).focus(); tma.haptic.select();
+  };
   return b;
 }));
+setRating(0);
 for (const pin of document.querySelectorAll<HTMLInputElement>('.tma-pin input')) {
   pin.addEventListener('input', () => { (pin.nextElementSibling as HTMLInputElement | null)?.focus(); });
 }
