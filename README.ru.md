@@ -21,7 +21,7 @@
 
 <p align="center">
   <b>Agent Skill, с которым ваш Telegram-бот выглядит, ощущается и работает как продуманный продукт.</b><br>
-  Весь интерфейс бота: экраны, тексты и клавиатуры · навигация и состояния · потоковые ответы ИИ · HTML-виджеты · публикация в каналы · боты под управлением агента · премиум-эмодзи · bot-ui Studio · весь Bot API офлайн.
+  Весь интерфейс бота: экраны, тексты и клавиатуры · навигация и состояния · потоковые ответы ИИ · HTML-виджеты · Mini Apps · публикация в каналы · боты под управлением агента · премиум-эмодзи · bot-ui Studio · весь Bot API офлайн.
 </p>
 
 <p align="center">
@@ -30,6 +30,7 @@
   <a href="#-быстрый-старт">Быстрый старт</a> ·
   <a href="#-что-умеет-агент">Возможности</a> ·
   <a href="#-html-виджеты">Виджеты</a> ·
+  <a href="#-mini-apps">Mini Apps</a> ·
   <a href="#-установка">Установка</a> ·
   <a href="#-рецепты-и-примеры">Рецепты</a> ·
   <a href="#-инструменты-без-агента">Инструменты</a> ·
@@ -117,6 +118,7 @@ Telegram-бота»*. Скилл включится сам, названия м�
 | 🧩 **HTML-виджеты** | виджеты Bot API 10.4 внутри сообщений: лимит размера, контекст продакшена, подпись и текстовый запасной вариант, живые карточки, общие опросы, сценарии с кошельком (18 готовых виджетов, сборка и предпросмотр, 7 рецептов) |
 | 💎 **Премиум-эмодзи** | один пак custom emoji на кнопках, в текстах, Rich Messages и постах: настоящие id из пака и откат на обычные эмодзи целиком, если бот не имеет права (6 рецептов) |
 | 📚 **Весь Bot API под рукой** | методы, типы и поля из локального каталога; проверка payload до отправки; отказ выдумывать поля (194 метода и 426 типов, каталог обновляется из официальной документации) |
+| 📱 **Mini Apps: создать и переделать** | решить, нужен ли бот, виджет или Mini App; `Telegram.WebApp` по версиям; дизайн-система в духе Telegram (роли темы, шрифтовая шкала iOS 27, именованные стили, системные палитры Apple); правила раскладки картинок, заголовков и цен; оплата в Stars и подарки так, как их рисует Telegram; проверка `initData`; линтер, имитация клиента и поэтапный план, как превратить веб-приложение в классический дизайн Telegram (10 рецептов) |
 | ⚙️ **Настройки бота из кода** | `setMySettings` из Bot API 10.5: темы с боковой панелью, подсказка inline-режима, режим приватности и режим колбэков хранятся в репозитории и применяются одним вызовом только с изменениями; `getMe` читается как `BotFullInfo`; ссылки-приглашения владельца для тестировщиков |
 
 А ещё он знает, **когда чего-то делать не стоит**: виджет ради меню из трёх кнопок, таблица ради
@@ -144,6 +146,31 @@ python skills/telegram-bot-ui/scripts/build_widget.py skills/telegram-bot-ui/exa
 python skills/telegram-bot-ui/scripts/preview_widget.py --gallery -o preview.html   # все виджеты и состояния, светлая и тёмная тема
 ```
 
+## 📱 Mini Apps
+
+Веб-приложения, которые открываются внутри Telegram и выглядят как его часть: шапка, кнопка «Назад» и
+нижняя кнопка Telegram вместо своей верхней панели и фиксированной кнопки «Купить»; тема пользователя
+вместо своей палитры; сгруппированные списки, один уровень подложек, SVG-иконки, никаких эмодзи; цены в
+Stars и подарки так, как их показывает Telegram.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mini-apps/showcase-dark.png">
+  <img alt="Пять мини-аппов на ките скилла в имитации клиента Telegram: занятия в спортзале с ценами в Stars, каталог книг, кошелёк баллов с быстрыми действиями, подарки Telegram с ценами в Stars и меню кофейни на Android" src="docs/assets/mini-apps/showcase-light.png" width="100%">
+</picture>
+
+<sub>Настоящие экраны примеров скилла (<code>rework</code>, <code>catalog</code>, <code>portfolio</code>, <code>gallery</code>, <code>vanilla</code>) в его имитации клиента (<code>preview_miniapp.py</code>), а не в настоящем Telegram;
+собрано скриптом <code>docs/assets/mini-apps/compose_showcase.py</code>. Как сгенерированное веб-приложение переделали в первый экран:
+<a href="docs/assets/mini-apps/rework-before.jpg">до</a> · <a href="docs/assets/mini-apps/rework-after.jpg">после</a>, журнал агента — в <code>examples/mini-apps/rework/FRICTION.md</code>.</sub>
+
+```bash
+python skills/telegram-bot-ui/scripts/miniapp_rework.py plan path/to/app   # поэтапный план, карты цветов и шрифтов
+python skills/telegram-bot-ui/scripts/miniapp_lint.py path/to/app --strict   # 44 правила: родные элементы, тема, эмодзи, безопасность, доступность, формы
+python skills/telegram-bot-ui/scripts/preview_miniapp.py path/to/app --serve 8790   # iOS/Android, светлая/тёмная, 320-430 px
+```
+
+Начните с [`references/mini-apps/README.md`](skills/telegram-bot-ui/references/mini-apps/README.md); полная переделка идёт по
+[`rework.md`](skills/telegram-bot-ui/references/mini-apps/rework.md).
+
 ## 💬 Как просить агента
 
 Названия API знать не нужно. В репозитории вашего бота:
@@ -155,6 +182,7 @@ python skills/telegram-bot-ui/scripts/preview_widget.py --gallery -o preview.htm
 | Каналы | *«Опубликуй заметку о релизе в наш канал завтра в 9:00, но сначала покажи превью»* · *«Каждый понедельник публикуй дайджест релизов за неделю без повторов»* |
 | Агент через бота | *«Хочу управлять своим агентом из Telegram — и только я»* · *«Пусть агент спрашивает подтверждение кнопками перед всем рискованным»* |
 | Виджеты | *«Сделай статус заказа одной карточкой, которая обновляется»* · *«Наш виджет слишком большой и не отправляется — уложи его в лимит»* |
+| Mini Apps | *«Сделай мини-апп для записи к тренерам нашего зала»* · *«Переделай наш мини-апп, чтобы он выглядел как Telegram»* · *«Продавай тариф Pro за Stars прямо в приложении»* |
 | Справочник Bot API | *«Какое обновление сообщает боту, что пользователь остановил ответ?»* · *«Может ли бот удалить сообщение только для одного пользователя?»* |
 
 Скилл можно вызвать и по имени: `/telegram-bot-ui` (Claude Code), `$telegram-bot-ui` (Codex),
@@ -277,7 +305,7 @@ telegram-bot-ui»*.
 
 ## 🍳 Рецепты и примеры
 
-66 нумерованных recipes и мини-рецепты. Восемь новых сценариев R80–R87 —
+76 нумерованных recipes и мини-рецепты. Восемь новых сценариев R80–R87 —
 офлайн-модели на Python с callback-интерфейсом; production-интеграции отмечены отдельно.
 
 Агент ищет основу в каталоге 40 семейств сценариев (`skills/telegram-bot-ui/recipes/use-cases.json`), переиспользует
@@ -314,6 +342,7 @@ python skills/telegram-bot-ui/examples/python/recipes/r80_87_product_journeys.py
 | [40–49 · Агент через своего бота](skills/telegram-bot-ui/references/agent-operated-bots.md) | подтверждение деплоя, живой статус сборки, ночной дайджест, спросить и продолжить, потоковое исследование со «Стоп», топики под задачи, командная группа, алерты об инцидентах, хуки для coding-агентов |
 | [50–56 · Виджеты](skills/telegram-bot-ui/references/widget-patterns.md) | дашборд мониторинга, запись, карточка товара, общая викторина, прогресс задачи, виджет по словесному описанию, браузер данных REST |
 | [70–75 · Премиум-эмодзи](skills/telegram-bot-ui/references/emoji-packs.md) | перевод на один пак, иконки с нуля, серия постов в канале, смешанные права, окончание Premium, переезд на другой пак |
+| [90–99 · Mini Apps](skills/telegram-bot-ui/references/mini-apps/README.md) | бот или Mini App, минимальное приложение, сессия по `initData`, магазин с оплатой, форма и запись, дашборд, профиль и подписка, игра на весь экран, поделиться результатом, редактор |
 
 Полный указатель по задаче, символу API, версии и контексту: [`recipes/README.md`](skills/telegram-bot-ui/recipes/README.md).
 
@@ -336,6 +365,8 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 | `python skills/telegram-bot-ui/scripts/validate_payload.py request.json` | структурная проверка по каталогу Bot API |
 | `python skills/telegram-bot-ui/scripts/audit_icons.py icon-map.json` | одно ли семейство иконок? не затесались ли анимированные? |
 | `python skills/telegram-bot-ui/scripts/audit_copy.py strings.json` | переводы: плейсхолдеры, символы, длина подписей |
+| `python skills/telegram-bot-ui/scripts/miniapp_lint.py app/ --strict` | Mini App: родные элементы, роли темы, эмодзи, подложки, оплата, `initData` |
+| `python skills/telegram-bot-ui/scripts/miniapp_rework.py plan app/` | план переделки Mini App с картами цветов и шрифтов |
 
 | Собрать и изучить | |
 |---|---|
@@ -343,6 +374,7 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 | `python skills/telegram-bot-ui/scripts/tg_post.py preview post.json` | отрисовать пост для канала (публикация — только по явному запросу) |
 | `python skills/telegram-bot-ui/scripts/build_widget.py src.html --strict` | собрать виджет из набора и показать его размер |
 | `python skills/telegram-bot-ui/scripts/preview_widget.py widget.html` | страница-имитация для предпросмотра (не настоящий клиент) |
+| `python skills/telegram-bot-ui/scripts/preview_miniapp.py app/ --serve 8790` | Mini App в имитации клиента Telegram (не настоящий клиент) |
 | `python skills/telegram-bot-ui/scripts/emoji_packs.py capture` | как собрать настоящие id custom emoji |
 | `python scripts/install.py --host all --dry-run` | куда установится скилл |
 | `python scripts/run_checks.py` | все проверки этого репозитория |
