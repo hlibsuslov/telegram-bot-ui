@@ -266,16 +266,25 @@ function Canvas({ selected, selectedAction, onAction }: { selected: string | nul
     setFitted(true);
     requestAnimationFrame(async () => {
       if (selected && layout.pos[selected]) { centre(selected); return; }
+      const canvas = document.querySelector<HTMLElement>(".react-flow");
+      const start = loaded.features.demo && layout.pos["entry.start"];
+      if (canvas && start) {
+        const zoom = 0.62;
+        const cardWidth = layout.size["entry.start"].width * zoom;
+        const left = Math.max(12, Math.min(152, canvas.clientWidth - cardWidth - 20));
+        const top = canvas.clientWidth < 600 ? 88 : 166;
+        await rf.setViewport({ x: left - start.x * zoom, y: top - start.y * zoom, zoom });
+        return;
+      }
       await rf.fitView({ padding: 0.12 });
       // A wide bot fits only at a tiny zoom: start readable at the entry points instead.
       if (rf.getZoom() < 0.5) {
-        const el = document.querySelector(".react-flow") as HTMLElement | null;
-        const h = el?.clientHeight ?? 800;
+        const h = canvas?.clientHeight ?? 800;
         const z = 0.62;
         rf.setViewport({ x: 40 - layout.bounds.minX * z, y: h / 2 - ((layout.bounds.minY + layout.bounds.maxY) / 2) * z, zoom: z });
       }
     });
-  }, [layout, fitted, selected, centre, rf]);
+  }, [layout, fitted, selected, centre, rf, loaded.features.demo]);
 
   // Wait a frame for the editor panel to take its width, then centre the selected screen.
   useEffect(() => {

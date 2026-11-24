@@ -356,9 +356,13 @@ export function SimulatorView() {
             <div className="tg flex min-h-0 flex-1 flex-col" data-theme={theme}>
               <header className="flex items-center gap-3 bg-[var(--tg-theme-header-bg-color)] px-3 py-2 shadow-[0_1px_0_rgba(0,0,0,.08)]">
                 <ArrowLeft className="size-5 text-[var(--tg-theme-hint-color)]" aria-hidden />
-                <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 text-sm font-semibold text-white" aria-hidden>
-                  {loaded.title.slice(0, 1).toUpperCase()}
-                </span>
+                {loaded.demoAvatar ? (
+                  <img src={loaded.demoAvatar} alt="" className="size-9 shrink-0 rounded-full" />
+                ) : (
+                  <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 text-sm font-semibold text-white" aria-hidden>
+                    {loaded.title.slice(0, 1).toUpperCase()}
+                  </span>
+                )}
                 <span className="min-w-0">
                   <span className="block truncate text-[15px] font-semibold">{loaded.title}</span>
                   <span className="block text-[12.5px] text-[var(--tg-theme-hint-color)]">bot</span>

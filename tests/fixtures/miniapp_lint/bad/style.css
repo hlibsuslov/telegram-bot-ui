@@ -1,0 +1,10 @@
+body { background: #ffffff; color: #111; height: 100vh; }
+.buy-btn { position: fixed; bottom: 0; left: 0; right: 0; }
+.card { transition: all .3s; }
+.badge { animation: pulse 1s infinite; }
+@keyframes pulse { to { transform: scale(1.1); } }
+.title { background: linear-gradient(90deg, #8b5cf6, #ec4899); background-clip: text; }
+.nav { backdrop-filter: blur(20px); }
+@font-face { font-family: Brand; src: url(brand.woff2); }
+.meta { font-size: 9px; }
+.card:hover .tip { display: block; }
