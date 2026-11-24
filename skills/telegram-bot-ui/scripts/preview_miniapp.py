@@ -28,6 +28,14 @@ here proves nothing about real clients: test on iOS, Android and Desktop
 (references/mini-apps/performance-and-testing.md).
 
 If the served folder has a build.mjs (the skill's examples), it runs `node build.mjs` first.
+The app itself is served at /app/<path of the entry under the root>, e.g. /app/rework/index.html.
+
+  --api mock.json   answers the app's own requests, so a server flow (checkout, order status) runs in the
+                    stand: {"POST /api/checkout": {"body": {...}}, "GET /api/orders/*": {"body": {...}}}.
+                    Keys are "METHOD /path" with * for one path segment; values take "status" (200),
+                    "body" (JSON) and "delay_ms". The string "$order_status" in a body becomes the order state
+                    for the stand's Invoice control: paid -> "paid", failed -> "failed", else "open".
+                    Without --api every request outside /app/ answers 501.
 """
 from __future__ import annotations
 
@@ -40,6 +48,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import urllib.parse
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
@@ -348,6 +357,18 @@ MOCK_JS = r"""/* MOCK of window.Telegram.WebApp for the local preview stand. Not
     }
   });
   window.Telegram = { WebApp: WebApp, WebView: { isIframe: inStand, initParams: {} }, Utils: {} };
+  // the stand's --api mock answers order status from the selected invoice outcome
+  if (window.fetch) {
+    var realFetch = window.fetch;
+    window.fetch = function (input, init) {
+      init = init || {};
+      var headers = new Headers(init.headers || (input && input.headers) || {});
+      headers.set('X-TMA-Mock-Invoice', cfg.invoice || 'cancelled');
+      init.headers = headers;
+      log('network', (init.method || 'GET') + ' ' + (typeof input === 'string' ? input : input.url));
+      return realFetch.call(this, input, init);
+    };
+  }
   post('loaded', { version: version, platform: platform });
 })();
 """
@@ -718,8 +739,35 @@ class StandServer(ThreadingHTTPServer):
     allow_reuse_address = os.name != "nt"
 
 
-def make_handler(root: str, app_rel: str, title: str):
+def load_api(path: str | None) -> list[tuple[str, re.Pattern, dict]]:
+    """--api file: [(method, path regex, response)]. `*` matches one path segment."""
+    if not path:
+        return []
+    with open(path, encoding="utf-8") as fh:
+        data = json.load(fh)
+    routes = []
+    for key, resp in data.items():
+        if key.startswith("$"):
+            continue
+        method, _, pattern = key.partition(" ")
+        if not pattern.startswith("/") or not isinstance(resp, dict):
+            raise ValueError(f"--api: bad route {key!r} (expected \"METHOD /path\": {{...}})")
+        rx = re.compile("^" + "/".join("[^/]+" if part == "*" else re.escape(part) for part in pattern.split("/")) + "$")
+        routes.append((method.upper(), rx, resp))
+    return routes
+
+
+ORDER_STATUS = {"paid": "paid", "failed": "failed"}
+
+
+def mock_response(resp: dict, invoice: str) -> tuple[int, bytes]:
+    body = json.dumps(resp.get("body", {})).replace('"$order_status"', json.dumps(ORDER_STATUS.get(invoice, "open")))
+    return int(resp.get("status", 200)), body.encode()
+
+
+def make_handler(root: str, app_rel: str, title: str, api: list | None = None):
     app_url = "/app/" + app_rel.replace(os.sep, "/")
+    api = api or []
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, fmt, *args):  # quiet
@@ -733,12 +781,49 @@ def make_handler(root: str, app_rel: str, title: str):
             self.end_headers()
             self.wfile.write(body)
 
-        def do_GET(self):  # noqa: N802
+        def _host_ok(self) -> bool:
             # DNS rebinding guard: only answer requests addressed to the loopback name we serve on.
             port = self.server.server_address[1]
-            if (self.headers.get("Host") or "") not in (f"127.0.0.1:{port}", f"localhost:{port}"):
+            return (self.headers.get("Host") or "") in (f"127.0.0.1:{port}", f"localhost:{port}")
+
+        def _api(self, method: str, path: str) -> bool:
+            for m, rx, resp in api:
+                if m == method and rx.match(path):
+                    length = int(self.headers.get("Content-Length") or 0)
+                    if length:
+                        self.rfile.read(min(length, 1 << 20))
+                    if resp.get("delay_ms"):
+                        time.sleep(min(int(resp["delay_ms"]), 5000) / 1000)
+                    code, body = mock_response(resp, self.headers.get("X-TMA-Mock-Invoice") or "")
+                    self._send(code, body, "application/json")
+                    return True
+            return False
+
+        def _other(self, method: str) -> None:
+            if not self._host_ok():
                 return self._send(403, b"forbidden host", "text/plain")
             path = urllib.parse.urlsplit(self.path).path
+            if not self._api(method, path):
+                self._send(501, f"no mock for {method} {path}: pass --api mock.json".encode(), "text/plain")
+
+        def do_POST(self):  # noqa: N802
+            self._other("POST")
+
+        def do_PUT(self):  # noqa: N802
+            self._other("PUT")
+
+        def do_PATCH(self):  # noqa: N802
+            self._other("PATCH")
+
+        def do_DELETE(self):  # noqa: N802
+            self._other("DELETE")
+
+        def do_GET(self):  # noqa: N802
+            if not self._host_ok():
+                return self._send(403, b"forbidden host", "text/plain")
+            path = urllib.parse.urlsplit(self.path).path
+            if not path.startswith("/app/") and path not in ("/", "/index.html", "/__tma__/mock.js") and self._api("GET", path):
+                return None
             if path in ("/", "/index.html"):
                 return self._send(200, stand_html(app_url, title).encode(), "text/html; charset=utf-8")
             if path == "/__tma__/mock.js":
@@ -785,6 +870,7 @@ def main(argv=None) -> int:
     ap.add_argument("--title", default=None, help="bot name in the mock header")
     ap.add_argument("--no-build", action="store_true", help="do not run node build.mjs")
     ap.add_argument("--check", action="store_true", help="static checks of the entry, no server")
+    ap.add_argument("--api", metavar="FILE", help="JSON mock of the app's own API (see the module docstring)")
     args = ap.parse_args(argv)
 
     entry = find_entry(args.app)
@@ -814,7 +900,7 @@ def main(argv=None) -> int:
     if warn:
         print(f"WARN: {warn}")
     try:
-        server = StandServer(("127.0.0.1", args.serve), make_handler(root, os.path.relpath(entry, root), title))
+        server = StandServer(("127.0.0.1", args.serve), make_handler(root, os.path.relpath(entry, root), title, load_api(args.api)))
     except OSError as exc:
         print(f"port {args.serve} is busy ({exc.strerror}); stop the other stand or pick another port")
         return 2

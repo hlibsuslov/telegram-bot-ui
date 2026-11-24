@@ -63,12 +63,12 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `data/mini-apps/icons.json` | 83 kit icons mapped to SF Symbol and Material names, including the Stars sign |
 | `scripts/webapp_lookup.py` | `show`, `search`, `since`, `gates`, `theme`, `sync` over the catalog |
 | `data/mini-apps/layouts.json` | layout rules L01-L25 and 16 content types (image ratio, card slots, price, primary action, detail order) |
-| `scripts/miniapp_layout.py` | `entities`, `show`, `rules`, `review` a screen description, `example` |
+| `scripts/miniapp_layout.py` | `entities`, `show`, `rules`, `review` a screen description (validated against `schema`), `example` |
 | `scripts/miniapp_style.py` | `presets`, `show`, `css`, `check` for styles and custom brand profiles |
-| `scripts/miniapp_lint.py` | 33 rules: security, native controls, theme, motion, labels, slop, payments, Telegram's own marks, rework tells (`--json`, `--strict`) |
+| `scripts/miniapp_lint.py` | 34 rules: security, native controls, theme, motion, labels, slop, payments, Telegram's own marks, rework tells (`--json`, `--strict`) |
 | `scripts/miniapp_rework.py` | `plan` (staged rework plan with replacements, colour map, type map), `colours`, `type` |
 | `data/mini-apps/rework-map.json` | every lint rule and 13 web patterns → the Telegram replacement, kit part and reference |
-| `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions |
+| `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions, invoice outcomes; `--api mock.json` for the app's own server routes |
 | `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets), `tma.ts` (no-dependency kit), `tg-values.ts` (Stars, grams, gift colours, rarity), `tma-bridge.css` (shadcn / Tailwind tokens → roles), `icons.svg` |
 | `examples/mini-apps/gallery` | every kit element on one page: open it in the stand and switch platform, theme, width, style |
 

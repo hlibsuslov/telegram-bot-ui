@@ -42,6 +42,8 @@ export interface WebAppLike {
   showConfirm?(msg: string, cb: (ok: boolean) => void): void;
   showPopup?(p: Record<string, unknown>, cb: (id: string) => void): void;
   openInvoice?(url: string, cb: (status: string) => void): void;
+  requestWriteAccess?(cb: (allowed: boolean) => void): void;
+  initDataUnsafe?: { user?: { allows_write_to_pm?: boolean } };
   MainButton?: BottomButtonLike;
   SecondaryButton?: BottomButtonLike;
   BackButton?: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void };
@@ -343,6 +345,13 @@ export function createTma(env: Env = {}) {
     return fallback();
   }
 
+  /** True when the bot may message the user (receipts, reminders): already allowed, or allowed now (6.9). */
+  function writeAccess(): Promise<boolean> {
+    if (tg?.initDataUnsafe?.user?.allows_write_to_pm) return Promise.resolve(true);
+    if (!tg?.requestWriteAccess || !has('6.9')) return Promise.resolve(false);
+    return new Promise((resolve) => tg.requestWriteAccess!((ok) => resolve(!!ok)));
+  }
+
   /* -- storage: promise wrappers; null when the client has no such storage */
   function wrap(s: StorageLike | undefined, since: string) {
     if (!s || !has(since)) return null;
@@ -420,7 +429,7 @@ export function createTma(env: Env = {}) {
 
   return {
     tg, inTelegram, launch, has, on, chrome, haptic, mainButton, secondaryButton, nav, settings,
-    closingConfirmation, confirm, store, deviceStore, secureStore, pay, watchOrder, ready, dispose,
+    closingConfirmation, confirm, store, deviceStore, secureStore, pay, watchOrder, writeAccess, ready, dispose,
     get initData(): string { return tg?.initData ?? ''; },
   };
 }

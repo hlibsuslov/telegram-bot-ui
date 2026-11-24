@@ -686,6 +686,8 @@ select.tma-input {
 .tma-cell:has(.tma-row-thumb.is-cover) { --tma-cell-text: calc(var(--tma-s4) + 48px + var(--tma-s3)); }
 .tma-cell:has(.tma-row-thumb.is-wide) { --tma-cell-text: calc(var(--tma-s4) + 96px + var(--tma-s3)); }
 .tma-cell__time { flex: none; width: 3.2em; font-weight: 600; font-variant-numeric: tabular-nums; }
+/* an unavailable row stays listed (L08): dimmed, still tappable for the reason, never colour alone */
+.tma-cell[aria-disabled="true"] > :not(.tma-cell__chevron) { opacity: .5; }
 
 /* booking (L16): day strip, slot grid, summary */
 .tma-days { display: flex; gap: var(--tma-s2); overflow-x: auto; scrollbar-width: none; margin-inline: calc(-1 * var(--tma-safe-left)); padding: 2px var(--tma-safe-left); }

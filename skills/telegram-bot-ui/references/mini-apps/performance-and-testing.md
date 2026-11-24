@@ -41,7 +41,7 @@ Name the level reached in every report. Levels 1-4 never prove how a real Telegr
 
 ## 4. The preview stand
 
-`scripts/preview_miniapp.py` serves the app folder on 127.0.0.1, swaps `telegram-web-app.js` for a mock of
+`scripts/preview_miniapp.py` (with `--api mock.json` for the app's own server routes) serves the app folder on 127.0.0.1, swaps `telegram-web-app.js` for a mock of
 `Telegram.WebApp` and draws Telegram's chrome around it:
 
 - controls: platform (iOS, Android, Desktop), scheme, width (320, 375, 390, 430, desktop 384), mode

@@ -169,3 +169,28 @@ Lint and layout review both silent (or only caught via my own JSON description):
 - CloudStorage keys kept as `lastClass` and `notif`; `lastClass` is still only written, as before.
 - `startapp` routes `tab-<name>` and `class-<id>` added (the old app had none).
 - Copy: all user-visible strings rewritten (no greetings, exclamation marks or emoji).
+
+## Status after the fixes (same branch, after this log)
+
+| # | Fix |
+|---|---|
+| 1 | `references/mini-apps/rework.md`: the loop, stages, translation table, framework bridge, acceptance score, report; `orchestration.md` §3 routes to it |
+| 2 | rework.md §1: stage 1 findings change the contract; app and server change together, the old body is accepted but its price and user are ignored, the report lists every changed route |
+| 3 | `miniapp_layout.py schema`; `review` rejects unknown keys and values with exit 2; rework.md §1 step 3 says to describe every key; this folder's `review/*.json` validate and are tested |
+| 4 | lint: own top bar (MA19), drawer (MA30), hype copy (MA31), glow and hover scale (MA32), the client's user object sent to the server (MA33, error), tracked caps (MA34); `miniapp_rework.py plan` reports stat cards, nested cards, ribbons, price pills, sticky headers, carousels, modals, toasts |
+| 5 | stand `--api mock.json` with the order status following the Invoice control; `rework/mock-api.json`; this app runs checkout, invoice and order status end to end in the stand (paid and failed walked in the browser) |
+| 6 | rework.md §1 and §3: a digital good priced in TON becomes Stars; a real TON flow moves to the bot's wallet features |
+| 7 | MA28 reports every occurrence (multi-line template literals, `+ ' XTR'`); the baseline is now 9 errors, 89 warnings |
+| 8 | `miniapp_layout.py show class` prints the time-led row with `.tma-cell__time`; avatar and thumbnail rows are distinct |
+| 9 | L02 no longer lists classes as 16:9 |
+| 10 | kit: `.tma-cell[aria-disabled="true"]` dims a row, the chevron stays; the local style here was removed |
+| 11 | rework.md §1 step 3: no primary action on a root tab; Subscribe goes on a level-2 screen |
+| 12, 13 | rework.md §2 stages: security and payments first, Telegram's values and trust marks third |
+| 14 | gym pattern: recipes 94, 96 and this example |
+| 15 | icon count 83 everywhere |
+| 16 | design-system §10 imports `../_kit/tma.ts` |
+| 17 | `preview_miniapp.py` docstring and rework.md: the app lives at `/app/<folder>/index.html` |
+| 18 | design-system §9.2: "classic Telegram" = `native`; the platform decides the chrome |
+| 19 | rework.md §2: constant data needs no skeleton; empty states and pending / error / success for server actions still do |
+| 20 | rework.md §8: missing inputs (terms URL, support handle, waitlist API) go in the report |
+| 21 | kit `writeAccess()` (allows_write_to_pm, then `requestWriteAccess` from 6.9), used here before paying. Open: no shared DOM helper; each example keeps its own `h()` |

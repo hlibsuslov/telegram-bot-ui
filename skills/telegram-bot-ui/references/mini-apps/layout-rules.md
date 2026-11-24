@@ -152,7 +152,7 @@ Generated from `data/mini-apps/layouts.json` (the test suite keeps them in step)
 | Rule | What | Fix |
 |---|---|---|
 | L01 | One primary action per screen, in the MainButton | Move the main action (Buy, Book, Subscribe, Start) to the MainButton; cards and rows open a detail screen. |
-| L02 | Image ratio follows the content type | Use the entity's ratio (book cover 2:3, portrait 4:5, product 1:1, video and class 16:9, listing 4:3, event 3:2) and keep it identical across a list. |
+| L02 | Image ratio follows the content type | Use the entity's ratio (book cover 2:3, portrait 4:5, product 1:1, video, course and workout 16:9, listing 4:3, event 3:2) and keep it identical across a list. |
 | L03 | Covers, logos and packshots are contained; photos are cropped | object-fit: contain on a surface for covers, logos, packshots and documents; cover for photos of people, places, food and video frames. |
 | L04 | Image position by card variant | Media cards and grid tiles: image on top, full width. Rows: a thumbnail at the start (people round, products square, covers 2:3); food menus may put a square photo at the end. Never an image on both sides. |
 | L05 | Title first among the text, clamped | Order the text: title, then meta, then price. Titles take 2 lines at most in cards and 1 in rows, with an ellipsis. |

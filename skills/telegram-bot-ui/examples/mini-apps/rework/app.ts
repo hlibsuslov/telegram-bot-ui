@@ -242,6 +242,7 @@ async function checkout(lines: Record<string, string>, status: HTMLElement, done
     tma.haptic.error();
     return;
   }
+  await tma.writeAccess(); // so the receipt and the reminder can reach the chat (payments.md step 9)
   const hint = await tma.pay(order.link);
   if (hint === 'cancelled') return; // quietly back; the MainButton is restored by the kit
   if (hint === 'unsupported') { status.textContent = 'Update Telegram to pay in this app.'; return; }

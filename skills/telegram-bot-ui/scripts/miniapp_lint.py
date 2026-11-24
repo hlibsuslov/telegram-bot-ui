@@ -33,7 +33,7 @@ in references/mini-apps/anti-slop.md#linter-rules):
     MA16 web-font         A   @font-face or a web-font CDN for UI text: system font
     MA17 reduced-motion   G4  motion in CSS and no prefers-reduced-motion rule anywhere
     MA18 ready            G8  the app never calls ready()
-    MA19 own-back         G3  history.back() or an own back button: BackButton
+    MA19 own-back         G3  history.back(), an own back button or an own sticky / fixed top bar: BackButton, Telegram's header
     MA20 web-login        S   "Login with Telegram" widget inside a Mini App: initData already identifies the user
     MA21 hover-only       G2  content revealed on :hover only
     MA22 small-text       G5  font-size below 11 px
@@ -51,6 +51,7 @@ in references/mini-apps/anti-slop.md#linter-rules):
     MA31 hype-copy        R   greetings, "!" in headings and buttons, hype words: plain statements
     MA32 glow             R   coloured glow shadows (blur >= 20 px) or :hover scale effects
     MA33 client-identity  S   initDataUnsafe sent to the server: send the raw initData (Authorization: tma <initData>) (error)
+    MA34 caps-label       R   uppercase labels with letter-spacing: sentence case in the type roles
 """
 from __future__ import annotations
 
@@ -78,7 +79,7 @@ RULES = {
     "MA25": ("error", "pay-form"), "MA26": ("warn", "client-price"), "MA27": ("warn", "paid-unlock"),
     "MA28": ("warn", "currency-label"), "MA29": ("error", "trust-mark"),
     "MA30": ("warn", "nav-drawer"), "MA31": ("warn", "hype-copy"), "MA32": ("warn", "glow"),
-    "MA33": ("error", "client-identity"),
+    "MA33": ("error", "client-identity"), "MA34": ("warn", "caps-label"),
 }
 TOKEN = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b|\bBOT_TOKEN\b|\bTELEGRAM_BOT_TOKEN\b")
 COLOR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\([^)]*\)")
@@ -289,15 +290,20 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
         # ---- Telegram's own elements: currency names users see, marks only Telegram draws
         if not server and ext in (".html", ".htm"):
             shown = re.sub(r"<(script|style)\b.*?</\1>|<[^>]+>", lambda m: " " * len(m.group(0)), text, flags=re.S | re.I)
-            cur = CURRENCY_SHOWN.search(shown)
-            if cur:
+            for cur in list(CURRENCY_SHOWN.finditer(shown))[:10]:  # every occurrence: the baseline must count them all
                 add("MA28", path, text, cur.start(), f"{cur.group(0).strip()!r} on screen: Stars as '⭐ 250', grams as '12 GRAM' (telegram-elements.md)")
         if code and not server:
-            for lit in re.finditer(r"[`'\"]([^`'\"\n]*)[`'\"]", code):
-                cur = CURRENCY_SHOWN.search(lit.group(1)) or re.search(r"\}\s*(?:XTR|TON)\b", lit.group(1))
-                if cur:
-                    add("MA28", path, text, lit.start(), f"{cur.group(0).strip()!r} in a label: Stars as '⭐ 250', grams as '12 GRAM'")
+            hits = 0
+            # template literals may span lines; quoted strings may not
+            for lit in re.finditer(r"`([^`]*)`|'([^'\n]*)'|\"([^\"\n]*)\"", code):
+                body = next(g for g in lit.groups() if g is not None)
+                for cur in list(CURRENCY_SHOWN.finditer(body)) + list(re.finditer(r"\}\s*(?:XTR|TON)\b", body)):
+                    add("MA28", path, text, lit.start() + 1 + cur.start(), f"{cur.group(0).strip()!r} in a label: Stars as '⭐ 250', grams as '12 GRAM'")
+                    hits += 1
+                if hits >= 10:
                     break
+            for cur in re.finditer(r"\+\s*['\"`]\s*(?:XTR|TON)\b", code):
+                add("MA28", path, text, cur.start(), "a price glued to 'XTR' / 'TON': Stars as '⭐ 250', grams as '12 GRAM'")
         if not server and ext in (".html", ".htm", ".js", ".mjs", ".ts", ".tsx", ".jsx"):
             mark = TRUST_MARK.search(text)
             if mark:
@@ -364,6 +370,11 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
                     add("MA07", path, text, offset + pos, f"fixed bottom button {sel[:40]!r}: MainButton / SecondaryButton")
                 if re.search(r"\binfinite\b", body) and not re.search(r"skeleton|spinner|shimmer|loading|loader|progress|spin", sel, re.I):
                     add("MA10", path, text, offset + pos, f"infinite animation on {sel[:40]!r}: animate only live or loading things")
+                if "tma-" not in sel and re.search(r"(^|[\s.#,>])(top-?bar|nav-?bar|app-?bar|app-header|site-header|header)\b", sel, re.I) \
+                        and re.search(r"position\s*:\s*(sticky|fixed)", body) and re.search(r"\btop\s*:\s*0", body):
+                    add("MA19", path, text, offset + pos, f"own top bar {sel[:40]!r}: Telegram draws the header; a large title in the page, BackButton for depth")
+                if re.search(r"text-transform\s*:\s*uppercase", body) and re.search(r"letter-spacing\s*:\s*[.\d]", body):
+                    add("MA34", path, text, offset + pos, f"uppercase tracked label {sel[:40]!r}: sentence case in caption or footnote")
                 if ":hover" in sel and re.search(r"transform\s*:[^;]*scale", body):
                     add("MA32", path, text, offset + pos, f"{sel[:40]!r} scales on hover: touch has no hover; pressed state only")
                 for sh in re.finditer(r"box-shadow\s*:([^;]*)", body):

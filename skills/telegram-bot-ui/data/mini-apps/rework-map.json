@@ -84,7 +84,7 @@
   },
   "MA19": {
    "stage": 2,
-   "telegram": "Telegram's BackButton driven by one navigation stack; no own header",
+   "telegram": "Telegram's header and BackButton driven by one navigation stack; no own top bar",
    "kit": "tma.nav.push/pop",
    "ref": "components.md section 3"
   },
@@ -207,6 +207,12 @@
    "telegram": "a label for every input, alt for every image",
    "kit": ".tma-field__label",
    "ref": "components.md section 5"
+  },
+  "MA34": {
+   "stage": 5,
+   "telegram": "sentence case in the type roles (caption, footnote)",
+   "kit": ".tma-text-caption1, .tma-footnote",
+   "ref": "anti-slop.md section 4"
   }
  },
  "patterns": [

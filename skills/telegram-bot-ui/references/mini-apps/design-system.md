@@ -182,7 +182,7 @@ tool: `scripts/miniapp_style.py`; CSS: the presets at the end of `_kit/tma.css`.
 | "like a bank / wallet / crypto app", "show the balance big", "fintech" | `fintech` | dark first, check light; one chart |
 | "friendlier", "warmer", "rounder", "for buyers", "like a shop" | `soft` | real product images with alt |
 | "more on one screen", "compact", "for power users", "admin" | `dense` | keep 44 px targets |
-| "like Telegram", "native", "clean", no direction | `native` | — |
+| "like Telegram", "classic Telegram", "native", "clean", no direction | `native` | the platform decides the chrome: iOS gets the glass capsule tab bar and 26 px groups, Android 16 px groups and Material sizes (`data-tma-platform`); a whole app redesign: [rework.md](rework.md) |
 | "use our brand colour" | current style + `brand` in a profile | brand only on the hero or promo (§9.4) |
 | "premium", "nicer" | keep the style; run the craft pass | [anti-slop.md](anti-slop.md) §5 before any token change |
 
@@ -242,7 +242,7 @@ drift. Colour tokens are not style tokens.
 ```
 
 ```ts
-import { createTma } from './_kit/tma.ts';             // built to JS by build.mjs, no packages
+import { createTma } from '../_kit/tma.ts';             // built to JS by build.mjs, no packages
 const tma = createTma();                                // saves launch params, mirrors theme/platform/perf
 tma.chrome({ header: 'secondary_bg_color', background: 'secondary_bg_color', bottomBar: 'secondary_bg_color' });
 tma.nav.push({ id: 'detail', kind: 'screen', onBack: closeDetail });   // BackButton follows the stack
@@ -263,7 +263,7 @@ tables `.tma-table`, `.tma-kv`, `.tma-rank`; settings `.tma-cell__check`, `.tma-
 overlays `.tma-menu`, `.tma-action-sheet`; media `.tma-media`, `.tma-gallery`, `.tma-carousel`, `.tma-dots`,
 `.tma-audio`, `.tma-file__icon`, `.tma-avatar-stack`, `.tma-moment`, `.tma-map`, `.tma-qr`; structure
 `.tma-accordion`, `.tma-steps`; input `.tma-rating`, `.tma-pin`, `.tma-file-drop`. Icons: `_kit/icons.svg`
-(81, mapped to SF Symbols and Material in `data/mini-apps/icons.json`). Anatomy and states:
+(83, mapped to SF Symbols and Material in `data/mini-apps/icons.json`). Anatomy and states:
 [components.md](components.md); every element rendered: `examples/mini-apps/gallery`.
 
 ## 11. Checklist

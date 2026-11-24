@@ -6,14 +6,29 @@ logic. [orchestration.md](orchestration.md) §3 is the short version; this file 
 tools, the translation table, the framework bridge and the acceptance score. Labels: **[Official]**,
 **[API]**, **[Heuristic]**.
 
-Worked example: `tests/fixtures/miniapp_rework/before` (a generated gym-booking app) and
-`examples/mini-apps/rework` (the same app reworked on the kit), with `examples/mini-apps/rework/FRICTION.md`.
+Worked example: `tests/fixtures/miniapp_rework/before` (a generated gym-booking app, lint 9 errors and 89
+warnings) and `examples/mini-apps/rework` (the same app reworked on the kit by an agent that had only this
+skill: 0 and 0, the full payment flow running in the stand with `--api rework/mock-api.json`).
+`examples/mini-apps/rework/FRICTION.md` is that agent's log of where the skill fell short, and what was fixed.
 
 ## 1. The loop
 
 1. **Freeze the contracts.** Write down what must not change: API routes and payloads, `startapp` values,
    CloudStorage keys, analytics events, the booking and payment logic. The rework changes how things look and
    which Telegram surfaces they use, not what they do.
+
+   **Except stage 1.** A security or payment finding (MA02, MA25-MA27, MA33) means the contract itself is
+   unsafe: the client sends a price or the user object, the server trusts it, the app unlocks on the invoice
+   status. Change it, and change the app and the server in the same release:
+   - the client sends ids and `Authorization: tma <initData>`; the server verifies `initData` and prices
+     ([security.md](security.md), [payments.md](payments.md) §2);
+   - the checkout answers `{order_id, link}`; add `GET /orders/<id>` for the app to watch;
+   - during the rollout the server accepts the old body but ignores its `price` and `user`;
+   - list every changed route in the report as "contract changed: why".
+
+   A payment option the rules forbid is not kept "as is": digital goods priced in TON or a card form become
+   Stars. A real TON flow moves to the bot's wallet features ([../wallet-and-ton.md](../wallet-and-ton.md));
+   the report says it was removed from the app and why.
 2. **Plan.** `py -3 scripts/miniapp_rework.py plan <app>` prints:
    - the lint baseline;
    - every finding sorted into six stages, each with the Telegram replacement, the kit part and the reference;
@@ -23,16 +38,28 @@ Worked example: `tests/fixtures/miniapp_rework/before` (a generated gym-booking 
    - a type map (each size → a type role).
 
    Keep the output as the baseline (`--json` for a diff later).
-3. **Describe the screens.** One screen JSON per list or detail screen and
-   `py -3 scripts/miniapp_layout.py review <screen.json>` ([layout-rules.md](layout-rules.md)). Map the app's
-   screens to tab roots (2-5) and level-2 screens; give each screen one primary action (MainButton or none).
+3. **Describe the screens.** One screen JSON per list or detail screen, before and after, and
+   `py -3 scripts/miniapp_layout.py review <screen.json>` ([layout-rules.md](layout-rules.md)). The keys and
+   values are fixed (`miniapp_layout.py schema`); an unknown key or value fails with exit 2. Describe every
+   key that applies: the review only judges what is written, so a thin description proves little.
+   Map the app's screens to tab roots (2-5) and level-2 screens; give each screen one primary action
+   (MainButton or none). The MainButton hides the floating tab bar while it shows
+   ([components.md](components.md) §3), so a root tab has no primary action: "Subscribe" belongs on a
+   level-2 plan screen, not on the Membership tab.
 4. **Fix in stage order**: §2. Structure before style: a screen with native chrome and grouped lists but the
    old colours is a better intermediate state than a recoloured web page.
 5. **Rebuild on the kit**: `_kit/tma.css`, `_kit/tma.ts`, `_kit/tg-values.ts`, `_kit/icons.svg`. For a React,
    Vue or Tailwind app keep the framework and bridge the tokens (§6); do not rewrite the stack.
-6. **Check**: `miniapp_lint.py <app> --strict` (0 findings), `miniapp_layout.py review` for each screen JSON,
-   the preview matrix (`preview_miniapp.py <app> --serve 8790`, `/?view=matrix`) in both themes and both
-   platforms, unit tests of the logic that had to move (storage, payments).
+6. **Check**:
+   - `miniapp_lint.py <app> --strict` (0 findings) and `miniapp_layout.py review` for each screen JSON;
+   - the preview matrix (`preview_miniapp.py <app> --serve 8790`, `/?view=matrix`) in both themes and both
+     platforms;
+   - the server flows in the stand: `--api mock.json` answers the app's requests (checkout, order status)
+     and the Invoice control (`?invoice=paid|failed|pending|cancelled`) drives the order the mock returns;
+     walk each outcome to its screen;
+   - unit tests of the logic that had to move (storage, payments).
+
+   The app is served at `/app/<folder>/index.html` under the stand's root, for curl checks.
 7. **Score** with §7 and **report** with §8.
 
 ## 2. Stages
@@ -47,7 +74,9 @@ Worked example: `tests/fixtures/miniapp_rework/before` (a generated gym-booking 
 | 6. Accessibility and polish | MA17, MA24 | labels, `alt`, reduced motion, focus |
 
 States (loading, empty, error, success) are not detectable from code: add them for every list and action
-whatever the plan says ([design-system.md](design-system.md) §8).
+whatever the plan says ([design-system.md](design-system.md) §8). Data that never loads (constants in the
+bundle) needs no skeleton; its lists still need an empty state, and every action that calls a server needs
+pending, error and success.
 
 ## 3. Translation table: web pattern → Telegram
 
@@ -67,6 +96,8 @@ the plan prints the rows that apply. The ones every rework meets:
 | `localStorage` | CloudStorage (synced) or DeviceStorage; secrets in SecureStorage |
 | Card form, `openInvoice` with a client price | `tma.pay(link)` with a server-created invoice, `tma.watchOrder()` |
 | `XTR` / `TON` amounts, own verified tick | `⭐ 250`, `12.5 GRAM`, trust in words |
+| A digital good priced in TON, "Pay with Toncoin" | Stars in the app; a TON flow, if the product needs one, through the bot's wallet features |
+| A full item hidden, or only greyed by colour | listed, `aria-disabled="true"` (the kit dims it), the reason in text, the MainButton says why |
 | Emoji in headings, nav and buttons | line icons from the kit; text labels |
 | Web font | the system font |
 
@@ -133,6 +164,7 @@ and at least 14 of 16 items overall. Anything less is "improved", not "Telegram-
 
 ## 8. Report
 
-Before and after lint counts; the plan's stages with what changed per screen; the score from §7 with the
-failing items; what was left alone and why (frozen contracts); evidence level (lint, review, mock preview,
-test server, devices) and what was not verified.
+Before and after lint counts; the plan's stages with what changed per screen; contracts changed and why
+(stage 1); options removed and why; the score from §7 with the failing items; what was left alone and why;
+inputs that are missing and block a rule (a terms URL for the payment footnote, a support handle, a
+waitlist API); evidence level (lint, review, mock preview, test server, devices) and what was not verified.

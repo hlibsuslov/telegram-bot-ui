@@ -64,7 +64,8 @@ Example: `examples/mini-apps/vanilla`. Recipes 91, 93.
 | Bot | confirmation, reminder an hour before, "a spot opened" for waitlists, cancellation with one tap |
 | Mistakes | hiding taken slots · a calendar month grid as the only picker on a phone · booking without showing the price · cancellation only by writing to support |
 
-Example: `examples/mini-apps/catalog` (Trainers, Workouts). Recipes 94, 97.
+Examples: `examples/mini-apps/catalog` (Trainers, Workouts), `examples/mini-apps/rework` (class schedule,
+membership, the full payment flow). Recipes 94, 96.
 
 ### Appointments (barber, beauty, clinic, tutor, repair)
 | | |

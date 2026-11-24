@@ -117,7 +117,7 @@ not proof of how real clients render.
 | MA16 web-font | warning | `@font-face`, web-font CDNs | §3 |
 | MA17 reduced-motion | warning | motion with no `prefers-reduced-motion` rule | G4 |
 | MA18 ready | warning | `ready()` never called | Official |
-| MA19 own-back | warning | `history.back()` or an own back button | G3 |
+| MA19 own-back | warning | `history.back()`, an own back button or an own sticky / fixed top bar | G3 |
 | MA20 web-login | warning | Telegram login widget inside the app | security |
 | MA21 hover-only | warning | content revealed only on `:hover` | G2 |
 | MA22 small-text | warning | font size below 11 px | G5 |
@@ -132,3 +132,4 @@ not proof of how real clients render.
 | MA31 hype-copy | warning | greetings, `!` in headings and buttons, hype words ("unleash", "crush it", "!!") | §4 |
 | MA32 glow | warning | coloured shadows with a blur of 20 px or more; `:hover` scale effects | §4 |
 | MA33 client-identity | error | `initDataUnsafe` sent to the server instead of the raw `initData` | security §1 |
+| MA34 caps-label | warning | `text-transform: uppercase` with `letter-spacing` (tracked caps labels) | §4 |

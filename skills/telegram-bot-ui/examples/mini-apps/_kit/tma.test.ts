@@ -286,3 +286,13 @@ test('watchOrder polls with back-off until the server says final, or times out',
     { timeoutMs: 5000, sleep: async () => {} });
   assert.equal(slow.timedOut, true);
 });
+
+test('writeAccess() trusts allows_write_to_pm, asks from 6.9, and is false on older clients', async () => {
+  const allowed = fakeWebApp('6.0', { initDataUnsafe: { user: { allows_write_to_pm: true } } });
+  assert.equal(await createTma(env(allowed.tg)).writeAccess(), true);
+  const asks = fakeWebApp('7.0', { requestWriteAccess: (cb: (ok: boolean) => void) => { asks.calls.push(['requestWriteAccess']); cb(true); } });
+  assert.equal(await createTma(env(asks.tg)).writeAccess(), true);
+  assert.deepEqual(asks.calls.filter((c) => c[0] === 'requestWriteAccess'), [['requestWriteAccess']]);
+  const old = fakeWebApp('6.2', { requestWriteAccess: () => { throw new Error('must not be called'); } });
+  assert.equal(await createTma(env(old.tg)).writeAccess(), false);
+});

@@ -5,6 +5,7 @@
   py -3 scripts/miniapp_layout.py show book                # recommended card, list variant, detail order, markup skeleton
   py -3 scripts/miniapp_layout.py rules                    # L01-L25
   py -3 scripts/miniapp_layout.py review screen.json       # findings with rule ids and fixes (--json)
+  py -3 scripts/miniapp_layout.py schema                   # every key and value a screen description may use
   py -3 scripts/miniapp_layout.py example catalog          # a screen description to start from
 
 A screen description is a small JSON an agent writes from a design, a screenshot or code before changing it:
@@ -18,7 +19,8 @@ A screen description is a small JSON an agent writes from a design, a screenshot
    "unavailable": "hidden"}
 
 Screens: catalog, detail, booking, form, plans, dashboard, gallery. Every key is optional; only what is described
-is checked. The rules are this skill's heuristics (data/mini-apps/layouts.json, references/mini-apps/layout-rules.md).
+is checked, so describe every list and detail screen fully. Unknown keys and values are errors (exit 2): a typo
+must not pass as "0 findings". The rules are this skill's heuristics (data/mini-apps/layouts.json, references/mini-apps/layout-rules.md).
 """
 from __future__ import annotations
 
@@ -47,6 +49,71 @@ EXAMPLES = {
     "plans": {"screen": "plans", "entity": "plan", "width": 390, "primary_action": "main-button",
               "plans": {"layout": "stacked", "count": 3, "features_max": 5, "recommended": 1}},
 }
+
+
+# The screen description: key -> allowed values (a tuple), a type, or a nested schema (dict).
+SCHEMA: dict = {
+    "screen": ("catalog", "detail", "booking", "form", "plans", "dashboard", "gallery"),
+    "entity": str, "width": int, "max_width": int,
+    "layout": {"variant": ("row", "tile", "media-card", "scroller-card", "plan-card"), "columns": int},
+    "card": {
+        "image": {"ratio": str, "fit": ("cover", "contain"), "position": ("top", "start", "end", "both", "none")},
+        "slots": list, "title_lines": int, "description_lines": int, "tags": int, "ribbon": bool,
+        "actions": list, "rating": ("none", "short", "stars", "five-stars"),
+        "price": {"style": ("plain", "pill", "badge", "accent"), "on_image": bool, "figures": ("tabular", "proportional")},
+        "text_on_image": bool, "alt": str,
+    },
+    "primary_action": ("main-button", "none", "in-card", "fixed-button", "several"),
+    "carousels": int, "main_list": ("list", "grid", "carousel"),
+    "filters": {"count": int, "placement": ("top", "sheet", "side"), "result_count": bool},
+    "search": ("top", "bottom", "hidden", "none"),
+    "unavailable": ("dimmed", "disabled", "hidden", "colour-only", "color-only", "labelled"),
+    "sections": list, "gallery": ("carousel", "grid", "viewer", "masonry", "autoplay"),
+    "form": {"columns": int, "labels": ("above", "floating", "placeholder", "none")},
+    "booking": {"days": ("strip", "calendar", "dropdown", "list"), "slots_columns": int,
+                "unavailable": ("disabled", "hidden", "dimmed"), "summary": bool, "main_button_names_slot": bool},
+    "plans": {"layout": ("stacked", "side-by-side", "table"), "count": int, "features_max": int,
+              "recommended": int, "table": bool},
+    "states": {"skeleton": ("card-shaped", "spinner", "none"), "empty": bool, "error": bool},
+}
+
+
+def validate(spec, schema: dict = SCHEMA, at: str = "") -> list[str]:
+    """Schema errors: unknown keys, values outside the allowed set, wrong types."""
+    errors = []
+    if not isinstance(spec, dict):
+        return [f"{at or 'the description'} must be an object"]
+    for key, value in spec.items():
+        path = f"{at}.{key}" if at else key
+        if key.startswith("$") or key == "notes":
+            continue
+        if key not in schema:
+            errors.append(f"unknown key {path!r}; allowed here: {', '.join(sorted(schema))}")
+            continue
+        rule = schema[key]
+        if isinstance(rule, dict):
+            errors += validate(value, rule, path)
+        elif isinstance(rule, tuple):
+            if value not in rule:
+                errors.append(f"{path} = {value!r}; allowed: {', '.join(rule)}")
+        elif rule is int and (not isinstance(value, int) or isinstance(value, bool)):
+            errors.append(f"{path} must be a whole number, got {value!r}")
+        elif rule is not int and not isinstance(value, rule):
+            errors.append(f"{path} must be {rule.__name__}, got {type(value).__name__}")
+    return errors
+
+
+def schema_text(schema: dict = SCHEMA, indent: str = "") -> str:
+    lines = []
+    for key, rule in schema.items():
+        if isinstance(rule, dict):
+            lines.append(f"{indent}{key}:")
+            lines.append(schema_text(rule, indent + "  "))
+        elif isinstance(rule, tuple):
+            lines.append(f"{indent}{key}: {' | '.join(rule)}")
+        else:
+            lines.append(f"{indent}{key}: {rule.__name__}")
+    return "\n".join(lines)
 
 
 def load() -> dict:
@@ -230,10 +297,25 @@ def show(name: str, data: dict) -> str:
     elif e["list_variant"] == "plan-card":
         markup = ('<section class="tma-card tma-plan">\n  <p class="tma-headline">Team</p>\n  <p class="tma-price is-lg">€12 <span class="tma-price__period">/ month</span></p>\n'
                   '  <ul class="tma-checks"><li>Up to 10 seats</li></ul>\n</section>')
+    elif e["card"] and e["card"][0] == "time":
+        markup = ('<ul class="tma-list">\n  <li><a class="tma-cell is-2" href="#"><span class="tma-cell__time">07:00</span>\n'
+                  f'    <span class="tma-cell__body"><span class="tma-cell__title">Title</span><span class="tma-cell__subtitle">{e["meta"]} · 3 spots left</span></span>\n'
+                  '    <svg class="tma-cell__chevron" aria-hidden="true"><use href="icons.svg#i-chevron-right"/></svg></a></li>\n'
+                  '  <!-- a full one stays listed: aria-disabled="true" dims it, the reason is in the subtitle -->\n</ul>')
+    elif "avatar" not in e["ratio"] and (ratio_of(e["ratio"]) or "thumbnail" in e["ratio"] or "photo" in e["ratio"]):
+        end = "end" in e["ratio"]
+        thumb = '<span class="tma-row-thumb"><img src="..." alt="Title"></span>'
+        markup = ('<ul class="tma-list">\n  <li><a class="tma-cell is-2" href="#">' + ("" if end else thumb) + '\n'
+                  f'    <span class="tma-cell__body"><span class="tma-cell__title">Title</span><span class="tma-cell__subtitle">{e["meta"]}</span></span>\n'
+                  '    ' + (thumb if end else '<span class="tma-cell__after tma-price">€12.90</span>') + '</a></li>\n</ul>')
+    elif "avatar" in e["ratio"]:
+        markup = ('<ul class="tma-list">\n  <li><a class="tma-cell is-2" href="#"><img class="tma-avatar is-48" src="..." alt="Name">\n'
+                  f'    <span class="tma-cell__body"><span class="tma-cell__title">Name</span><span class="tma-cell__subtitle">{e["meta"]}</span></span>\n'
+                  '    <span class="tma-cell__after">from €30</span></a></li>\n</ul>')
     else:
-        markup = ('<ul class="tma-list">\n  <li><a class="tma-cell is-2" href="#"><img class="tma-avatar" src="..." alt="Name">\n'
-                  '    <span class="tma-cell__body"><span class="tma-cell__title">Name</span><span class="tma-cell__subtitle">meta</span></span>\n'
-                  '    <span class="tma-cell__after"><strong>€30</strong>★ 4.9</span></a></li>\n</ul>')
+        markup = ('<ul class="tma-list">\n  <li><div class="tma-cell is-2">\n'
+                  f'    <span class="tma-cell__body"><span class="tma-cell__title">Name</span><span class="tma-cell__subtitle">{e["meta"]}</span></span>\n'
+                  '    <span class="tma-cell__after tma-num">1,250</span></div></li>\n</ul>')
     return "\n".join(lines) + "\n\nMarkup (kit classes):\n" + markup
 
 
@@ -248,6 +330,7 @@ def main(argv=None) -> int:
     sub.add_parser("show").add_argument("entity")
     sub.add_parser("review").add_argument("spec")
     sub.add_parser("example").add_argument("screen", choices=sorted(EXAMPLES))
+    sub.add_parser("schema")
     args = ap.parse_args(argv)
     data = load()
     if args.cmd == "entities":
@@ -263,9 +346,17 @@ def main(argv=None) -> int:
         print(json.dumps(data["entities"][args.entity], ensure_ascii=False, indent=1) if args.json else show(args.entity, data))
     elif args.cmd == "example":
         print(json.dumps(EXAMPLES[args.screen], ensure_ascii=False, indent=1))
+    elif args.cmd == "schema":
+        print(schema_text())
     else:
         with open(args.spec, encoding="utf-8") as fh:
             spec = json.load(fh)
+        errors = validate(spec)
+        if errors:
+            for e in errors:
+                print(f"SCHEMA {e}")
+            print(f"{len(errors)} schema error(s): fix the description (py -3 scripts/miniapp_layout.py schema); nothing was reviewed")
+            return 2
         found = review(spec, data)
         if args.json:
             print(json.dumps({"findings": found, "ok": not any(f["severity"] == "error" for f in found)}, ensure_ascii=False, indent=1))

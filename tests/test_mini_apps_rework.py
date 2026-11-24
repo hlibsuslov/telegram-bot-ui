@@ -90,3 +90,59 @@ class Plan(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ReworkExample(unittest.TestCase):
+    """examples/mini-apps/rework: the before-app reworked with the skill, its screen descriptions and API mock."""
+    APP = os.path.join(_paths.ROOT, "examples", "mini-apps", "rework")
+
+    def test_layout_descriptions_are_valid_and_the_after_screens_pass(self):
+        import glob
+        import miniapp_layout as layout
+        data = layout.load()
+        files = sorted(glob.glob(os.path.join(self.APP, "review", "*.json")))
+        self.assertGreaterEqual(len(files), 6)
+        for f in files:
+            with open(f, encoding="utf-8") as fh:
+                spec = json.load(fh)
+            with self.subTest(file=os.path.basename(f)):
+                self.assertEqual(layout.validate(spec), [])
+                found = layout.review(spec, data)
+                if os.path.basename(f).startswith("after-"):
+                    self.assertEqual([x["rule"] for x in found], [])
+                else:
+                    self.assertTrue(found)
+
+    def test_schema_rejects_typos_and_unknown_keys(self):
+        import miniapp_layout as layout
+        errors = layout.validate({"screen": "catalog", "primary_action": "main-buton", "foo": 1, "card": {"price": {"style": "neon"}}})
+        self.assertEqual(len(errors), 3)
+        buf = io.StringIO()
+        import tempfile
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "s.json")
+            with open(p, "w", encoding="utf-8") as fh:
+                json.dump({"foo": 1}, fh)
+            with contextlib.redirect_stdout(buf):
+                self.assertEqual(layout.main(["review", p]), 2)
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            layout.main(["show", "class"])
+        self.assertIn("tma-cell__time", out.getvalue())
+
+    def test_api_mock_routes_and_order_status_follow_the_invoice(self):
+        import preview_miniapp as preview
+        routes = preview.load_api(os.path.join(self.APP, "mock-api.json"))
+        self.assertEqual({m for m, _, _ in routes}, {"POST", "GET"})
+        get = next(r for r in routes if r[0] == "GET")
+        self.assertTrue(get[1].match("/api/orders/1042"))
+        self.assertFalse(get[1].match("/api/orders/1042/extra"))
+        self.assertEqual(json.loads(preview.mock_response(get[2], "paid")[1])["status"], "paid")
+        self.assertEqual(json.loads(preview.mock_response(get[2], "failed")[1])["status"], "failed")
+        self.assertEqual(json.loads(preview.mock_response(get[2], "pending")[1])["status"], "open")
+
+    def test_the_after_app_uses_the_payment_flow(self):
+        with open(os.path.join(self.APP, "app.ts"), encoding="utf-8") as fh:
+            ts = fh.read()
+        for call in ("tma.pay(", "tma.watchOrder(", "tma.writeAccess(", "Authorization: `tma ${tma.initData}`"):
+            self.assertIn(call, ts)
+        self.assertNotIn("initDataUnsafe.user", ts.replace("initDataUnsafe?.user", ""))
