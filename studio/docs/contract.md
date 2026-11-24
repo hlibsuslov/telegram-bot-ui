@@ -121,7 +121,7 @@ method set by the server), `state` (set by an action's `set`), `input` (typed by
 
 Pictures live in `.bot-ui/emoji/<id>.<webp|webm|png|jpg>`, a local cache that is never committed;
 without it every surface shows the fallback. Only an import by link goes online. By default it
-asks the telegram-bot-ui resolver (`GET https://telegram-bot-ui-site.vercel.app/api/emoji-pack/<name>`
+asks the telegram-bot-ui resolver (`GET https://telegram-bot-ui.hlixli.com/api/emoji-pack/<name>`
 and the picture paths it returns), which reads the pack with the project's own bot: the user
 needs no token and only the pack name is sent. `BOT_UI_EMOJI_RESOLVER` sets another resolver URL
 or `off`; with it off, a token of the user's own (`TELEGRAM_TEST_BOT_TOKEN` /

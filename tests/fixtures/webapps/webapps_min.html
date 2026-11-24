@@ -1,0 +1,63 @@
+<!DOCTYPE html><html><body>
+<div id="dev_page_content">
+<h3><a class="anchor" name="recent-changes" href="#recent-changes"></a>Recent changes</h3>
+<h4><a class="anchor" name="march-1-2026" href="#march-1-2026"></a>March 1, 2026</h4>
+<p><strong>Bot API 9.5</strong></p>
+<ul><li>Added the field <em>iconCustomEmojiId</em> to the class <a href="#bottombutton">BottomButton</a>.</li></ul>
+<h4><a class="anchor" name="december-29-2023" href="#december-29-2023"></a>December 29, 2023</h4>
+<p><strong>Bot API 7.0</strong></p>
+<ul><li>Added the field <em>SettingsButton</em> to the class <a href="#initializing-mini-apps">WebApp</a>.</li>
+<li>Mini Apps no longer close when the method <em>WebApp.openTelegramLink</em> is called.</li></ul>
+<h4><a class="anchor" name="june-20-2022" href="#june-20-2022"></a>June 20, 2022</h4>
+<p><strong>Bot API 6.1</strong></p>
+<ul><li>Added the fields <em>version</em>, <em>BackButton</em> and the method <em>isVersionAtLeast</em> to the class <a href="#initializing-mini-apps">WebApp</a>.</li>
+<li>Added the method <em>offClick</em> to the class <a href="#bottombutton">MainButton</a>.</li>
+<li>Added the events <em>backButtonClicked</em>.</li></ul>
+<h3><a class="anchor" name="designing-mini-apps" href="#designing-mini-apps"></a>Designing Mini Apps</h3>
+<h4><a class="anchor" name="initializing-mini-apps" href="#initializing-mini-apps"></a>Initializing Mini Apps</h4>
+<table class="table"><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>initData</td><td>String</td><td>A string with raw data.</td></tr>
+<tr><td>version</td><td>String</td><td>The version of the Bot API available in the user&#39;s Telegram app.</td></tr>
+<tr><td>isActive</td><td>Boolean</td><td><mark>Bot API 8.0+</mark> <em>True</em>, if active.</td></tr>
+<tr><td>MainButton</td><td><a href="#bottombutton">BottomButton</a></td><td>An object for the main button.</td></tr>
+<tr><td>BackButton</td><td><a href="#backbutton">BackButton</a></td><td>An object for the back button.</td></tr>
+<tr><td>SettingsButton</td><td><a href="#settingsbutton">SettingsButton</a></td><td>An object for the settings item.</td></tr>
+<tr><td>Serverless <mark>NEW</mark></td><td><a href="#serverless">Serverless</a></td><td>An object for endpoints.</td></tr>
+<tr><td>close()</td><td>Function</td><td>A method that closes the Mini App.</td></tr>
+<tr><td>isVersionAtLeast(version)</td><td>Function</td><td>Returns true if the user&#39;s app supports a version.</td></tr>
+<tr><td>openLink(url[, options])</td><td>Function</td><td>Opens a link. <mark>Bot API 6.4+</mark> options.</td></tr>
+</tbody></table>
+<h4><a class="anchor" name="themeparams" href="#themeparams"></a>ThemeParams</h4>
+<table class="table"><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>bg_color</td><td>String</td><td><em>Optional</em>. Background color.</td></tr>
+<tr><td>section_separator_color</td><td>String</td><td><em>Optional</em>. <mark>Bot API 7.6+</mark> Separator color.</td></tr>
+</tbody></table>
+<h4><a class="anchor" name="backbutton" href="#backbutton"></a>BackButton</h4>
+<table class="table"><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>show()</td><td>Function</td><td>Shows the button.</td></tr>
+</tbody></table>
+<h4><a class="anchor" name="bottombutton" href="#bottombutton"></a>BottomButton</h4>
+<table class="table"><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>text</td><td>String</td><td>Current button text.</td></tr>
+<tr><td>iconCustomEmojiId</td><td>String</td><td>Custom emoji id.</td></tr>
+<tr><td>offClick(callback)</td><td>Function</td><td>Removes the handler.</td></tr>
+<tr><td>setParams(params)</td><td>Function</td><td>Sets params: icon_custom_emoji_id - <mark>Bot API 9.5+</mark> icon.</td></tr>
+</tbody></table>
+<h4><a class="anchor" name="settingsbutton" href="#settingsbutton"></a>SettingsButton</h4>
+<table class="table"><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>show()</td><td>Function</td><td>Shows the item.</td></tr>
+</tbody></table>
+<h4><a class="anchor" name="serverless" href="#serverless"></a>Serverless</h4>
+<table class="table"><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>call(name[, input][, callback])</td><td>Function</td><td>Calls an endpoint.</td></tr>
+</tbody></table>
+<table class="table"><thead><tr><th>Field</th><th>Type</th><th>Description</th></tr></thead><tbody>
+<tr><td>status</td><td>Integer</td><td>HTTP status.</td></tr>
+</tbody></table>
+<h4><a class="anchor" name="events-available-for-mini-apps" href="#events-available-for-mini-apps"></a>Events Available for Mini Apps</h4>
+<table class="table"><thead><tr><th>eventType</th><th>Description</th></tr></thead><tbody>
+<tr><td><code>themeChanged</code></td><td>Occurs on theme change.</td></tr>
+<tr><td><code>backButtonClicked</code></td><td>Occurs when the back button is pressed.</td></tr>
+<tr><td><code>activated</code></td><td><mark>Bot API 8.0+</mark> Occurs when active.</td></tr>
+</tbody></table>
+</div></body></html>

@@ -141,6 +141,39 @@ function SlotDialog({ entry, onClose }: { entry: Entry | null; onClose: () => vo
   );
 }
 
+/** The bot already uses premium emoji whose packs are not in the library: import them in one go. */
+function BotPacks() {
+  const { doc, call, editable } = useEmoji();
+  const { notify } = useStudio();
+  const [busy, setBusy] = useState(false);
+  const missing = doc.missing ?? [];
+  if (!editable || !missing.length) return null;
+  const available = !!doc.resolver || !!doc.tokenEnv;
+  const run = async () => {
+    setBusy(true);
+    const res = await call("/api/emoji/import-used", {});
+    setBusy(false);
+    if (!res.ok) { notify(res.error ?? "import failed", "error"); return; }
+    const d = res.data as { packs: { title: string }[]; failed: { pack: string }[]; unresolved: unknown[]; adopted: unknown[] };
+    const parts = [`${d.packs.length} pack${d.packs.length === 1 ? "" : "s"} imported`];
+    if (d.adopted.length) parts.push(`${d.adopted.length} icon${d.adopted.length === 1 ? "" : "s"} mapped`);
+    if (d.unresolved.length) parts.push(`${d.unresolved.length} id${d.unresolved.length === 1 ? "" : "s"} not found in Telegram`);
+    if (d.failed.length) parts.push(`failed: ${d.failed.map((f) => f.pack).join(", ")}`);
+    notify(parts.join(" · "), d.failed.length ? "error" : "success");
+  };
+  return (
+    <Section icon={Bot} title="Packs your bot already uses" count={missing.length}
+      hint="The bot's buttons and texts use premium emoji from packs that are not in the library yet. Import finds each pack by its emoji and adds it; button icons get their meaning in the icon map."
+      actions={<Button size="sm" disabled={busy || !available} onClick={() => void run()}>{busy ? <Loader2 className="size-4 animate-spin" /> : <Download className="size-4" />} {busy ? "Finding packs…" : "Import their packs"}</Button>}>
+      <div className="flex flex-wrap gap-1.5">
+        {missing.slice(0, 24).map((id) => <span key={id} className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground">{id}</span>)}
+        {missing.length > 24 && <span className="px-1.5 py-0.5 text-[11px] text-muted-foreground">+{missing.length - 24}</span>}
+      </div>
+      {!available && <p className="text-xs text-muted-foreground">Import is off here: run <span className="font-mono">bot-ui emoji import-used</span> with the bot's token in <span className="font-mono">BOT_TOKEN</span>.</p>}
+    </Section>
+  );
+}
+
 function Suggestions() {
   const { doc, call, editable } = useEmoji();
   const { notify } = useStudio();
@@ -297,6 +330,7 @@ export function EmojiView() {
         </p>
         {doc.error && <p className="text-sm text-destructive">{doc.error.code}: {doc.error.message}</p>}
       </header>
+      <BotPacks />
       <ImportCard preview={!editable} />
       <Suggestions />
       <IconMap onOpen={setOpen} />

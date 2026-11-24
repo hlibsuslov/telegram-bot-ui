@@ -365,10 +365,20 @@ def cmd_import(args) -> int:
         res = probe if args.dry_run else import_bot(args.source, into, project_id=args.project_id, dry_run=False)
     except StoreError as err:
         return _fail(args, err.code, err.message, **err.extra)
+    text = report_markdown(res)
+    if args.emoji_packs and not args.dry_run and res["stats"].get("customEmoji"):
+        from . import emoji
+        try:
+            used = emoji.import_used(into, open_snapshot(into))
+            res["emojiPacks"] = used
+            text += "\n\nemoji packs: " + emoji.import_used_markdown(used)
+        except emoji.EmojiError as err:
+            res["emojiPacks"] = {"ok": False, "error": err.to_json()}
+            text += f"\n\nemoji packs not imported: {err.code} {err.message}"
     if args.report:
         with open(args.report, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(report_markdown(res) + "\n")
-    _emit(args, res, report_markdown(res) + ("" if args.dry_run else f"\nproject: {res['project']}"))
+            fh.write(text + "\n")
+    _emit(args, res, text + ("" if args.dry_run else f"\nproject: {res['project']}"))
     return 1 if res.get("errors") else 0
 
 
@@ -387,6 +397,10 @@ def cmd_emoji(args) -> int:
             _emit(args, res, f"{res['title']} ({res['pack']}): {res['count']} emoji, {res['previews']} previews "
                              f"-> {emoji.LIBRARY}")
             return 0
+        if args.action == "import-used":
+            res = emoji.import_used(root, open_snapshot(root), map_icons=not args.no_icon_map)
+            _emit(args, res, emoji.import_used_markdown(res))
+            return 1 if res["failed"] else 0
         if args.action == "remove":
             if not args.link:
                 return _fail(args, "USAGE", "emoji remove <pack name>", 2)
@@ -480,7 +494,8 @@ def main(argv: list[str] | None = None) -> int:
                    help="json: inline pictures of the used emoji only (default) or of every imported pack")
     p.add_argument("--emoji-budget", type=int, default=1_500_000, help="json: bytes of inlined emoji pictures")
     p = add("emoji", cmd_emoji, "premium emoji library: import a pack by link, map icons to meanings, the agent's brief")
-    p.add_argument("action", choices=("import", "list", "icon", "remove", "brief"))
+    p.add_argument("action", choices=("import", "import-used", "list", "icon", "remove", "brief"),
+                   help="import-used: import every pack the bot's screens and code already use")
     p.add_argument("link", nargs="?", help="import: https://t.me/addemoji/<name> or the name; remove: the pack name")
     p.add_argument("--from-json", help="import a saved getStickerSet response (offline, no previews)")
     p.add_argument("--slot", help="icon: the meaning, e.g. home, back, cart")
@@ -488,11 +503,14 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--clear", action="store_true", help="icon: remove the slot")
     p.add_argument("--note", help="icon: where to use it")
     p.add_argument("--fallback", help="icon: the ordinary emoji, for an id not in an imported pack")
+    p.add_argument("--no-icon-map", action="store_true", help="import-used: do not adopt the button icons into the icon map")
     p = sub.add_parser("import", help="build a bot-ui project from an existing aiogram bot (the bot's code is not changed)")
     p.add_argument("--source", required=True, help="the bot's source folder")
     p.add_argument("--into", help="project folder to create (default: <source>/bot-ui); an existing project is re-imported")
     p.add_argument("--project-id")
     p.add_argument("--report", help="also write the review list as Markdown here")
+    p.add_argument("--emoji-packs", action="store_true",
+                   help="also import the premium emoji packs the bot uses (online: the resolver or a bot token)")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--json", action="store_true")
     p.set_defaults(fn=cmd_import, project=None)

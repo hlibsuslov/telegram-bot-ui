@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+<head>
+  <script src="./vendor.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Welcome back 👋</h1>
+  <button class="back-btn" onclick="history.back()">Back</button>
+  <input type="text" placeholder="Your name">
+  <img src="hero.png">
+  <button>Buy now 🚀</button>
+  <p>Login with Telegram to continue</p>
+  <script>
+    if (!localStorage.getItem('seen')) alert('Hello!');
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>

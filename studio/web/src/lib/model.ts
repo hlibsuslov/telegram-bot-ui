@@ -23,6 +23,7 @@ export interface Loaded {
   cliProject?: string;
   readOnly: boolean;
   features: Record<string, boolean>;
+  demoAvatar?: string;
   apply?: string;
   /** Artifact: the premium emoji library with inlined previews (the Studio loads /api/emoji). */
   emoji?: EmojiDoc;
@@ -65,6 +66,8 @@ export function fromSnapshot(doc: Doc): Loaded {
   const project = doc.project ?? {};
   const widgets: Record<string, WidgetDoc> = {};
   for (const [wid, w] of Object.entries<Doc>(doc.widgets ?? {})) widgets[wid] = { meta: { ...w }, files: {} };
+  const demoAvatar = doc.features?.demo && typeof doc.demoAvatar === "string" && doc.demoAvatar.startsWith("data:image/png;base64,")
+    ? doc.demoAvatar : undefined;
   return {
     mode: "artifact",
     projectId: doc.projectId ?? project.projectId ?? "project",
@@ -79,6 +82,7 @@ export function fromSnapshot(doc: Doc): Loaded {
     rootKey: "artifact",
     readOnly: false,
     features: { editStructure: false, ...(doc.features ?? {}) },
+    demoAvatar,
     apply: doc.apply,
     emoji: doc.emoji && typeof doc.emoji === "object" ? doc.emoji : undefined,
   };

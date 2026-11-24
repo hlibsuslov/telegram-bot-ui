@@ -61,6 +61,7 @@ revision is refused with `REVISION_CONFLICT` (exit 3): export a fresh snapshot
 | `build [--output D]` | widget builds per language + sendWidget payloads (default `<project>/.bot-ui/build`) |
 | `studio`, `export-snapshot` | the two editors |
 | `emoji import <t.me/addemoji/name> [--from-json F]`, `emoji icon --slot S --id ID`, `emoji list`, `emoji remove <pack>`, `emoji brief` | premium emoji library (`emoji/library.json`): import a pack by link (through the telegram-bot-ui resolver, no token; or your own token with the resolver off), give emoji meanings, the agent's brief |
+| `emoji import-used [--no-icon-map]` | an existing bot's premium emoji: finds the pack of every custom emoji id its screens and code use (`getCustomEmojiStickers`, through the resolver or a bot token), imports those packs and adopts the button icons into the icon map; `import --emoji-packs` does it right after `import` |
 | `inventory --source <bot>` | read-only inventory of an existing aiogram bot: commands, callbacks, buttons, texts, proposed screens |
 
 `--json` gives a stable object on stdout; messages for people go to stderr. Exit codes: 0 ok,

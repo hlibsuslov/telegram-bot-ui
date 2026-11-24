@@ -43,6 +43,7 @@ export type NavItem = {
   label: string;
   icon: LucideIcon;
   href: string;
+  target?: "_top";
   badge?: string | number;
   children?: { key: string; label: string; href: string }[];
 };
@@ -60,6 +61,7 @@ export interface ApplicationShell1Props {
   trail: Crumb[];
   headerEnd?: React.ReactNode;
   mobileTitle: string;
+  mobileAvatar?: string;
   children: React.ReactNode;
 }
 
@@ -79,7 +81,7 @@ const NavMenuItem = ({ item, active }: { item: NavItem; active: string }) => {
     return (
       <SidebarMenuItem>
         <SidebarMenuButton asChild isActive={isActive} className={buttonMotion} tooltip={item.label}>
-          <a href={item.href} aria-current={isActive ? "page" : undefined}>
+          <a href={item.href} target={item.target} aria-current={isActive ? "page" : undefined}>
             <Icon className="size-4" />
             <span>{item.label}</span>
           </a>
@@ -148,7 +150,7 @@ const AppSidebar = ({ brand, navGroups, footer, active }: Pick<ApplicationShell1
   </Sidebar>
 );
 
-export function ApplicationShell1({ className, brand, navGroups, footer, active, trail, headerEnd, mobileTitle, children }: ApplicationShell1Props) {
+export function ApplicationShell1({ className, brand, navGroups, footer, active, trail, headerEnd, mobileTitle, mobileAvatar, children }: ApplicationShell1Props) {
   return (
     <SidebarProvider className={cn(className)}>
       <AppSidebar brand={brand} navGroups={navGroups} footer={footer} active={active} />
@@ -156,7 +158,10 @@ export function ApplicationShell1({ className, brand, navGroups, footer, active,
         <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-3 sm:px-4">
           <SidebarTrigger className="-ml-1" aria-label="Toggle navigation" />
           <Separator orientation="vertical" className="mx-1 hidden h-5 md:block" />
-          <span className="min-w-0 truncate text-sm font-semibold md:hidden">{mobileTitle}</span>
+          <span className="flex min-w-0 items-center gap-1.5 text-sm font-semibold md:hidden">
+            {mobileAvatar && <img src={mobileAvatar} alt="" className="size-5 shrink-0 rounded" />}
+            <span className="truncate">{mobileTitle}</span>
+          </span>
           <Breadcrumb className="hidden min-w-0 md:block">
             <BreadcrumbList className="flex-nowrap">
               {trail.map((crumb, index) => {

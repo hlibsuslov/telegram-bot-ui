@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>FitHub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<!-- A typical generated "gym booking" Mini App: the starting point of the rework walkthrough
+     (references/mini-apps/rework.md). Every defect here is deliberate. Fictional product. -->
+<div class="app">
+  <header class="topbar">
+    <button class="back-btn" onclick="history.back()">&larr;</button>
+    <div class="logo">💪 FitHub</div>
+    <button class="burger" id="burger">☰</button>
+  </header>
+
+  <aside class="drawer" id="drawer">
+    <a href="#">🏠 Home</a><a href="#classes">📅 Classes</a><a href="#trainers">🏋️ Trainers</a><a href="#plans">💎 Plans</a><a href="#profile">👤 Profile</a>
+  </aside>
+
+  <section class="hero">
+    <h1 class="gradient-title">Unleash Your Potential! 🚀</h1>
+    <p>Welcome back, champ! Ready to crush it today? 🔥</p>
+    <div class="stats">
+      <div class="stat-card"><div class="stat-card-inner"><span class="big">12</span><small>workouts</small></div></div>
+      <div class="stat-card"><div class="stat-card-inner"><span class="big">+340%</span><small>progress!!</small></div></div>
+      <div class="stat-card"><div class="stat-card-inner"><span class="big">1,250 XTR</span><small>balance</small></div></div>
+    </div>
+  </section>
+
+  <section id="classes">
+    <h2>🔥 Today's Classes <span class="live">LIVE</span></h2>
+    <div class="class-grid" id="class-grid"></div>
+  </section>
+
+  <section id="trainers">
+    <h2>⭐ Top Trainers</h2>
+    <div class="trainer-row" id="trainer-row"></div>
+  </section>
+
+  <section id="plans">
+    <h2>💎 Membership</h2>
+    <div class="plans">
+      <div class="plan"><h3>Basic</h3><div class="price">250 XTR</div><p>8 classes / month</p></div>
+      <div class="plan featured"><div class="ribbon">POPULAR</div><h3>Pro</h3><div class="price">450 XTR</div><p>Unlimited classes</p></div>
+      <div class="plan"><h3>Wallet</h3><div class="price">1.5 TON</div><p>Pay with Toncoin</p></div>
+    </div>
+    <form class="card-form" id="card-form">
+      <input name="card-number" placeholder="Card number" autocomplete="cc-number">
+      <input name="cvv" placeholder="CVV">
+      <input id="email" placeholder="Email">
+    </form>
+  </section>
+
+  <section id="profile">
+    <h2>👤 Profile</h2>
+    <div class="profile"><img src="avatar.svg"><span id="name">Athlete</span> <span class="verified-badge" title="Verified">✔</span></div>
+    <label class="toggle"><input type="checkbox" id="notif"> Notifications</label>
+  </section>
+</div>
+
+<button class="fixed-cta" id="book">Book Now 🚀</button>
+</body>
+</html>

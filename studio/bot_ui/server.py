@@ -229,10 +229,14 @@ class Studio:
         try:
             if path == "/api/emoji":
                 return 200, emoji.client_document(self.root, snap)
-            if snap.read_only and path in ("/api/emoji/import", "/api/emoji/icon", "/api/emoji/remove-pack"):
+            if snap.read_only and path in ("/api/emoji/import", "/api/emoji/import-used", "/api/emoji/icon",
+                                                     "/api/emoji/remove-pack"):
                 return 409, {"ok": False, "error": {"code": "READ_ONLY", "message": "this project opens read-only"}}
             if path == "/api/emoji/import":
                 res = emoji.import_pack(self.root, link=body.get("link"), sticker_set=body.get("stickerSet"))
+                return 200, {**res, **emoji.client_document(self.root, open_snapshot(self.root))}
+            if path == "/api/emoji/import-used":
+                res = emoji.import_used(self.root, snap)
                 return 200, {**res, **emoji.client_document(self.root, open_snapshot(self.root))}
             if path == "/api/emoji/icon":
                 emoji.set_icon(self.root, str(body.get("slot", "")), body.get("id"), note=body.get("note"),
@@ -305,7 +309,7 @@ class Studio:
                     return self._json(400, {"ok": False, "error": {"code": "JSON_INVALID", "message": "body is not JSON"}})
                 api_path = self.path.split("?", 1)[0]
                 try:
-                    if api_path == "/api/emoji/import":  # waits on Telegram; takes the project write lock itself
+                    if api_path in ("/api/emoji/import", "/api/emoji/import-used"):  # wait on Telegram; take the write lock themselves
                         status, doc = studio.api(api_path, body if isinstance(body, dict) else {})
                     else:
                         with studio.lock:
