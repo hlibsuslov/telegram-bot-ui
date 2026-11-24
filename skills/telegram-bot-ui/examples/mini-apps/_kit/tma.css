@@ -20,6 +20,7 @@
   --tma-fb-seg-on: #ffffff;
   --tma-fb-knob: #ffffff;
   --tma-fb-star: #f2a100;          /* Telegram Stars gold, approximated (telegram-elements.md) */
+  --tma-fb-star-text: #975700;     /* the amount in a Stars pill: 4.5:1 on the light pill */
   color-scheme: light;
 }
 /* dark fallback: Telegram's scheme when known, the OS scheme in a plain browser */
@@ -36,6 +37,7 @@
   --tma-fb-overlay: rgb(0 0 0 / .48);
   --tma-fb-seg-on: rgb(255 255 255 / .27);
   --tma-fb-star: #ffbf1f;
+  --tma-fb-star-text: #ffc23d;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -51,6 +53,7 @@
     --tma-fb-overlay: rgb(0 0 0 / .48);
     --tma-fb-seg-on: rgb(255 255 255 / .27);
     --tma-fb-star: #ffbf1f;
+    --tma-fb-star-text: #ffc23d;
     color-scheme: dark;
   }
 }
@@ -81,8 +84,9 @@
   --tma-danger-tint: color-mix(in srgb, var(--tma-danger) 14%, transparent);
   --tma-overlay: var(--tma-fb-overlay);
   --tma-seg-on: var(--tma-fb-seg-on);
-  /* Telegram's own value colour: the Stars glyph only, never text, buttons or a theme */
+  /* Telegram's own value colour: the Stars glyph, its price pill and sparkles; never buttons or a theme */
   --tma-star: var(--tma-fb-star);
+  --tma-star-text: var(--tma-fb-star-text);
   /* brand: one moment per screen (hero header, promo); a style profile sets it, else the accent */
   --tma-brand: var(--tma-accent);
   --tma-on-brand: var(--tma-on-accent);
@@ -592,6 +596,40 @@ select.tma-input {
 .tma-star { flex: none; width: 1em; height: 1em; color: var(--tma-star); } /* the symbol paints itself in currentColor */
 .tma-figure .tma-star { width: .72em; height: .72em; }
 .tma-amount.is-negative { color: var(--tma-danger); }
+
+/* Stars price pill, as Telegram draws prices on gifts and paid items: a translucent gold pill, the gold star,
+   the amount in gold, sparkles drifting out of it. Sparkles stop (and stay at half opacity) when motion is
+   reduced or the device is weak. Markup: <span class="tma-stars-pill"><span class="tma-sparkles" aria-hidden="true">
+   <i></i> x10</span><svg class="tma-star"><use href="icons.svg#i-stars-gold"/></svg>25</span> */
+.tma-stars-pill {
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px 5px 8px;
+  border-radius: 999px; background: color-mix(in srgb, var(--tma-star) 13%, transparent); color: var(--tma-star-text);
+  font-size: var(--tma-fs-footnote); font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.tma-stars-pill > .tma-star { width: 1.25em; height: 1.25em; }
+.tma-sparkles { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: visible; color: var(--tma-star); }
+.tma-sparkles > i {
+  position: absolute; width: 5px; height: 5px; background: currentColor; opacity: 0;
+  clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+  animation: tma-sparkle 5s linear infinite; animation-delay: var(--d, 0s);
+}
+.tma-sparkles > i:nth-child(1) { left: 14%; top: 18%; --dx: -10px; --dy: -7px; --d: -0.4s; }
+.tma-sparkles > i:nth-child(2) { left: 26%; top: 70%; --dx: -8px; --dy: 8px; --d: -3.6s; scale: .8; }
+.tma-sparkles > i:nth-child(3) { left: 38%; top: 8%; --dx: -2px; --dy: -10px; --d: -1.6s; scale: 1.2; }
+.tma-sparkles > i:nth-child(4) { left: 48%; top: 78%; --dx: 1px; --dy: 10px; --d: -4.4s; }
+.tma-sparkles > i:nth-child(5) { left: 58%; top: 14%; --dx: 3px; --dy: -10px; --d: -2.4s; scale: .8; }
+.tma-sparkles > i:nth-child(6) { left: 68%; top: 64%; --dx: 7px; --dy: 9px; --d: -0.9s; scale: 1.2; }
+.tma-sparkles > i:nth-child(7) { left: 78%; top: 22%; --dx: 9px; --dy: -7px; --d: -3.1s; }
+.tma-sparkles > i:nth-child(8) { left: 86%; top: 58%; --dx: 11px; --dy: 5px; --d: -1.2s; scale: .8; }
+.tma-sparkles > i:nth-child(9) { left: 6%; top: 50%; --dx: -12px; --dy: 1px; --d: -2.8s; scale: 1.1; }
+.tma-sparkles > i:nth-child(10) { left: 94%; top: 36%; --dx: 12px; --dy: -2px; --d: -4.0s; }
+@keyframes tma-sparkle {
+  0% { transform: translate(0, 0); opacity: 0; }
+  15% { opacity: .9; }
+  100% { transform: translate(var(--dx), var(--dy)); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .tma-sparkles > i { animation: none; opacity: .5; } }
+:root[data-tma-perf="low"] .tma-sparkles > i { animation: none; opacity: .5; }
 .tma-amount.is-positive { color: var(--tma-success); }
 
 .tma-gift {

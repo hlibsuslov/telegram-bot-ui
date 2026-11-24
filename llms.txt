@@ -173,6 +173,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [build_widget.py](skills/telegram-bot-ui/scripts/build_widget.py): Build a Telegram HTML widget (Bot API 10.4) from a source file and the widget kit.
 - [emoji_packs.py](skills/telegram-bot-ui/scripts/emoji_packs.py): Premium (custom) emoji packs for a bot: resolve, suggest, verify, capture, apply, strip.
 - [example_library.py](skills/telegram-bot-ui/scripts/example_library.py): Find examples by user intent and validate the use-case catalog offline.
+- [fetch_telegram_star.py](skills/telegram-bot-ui/scripts/fetch_telegram_star.py): Download Telegram's original Stars glyph into YOUR app (not into this skill).
 - [miniapp_layout.py](skills/telegram-bot-ui/scripts/miniapp_layout.py): Layout rules for Mini App screens: recommend a layout for a content type, review a screen description.
 - [miniapp_lint.py](skills/telegram-bot-ui/scripts/miniapp_lint.py): Lint a Telegram Mini App's source for security mistakes, non-native patterns and AI-slop.
 - [miniapp_rework.py](skills/telegram-bot-ui/scripts/miniapp_rework.py): Plan the rework of an existing Mini App into classic Telegram design.

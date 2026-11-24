@@ -1,4 +1,4 @@
-<!-- Mini App kit icons: an own line set on a 24 px grid, stroke 1.8, round caps (CC0 within this skill). i-stars is the one filled glyph:
+<!-- Mini App kit icons: an own line set on a 24 px grid, stroke 1.8, round caps (CC0 within this skill). i-stars and i-stars-gold are the filled glyphs:
      the Telegram Stars currency sign drawn here (not Telegram's artwork), coloured by .tma-star.
      Not Apple SF Symbols and not Material glyphs: data/mini-apps/icons.json maps each id to the SF Symbol and
      Material name with the same meaning, so a design that names those can be built without their artwork.
@@ -18,6 +18,7 @@
   <symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M3 9h18M12 9v11M12 9c-2-4-6-4-6-1.5S12 9 12 9Zm0 0c2-4 6-4 6-1.5S12 9 12 9Z"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.8 2.5 5.2 5.7.8-4.1 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4.1-4 5.7-.8L12 3.8Z"/></symbol>
   <symbol id="i-stars" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" d="m12 3.6 2.6 5.3 5.8.85-4.2 4.1 1 5.8L12 16.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85L12 3.6Z"/></symbol>
+  <symbol id="i-stars-gold" viewBox="0 0 24 24"><defs><linearGradient id="tma-star-fill" x1="12" y1="3.6" x2="14" y2="20" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ffd95c"/><stop offset="1" stop-color="#ffb21f"/></linearGradient><linearGradient id="tma-star-edge" x1="12" y1="3" x2="15" y2="21" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#e8920f"/><stop offset="1" stop-color="#e57212"/></linearGradient></defs><path fill="url(#tma-star-fill)" stroke="url(#tma-star-edge)" stroke-width="1.3" stroke-linejoin="round" d="M12 3.6 14.6 8.9l5.8.85-4.2 4.1 1 5.8L12 16.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85L12 3.6Z"/><path fill="#fff4cc" opacity=".75" d="M12 5.4 10.1 9.3l-4.3.6 3.1 1.3 3.1-1.1Z"/></symbol>
   <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.5 3 5.5 13.5h6L10.5 21l8-10.5h-6L13.5 3Z"/></symbol>
   <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10Z"/></symbol>
   <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6.5 4h11v16L12 16l-5.5 4V4Z"/></symbol>

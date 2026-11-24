@@ -56,7 +56,7 @@ function svgUse(cls: string, name: string): SVGSVGElement {
 const chevron = () => svgUse('tma-cell__chevron', 'chevron-right');
 /** T1: the Stars sign before a whole number; screen readers hear "120 Stars". */
 const stars = (n: number, period = '') => h('span', { class: 'tma-amount is-stars', 'aria-label': `${n} Stars${period ? ` ${period}` : ''}` },
-  svgUse('tma-star', 'stars'), String(n), period ? h('span', { class: 'tma-price__period' }, ` ${period}`) : null);
+  svgUse('tma-star', 'stars-gold'), String(n), period ? h('span', { class: 'tma-price__period' }, ` ${period}`) : null);
 const initials = (name: string, cls = '') => h('span', { class: `tma-avatar ${cls}`, 'aria-hidden': 'true' }, name.slice(0, 1).toUpperCase());
 const spotsText = (c: Cls) => (c.spots === 0 ? 'Full' : c.spots === 1 ? '1 spot left' : `${c.spots} spots left`);
 

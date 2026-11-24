@@ -67,6 +67,7 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `scripts/miniapp_layout.py` | `entities`, `show`, `rules`, `review` a screen description (validated against `schema`), `example` |
 | `scripts/miniapp_style.py` | `presets`, `palettes`, `show`, `css`, `check` for styles and brand profiles (`"brand": "teal"` or own colours) |
 | `scripts/miniapp_lint.py` | 35 rules: security, native controls, theme, motion, labels, slop, payments, Telegram's own marks, rework tells (`--json`, `--strict`) |
+| `scripts/fetch_telegram_star.py` | Telegram's original Stars glyph (GPL-3.0, Telegram Web A) into an app that accepts that licence; pinned and hash-checked |
 | `scripts/miniapp_rework.py` | `plan` (staged rework plan with replacements, colour map, type map), `colours`, `type` |
 | `data/mini-apps/rework-map.json` | every lint rule and 13 web patterns → the Telegram replacement, kit part and reference |
 | `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions, invoice outcomes; `--api mock.json` for the app's own server routes |

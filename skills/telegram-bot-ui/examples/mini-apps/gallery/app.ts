@@ -69,14 +69,14 @@ fetch(ICONS).then((r) => r.text()).then((svg) => {
 /* Telegram's own values (telegram-elements.md): sample API data, formatted by the kit */
 $('stars-balance').textContent = formatStars(1250);
 for (const el of document.querySelectorAll<HTMLElement>('[data-nano]')) el.textContent = formatGrams(el.dataset.nano ?? '0', { signed: 'signed' in el.dataset });
-const GIFTS: Record<string, { background: { center_color: number; edge_color: number; text_color: number }; remaining?: number; total?: number }> = {
-  cake: { background: { center_color: 0xfbe3ea, edge_color: 0xf2bfcf, text_color: 0x5a2336 }, remaining: 142, total: 5000 },
-  plant: { background: { center_color: 0xdff3e4, edge_color: 0xb5dfc2, text_color: 0x1f4a2c } },
-};
+// Regular gifts sit on plain surface tiles, as in Telegram's gift catalogue; Gift.background (9.3), when a
+// gift has one, colours the tile through giftVars(). The unique gift below shows the backdrop colours.
+type RegularGift = { background?: { center_color: number; edge_color: number; text_color: number }; remaining?: number; total?: number };
+const GIFTS: Record<string, RegularGift> = { cake: { remaining: 142, total: 5000 }, plant: {} };
 for (const b of document.querySelectorAll<HTMLElement>('[data-gift]')) {
   const g = GIFTS[b.dataset.gift ?? ''];
   if (!g) continue;
-  for (const [k, v] of Object.entries(giftVars(g.background))) b.style.setProperty(k, v);
+  if (g.background) for (const [k, v] of Object.entries(giftVars(g.background))) b.style.setProperty(k, v);
   const counter = b.querySelector<HTMLElement>('.tma-limited');
   if (counter && g.remaining !== undefined && g.total !== undefined) {
     const left = limitedLeft(g.remaining, g.total);

@@ -424,7 +424,7 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
                 if re.search(r"position\s*:\s*fixed", body) and re.search(r"\bbottom\s*:", body) \
                         and re.search(r"btn|button|cta|checkout|submit|buy|pay", sel, re.I) and "data-tma-fallback" not in sel:
                     add("MA07", path, text, offset + pos, f"fixed bottom button {sel[:40]!r}: MainButton / SecondaryButton")
-                if re.search(r"\binfinite\b", body) and not re.search(r"skeleton|spinner|shimmer|loading|loader|progress|spin", sel, re.I):
+                if re.search(r"\binfinite\b", body) and not re.search(r"skeleton|spinner|shimmer|loading|loader|progress|spin|sparkle", sel, re.I):
                     add("MA10", path, text, offset + pos, f"infinite animation on {sel[:40]!r}: animate only live or loading things")
                 if "tma-" not in sel and re.search(r"(^|[\s.#,>])(top-?bar|nav-?bar|app-?bar|app-header|site-header|header)\b", sel, re.I) \
                         and re.search(r"position\s*:\s*(sticky|fixed)", body) and re.search(r"\btop\s*:\s*0", body):

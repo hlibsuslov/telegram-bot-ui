@@ -52,6 +52,10 @@ Bot API 10.5 and https://core.telegram.org/bots/webapps on 2026-11-23.
   the project's own palette, or for a new app a named palette of Apple's system colours from the HIG
   (`data/mini-apps/palettes.json`, `"brand": "teal"`, `miniapp_style.py palettes`); tonal hero fade as the
   only gradient.
+- Telegram's Stars look: a gold star glyph with Telegram's shading (`i-stars-gold`), the Stars price pill with
+  drifting sparkles that stop under reduced motion (`.tma-stars-pill`), plain gift tiles as in Telegram's gift
+  catalogue; `scripts/fetch_telegram_star.py` fetches Telegram's original glyph (GPL-3.0) into an app whose
+  owner accepts that licence.
 - A no-dependency kit (`examples/mini-apps/_kit`), examples (coffee pickup, catalogue, points
   portfolio, kit gallery, React 19 with `@tma.js/sdk-react`), server-side `initData` verification in
   Python stdlib and `node:crypto` with shared vectors, the bot side, and a mock preview stand

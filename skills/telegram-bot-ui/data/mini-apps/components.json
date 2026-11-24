@@ -2106,6 +2106,25 @@
    "status": "kit",
    "note": "own gold glyph before a whole number; plain text '⭐ 250' where no markup; never 'XTR' (T1)"
   },
+  "stars-pill": {
+   "group": "telegram",
+   "title": "Stars price pill",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "gift price",
+    "paid item",
+    "static (reduced motion)"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-stars-pill .tma-sparkles",
+   "native": null,
+   "status": "kit",
+   "note": "translucent gold pill, gold star, gold amount, drifting sparkles that stop under reduced motion (T1)"
+  },
   "gram-amount": {
    "group": "telegram",
    "title": "Gram amount (formerly Toncoin)",
@@ -2139,10 +2158,10 @@
    "states": [
     "D"
    ],
-   "kit": ".tma-gifts .tma-gift .tma-gift__art .tma-gift__title .tma-gift__price .tma-gift__flag",
+   "kit": ".tma-gifts .tma-gift .tma-gift__art .tma-gift__title .tma-stars-pill .tma-gift__flag",
    "native": null,
    "status": "kit",
-   "note": "Gift.background colours via giftVars(); the sticker is the gift's own art (T4)"
+   "note": "plain surface tile as in Telegram's gift catalogue; Gift.background colours via giftVars() when present; price in a Stars pill (T4)"
   },
   "unique-gift": {
    "group": "telegram",

@@ -127,6 +127,12 @@
    "use": "Telegram Stars currency sign before an amount (.tma-amount.is-stars); filled, gold via .tma-star",
    "lucide": "star"
   },
+  "stars-gold": {
+   "sf_symbol": "star.fill",
+   "material": "star (filled)",
+   "lucide": "star",
+   "use": "the Telegram Stars sign in prices and balances: gold gradient with a darker edge (own drawing); the original artwork: scripts/fetch_telegram_star.py"
+  },
   "bolt": {
    "sf_symbol": "bolt",
    "material": "bolt",

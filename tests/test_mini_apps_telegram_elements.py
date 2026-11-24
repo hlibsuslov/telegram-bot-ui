@@ -138,3 +138,27 @@ class StricterVisualRules(unittest.TestCase):
         self.assertIn('[data-tma-scheme="dark"] { --tma-brand: #00d2e0; --tma-on-brand: #000000; }', css)
         _, errors, _ = style.resolve({"brand": "neon"}, style.load())
         self.assertTrue(errors)
+
+
+class StarsLook(unittest.TestCase):
+    def test_pill_sparkles_stop_without_motion_and_text_contrast(self):
+        import miniapp_style as style
+        css = read(KIT, "_kit", "tma.css")
+        self.assertIn(".tma-stars-pill", css)
+        self.assertRegex(css, r"prefers-reduced-motion: reduce\) \{ \.tma-sparkles > i \{ animation: none; opacity: \.5; \}")
+        self.assertIn('[data-tma-perf="low"] .tma-sparkles > i', css)
+        light = re.search(r"--tma-fb-star-text: (#[0-9a-f]{6})", css).group(1)
+        self.assertGreaterEqual(style.contrast(light, "#fdf0d4"), 4.5)
+        self.assertIn('<symbol id="i-stars-gold"', read(KIT, "_kit", "icons.svg"))
+
+    def test_original_star_is_fetched_only_with_consent(self):
+        import contextlib
+        import io
+        import fetch_telegram_star as fetch
+        self.assertRegex(fetch.COMMIT, r"^[0-9a-f]{40}$")
+        for sha in fetch.FILES.values():
+            self.assertRegex(sha, r"^[0-9a-f]{64}$")
+        with tempfile.TemporaryDirectory() as d, contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(fetch.main(["--out", d]), 2)
+            self.assertEqual(os.listdir(d), [])
+        self.assertIn("GPL-3.0", read(REF, "telegram-elements.md"))

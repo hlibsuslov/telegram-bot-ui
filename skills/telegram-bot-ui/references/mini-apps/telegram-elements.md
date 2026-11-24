@@ -34,8 +34,21 @@ wallet: [../wallet-and-ton.md](../wallet-and-ton.md).
   invoice currency is `XTR` **[API]/[Official]**. Balances can carry a fraction: `StarAmount.amount` plus
   `nanostar_amount` (1/10⁹ of a Star, 9.0) **[API]**.
 - **Render.**
-  - In markup: `<span class="tma-amount is-stars"><svg class="tma-star"><use href="icons.svg#i-stars"/></svg>250</span>`.
-    The glyph is the kit's own drawing in `--tma-star` gold, not Telegram's artwork **[Heuristic]**.
+  - In markup: `<span class="tma-amount is-stars"><svg class="tma-star"><use href="icons.svg#i-stars-gold"/></svg>250</span>`.
+    `i-stars-gold` is the kit's own drawing with Telegram's shading (gold gradient, darker edge, a light
+    facet); `i-stars` is the flat version for small sizes **[Heuristic]**.
+  - **The original artwork.** Telegram's Stars glyph is published in Telegram Web A
+    (github.com/Ajaxy/telegram-tt, `src/assets/icons/star/GoldStar.svg`), licensed **GPL-3.0**. It is not
+    copied into this skill (MIT). An app owner who accepts GPL-3.0 for that file fetches it with
+    `py -3 scripts/fetch_telegram_star.py --out <app>/assets --accept-gpl` (pinned commit, SHA-256 checked,
+    a licence notice written next to it) and uses `<img class="tma-star" src="assets/GoldStar.svg" alt="">`.
+  - **The price pill** (gifts, paid items, "Unlock" offers), as Telegram's own clients draw it: a translucent
+    gold pill (gold at about 13 %), the gold star, the amount in gold, small four-point sparkles drifting out
+    of it. `.tma-stars-pill` with `.tma-sparkles` (ten `<i>`); the sparkles stop and stay at half opacity
+    under `prefers-reduced-motion` and on weak Android (`data-tma-perf="low"`), as Telegram does with
+    animations off. The amount uses `--tma-star-text` (4.5:1 on the pill in both themes). The effect is the
+    kit's own CSS; Telegram Web A draws the same idea with "✦" characters, which this skill does not use
+    (no emoji, MA13).
   - Never the ⭐ character in markup (headings, rows, prices, footnotes): lint MA13.
   - Where only text fits (MainButton, popups, bot messages): `starsText(250)` → `⭐ 250`; a period:
     `⭐ 250 / month` **[Heuristic]**. The ⭐ before an amount is the one emoji the lint accepts in labels (MA13).
