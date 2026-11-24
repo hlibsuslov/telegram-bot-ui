@@ -86,5 +86,5 @@
   <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></symbol>
   <symbol id="i-logout" viewBox="0 0 24 24"><path d="M14 4.5H6.5a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1H14M10 12h10.5M17 8.5l3.5 3.5-3.5 3.5"/></symbol>
   <symbol id="i-language" viewBox="0 0 24 24"><path d="M4 6h9M8.5 4v2M6 6c.5 3.5 3 6.5 6.5 8M11 6c-.5 3.5-3 6.5-6.5 8M13 20l3.5-8.5L20 20M14.2 17.2h4.6"/></symbol>
-  <symbol id="i-sticker" viewBox="0 0 24 24"><path d="M20.5 12A8.5 8.5 0 1 1 12 3.5h3a5.5 5.5 0 0 0 5.5 5.5V12Z"/><path d="M20.5 9.5 15 4"/><path d="M8.5 14a4.5 4.5 0 0 0 7 0M9 10h.01M15 10h.01"/></symbol>
+  <symbol id="i-sticker" viewBox="0 0 24 24"><path d="M20.5 13.5A8.5 8.5 0 1 1 10.5 3.6"/><path d="M10.5 3.6 20.5 13.5"/><path d="M10.5 3.6c.6 5.1 4.9 9.3 10 9.9"/><path d="M8 15.2a4.2 4.2 0 0 0 5.6 0M8.6 11h.01M13 11h.01"/></symbol>
 </svg>
