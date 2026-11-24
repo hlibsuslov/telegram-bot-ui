@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  createTma, parseStartParam, perfClass, platformClass, readLaunchParams, versionAtLeast,
+  ApiError, createTma, idempotencyKey, parseStartParam, perfClass, pickLanguage, platformClass, readLaunchParams, textDirection, versionAtLeast,
   type WebAppLike, type RootLike, type FallbackButtonLike,
 } from './tma.ts';
 
@@ -295,4 +295,167 @@ test('writeAccess() trusts allows_write_to_pm, asks from 6.9, and is false on ol
   assert.deepEqual(asks.calls.filter((c) => c[0] === 'requestWriteAccess'), [['requestWriteAccess']]);
   const old = fakeWebApp('6.2', { requestWriteAccess: () => { throw new Error('must not be called'); } });
   assert.equal(await createTma(env(old.tg)).writeAccess(), false);
+});
+
+test('haptics: every style and type, one play per burst, an in-app switch, silent below 6.1', () => {
+  let t = 0;
+  const f = fakeWebApp('8.0');
+  const tma = createTma(env(f.tg, { now: () => t }));
+  for (const s of ['light', 'medium', 'heavy', 'rigid', 'soft'] as const) assert.equal(tma.haptic.impact(s), true);
+  assert.equal(tma.haptic.notify('warning'), true);
+  assert.equal(tma.haptic.select(), true);
+  assert.equal(tma.haptic.select(), false);           // same pattern again within the gap
+  t += 100;
+  assert.equal(tma.haptic.select(), true);            // after the gap it plays
+  tma.haptic.setEnabled(false);
+  t += 100;
+  assert.equal(tma.haptic.success(), false);
+  assert.equal(tma.haptic.enabled, false);
+  const kinds = f.calls.filter((c) => c[0] === 'impact' || c[0] === 'notification' || c[0] === 'selection');
+  assert.deepEqual(kinds.map((c) => c.slice(0, 2).join(':')), [
+    'impact:light', 'impact:medium', 'impact:heavy', 'impact:rigid', 'impact:soft', 'notification:warning', 'selection', 'selection']);
+  const old = fakeWebApp('6.0');
+  assert.equal(createTma(env(old.tg)).haptic.tap(), false);
+});
+
+function fakeSensor(log: string[]) {
+  return {
+    isStarted: false, x: 0.1, y: 9.8, z: 0.2, alpha: 1, beta: 0.5, gamma: -0.25, absolute: false,
+    start(p: Record<string, unknown>) { this.isStarted = true; log.push(`start ${JSON.stringify(p)}`); },
+    stop() { this.isStarted = false; log.push('stop'); },
+  };
+}
+
+test('motion(): clamps the rate, reads values on each event, pauses while hidden, stops once', () => {
+  const log: string[] = [];
+  const acc = fakeSensor(log);
+  const f = fakeWebApp('8.0', { Accelerometer: acc } as Partial<WebAppLike>);
+  const tma = createTma(env(f.tg));
+  const seen: Array<Record<string, unknown>> = [];
+  const stop = tma.motion('accelerometer', (r) => seen.push(r), { refreshMs: 5 });
+  assert.ok(stop);
+  assert.deepEqual(log, ['start {"refresh_rate":20}']);
+  f.emit('accelerometerChanged');
+  assert.deepEqual(seen, [{ x: 0.1, y: 9.8, z: 0.2 }]);
+  f.emit('deactivated');
+  f.emit('activated');
+  assert.deepEqual(log.slice(1), ['stop', 'start {"refresh_rate":20}']);
+  stop!(); stop!();
+  assert.equal(log.filter((l) => l === 'stop').length, 2);
+  f.emit('accelerometerChanged');
+  assert.equal(seen.length, 1);
+  assert.equal(createTma(env(fakeWebApp('7.10', { Accelerometer: fakeSensor([]) } as Partial<WebAppLike>).tg)).motion('accelerometer', () => {}), null);
+});
+
+test('location(): initialises once, resolves the data, or null when unavailable', async () => {
+  const data = { latitude: 52.37, longitude: 4.9, altitude: null, course: null, speed: null, horizontal_accuracy: 15, vertical_accuracy: null };
+  let inits = 0;
+  const lm = {
+    isInited: false, isLocationAvailable: true, isAccessGranted: true,
+    init(cb?: () => void) { inits++; this.isInited = true; cb?.(); },
+    getLocation(cb: (d: typeof data | null) => void) { cb(data); },
+    openSettings() {},
+  };
+  const tma = createTma(env(fakeWebApp('8.0', { LocationManager: lm } as Partial<WebAppLike>).tg));
+  assert.deepEqual(await tma.location(), data);
+  assert.deepEqual(await tma.location(), data);
+  assert.equal(inits, 1);
+  lm.isLocationAvailable = false;
+  assert.equal(await tma.location(), null);
+  assert.equal(await createTma(env(fakeWebApp('7.0').tg)).location(), null);
+});
+
+test('textDirection knows RTL scripts by base language', () => {
+  for (const t of ['ar', 'fa-IR', 'he_IL', 'iw', 'ur', 'ckb']) assert.equal(textDirection(t), 'rtl', t);
+  for (const t of ['en', 'ru', 'pt-BR', 'zh-Hant', 'ja']) assert.equal(textDirection(t), 'ltr', t);
+});
+
+test('pickLanguage: exact tag, then base language, in candidate order, then the fallback', () => {
+  const sup = ['en', 'ru', 'pt-BR', 'ar'];
+  assert.equal(pickLanguage(['pt_br'], sup, 'en'), 'pt-BR');
+  assert.equal(pickLanguage(['pt-PT'], sup, 'en'), 'pt-BR');
+  assert.equal(pickLanguage(['ru-UA'], sup, 'en'), 'ru');
+  assert.equal(pickLanguage([null, 'de', 'ar-EG'], sup, 'en'), 'ar');
+  assert.equal(pickLanguage(['de', undefined], sup, 'en'), 'en');
+});
+
+test('locale: the app override, then language_code, then the browser; sets lang and dir on <html>', () => {
+  const tg = fakeWebApp('8.0', { initDataUnsafe: { user: { language_code: 'ar' } } }).tg;
+  const root = fakeRoot();
+  const tma = createTma(env(tg, { root, languages: ['ru-RU'] }));
+  assert.deepEqual(tma.locale(['en', 'ru', 'ar']), { lang: 'ar', dir: 'rtl' });
+  assert.equal(root.lang, 'ar'); assert.equal(root.dir, 'rtl');
+  assert.deepEqual(tma.locale(['en', 'ru', 'ar'], { override: 'ru' }), { lang: 'ru', dir: 'ltr' });
+  assert.equal(root.dir, 'ltr');
+  const outside = createTma(env(null, { root: fakeRoot(), languages: ['de-DE', 'ru'] }));
+  assert.equal(outside.locale(['en', 'ru']).lang, 'ru');
+  assert.equal(outside.locale(['en', 'fr'], { fallback: 'en' }).lang, 'en');
+});
+
+function fakeServer(answers: Array<number | 'offline' | 'hang'>) {
+  const seen: Array<{ url: string; init: Record<string, unknown> }> = [];
+  let i = 0;
+  const fetch = (url: string, init: Record<string, unknown>) => {
+    seen.push({ url, init });
+    const a = answers[Math.min(i++, answers.length - 1)];
+    if (a === 'offline') return Promise.reject(new TypeError('Failed to fetch'));
+    if (a === 'hang') return new Promise<never>((_, rej) => (init.signal as AbortSignal).addEventListener('abort', () => rej(new Error('aborted'))));
+    return Promise.resolve({ ok: a < 400, status: a, text: async () => (a < 400 ? '{"ok":true}' : '{"reason":"Sold out"}') });
+  };
+  return { fetch, seen };
+}
+const noSleep = async () => {};
+
+test('api: sends the raw initData, JSON body and parses the answer', async () => {
+  const { tg } = fakeWebApp('8.0');
+  const srv = fakeServer([200]);
+  const tma = createTma(env(tg, { fetch: srv.fetch, sleep: noSleep }));
+  assert.deepEqual(await tma.api('/api/cart', { body: { id: 1 } }), { ok: true });
+  const h = srv.seen[0].init.headers as Record<string, string>;
+  assert.equal(h.Authorization, `tma ${tg.initData}`);
+  assert.equal(srv.seen[0].init.method, 'POST');
+  assert.equal(srv.seen[0].init.body, '{"id":1}');
+});
+
+test('api: GET retries offline and 5xx, a write without a key does not', async () => {
+  const { tg } = fakeWebApp('8.0');
+  let srv = fakeServer(['offline', 503, 200]);
+  let tma = createTma(env(tg, { fetch: srv.fetch, sleep: noSleep }));
+  assert.deepEqual(await tma.api('/api/list'), { ok: true });
+  assert.equal(srv.seen.length, 3);
+  srv = fakeServer(['offline', 200]);
+  tma = createTma(env(tg, { fetch: srv.fetch, sleep: noSleep }));
+  await assert.rejects(tma.api('/api/book', { body: {} }), (e: ApiError) => e.kind === 'offline');
+  assert.equal(srv.seen.length, 1);
+  srv = fakeServer([502, 200]);
+  tma = createTma(env(tg, { fetch: srv.fetch, sleep: noSleep }));
+  const key = idempotencyKey();
+  await tma.api('/api/book', { body: {}, idempotencyKey: key });
+  assert.equal(srv.seen.length, 2);
+  assert.equal((srv.seen[1].init.headers as Record<string, string>)['Idempotency-Key'], key);
+});
+
+test('api: 401 is a session error, 4xx a rejection with the reason, both without retries', async () => {
+  const { tg } = fakeWebApp('8.0');
+  let srv = fakeServer([401]);
+  let tma = createTma(env(tg, { fetch: srv.fetch, sleep: noSleep }));
+  await assert.rejects(tma.api('/api/me'), (e: ApiError) => e.kind === 'session' && e.status === 401);
+  assert.equal(srv.seen.length, 1);
+  srv = fakeServer([409]);
+  tma = createTma(env(tg, { fetch: srv.fetch, sleep: noSleep }));
+  await assert.rejects(tma.api('/api/me'), (e: ApiError) => e.kind === 'rejected' && e.reason === 'Sold out');
+  assert.equal(srv.seen.length, 1);
+});
+
+test('api: a hanging request times out', async () => {
+  const { tg } = fakeWebApp('8.0');
+  const srv = fakeServer(['hang']);
+  const tma = createTma(env(tg, { fetch: srv.fetch, sleep: noSleep }));
+  await assert.rejects(tma.api('/api/slow', { timeoutMs: 20, retries: 0 }), (e: ApiError) => e.kind === 'timeout');
+});
+
+test('hideKeyboard uses the client from 9.1', () => {
+  const a = fakeWebApp('9.1', { hideKeyboard() { a.calls.push(['hideKeyboard']); } } as Partial<WebAppLike>);
+  createTma(env(a.tg)).hideKeyboard();
+  assert.deepEqual(a.calls.filter((c) => c[0] === 'hideKeyboard').length, 1);
 });

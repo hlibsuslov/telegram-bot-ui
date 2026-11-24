@@ -71,7 +71,7 @@ skill: 0 and 0, the full payment flow running in the stand with `--api rework/mo
 | 3. Telegram's values and trust | MA28-MA29 | `⭐ 250`, `12.5 GRAM`, no own verified marks ([telegram-elements.md](telegram-elements.md)) |
 | 4. Theme and type | MA05, MA16, MA22, Tailwind / shadcn tokens | colour map → roles, type map → roles, system font |
 | 5. Slop | MA09-MA13, MA21, MA31-MA32, stat cards, nested cards, ribbons, price pills, carousels | grouped lists, one moment, plain copy, line icons |
-| 6. Accessibility and polish | MA17, MA24 | labels, `alt`, reduced motion, focus |
+| 6. Accessibility and language | MA17, MA24, MA38, MA39 | labels, `alt`, icon names, reduced motion, focus, `tma.locale()`, logical sides ([accessibility-and-language.md](accessibility-and-language.md)) |
 
 States (loading, empty, error, success) are not detectable from code: add them for every list and action
 whatever the plan says ([design-system.md](design-system.md) §8). Data that never loads (constants in the

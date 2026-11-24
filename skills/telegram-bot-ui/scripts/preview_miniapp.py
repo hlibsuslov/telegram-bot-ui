@@ -13,7 +13,9 @@ The stand serves the app's folder (by default its parent, so `../_kit/tma.css` r
 `window.Telegram.WebApp`, and draws what Telegram draws around a Mini App: the status bar, the
 header (Close or Back, title, menu), the bottom bar with MainButton / SecondaryButton, native
 popups, the fullscreen controls and safe areas. Controls: platform, colour scheme, width, mode
-(compact, full, fullscreen), client version, Android performance class, style preset (to see any
+(compact, full, fullscreen), client version, Android performance class, motion sensors and location
+(synthetic readings and demo coordinates), the user's language_code (en, ru, uk, de, ar, he, fa),
+the network for the app's own requests (slow 3 s, flaky, offline, 500, 401: `?network=offline`), style preset (to see any
 app in native / fintech / soft / dense), the invoice outcome (paid, cancelled, failed, pending:
 `?invoice=paid`), start_param. Every call
 (haptics, popups, chrome colours, storage, links, unsupported members) is logged.
@@ -99,7 +101,7 @@ DEVICES = {
     "tdesktop": {"status": 0, "header": 40, "bar": 60, "home": 0, "safe_fs": {"top": 0, "bottom": 0},
                  "content_fs": {"top": 0}},
 }
-HEIGHTS = {320: 600, 375: 740, 390: 800, 430: 860, 384: 640}
+HEIGHTS = {320: 600, 375: 740, 390: 800, 430: 860, 384: 640, 669: 860}  # 669: iPhone Duo inner display (iOS 27 kit)
 # Methods that throw WebAppMethodUnsupported in telegram-web-app.js when the client is too old (read 2026-11-23).
 THROWING = ["addToHomeScreen", "checkHomeScreenStatus", "closeScanQrPopup", "downloadFile", "exitFullscreen",
             "openInvoice", "readTextFromClipboard", "requestChat", "requestContact", "requestEmojiStatusAccess",
@@ -337,8 +339,41 @@ MOCK_JS = r"""/* MOCK of window.Telegram.WebApp for the local preview stand. Not
     },
     CloudStorage: storage('CloudStorage', '6.9', true),
     DeviceStorage: storage('DeviceStorage', '9.0', false),
-    SecureStorage: storage('SecureStorage', '9.0', false)
+    SecureStorage: storage('SecureStorage', '9.0', false),
+    Accelerometer: sensor('Accelerometer', 'accelerometer', function (t) { return { x: 0.6 * Math.sin(t), y: 9.6 + 0.2 * Math.cos(t), z: 0.8 * Math.cos(t * 0.7) }; }),
+    Gyroscope: sensor('Gyroscope', 'gyroscope', function (t) { return { x: 0.3 * Math.cos(t), y: 0.2 * Math.sin(t * 1.3), z: 0.05 * Math.sin(t) }; }),
+    DeviceOrientation: sensor('DeviceOrientation', 'deviceOrientation', function (t) { return { alpha: (t * 0.2) % (2 * Math.PI), beta: 0.35 * Math.sin(t), gamma: 0.3 * Math.cos(t * 0.8), absolute: false }; }),
+    LocationManager: {
+      isInited: false, isLocationAvailable: true, isAccessRequested: false, isAccessGranted: false,
+      init: function (cb) { if (!ok('WebApp.LocationManager', 'LocationManager')) return this; var m = this; setTimeout(function () { m.isInited = true; emit('locationManagerUpdated'); cb && cb(); }, 0); log('call', 'LocationManager.init'); return this; },
+      getLocation: function (cb) {
+        if (!ok('WebApp.LocationManager', 'LocationManager')) return this;
+        var m = this; m.isAccessRequested = true; m.isAccessGranted = true;
+        log('call', 'LocationManager.getLocation', 'mock grants access; demo coordinates');
+        setTimeout(function () { var d = { latitude: 52.3702, longitude: 4.8952, altitude: null, course: null, speed: null, horizontal_accuracy: 25, vertical_accuracy: null, course_accuracy: null, speed_accuracy: null }; emit('locationRequested', { locationData: d }); cb && cb(d); }, 400);
+        return this;
+      },
+      openSettings: function () { log('call', 'LocationManager.openSettings', 'needs a user gesture on real clients'); }
+    }
   };
+  // motion sensors (8.0): smooth synthetic readings at the requested refresh rate; stopped while the app is hidden
+  function sensor(name, ev, reading) {
+    var timer = null;
+    var o = {
+      isStarted: false,
+      start: function (p, cb) {
+        if (!ok('WebApp.' + name, name)) { cb && cb(false); return o; }
+        var rate = Math.min(1000, Math.max(20, (p && p.refresh_rate) || 1000));
+        if (timer) clearInterval(timer);
+        var t0 = Date.now();
+        o.isStarted = true; emit(ev + 'Started'); log('call', name + '.start', 'refresh_rate ' + rate);
+        timer = setInterval(function () { var r = reading((Date.now() - t0) / 1000); for (var k in r) o[k] = r[k]; emit(ev + 'Changed'); }, rate);
+        cb && cb(true); return o;
+      },
+      stop: function (cb) { if (timer) clearInterval(timer); timer = null; o.isStarted = false; emit(ev + 'Stopped'); log('call', name + '.stop'); cb && cb(true); return o; }
+    };
+    return o;
+  }
   if (cfg.serverless) {
     WebApp.Serverless = { call: function (name, input, cb) { log('call', 'Serverless.call', name); setTimeout(function () { var e = Error('mock: no endpoint'); e.type = 'ENDPOINT_ERROR'; e.status = 0; cb && cb(e); }, 100); } };
   }
@@ -359,13 +394,29 @@ MOCK_JS = r"""/* MOCK of window.Telegram.WebApp for the local preview stand. Not
   window.Telegram = { WebApp: WebApp, WebView: { isIframe: inStand, initParams: {} }, Utils: {} };
   // the stand's --api mock answers order status from the selected invoice outcome
   if (window.fetch) {
-    var realFetch = window.fetch;
+    var realFetch = window.fetch, netCount = 0;
     window.fetch = function (input, init) {
       init = init || {};
       var headers = new Headers(init.headers || (input && input.headers) || {});
       headers.set('X-TMA-Mock-Invoice', cfg.invoice || 'cancelled');
       init.headers = headers;
-      log('network', (init.method || 'GET') + ' ' + (typeof input === 'string' ? input : input.url));
+      var raw = typeof input === 'string' ? input : input.url;
+      log('network', (init.method || 'GET') + ' ' + raw);
+      // the stand's Network control breaks the app's own requests (not its files under /app/)
+      var url = new URL(raw, location.href);
+      var own = url.origin === location.origin && url.pathname.indexOf('/app/') !== 0 && url.pathname.indexOf('/__tma__') !== 0;
+      var net = cfg.network || 'normal';
+      if (own && net !== 'normal') {
+        netCount++;
+        var json = function (code, body) { return new Response(JSON.stringify(body), { status: code, headers: { 'Content-Type': 'application/json' } }); };
+        if (net === 'offline' || (net === 'flaky' && netCount % 2 === 1)) {
+          log('network', 'mock ' + net + ': the request fails like a lost connection');
+          return Promise.reject(new TypeError('Failed to fetch'));
+        }
+        if (net === 'error') { log('network', 'mock 500'); return Promise.resolve(json(500, { reason: 'Mock server error' })); }
+        if (net === 'session') { log('network', 'mock 401: initData too old'); return Promise.resolve(json(401, { reason: 'session-expired' })); }
+        if (net === 'slow') { var self = this; return new Promise(function (r) { setTimeout(r, 3000); }).then(function () { return realFetch.call(self, input, init); }); }
+      }
       return realFetch.call(this, input, init);
     };
   }
@@ -420,11 +471,13 @@ STAND_HTML = r"""<!doctype html>
 <div class="bar" id="bar">
   <label>Platform <select id="c-platform"><option>ios</option><option>android</option><option>tdesktop</option></select></label>
   <label>Scheme <select id="c-scheme"><option>light</option><option>dark</option></select></label>
-  <label>Width <select id="c-width"><option>320</option><option>375</option><option selected>390</option><option>430</option><option>384</option></select></label>
+  <label>Width <select id="c-width"><option>320</option><option>375</option><option selected>390</option><option>430</option><option>384</option><option>669</option></select></label>
   <label>Mode <select id="c-mode"><option>full</option><option>compact</option><option>fullscreen</option></select></label>
   <label>Version <select id="c-version"></select></label>
   <label>Style <select id="c-style"><option value="">app's own</option><option>native</option><option>fintech</option><option>soft</option><option>dense</option></select></label>
   <label>Invoice <select id="c-invoice"><option>cancelled</option><option>paid</option><option>failed</option><option>pending</option></select></label>
+  <label>Network <select id="c-network"><option>normal</option><option>slow</option><option>flaky</option><option>offline</option><option value="error">500</option><option value="session">401</option></select></label>
+  <label>Language <select id="c-lang"><option>en</option><option>ru</option><option>uk</option><option>de</option><option>ar</option><option>he</option><option>fa</option></select></label>
   <label>Android class <select id="c-perf"><option>HIGH</option><option>AVERAGE</option><option>LOW</option></select></label>
   <label>start_param <input id="c-start" size="14" placeholder="none"></label>
   <button id="c-reload" type="button">Reload</button>
@@ -439,11 +492,11 @@ const $ = (id) => document.getElementById(id);
 const verSel = $('c-version');
 CONFIG.versions.forEach(v => { const o = document.createElement('option'); o.textContent = v; verSel.append(o); });
 verSel.value = CONFIG.versions[CONFIG.versions.length - 1];
-for (const k of ['platform', 'scheme', 'width', 'mode', 'version', 'perf', 'start', 'style', 'invoice']) if (qs.get(k)) $('c-' + k).value = qs.get(k);
+for (const k of ['platform', 'scheme', 'width', 'mode', 'version', 'perf', 'start', 'style', 'invoice', 'lang', 'network']) if (qs.get(k)) $('c-' + k).value = qs.get(k);
 
 function themeFor(platform, scheme) { return CONFIG.themes[(platform === 'android' ? 'android' : 'ios') + '-' + scheme]; }
-function demoInitData(start) {
-  const user = JSON.stringify({ id: 100000001, first_name: 'Demo', language_code: 'en', allows_write_to_pm: true });
+function demoInitData(start, lang) {
+  const user = JSON.stringify({ id: 100000001, first_name: 'Demo', language_code: lang || 'en', allows_write_to_pm: true });
   const p = new URLSearchParams({ query_id: 'MOCK-QUERY', user, auth_date: String(Math.floor(Date.now() / 1000)), hash: 'mock-unsigned' });
   if (start) { p.set('start_param', start); p.set('chat_type', 'sender'); }
   return p.toString();
@@ -476,9 +529,9 @@ class Device {
   src() {
     const ins = this.insets();
     const p = new URLSearchParams({
-      tgWebAppData: demoInitData(this.o.start), tgWebAppVersion: this.o.version, tgWebAppPlatform: this.o.platform,
+      tgWebAppData: demoInitData(this.o.start, this.o.lang), tgWebAppVersion: this.o.version, tgWebAppPlatform: this.o.platform,
       tgWebAppThemeParams: JSON.stringify(this.theme),
-      tgWebAppMock: JSON.stringify({ scheme: this.o.scheme, mode: this.o.mode, fullscreen: this.fullscreen, safe: ins.safe, content: ins.content, perf: this.o.perf, style: this.o.style === 'native' ? '' : this.o.style, invoice: this.o.invoice }),
+      tgWebAppMock: JSON.stringify({ scheme: this.o.scheme, mode: this.o.mode, fullscreen: this.fullscreen, safe: ins.safe, content: ins.content, perf: this.o.perf, style: this.o.style === 'native' ? '' : this.o.style, invoice: this.o.invoice, network: this.o.network }),
     });
     if (this.fullscreen) p.set('tgWebAppFullscreen', '1');
     let url = CONFIG.app;
@@ -640,7 +693,7 @@ window.addEventListener('message', (ev) => {
 
 function opts(over) {
   return Object.assign({ platform: $('c-platform').value, scheme: $('c-scheme').value, width: +$('c-width').value,
-    mode: $('c-mode').value, version: verSel.value, start: $('c-start').value.trim(), perf: $('c-perf').value, style: $('c-style').value, invoice: $('c-invoice').value, height: +qs.get('height') || undefined }, over);
+    mode: $('c-mode').value, version: verSel.value, start: $('c-start').value.trim(), perf: $('c-perf').value, style: $('c-style').value, invoice: $('c-invoice').value, lang: $('c-lang').value, network: $('c-network').value, height: +qs.get('height') || undefined }, over);
 }
 function render() {
   const root = $('root'); root.replaceChildren(); Device.all = [];
@@ -663,7 +716,7 @@ function render() {
   Stand.logEl = side.querySelector('#log');
   new Device(devHost, opts());
 }
-for (const id of ['c-platform', 'c-scheme', 'c-width', 'c-mode', 'c-version', 'c-perf', 'c-style', 'c-invoice']) $(id).onchange = render;
+for (const id of ['c-platform', 'c-scheme', 'c-width', 'c-mode', 'c-version', 'c-perf', 'c-style', 'c-invoice', 'c-lang', 'c-network']) $(id).onchange = render;
 $('c-reload').onclick = render;
 render();
 </script>

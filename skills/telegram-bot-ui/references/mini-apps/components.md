@@ -11,6 +11,8 @@ States column: **D** default, **P** pressed, **X** disabled, **L** loading, **E*
 **S** skeleton. Every interactive component also has a visible keyboard focus (`:focus-visible`) for
 desktop clients and works right-to-left (`dir="rtl"`: logical properties, mirrored chevrons and switches).
 
+Measured sizes and how iOS 27 and Telegram compose screens: [native-anatomy.md](native-anatomy.md).
+
 ## 1. Native first
 
 | Need | Native (version) | Own component only when |
@@ -63,7 +65,7 @@ Gate each by version (`isVersionAtLeast`, or the kit's `tma.has()`). **[Official
 
 | Component | Kit | States | Rules |
 |---|---|---|---|
-| Text field | `.tma-field` + `.tma-field__label` + `.tma-input` + `.tma-field__error` | D, focus, X, E | visible label (G5); error under the field names the fix; `autocomplete` and `inputmode` set |
+| Text field ([forms-and-data.md](forms-and-data.md) §1-3) | `.tma-field` + `.tma-field__label` + `.tma-input` + `.tma-field__error` | D, focus, X, E | visible label (G5); error under the field names the fix; `autocomplete` and `inputmode` set |
 | Textarea | `textarea.tma-input` | D, focus, E | counter only near the limit |
 | Select / picker | a cell that opens a sheet or a radio list | D, selected | native `<select>` only for long, plain lists |
 | Switch | `.tma-switch` (in a cell, label = the row title) | on, off, X | changes apply at once; `selectionChanged` |

@@ -126,10 +126,10 @@
    "states": [
     "D"
    ],
-   "kit": ".tma-section__header",
+   "kit": ".tma-section__header .is-prominent .is-extra .is-small",
    "native": null,
    "status": "kit",
-   "note": "prominent = <strong> title3 inside the header"
+   "note": "iOS 27: nested 17 semibold by default, prominent 20 semibold (<strong> or .is-prominent), extra prominent 22 bold, an action at the end; .is-small = the older 13 pt caption for settings-like lists"
   },
   "list": {
    "group": "structure",
@@ -233,10 +233,10 @@
     "0",
     "E"
    ],
-   "kit": ".tma-placeholder",
+   "kit": ".tma-placeholder .tma-placeholder__icon",
    "native": null,
    "status": "kit",
-   "note": "what is missing, why, one action"
+   "note": "iOS 27: symbol in a 50 pt tinted circle, a 22 pt message, the reason, one action (the MainButton when it is the screen's primary action)"
   },
   "accordion": {
    "group": "structure",
@@ -289,10 +289,10 @@
     "D",
     "S"
    ],
-   "kit": ".tma-kv",
+   "kit": ".tma-kv .is-stacked",
    "native": null,
    "status": "kit",
-   "note": "receipts, details"
+   "note": "receipts and details; .is-stacked puts the label above the value for long values (Telegram kit templates)"
   },
   "tab-bar": {
    "group": "navigation",
@@ -1722,7 +1722,7 @@
    "kit": ".tma-sheet",
    "native": null,
    "status": "kit",
-   "note": "grabber, close left, title, confirm right; BackButton closes it"
+   "note": "grabber, close left, title, confirm right; BackButton closes it; iOS 27: floats 6 pt from the edges with a 60x4 grabber"
   },
   "onboarding-sheet": {
    "group": "overlays",

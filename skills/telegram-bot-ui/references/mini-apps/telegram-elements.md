@@ -34,7 +34,7 @@ wallet: [../wallet-and-ton.md](../wallet-and-ton.md).
   invoice currency is `XTR` **[API]/[Official]**. Balances can carry a fraction: `StarAmount.amount` plus
   `nanostar_amount` (1/10⁹ of a Star, 9.0) **[API]**.
 - **Render.**
-  - In markup: `<span class="tma-amount is-stars"><svg class="tma-star"><use href="icons.svg#i-stars-gold"/></svg>250</span>`.
+  - In markup: `<span class="tma-amount is-stars"><svg class="tma-star" aria-hidden="true"><use href="icons.svg#i-stars-gold"/></svg>250<span class="tma-sr-only"> Stars</span></span>`.
     `i-stars-gold` is the kit's own drawing with Telegram's shading (gold gradient, darker edge, a light
     facet); `i-stars` is the flat version for small sizes **[Heuristic]**.
   - **The original artwork.** Telegram's Stars glyph is published in Telegram Web A
