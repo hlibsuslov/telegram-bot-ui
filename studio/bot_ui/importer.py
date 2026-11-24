@@ -50,6 +50,9 @@ EDIT_METHODS = {"edit_text", "edit_message_text", "edit_caption", "edit_media", 
 I18N_FUNCS = {"_", "gettext", "__", "t", "tr", "i18n", "get", "lazy_gettext"}
 ERROR_WORDS = re.compile(r"(ошиб|не удалось|не получилось|failed|error|❌|⚠️|помилк)", re.I)
 EMPTY_WORDS = re.compile(r"(пуст|ничего нет|nothing|empty|порожн)", re.I)
+EMOJI_ID_ATTR = re.compile(r"""emoji-id=\\?["'](\d{1,20})""")
+LONG_ID = re.compile(r"^\d{16,20}$")  # custom emoji ids are 19 digits today
+ID_NAMES = re.compile(r"emoji|icon|premium", re.I)
 
 
 @dataclass
@@ -690,6 +693,44 @@ class Analyzer:
         return b
 
 
+def custom_emoji_ids(an: "Analyzer") -> dict[str, str]:
+    """Custom emoji ids anywhere in the bot ({id: file:line}), not only on imported screens:
+    <tg-emoji emoji-id> in any string or catalog, icon_custom_emoji_id= / custom_emoji_id=,
+    and long digit strings in constants, dicts or classes named like emoji/icon maps."""
+    out: dict[str, str] = {}
+
+    def add(cid: str, where: str) -> None:
+        if re.fullmatch(r"\d{1,20}", cid):
+            out.setdefault(cid, where)
+
+    def digits_in(node: ast.AST, rel: str) -> None:
+        for n in ast.walk(node):
+            if isinstance(n, ast.Constant) and isinstance(n.value, str) and LONG_ID.match(n.value):
+                add(n.value, f"{rel}:{n.lineno}")
+
+    for mod in an.modules:
+        for node in ast.walk(mod.tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                for m in EMOJI_ID_ATTR.finditer(node.value):
+                    add(m.group(1), f"{mod.rel}:{node.lineno}")
+            elif isinstance(node, ast.keyword) and node.arg in ("icon_custom_emoji_id", "custom_emoji_id"):
+                v = _const(node.value)
+                if isinstance(v, str):
+                    add(v, f"{mod.rel}:{node.value.lineno}")
+            elif isinstance(node, (ast.Assign, ast.AnnAssign)):
+                targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+                names = [t.id if isinstance(t, ast.Name) else t.attr if isinstance(t, ast.Attribute) else "" for t in targets]
+                if node.value is not None and any(ID_NAMES.search(n) for n in names):
+                    digits_in(node.value, mod.rel)
+            elif isinstance(node, ast.ClassDef) and ID_NAMES.search(node.name):
+                digits_in(node, mod.rel)
+    for loc, cat in sorted(an.catalogs.items()):
+        for key, text in cat.items():
+            for m in EMOJI_ID_ATTR.finditer(text or ""):
+                add(m.group(1), f"catalog {loc}: {key}")
+    return dict(sorted(out.items()))
+
+
 def _adjust(buttons: list[Button], sizes: list[int] | None) -> list[list[Button]]:
     if not buttons:
         return []
@@ -1078,13 +1119,19 @@ def import_bot(source: str, into: str, *, project_id: str | None = None, dry_run
         files[f"scenarios/{sc['scenarioId']}.json"] = (json.dumps(sc, ensure_ascii=False, indent=2) + "\n").encode()
     map_doc = {"format": "bot-ui-import-map/v1", "source": "aiogram",
                "handlers": dict(sorted(b.id_map.items()))}
+    emoji_ids = custom_emoji_ids(an)
+    if emoji_ids:
+        map_doc["customEmoji"] = emoji_ids
+        report.add("emoji-packs", "", 0, f"{len(emoji_ids)} custom emoji id(s) in the bot's code; their packs are not "
+                                         "in the project's emoji library yet",
+                   f"bot-ui emoji import-used --project {into} (or import --emoji-packs) imports every pack they come from")
     result = {"ok": True, "project": into, "projectId": pid, "existing": existing,
               "stats": {"files": len(an.modules), "handlers": len(an.handlers), "screens": len(screens),
                         "arrows": sum(1 for s in screens.values() for a in (s.get("actions") or {}).values()
                                       if a.get("type") in ("navigate", "handler")) +
                         sum(1 for s in screens.values() if s.get("input")),
                         "media": sum(1 for s in screens.values() if s["message"].get("media")),
-                        "locales": project["locales"]},
+                        "locales": project["locales"], "customEmoji": len(emoji_ids)},
               "report": report.items, "status": "static"}
     if existing:
         return _reimport(into, files, map_doc, result, dry_run)
@@ -1139,6 +1186,8 @@ def _reimport(into: str, files: dict[str, bytes], map_doc: dict, result: dict, d
     for sid in gone:
         result["report"].append({"kind": "handler-gone", "file": "", "line": 0,
                                  "what": f"{sid} has no source handler any more", "default": "kept; delete it yourself"})
+    if not new and not dry_run:
+        _write_map(into, map_doc)  # the found custom emoji ids stay current
     if not new or dry_run:
         result["dryRun"] = dry_run
         result["revision"] = snap.revision
@@ -1146,12 +1195,16 @@ def _reimport(into: str, files: dict[str, bytes], map_doc: dict, result: dict, d
     changes = [{"screenId": rel[8:-5], "create": json.loads(data)} for rel, data in sorted(new.items())]
     res = write_patch(into, {"format": "bot-ui-patch/v1", "projectId": (snap.project or {}).get("projectId"),
                              "baseRevision": snap.revision, "changes": changes})
-    with open(os.path.join(into, "import-map.json"), "w", encoding="utf-8", newline="\n") as fh:
-        json.dump(map_doc, fh, ensure_ascii=False, indent=2)
-        fh.write("\n")
+    _write_map(into, map_doc)
     result["revision"] = res.revision
     result["diff"] = res.diff
     return result
+
+
+def _write_map(into: str, map_doc: dict) -> None:
+    with open(os.path.join(into, "import-map.json"), "w", encoding="utf-8", newline="\n") as fh:
+        json.dump(map_doc, fh, ensure_ascii=False, indent=2)
+        fh.write("\n")
 
 
 def report_markdown(result: dict) -> str:

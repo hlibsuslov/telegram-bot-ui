@@ -17,6 +17,8 @@ export interface Suggestion { slot: string; id: string; set: string; fallback: s
 export interface EmojiDoc {
   library: Library; previews: Record<string, string>; usage: Use[]; vocabulary: Slot[];
   suggestions: Suggestion[]; tokenEnv: string | null; resolver?: string | null; error?: { code: string; message: string } | null;
+  /** Custom emoji ids the bot's screens (and, after `bot-ui import`, its code) use whose pack is not imported yet. */
+  missing?: string[];
 }
 export interface Entry extends PackEmoji { pack: string }
 
