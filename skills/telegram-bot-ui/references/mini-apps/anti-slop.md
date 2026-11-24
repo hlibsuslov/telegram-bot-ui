@@ -128,3 +128,7 @@ not proof of how real clients render.
 | MA27 paid-unlock | warning | unlocking on invoice status `paid` without asking the server for the order | payments §3 |
 | MA28 currency-label | warning | `XTR`, `Toncoin` or `12.5 TON` shown to users ("formerly Toncoin" is fine) | telegram-elements T1-T2 |
 | MA29 trust-mark | error | an own verified or Premium badge (class, id, `aria-label`, `title`) | telegram-elements T7-T8 |
+| MA30 nav-drawer | warning | hamburger, drawer, sidebar or off-canvas navigation | components §3, rework §3 |
+| MA31 hype-copy | warning | greetings, `!` in headings and buttons, hype words ("unleash", "crush it", "!!") | §4 |
+| MA32 glow | warning | coloured shadows with a blur of 20 px or more; `:hover` scale effects | §4 |
+| MA33 client-identity | error | `initDataUnsafe` sent to the server instead of the raw `initData` | security §1 |

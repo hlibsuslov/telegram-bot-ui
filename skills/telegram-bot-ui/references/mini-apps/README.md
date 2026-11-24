@@ -26,6 +26,7 @@ TON wallet: [../wallet-and-ton.md](../wallet-and-ton.md). Widgets inside a messa
 | "Make it look like X", "use our brand", "calmer / denser / fintech", restyle an existing app | [design-system.md](design-system.md) §9 styles, `scripts/miniapp_style.py` | `data/mini-apps/styles.json` |
 | Build a screen: shop, gym and trainers, bookstore, SaaS dashboard, form, booking, game, editor | [screen-patterns.md](screen-patterns.md), [components.md](components.md) | recipes 93-99 |
 | Where the image, title, price, rating go; galleries, filters, booking, plans; review a screen | [layout-rules.md](layout-rules.md), `scripts/miniapp_layout.py` | `examples/mini-apps/catalog` |
+| "Rework our Mini App into classic Telegram design", redesign an existing app (any stack) | [rework.md](rework.md), `scripts/miniapp_rework.py plan` | `examples/mini-apps/rework` |
 | "It looks generated / web-like / off", "make it premium" | [anti-slop.md](anti-slop.md), `scripts/miniapp_lint.py` | — |
 | Speed, weak Android, how to test without a phone | [performance-and-testing.md](performance-and-testing.md), `scripts/preview_miniapp.py` | — |
 
@@ -64,9 +65,11 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `data/mini-apps/layouts.json` | layout rules L01-L25 and 16 content types (image ratio, card slots, price, primary action, detail order) |
 | `scripts/miniapp_layout.py` | `entities`, `show`, `rules`, `review` a screen description, `example` |
 | `scripts/miniapp_style.py` | `presets`, `show`, `css`, `check` for styles and custom brand profiles |
-| `scripts/miniapp_lint.py` | 29 rules: security, native controls, theme, motion, labels, slop, payments, Telegram's own marks (`--json`, `--strict`) |
+| `scripts/miniapp_lint.py` | 33 rules: security, native controls, theme, motion, labels, slop, payments, Telegram's own marks, rework tells (`--json`, `--strict`) |
+| `scripts/miniapp_rework.py` | `plan` (staged rework plan with replacements, colour map, type map), `colours`, `type` |
+| `data/mini-apps/rework-map.json` | every lint rule and 13 web patterns → the Telegram replacement, kit part and reference |
 | `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions |
-| `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets), `tma.ts` (no-dependency kit), `tg-values.ts` (Stars, grams, gift colours, rarity), `icons.svg` |
+| `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets), `tma.ts` (no-dependency kit), `tg-values.ts` (Stars, grams, gift colours, rarity), `tma-bridge.css` (shadcn / Tailwind tokens → roles), `icons.svg` |
 | `examples/mini-apps/gallery` | every kit element on one page: open it in the stand and switch platform, theme, width, style |
 
 ## Not covered yet

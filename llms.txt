@@ -175,6 +175,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [example_library.py](skills/telegram-bot-ui/scripts/example_library.py): Find examples by user intent and validate the use-case catalog offline.
 - [miniapp_layout.py](skills/telegram-bot-ui/scripts/miniapp_layout.py): Layout rules for Mini App screens: recommend a layout for a content type, review a screen description.
 - [miniapp_lint.py](skills/telegram-bot-ui/scripts/miniapp_lint.py): Lint a Telegram Mini App's source for security mistakes, non-native patterns and AI-slop.
+- [miniapp_rework.py](skills/telegram-bot-ui/scripts/miniapp_rework.py): Plan the rework of an existing Mini App into classic Telegram design.
 - [miniapp_style.py](skills/telegram-bot-ui/scripts/miniapp_style.py): Mini App design styles: named presets and custom profiles compiled to kit-token overrides.
 - [preview_miniapp.py](skills/telegram-bot-ui/scripts/preview_miniapp.py): Local preview stand for a Telegram Mini App inside a MOCK of the Telegram client.
 - [preview_widget.py](skills/telegram-bot-ui/scripts/preview_widget.py): Local preview of a Telegram HTML widget inside a MOCK of the widget runtime.

@@ -46,6 +46,11 @@ in references/mini-apps/anti-slop.md#linter-rules):
   Telegram's own elements (T = references/mini-apps/telegram-elements.md)
     MA28 currency-label   T   "XTR", "Toncoin" or "12 TON" shown to users: "⭐ 250", "12 GRAM"
     MA29 trust-mark       T   an own verified / Premium badge (class, id, aria-label, title): Telegram draws those (error)
+  rework tells (R = references/mini-apps/rework.md)
+    MA30 nav-drawer       R   hamburger, drawer or sidebar navigation: a tab bar (2-5) and BackButton
+    MA31 hype-copy        R   greetings, "!" in headings and buttons, hype words: plain statements
+    MA32 glow             R   coloured glow shadows (blur >= 20 px) or :hover scale effects
+    MA33 client-identity  S   initDataUnsafe sent to the server: send the raw initData (Authorization: tma <initData>) (error)
 """
 from __future__ import annotations
 
@@ -72,6 +77,8 @@ RULES = {
     "MA22": ("warn", "small-text"), "MA23": ("warn", "viewport-meta"), "MA24": ("warn", "label"),
     "MA25": ("error", "pay-form"), "MA26": ("warn", "client-price"), "MA27": ("warn", "paid-unlock"),
     "MA28": ("warn", "currency-label"), "MA29": ("error", "trust-mark"),
+    "MA30": ("warn", "nav-drawer"), "MA31": ("warn", "hype-copy"), "MA32": ("warn", "glow"),
+    "MA33": ("error", "client-identity"),
 }
 TOKEN = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b|\bBOT_TOKEN\b|\bTELEGRAM_BOT_TOKEN\b")
 COLOR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\([^)]*\)")
@@ -80,6 +87,8 @@ EMOJI = re.compile("[\U0001F300-\U0001FAFF\U0001F000-\U0001F2FF\u2600-\u27BF\u2B
 CURRENCY_SHOWN = re.compile(r"\bXTR\s*\d|\d[\d.,\s]*XTR\b|(?<!formerly )\bToncoin\b|\d[\d.,]*\s*TON\b")
 TRUST_MARK = re.compile(r"(?:\bclass|\bid|className)\s*[=:]\s*[\"'`][^\"'`]*\b(?:verified|verification|premium)[-_]?(?:badge|mark|check|tick|icon)\b"
                         r"|(?:aria-label|title)\s*=\s*[\"'](?:verified|premium)\b", re.I)
+NAV_DRAWER = re.compile(r"(?:\bclass|\bid|className)\s*[=:]\s*[\"'`][^\"'`]*\b(?:hamburger|burger|drawer|sidebar|side-menu|offcanvas|off-canvas|nav-toggle)\b|☰", re.I)
+HYPE = re.compile(r"\b(?:welcome back|hey there|unleash|crush it|supercharge|skyrocket|game[- ]?changer|next[- ]level|revolutioni[sz]e|ultimate|seamless(?:ly)?|effortless(?:ly)?|level up)\b|!!", re.I)
 STARS_AMOUNT = re.compile(r"⭐️?\s*(?:\d|\$\{)")  # the Telegram Stars currency sign before an amount is not decoration
 TG_SCRIPT = re.compile(r"<script\b[^>]*\bsrc=[\"']https://telegram\.org/js/telegram-web-app\.js", re.I)
 STYLE_BLOCK = re.compile(r"<style[^>]*>(.*?)</style>", re.S | re.I)
@@ -256,6 +265,27 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
             paid = re.search(r"(===?|==)\s*['\"]paid['\"]|['\"]paid['\"]\s*(===?|==)", code)
             if paid and not re.search(r"watchOrder|/orders?\b|orderStatus|getOrder", code):
                 add("MA27", path, text, paid.start(), "invoice status 'paid' is a hint: ask the server for the order before unlocking")
+        # ---- rework tells: navigation drawers, hype copy, the user's identity taken from the client
+        if not server and ext in (".html", ".htm", ".js", ".mjs", ".ts", ".tsx", ".jsx"):
+            nav = NAV_DRAWER.search(text)
+            if nav:
+                add("MA30", path, text, nav.start(), "hamburger / drawer navigation: a tab bar (2-5 roots) and BackButton for depth")
+        if not server and ext in (".html", ".htm"):
+            hits = 0
+            for m in re.finditer(r"<(h[1-6]|button|a|p|span|div|small|li)\b[^>]*>([^<]*)", text, re.I):
+                words = m.group(2)
+                why = HYPE.search(words)
+                if not why and m.group(1).lower() in ("h1", "h2", "h3", "h4", "h5", "h6", "button") and "!" in words:
+                    why = re.search("!", words)
+                if why:
+                    add("MA31", path, text, m.start(), f"{words.strip()[:40]!r}: plain statement, no greetings, hype or exclamation marks")
+                    hits += 1
+                    if hits == 5:
+                        break
+        if code and not server:
+            ident = re.search(r"(?:JSON\.stringify|body\s*:)[^;\n]{0,200}initDataUnsafe", code)
+            if ident:
+                add("MA33", path, text, ident.start(), "initDataUnsafe sent to the server: send the raw initData and verify it there (security.md)")
         # ---- Telegram's own elements: currency names users see, marks only Telegram draws
         if not server and ext in (".html", ".htm"):
             shown = re.sub(r"<(script|style)\b.*?</\1>|<[^>]+>", lambda m: " " * len(m.group(0)), text, flags=re.S | re.I)
@@ -334,6 +364,16 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
                     add("MA07", path, text, offset + pos, f"fixed bottom button {sel[:40]!r}: MainButton / SecondaryButton")
                 if re.search(r"\binfinite\b", body) and not re.search(r"skeleton|spinner|shimmer|loading|loader|progress|spin", sel, re.I):
                     add("MA10", path, text, offset + pos, f"infinite animation on {sel[:40]!r}: animate only live or loading things")
+                if ":hover" in sel and re.search(r"transform\s*:[^;]*scale", body):
+                    add("MA32", path, text, offset + pos, f"{sel[:40]!r} scales on hover: touch has no hover; pressed state only")
+                for sh in re.finditer(r"box-shadow\s*:([^;]*)", body):
+                    lengths = re.sub(r"[\w-]+\([^()]*(?:\([^()]*\)[^()]*)*\)|#[0-9a-fA-F]{3,8}\b", " ", sh.group(1))
+                    blur = [float(t[2]) for t in (re.findall(r"-?\d*\.?\d+", part) for part in lengths.split(",")) if len(t) >= 3]
+                    tinted = [c for c in COLOR.findall(sh.group(1)) if not _neutral(c) and c.lower() not in ("#000", "#000000")]
+                    tinted += re.findall(r"var\(--(?:tma-(?:accent|brand)|tg-theme-button-color)", sh.group(1))
+                    if tinted and blur and max(blur) >= 20:
+                        add("MA32", path, text, offset + pos, f"coloured glow on {sel[:40]!r}: flat surfaces, a hairline or a neutral shadow")
+                        break
                 if ":hover" in sel and re.search(r"(display\s*:\s*(block|flex|grid)|visibility\s*:\s*visible|opacity\s*:\s*1\b)", body):
                     add("MA21", path, text, offset + pos, f"{sel[:40]!r} reveals content on hover only; touch has no hover")
             for m in re.finditer(r"transition\s*:\s*all\b|transition-all\b|animate-(pulse|ping)\b", clean):

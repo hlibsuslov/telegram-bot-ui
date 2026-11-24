@@ -206,6 +206,7 @@ description is updated.
 | MA18 | ru | "Подключи оплату картой в нашем мини-аппе доставки кофе." | no | `references/mini-apps/payments.md` |
 | MA19 | ru | "Добавь в мини-апп элементы телеграма: звёздочки, граммы, карточки подарков, как в самом Telegram." | no | `references/mini-apps/telegram-elements.md` |
 | MA20 | en | "Show the user's wallet balance in grams and a verified tick next to trusted sellers in our Mini App." | yes | `references/mini-apps/telegram-elements.md` |
+| MA21 | ru | "Переделай наш мини-апп на Tailwind и shadcn под нормальный классический дизайн Telegram." | no | `references/mini-apps/rework.md`, `scripts/miniapp_rework.py` |
 
 ## Negative — Mini App boundaries (should NOT activate)
 

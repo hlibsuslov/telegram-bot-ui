@@ -10,7 +10,9 @@ with the closest recipe (90-99) and the screen pattern for the product type.
 |---|---|---|
 | "Build a Mini App for X" | [decide.md](decide.md), the screen pattern for X, the recipe | [design-system.md](design-system.md), [components.md](components.md) |
 | "Make it look like X / use our brand / calmer / denser" | [design-system.md](design-system.md) §9 | `scripts/miniapp_style.py` |
+| "Rework / redesign our Mini App like Telegram", "make it native" | [rework.md](rework.md) | `scripts/miniapp_rework.py plan <app>` |
 | "It looks generated / web-like / cheap", "make it premium" | [anti-slop.md](anti-slop.md) §5 | `scripts/miniapp_lint.py` |
+| Stars, grams, gifts, Premium, verification in the app | [telegram-elements.md](telegram-elements.md) | `_kit/tg-values.ts` |
 | "Add a screen / a table / settings / a gallery" | `data/mini-apps/components.json`, [components.md](components.md) | the kit gallery for the markup |
 | "Check this screen", "where should the price / photo go", "make the catalogue better" | [layout-rules.md](layout-rules.md) | `scripts/miniapp_layout.py show / review` |
 | "What does an app for X look like" (gym, bookstore, SaaS, clinic, events…) | [screen-patterns.md](screen-patterns.md) | the matching example |
@@ -38,8 +40,11 @@ with the closest recipe (90-99) and the screen pattern for the product type.
 
 ## 3. Rework an existing Mini App
 
-1. **Inventory**: screens, entry points, the components each screen uses, colours and fonts in use, how it
-   authenticates. Run the lint and keep the report as the baseline.
+The full procedure, translation table, Tailwind / shadcn bridge and acceptance score: [rework.md](rework.md).
+
+1. **Inventory**: screens, entry points, the components each screen uses, how it authenticates.
+   `py -3 scripts/miniapp_rework.py plan <app>` gives the lint baseline sorted into stages with the Telegram
+   replacement for each finding, plus the colour map and the type map; keep it as the baseline.
 2. **Describe each screen** as a screen JSON and run `miniapp_layout.py review`; keep the findings with the lint report.
 3. **Rank the defects**: security (MA01-MA02) → broken native behaviour (own header, own back, own bottom
    CTA, missing `ready()`) → missing states → theme (literal colours, `100vh`) → slop → polish.
@@ -47,7 +52,9 @@ with the closest recipe (90-99) and the screen pattern for the product type.
 5. **Replace literals with kit roles**; delete web fonts, gradient text, glows, emoji icons.
 6. **Apply the style** the request names (preset or checked profile).
 7. **Re-check**: lint `--strict`, preview matrix in every style the app ships, both themes, fullscreen.
-8. **Report** the before/after lint counts, what changed per screen, what was left alone and why.
+8. **Score** with [rework.md](rework.md) §7 (16 items; "classic Telegram" needs chrome, theme and security
+   all passing and 14 of 16 overall) and **report** the before/after lint counts, what changed per screen,
+   what was left alone and why.
 
 Contracts stay frozen while reworking: API routes, `startapp` values, CloudStorage keys, analytics events.
 
@@ -64,7 +71,9 @@ Contracts stay frozen while reworking: API routes, `startapp` values, CloudStora
 | Media | `image`, `video`, `gallery`, `carousel`, `audio`, `file`, `sticker-moment`, `map`, `qr` | `.tma-media`, … | components §6a |
 | Tables | `data-table`, `compact-table`, `sortable-table`, `sticky-column-table`, `leaderboard`, `comparison` | `.tma-table`, `.tma-kv` | components §6b |
 | Overlays | native `popup`, `qr-scanner`; `sheet`, `action-sheet`, `menu` | `.tma-sheet`, `.tma-menu` | components §7 |
-| Icons | 81 ids with SF Symbol and Material equivalents | `_kit/icons.svg` | components §6c |
+| Icons | 83 ids with SF Symbol and Material equivalents | `_kit/icons.svg` | components §6c |
+| Telegram's own values | `stars-amount`, `gram-amount`, `gift-card`, `unique-gift`, `rarity-chip`, `limited-counter`; patterns and `avoid` for Premium, verification | `.tma-amount`, `.tma-gift`, `tg-values.ts` | telegram-elements |
+| Framework tokens | shadcn/ui and Tailwind names bridged to the roles | `_kit/tma-bridge.css` | rework §6 |
 
 What is not covered and why: anything the read sources did not show and Telegram does not need (wheel
 date pickers: the native input; numbered pagination, breadcrumbs, hamburger menus, bottom toolbars,

@@ -24,7 +24,7 @@ Bot API 10.5 and https://core.telegram.org/bots/webapps on 2026-11-23.
 - Layout rules L01-L25 for images, titles, prices, ratings, availability, galleries, filters, forms,
   booking and plans across 16 content types, with `scripts/miniapp_layout.py show / review`;
   screen patterns for shops, gyms and trainers, bookstores, SaaS dashboards, clinics, events and more.
-- Anti-slop rules with a 29-rule lint (`scripts/miniapp_lint.py`), security (`initData` HMAC and
+- Anti-slop rules with a 33-rule lint (`scripts/miniapp_lint.py`), security (`initData` HMAC and
   Ed25519, freshness, sessions, storage, CSP), performance and testing.
 - Payments inside a Mini App (`references/mini-apps/payments.md`): rail by goods (Stars for digital,
   subscriptions, a provider for physical goods), the cart-to-receipt flow with a signed payload bound to the
@@ -36,6 +36,11 @@ Bot API 10.5 and https://core.telegram.org/bots/webapps on 2026-11-23.
   `tg-values.ts`, a Telegram group in the gallery, lint MA28 (currency names users should not see) and
   MA29 (own verified or Premium marks). Fixed: list chevrons rendered as a dot; the HTML half of MA19
   (own back button) never matched.
+- Reworking an existing Mini App (`references/mini-apps/rework.md`): the loop, six stages, a web-to-Telegram
+  translation table (`data/mini-apps/rework-map.json`), a Tailwind / shadcn/ui token bridge
+  (`_kit/tma-bridge.css`) and a 16-item acceptance score; `scripts/miniapp_rework.py plan` turns any app into
+  a staged plan with colour and type maps; lint MA30-MA33 (drawers, hype copy, glow, the client's user
+  object sent to the server); a generated web-style app as the rework baseline.
 - A no-dependency kit (`examples/mini-apps/_kit`), examples (coffee pickup, catalogue, points
   portfolio, kit gallery, React 19 with `@tma.js/sdk-react`), server-side `initData` verification in
   Python stdlib and `node:crypto` with shared vectors, the bot side, and a mock preview stand

@@ -1453,6 +1453,19 @@
         "references/mini-apps/telegram-elements.md"
       ],
       "why": "gram amounts; trust marks are Telegram's"
+    },
+    {
+      "id": "MA21",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Переделай наш мини-апп на Tailwind и shadcn под нормальный классический дизайн Telegram.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/rework.md",
+        "scripts/miniapp_rework.py"
+      ],
+      "why": "rework of an existing app on a web stack"
     }
   ],
   "behavioral": [
@@ -2463,6 +2476,23 @@
       "critical_failures": [
         "draws an own verified or Premium badge next to a seller",
         "parses nanogram strings as floats or shows '12.5 TON' / 'XTR' to users"
+      ]
+    },
+    {
+      "id": "B98",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Redesign our gym booking Mini App so it looks like Telegram. Keep booking and payments working.",
+      "context": "web-style app: own top bar with burger menu, purple gradient hero with stat cards, 3-column class grid with price pills, fixed Book Now button, alert() dialogs, localStorage, prices in XTR, a verified tick on trainers",
+      "must": [
+        "runs miniapp_rework.py plan (or the lint) first and fixes in stage order: security and payments, native chrome, Telegram values, theme, slop",
+        "replaces the top bar and drawer with Telegram's header, BackButton and a tab bar; the Book button with the MainButton naming the class and price",
+        "maps colours to kit roles with the brand on one moment and drops gradients and glows; removes the verified tick",
+        "keeps routes, payloads and storage keys; scores the result with rework.md section 7 and reports before/after lint counts"
+      ],
+      "critical_failures": [
+        "keeps an own fixed bottom button or own header",
+        "recolours the web layout without changing its structure and calls it Telegram-native"
       ]
     }
   ]
