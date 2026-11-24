@@ -228,6 +228,8 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 - Reply keyboards, `ForceReply`, placeholders → `references/reply-keyboards.md`
 - Screens, back/home, commands, menu button, deep links → `references/navigation-and-flows.md`
 - First run, `/start` payloads, language choice, returning users → `references/onboarding-and-first-run.md`
+- What the bot or Mini App knows about a user (profile, phone, location, shared users, Passport), asking for it, the data inventory, privacy policy and deletion → `references/user-data.md`; spam and risk tiers, account age, blocklists, appeals → `references/user-trust.md`
+- The baseline user record every bot keeps (acquisition, terms version, time zone, notifications, labels, profile snapshot, community role) and adapting messages and personal screens to it (share theme, gift colours, voice restrictions) → `references/user-profile.md`
 - One visual language, screen anatomy, the premium pass → `references/visual-language.md`
 - Feedback mechanism → `references/dynamic-feedback-and-streaming.md`; draft state machine, Stop, races → `references/streaming-and-editing.md`
 - Personal / ephemeral answers in groups → `references/ephemeral-and-personal.md`
@@ -262,6 +264,11 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 - The Mini App itself: decide, launch, `Telegram.WebApp` by version, design system and styles, components, layout rules, screen patterns, anti-slop, `initData` security, testing → `references/mini-apps/README.md`
 - "Where do the photo, title and price go", reviewing a Mini App screen → `references/mini-apps/layout-rules.md`
 - Reworking an existing Mini App (any stack) into classic Telegram design → `references/mini-apps/rework.md` (`scripts/miniapp_rework.py plan`)
+- Exact iOS 27 and Telegram screen anatomy; building from a Figma file → `references/mini-apps/native-anatomy.md`, `references/mini-apps/figma-workflow.md`
+- Haptics (Taptic Engine), motion sensors, location, biometrics and other device features in a Mini App → `references/mini-apps/haptics-and-device.md`
+- Mini App accessibility (VoiceOver, TalkBack, text size, contrast) and language (`language_code`, plurals, `Intl`, RTL) → `references/mini-apps/accessibility-and-language.md`
+- Mini App forms, the on-screen keyboard, loading, errors, retries and idempotency → `references/mini-apps/forms-and-data.md`
+- Glass and materials, interface trends, new CSS features in Telegram's WebViews, platform redesigns → `references/mini-apps/materials-and-trends.md`
 - Stars, grams (formerly Toncoin), gift cards and rarity, Premium and verification marks in an app or message → `references/mini-apps/telegram-elements.md`
 - Wallet pay / sign, TON cards and transfers → `references/wallet-and-ton.md`
 
@@ -301,7 +308,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 | `scripts/validate_rich.py` | Rich Message Limits, drafts, media refs |
 | `scripts/validate_widget.py` / `build_widget.py` / `preview_widget.py` | widget size (zlib-9), runtime gaps, `--strict`; build from the kit; mock preview (proves nothing about real clients) |
 | `scripts/webapp_lookup.py` | `show`, `search`, `since`, `gates`, `theme` over the `Telegram.WebApp` catalog |
-| `scripts/miniapp_lint.py` / `miniapp_rework.py` / `miniapp_layout.py` / `miniapp_style.py` / `preview_miniapp.py` | Mini App lint (35 rules); staged rework plan with colour and type maps; layout rules (`show`, `review`); styles and brand profiles; mock client preview (proves nothing about real clients) |
+| `scripts/miniapp_lint.py` / `miniapp_rework.py` / `miniapp_layout.py` / `miniapp_style.py` / `preview_miniapp.py` | Mini App lint (44 rules); staged rework plan with colour and type maps; layout rules (`show`, `review`); styles and brand profiles; mock client preview (proves nothing about real clients) |
 | `scripts/tg_post.py` | validate, preview and publish a post (dry-run by default) |
 | `scripts/emoji_packs.py` | `resolve`, `suggest`, `verify`, `capture`, `apply`, `strip` premium emoji |
 | `scripts/audit_icons.py`, `scripts/audit_copy.py` | one icon family; i18n placeholders, label length, HTML |

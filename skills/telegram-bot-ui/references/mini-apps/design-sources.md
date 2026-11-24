@@ -13,8 +13,8 @@ Labels: **[Official]** core.telegram.org/bots/webapps; **[iOS27]** Apple iOS and
 |---|---|---|---|
 | Telegram Design Guidelines | yes | hard rules, rule by rule in [telegram-design-guidelines.md](telegram-design-guidelines.md) | — |
 | Live `themeParams` | at runtime | every surface, text and accent colour | — |
-| Telegram Mini Apps UI Kit | yes | `themeParams` role names, component inventory, iOS/Android pairs, cell slots, list layouts | chrome, radii, type scale: it predates the 2025-26 Liquid Glass redesign |
-| iOS and iPadOS 27 kit | yes | Liquid Glass placement, capsule shapes, tab bar, sheets, list rows, type scale, system colours as fallbacks | Mini App chrome (Telegram draws it); icons and images (Apple licence) |
+| Telegram Mini Apps UI Kit | yes; the three template apps read 2026-11-24 ([native-anatomy.md](native-anatomy.md) §9) | `themeParams` role names, component inventory, iOS/Android pairs, cell slots, list layouts | chrome, radii, type scale: it predates the 2025-26 Liquid Glass redesign |
+| iOS and iPadOS 27 kit | yes; components re-read page by page 2026-11-24 ([native-anatomy.md](native-anatomy.md)) | Liquid Glass placement, capsule shapes, tab bar, sheets, list rows, type scale, system colours as fallbacks | Mini App chrome (Telegram draws it); icons and images (Apple licence) |
 | Telegram UI (community 1348989725141777736) | **no** | — | — |
 | Appetite UI | **no** (no access; paid kit) | the general dark-fintech direction only, never its values | tokens, screens, screenshots: licence forbids redistribution |
 
@@ -85,6 +85,10 @@ the hint colour at about 60 % of the integer size. Follow the user's text size: 
 - Android: same structure, Material proportions (48 dp targets), full-width sections are acceptable **[TgKit]**.
 
 ## 6. Liquid Glass on the web
+
+The kit now builds glass from tokens with three levels and records the values in `design-sources.json` →
+`web_materials`; how to use and update it: [materials-and-trends.md](materials-and-trends.md) §2. The recipe below
+is the regular level written out.
 
 The Figma effect (frost 6 regular / 16 medium-large, refraction .7, depth 30, dispersion .2) is a native shader.
 CSS can only approximate the frost and the rim light. Do not fake refraction or dispersion with SVG displacement

@@ -75,13 +75,60 @@ adapted). A Mini App is almost always an **Operate** product (people come to do 
   `:focus-visible`, scrollbars and `tabular-nums` from the theme.
 - **States:** a screen with only the happy path → loading, empty, error, disabled and success for every
   list and action (design-system §8).
+- **Decoration standing in for structure (impeccable craft floor):**
+  - a coloured stripe on one side of a card, row or callout (`border-left` of 2 px or more) → a tag, an
+    icon or the section header says what kind it is (MA42);
+  - hard offset shadows (`4px 4px 0`) and zero-offset coloured halos → the theme's surfaces, and glass only
+    for floating controls (MA43, MA32);
+  - a small "eyebrow" label above a heading → the heading alone (MA44);
+  - section numbers (01 / 02 / 03) where order means nothing → none;
+  - sparklines and progress rings in place of a number → the number, its change and the period.
+- **Glass as decoration:** blur on cards, rows or the page, glass on glass → solid surfaces, glass only on
+  floating controls as a token material ([materials-and-trends.md](materials-and-trends.md) §2).
+- **Trend chasing:** bento pages, mesh gradients, 3D orbs, neumorphism, parallax → the decisions in
+  [materials-and-trends.md](materials-and-trends.md) §3.
 
-## 5. The craft pass ("make it premium / nicer")
+## 5. The polish pass ("make it premium / cleaner / nicer")
 
-In this order, stopping when the screen is right: 1) copy and the first line of each screen; 2) structure:
-native buttons, grouped lists, one primary action; 3) states; 4) hierarchy: one moment, one figure, type
-scale; 5) colour roles and the style ([design-system.md](design-system.md) §9); 6) icons and imagery last.
-Then lint and preview both themes.
+Polish refines what is there. It is never a redesign in disguise. If the concept is wrong (the wrong surface,
+a dashboard where a list belongs), say so and propose a rework ([rework.md](rework.md)) instead.
+Adapted from impeccable's polish pass (Apache 2.0) for Mini Apps **[Heuristic]**.
+
+**1. Evidence first.** Open every screen in the stand in both themes, iOS and Android, at 320 and 390 px.
+Read computed values (gaps, sizes, colours) with devtools instead of judging from the screenshot. Run the
+lint. Use the app as a user would, including errors (stand Network) and long content.
+
+**2. Classify each problem before fixing it.** The class decides where the fix goes:
+
+| Class | Example | Fix at |
+|---|---|---|
+| Kit defect | a component's own `margin: 0` eats the stack gap | the kit, with a test (helps every app) |
+| Missing token | the same 20 px radius written in three places | a token in the app's style, or a kit token if it is general |
+| One-off implementation | an own toggle next to the kit's `.tma-switch` | replace it with the kit component |
+| Conceptual mismatch | Settings built as cards, Orders as a grouped list | the pattern the neighbouring screens use ([screen-patterns.md](screen-patterns.md)) |
+| Local defect | a missing `alt`, a cut label | that line |
+
+**3. Fix in this order,** and bring every screen to the same bar before perfecting one:
+1. broken tasks, data loss, misleading states, inaccessible paths;
+2. missing states: loading, empty, error, success, disabled, permission;
+3. structure and hierarchy: native buttons, grouped lists, one primary action, one moment, the type scale;
+4. copy: the first line of each screen, buttons that name the action, errors that name the fix;
+5. colour roles, the style ([design-system.md](design-system.md) §9), materials;
+6. icons, imagery and motion;
+7. cleanup: dead styles, duplicated values, debug output.
+
+**4. Quieter, not emptier.** When a screen is loud:
+- lower weights (700 → 600, 600 → 500);
+- fewer colours;
+- flatter surfaces;
+- shorter motion.
+
+Keep the hierarchy and the one moment. Quiet without intent turns into grey text on white and a grid of
+identical cards, which is just another template.
+
+**5. Verify the whole path again:** both themes, both platforms, 320 and 669 px, large text, reduced motion
+and transparency, a screen reader pass on one screen, every Network setting on one action. Then a source
+diff with no accidental churn. A clean lint does not replace looking.
 
 ## 6. Checklist
 
@@ -134,3 +181,12 @@ not proof of how real clients render.
 | MA33 client-identity | error | `initDataUnsafe` sent to the server instead of the raw `initData` | security §1 |
 | MA34 caps-label | warning | `text-transform: uppercase` with `letter-spacing` (tracked caps labels) | §4 |
 | MA35 nested-surface | warning | a surface inside a surface in markup: card in card, list or key-value block inside a card, `*-card-inner`, panels in panels | design-system §3 |
+| MA36 haptic-stream | warning | `impactOccurred` / `selectionChanged` / `tma.haptic.*` inside scroll, pointermove or input handlers, timers or animation frames | haptics-and-device §1 |
+| MA37 sensor-stop | warning | `Accelerometer` / `Gyroscope` / `DeviceOrientation.start` or `tma.motion()` with no stop in the file | haptics-and-device §2 |
+| MA38 icon-name | warning | a `<button>` or `<a>` holding only an icon, with no `aria-label`, `title` or hidden text | accessibility-and-language §2 |
+| MA39 physical-side | warning | `margin-left`, `padding-right`, `text-align: left`, `float: right` in app CSS | accessibility-and-language §8 |
+| MA40 number-input | warning | `<input type="number">` or `type: 'number'` | forms-and-data §1 |
+| MA41 autofocus | warning | `autofocus` / `autoFocus` on an input, textarea or select | forms-and-data §2 |
+| MA42 side-stripe | warning | `border-left` / `border-right` / `border-inline-start` of 2 px or more on a card, row, callout or alert | §4 |
+| MA43 hard-shadow | warning | a `box-shadow` with an offset and no blur (`4px 4px 0`) | §4 |
+| MA44 eyebrow | warning | an eyebrow, kicker or overline label class above a heading | §4 |

@@ -109,7 +109,7 @@ Subheadline semibold, h6 → Footnote semibold in hint colour; lists, code, rule
 |---|---|---|
 | `--tma-margin` | 16 | side margin; safe-area insets win in landscape |
 | `--tma-s1…s8` | 4 … 32 | every gap on the 4 px step |
-| `--tma-gap-section` | 24 | between sections |
+| `--tma-gap-section` | 24 | between sections and groups: put them in a `.tma-stack` (or consecutive `.tma-section`s); two surfaces never touch or sit 4-8 px apart |
 | `--tma-row` / `--tma-row-2` | 52 / 68 | one-line row / with subtitle |
 | `--tma-avatar` | 40 | avatar and icon tile in rows; the separator starts after it |
 | `--tma-r-group` | 26 / 16 | inset groups and cards (check on device) |
@@ -143,10 +143,14 @@ shimmering. No idle loops on anything that is not live or loading.
 
 | Moment | Haptic (`tma.haptic`) | API |
 |---|---|---|
-| Selection in a list, segmented control, toggle, chip | `select()` | `selectionChanged()` |
-| Tap on a large control (MainButton, a quick action) | `tap()` | `impactOccurred('light')` |
-| Operation succeeded / failed / needs attention | `success()` / `error()` / `warning()` | `notificationOccurred(...)` |
-| Scroll, every ordinary tap, typing | none | — |
+| Selection in a list, segmented control, toggle, chip, a picker step | `select()` | `selectionChanged()` |
+| A small commit (stepper, add to cart, a quick action) | `tap()` | `impactOccurred('light')` |
+| Long press opens a menu, a drag lifts / snaps, a limit is hit | `impact('medium' / 'rigid')` | `impactOccurred(...)` |
+| The server confirmed / refused / warns | `success()` / `error()` / `warning()` | `notificationOccurred(...)` |
+| Scroll, every ordinary tap, typing, timers, decoration | none | — |
+
+The full map (all five impact styles), the rules and the device features next to it (motion sensors,
+location, biometrics, fullscreen, QR, sharing): [haptics-and-device.md](haptics-and-device.md).
 
 ## 8. States every screen draws
 
@@ -298,5 +302,7 @@ overlays `.tma-menu`, `.tma-action-sheet`; media `.tma-media`, `.tma-gallery`, `
 - [ ] Radii consistent and nested correctly; targets ≥ 44 (48 on Android).
 - [ ] Every list has empty and error states; every load a skeleton; every action feedback.
 - [ ] Motion transform/opacity only, reduced motion respected; Android `LOW` gets the light variant.
+- [ ] Names, focus, text size, contrast, language and RTL: [accessibility-and-language.md](accessibility-and-language.md) §11.
+- [ ] Fields, keyboard, loading, errors per kind, one action once: [forms-and-data.md](forms-and-data.md) §11.
 - [ ] One style, named; brand colour on one moment per screen at most.
 - [ ] `miniapp_lint.py --strict` clean; preview matrix screenshots taken; real devices listed as checked or not.
