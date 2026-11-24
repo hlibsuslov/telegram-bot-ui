@@ -182,6 +182,41 @@ description is updated.
 | LN1 | en | "What's the Slack API method to post a message to a channel?" | other platform |
 | LN2 | ru | "Как зарегистрировать слэш-команды в Discord API?" | other platform |
 
+## Positive — Mini Apps (should activate)
+
+| # | Lang | Request | Names a method? | Routes to |
+|---|---|---|---|---|
+| MA1 | en | "Build a Telegram Mini App for our café: menu, cart and checkout." | no | `references/mini-apps/README.md`, `references/mini-apps/screen-patterns.md`, `recipes/93-mini-app-shop.md` |
+| MA2 | en | "Our Telegram web app flashes white in dark mode and ignores the user's theme." | no | `references/mini-apps/design-system.md`, `references/mini-apps/telegram-design-guidelines.md` |
+| MA3 | en | "How do I verify initData from the Mini App on my Node server?" | yes | `references/mini-apps/security.md`, `recipes/92-init-data-session.md` |
+| MA4 | en | "Replace my fixed checkout button with Telegram.WebApp.MainButton." | yes | `references/mini-apps/components.md`, `references/mini-apps/webapp-api.md` |
+| MA5 | en | "Our TMA goes fullscreen but the title hides under the notch and Telegram's buttons." | no | `references/mini-apps/telegram-design-guidelines.md`, `references/mini-apps/webapp-api.md` |
+| MA6 | en | "Make our Mini App look less AI-generated and more like Telegram itself." | no | `references/mini-apps/anti-slop.md`, `references/mini-apps/design-system.md` |
+| MA7 | en | "Where should the cover, title and price go on a book card in our Telegram mini app?" | no | `references/mini-apps/layout-rules.md`, `scripts/miniapp_layout.py` |
+| MA8 | en | "Restyle the mini app to a dark fintech look with our brand blue." | no | `references/mini-apps/design-system.md`, `scripts/miniapp_style.py` |
+| MA9 | ru | "Сделай мини-апп в телеграме для записи к тренеру в спортзал." | no | `references/mini-apps/screen-patterns.md`, `references/mini-apps/layout-rules.md`, `recipes/94-mini-app-form-booking.md` |
+| MA10 | ru | "Проверь initData на сервере для нашего Telegram Mini App." | yes | `references/mini-apps/security.md` |
+| MA11 | ru | "Как передать startapp, чтобы web app в телеграме открылся сразу на нужном заказе?" | yes | `references/mini-apps/launch-and-lifecycle.md` |
+| MA12 | ru | "Почему themeParams не применяются в моём мини-приложении в тёмной теме?" | yes | `references/mini-apps/design-system.md`, `references/mini-apps/webapp-api.md` |
+| MA13 | ru | "Сделай наше веб-приложение в Telegram красивым, как приложение банка." | no | `references/mini-apps/design-system.md` |
+| MA14 | uk | "Зроби міні-застосунок у Telegram для книжкового магазину з кошиком." | no | `references/mini-apps/screen-patterns.md`, `references/mini-apps/layout-rules.md` |
+| MA15 | uk | "Перевір дизайн нашого Telegram Mini App на відповідність гайдлайнам." | no | `references/mini-apps/telegram-design-guidelines.md`, `scripts/miniapp_lint.py` |
+| MA16 | en | "Should this be a Mini App or can the bot do it with buttons?" | no | `references/mini-apps/decide.md`, `recipes/90-mini-app-or-bot.md` |
+| MA17 | en | "Add Stars payments to my Mini App for AI credits." | yes | `references/mini-apps/payments.md`, `recipes/93-mini-app-shop.md` |
+| MA18 | ru | "Подключи оплату картой в нашем мини-аппе доставки кофе." | no | `references/mini-apps/payments.md` |
+| MA19 | ru | "Добавь в мини-апп элементы телеграма: звёздочки, граммы, карточки подарков, как в самом Telegram." | no | `references/mini-apps/telegram-elements.md` |
+| MA20 | en | "Show the user's wallet balance in grams and a verified tick next to trusted sellers in our Mini App." | yes | `references/mini-apps/telegram-elements.md` |
+| MA21 | ru | "Переделай наш мини-апп на Tailwind и shadcn под нормальный классический дизайн Telegram." | no | `references/mini-apps/rework.md`, `scripts/miniapp_rework.py` |
+
+## Negative — Mini App boundaries (should NOT activate)
+
+| # | Lang | Request | Why it's out of scope |
+|---|---|---|---|
+| MAN1 | en | "Build a PWA for our gym with offline mode and push notifications." | web app outside Telegram |
+| MAN2 | en | "Create a React landing page for our SaaS with a pricing section." | marketing site |
+| MAN3 | ru | "Сверстай адаптивный сайт книжного магазина на Next.js." | website outside Telegram |
+| MAN4 | uk | "Зроби нативний iOS-застосунок на SwiftUI зі списком тренувань." | native app, not Telegram |
+
 ## Boundary notes
 
 - N2 flips **positive** for the *checkout screen's* wording, button labels, or

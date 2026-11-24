@@ -1,0 +1,40 @@
+* { box-sizing: border-box; transition: all .3s ease; }
+body { margin: 0; font-family: 'Poppins', sans-serif; background: #f5f3ff; color: #1a1a2e; min-height: 100vh; }
+.app { padding-bottom: 90px; }
+.topbar { position: sticky; top: 0; display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #ffffff; box-shadow: 0 4px 20px rgba(108, 92, 231, .25); z-index: 5; }
+.back-btn, .burger { border: 0; background: #ede9fe; border-radius: 12px; width: 40px; height: 40px; font-size: 18px; }
+.logo { font-weight: 800; font-size: 20px; }
+.drawer { display: none; }
+.drawer.open { display: flex; flex-direction: column; position: fixed; inset: 0 30% 0 0; background: #fff; padding: 24px; gap: 18px; z-index: 9; }
+.hero { margin: 16px; padding: 28px 20px; border-radius: 28px; background: linear-gradient(135deg, #6c5ce7, #a29bfe, #00cec9); color: #fff; box-shadow: 0 0 40px rgba(108, 92, 231, .6); }
+.gradient-title { font-size: 34px; font-weight: 800; background: linear-gradient(90deg, #ffeaa7, #fd79a8); -webkit-background-clip: text; background-clip: text; color: transparent; margin: 0 0 8px; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+.stat-card { background: rgba(255,255,255,.18); border-radius: 18px; padding: 6px; backdrop-filter: blur(12px); }
+.stat-card-inner { background: rgba(255,255,255,.2); border-radius: 14px; padding: 12px 8px; text-align: center; }
+.big { display: block; font-size: 20px; font-weight: 800; }
+small { font-size: 9px; text-transform: uppercase; letter-spacing: .12em; }
+section { margin: 24px 16px; }
+h2 { font-size: 22px; font-weight: 800; }
+.live { background: #ff4757; color: #fff; font-size: 10px; padding: 3px 8px; border-radius: 8px; animation: pulse 1s infinite; }
+@keyframes pulse { 50% { opacity: .3; } }
+.class-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.class-card { background: #fff; border-radius: 20px; padding: 12px; box-shadow: 0 8px 24px rgba(108, 92, 231, .2); }
+.class-card img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 14px; }
+.class-card .price-pill { background: #6c5ce7; color: #fff; border-radius: 99px; padding: 2px 8px; font-size: 11px; }
+.class-card .more { display: none; }
+.class-card:hover .more { display: block; }
+.class-card:hover { transform: scale(1.05); }
+.trainer-row { display: flex; gap: 12px; overflow-x: auto; }
+.trainer { min-width: 120px; background: #fff; border-radius: 20px; padding: 12px; text-align: center; }
+.trainer img { width: 64px; height: 64px; border-radius: 50%; }
+.plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.plan { position: relative; background: #fff; border-radius: 20px; padding: 14px 10px; text-align: center; border: 2px solid #ede9fe; }
+.plan.featured { border-color: #6c5ce7; box-shadow: 0 0 30px rgba(108, 92, 231, .5); }
+.ribbon { position: absolute; top: -10px; right: -6px; background: #fd79a8; color: #fff; font-size: 9px; padding: 3px 8px; border-radius: 6px; font-weight: 800; }
+.price { font-size: 18px; font-weight: 800; color: #6c5ce7; }
+.card-form { display: grid; gap: 8px; margin-top: 16px; }
+.card-form input { padding: 14px; border-radius: 14px; border: 1px solid #ddd; font-family: 'Poppins'; }
+.profile { display: flex; align-items: center; gap: 10px; }
+.profile img { width: 48px; height: 48px; border-radius: 50%; }
+.verified-badge { color: #fff; background: #0088cc; border-radius: 50%; width: 18px; height: 18px; display: inline-grid; place-items: center; font-size: 11px; }
+.fixed-cta { position: fixed; left: 16px; right: 16px; bottom: 16px; padding: 18px; border: 0; border-radius: 18px; background: linear-gradient(90deg, #6c5ce7, #00cec9); color: #fff; font-family: 'Poppins'; font-size: 17px; font-weight: 800; box-shadow: 0 10px 30px rgba(108, 92, 231, .5); }
