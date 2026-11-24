@@ -70,6 +70,13 @@ Rules **[Heuristic]**: one accent per screen; green and red only for direction o
 sign or arrow; surfaces never tinted toward a hue; a user's custom theme must keep working (no brand-blue
 button in a green theme, G1).
 
+**One surface level.** The page (`--tma-page`) holds surfaces (`--tma-surface`: a list, a card, a key-value
+block); a surface holds content, rows and separators, never another surface. No card in a card, no list or
+key-value block inside a card, no tinted box inside a list, no "card-inner". Inside a surface, group with
+separators, spacing and type weight; for a second level, push a screen or open a sheet. Fills
+(`--tma-fill`, `--tma-tonal`) are for controls (segmented track, steppers, chips, icon tiles), not for
+panels. Lint MA35 flags nested surfaces in markup; the rework plan reports `nested-cards` and `stat-cards`.
+
 ## 4. Type
 
 System font only (`--tma-font`: `system-ui`, `-apple-system`, Roboto on Android). The iOS 27 scale in `rem`
@@ -208,6 +215,21 @@ py -3 scripts/miniapp_style.py css style.json > style.css
 are clamped to the allowed ranges with a warning; a brand pair under 4.5:1 fails.
 
 ### 9.4 Brand colour: one moment per screen
+
+**Where the colour comes from.**
+- **An existing project keeps its own palette.** Its main brand colour (the rework plan's brand candidate,
+  or the colour the brand guide names) becomes `--tma-brand` through a profile; it is not swapped for a
+  palette the skill likes. If it fails 4.5:1 with its text colour in a scheme, darken (light) or lighten
+  (dark) that scheme's value until it passes, keeping the hue, and say so.
+- **A new project picks a named palette**: Apple's system colours from the Human Interface Guidelines
+  (`data/mini-apps/palettes.json`: red, orange, yellow, green, mint, teal, cyan, blue, indigo, purple, pink,
+  brown, with their dark and increased-contrast variants). `"brand": "teal"` in `style.json` resolves to a
+  pair that passes 4.5:1 in both schemes; `py -3 scripts/miniapp_style.py palettes` lists them, with a
+  starting choice per product type. They are the system colours of the iOS 27 kit the rest of this design
+  follows, so they sit next to Telegram's chrome without clashing.
+- **Gradients.** None of the read sources (the iOS 27 kit, the Telegram Mini Apps kit, Telegram's guidelines)
+  ship gradients. The only one allowed is the tonal fade of one brand colour into the page on the hero
+  (`.tma-hero`); no multi-hue gradients, no gradient text, no gradient buttons.
 
 Allowed: the hero block at the top of a section root (`.tma-hero`, brand → page fade below its text, header
 colour set to the same brand colour and returned to the page colour when it scrolls away), a promo banner,

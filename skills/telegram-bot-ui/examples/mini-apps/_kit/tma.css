@@ -671,7 +671,8 @@ select.tma-input {
 .tma-price.is-lg { font-size: var(--tma-fs-title1); line-height: 1.2; }
 .tma-price__old { color: var(--tma-hint); font-weight: 400; font-size: .88em; text-decoration: line-through; }
 .tma-price__from, .tma-price__period { color: var(--tma-hint); font-weight: 400; font-size: .88em; }
-.tma-rating-inline { color: var(--tma-hint); font-size: var(--tma-fs-footnote); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tma-rating-inline { display: inline-flex; align-items: center; gap: 3px; color: var(--tma-hint); font-size: var(--tma-fs-footnote); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tma-rating-inline__star { width: 1em; height: 1em; flex: none; color: var(--tma-star); } /* an SVG, never the ★ character */
 .tma-avail { font-size: var(--tma-fs-footnote); color: var(--tma-hint); }
 .tma-avail.is-low { color: var(--tma-accent-text); }
 .tma-avail.is-out { color: var(--tma-danger); }

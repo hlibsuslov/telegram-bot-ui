@@ -24,7 +24,7 @@ Bot API 10.5 and https://core.telegram.org/bots/webapps on 2026-11-23.
 - Layout rules L01-L25 for images, titles, prices, ratings, availability, galleries, filters, forms,
   booking and plans across 16 content types, with `scripts/miniapp_layout.py show / review`;
   screen patterns for shops, gyms and trainers, bookstores, SaaS dashboards, clinics, events and more.
-- Anti-slop rules with a 34-rule lint (`scripts/miniapp_lint.py`), security (`initData` HMAC and
+- Anti-slop rules with a 35-rule lint (`scripts/miniapp_lint.py`), security (`initData` HMAC and
   Ed25519, freshness, sessions, storage, CSP), performance and testing.
 - Payments inside a Mini App (`references/mini-apps/payments.md`): rail by goods (Stars for digital,
   subscriptions, a provider for physical goods), the cart-to-receipt flow with a signed payload bound to the
@@ -46,6 +46,12 @@ Bot API 10.5 and https://core.telegram.org/bots/webapps on 2026-11-23.
   descriptions validated against `miniapp_layout.py schema`; lint finds own top bars, tracked caps (MA34) and
   every XTR / TON label; the kit's disabled row and `writeAccess()`; rework rules for contracts that stage 1
   must change and for TON payment options.
+- Stricter visual rules: no Unicode emoji anywhere in a Mini App's interface (lint MA13 now checks all visible
+  text and UI strings; the Stars sign and ratings are SVG glyphs); icons from the kit or one open SVG library,
+  Lucide first, with a verified Lucide name for every kit icon; one surface level (lint MA35); brand colour from
+  the project's own palette, or for a new app a named palette of Apple's system colours from the HIG
+  (`data/mini-apps/palettes.json`, `"brand": "teal"`, `miniapp_style.py palettes`); tonal hero fade as the
+  only gradient.
 - A no-dependency kit (`examples/mini-apps/_kit`), examples (coffee pickup, catalogue, points
   portfolio, kit gallery, React 19 with `@tma.js/sdk-react`), server-side `initData` verification in
   Python stdlib and `node:crypto` with shared vectors, the bot side, and a mock preview stand

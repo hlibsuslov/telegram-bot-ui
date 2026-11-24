@@ -43,12 +43,12 @@ adapted). A Mini App is almost always an **Operate** product (people come to do 
 
 | Conflict | Decision |
 |---|---|
-| "No emoji" vs Telegram, where emoji is a native language | Unicode emoji as UI icons and in labels: slop. Animated or premium emoji and stickers (TGS / WEBM from the bot's packs, `iconCustomEmojiId` 9.5, `setEmojiStatus`) as the illustration of a moment: native, at most one per screen |
+| "No emoji" vs Telegram, where emoji is a native language | **No Unicode emoji anywhere in a Mini App's interface**: not as icons, not in titles, labels, buttons, list rows, empty states, toasts or popups. Icons come from the kit or one open SVG library ([components.md](components.md) §6c). The only exceptions: animated or premium stickers from the bot's packs (TGS / WEBM, `iconCustomEmojiId` 9.5, `setEmojiStatus`) as the illustration of one moment per screen, and the Stars character in plain-text-only surfaces (next row). Bot messages follow the bot-side rules |
 | "No coloured gradients" vs a brand header and CTA | only a tonal gradient of one hue on one moment (hero, promo), fading into the page; buttons solid; cross-hue gradients and gradient text banned |
 | "No glass as decoration" vs Telegram's glass chrome on iOS | glass only on floating controls over scrolling content (tab bar, side circle), with a solid fallback; cards and cells solid |
 | "No NEW badges" vs a coachmark in the reference | a one-time coachmark naming the new feature, remembered; no permanent badges |
 | Own "verified" ticks, Premium-like star badges next to names | trust signals in text; Telegram draws its marks ([telegram-elements.md](telegram-elements.md)) |
-| Stars prices ("⭐ 250") vs "no emoji in labels" | `⭐` directly before an amount is the Telegram Stars currency sign (as in Telegram's own payment UI): allowed in prices and MainButton text; every other emoji in a label stays slop (lint MA13 makes the same exception) |
+| Stars prices vs "no emoji" | In markup the Stars sign is the kit's SVG glyph (`.tma-star`, [telegram-elements.md](telegram-elements.md) T1), never the character. `⭐ 250` as text only where no markup exists: the MainButton and SecondaryButton text and native popups (`starsText()`). Lint MA13 flags every other emoji, the star included |
 | "Primary is off-white on dark" | in a Mini App the primary action is the MainButton in the theme's `button_color` |
 | "Own typeface for an own world" | a Mini App operates inside Telegram: system font; a brand face only inside the one moment |
 | Corner ribbons on cards (reference) | a quiet tag text, one per card |
@@ -111,7 +111,7 @@ not proof of how real clients render.
 | MA10 infinite | warning | infinite animation on a non-loader | G4 |
 | MA11 gradient-text | warning | `background-clip: text` | §4 |
 | MA12 glass-fallback | warning | `backdrop-filter` without a solid fallback | §3 |
-| MA13 emoji-ui | warning | Unicode emoji in buttons, navigation, headings, bottom-button text | §3 |
+| MA13 emoji-ui | warning | any Unicode emoji in visible markup or a UI string (including ★ and ⭐ in markup); `⭐ <amount>` only in MainButton / popup text | §3 |
 | MA14 local-storage | warning | `localStorage`, `sessionStorage` | security §6 |
 | MA15 version-gate | warning | a member newer than 6.0 used with no gate in the file (`isVersionAtLeast`, the kit's `has()`, or `@tma.js/sdk` `isAvailable()` / `ifAvailable()`) | webapp-api §2 |
 | MA16 web-font | warning | `@font-face`, web-font CDNs | §3 |
@@ -133,3 +133,4 @@ not proof of how real clients render.
 | MA32 glow | warning | coloured shadows with a blur of 20 px or more; `:hover` scale effects | §4 |
 | MA33 client-identity | error | `initDataUnsafe` sent to the server instead of the raw `initData` | security §1 |
 | MA34 caps-label | warning | `text-transform: uppercase` with `letter-spacing` (tracked caps labels) | §4 |
+| MA35 nested-surface | warning | a surface inside a surface in markup: card in card, list or key-value block inside a card, `*-card-inner`, panels in panels | design-system §3 |

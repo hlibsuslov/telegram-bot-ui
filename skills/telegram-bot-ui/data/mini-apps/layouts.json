@@ -43,7 +43,7 @@
    "title": "Rating is a short meta, not a star row",
    "severity": "warn",
    "check": "rating",
-   "fix": "Show '★ 4.8 (120)' in subhead hint next to or under the title; five-star rows only on the detail screen's reviews section."
+   "fix": "Show a star icon (SVG) with '4.8 (120)' in subhead hint next to or under the title; five-star rows only on the detail screen's reviews section."
   },
   "L08": {
    "title": "Unavailable stays visible",
@@ -225,7 +225,7 @@
     "format"
    ],
    "meta": "author",
-   "rating": "★ 4.6 (2.1k) under the author",
+   "rating": "star icon + 4.6 (2.1k) under the author",
    "card_action": "none (or favourite)",
    "primary": "Buy · {price} / Add to cart",
    "detail": [

@@ -8,10 +8,14 @@
   py -3 scripts/miniapp_style.py css style.json             # CSS for a custom profile (paste after tma.css)
   py -3 scripts/miniapp_style.py check style.json           # validate + brand contrast in light and dark
   py -3 scripts/miniapp_style.py check-presets              # presets in styles.json match tma.css (run_checks)
+  py -3 scripts/miniapp_style.py palettes                   # named brand palettes (Apple system colours) with contrast
 
 A profile (style.json):
   {"base": "fintech", "radius": "round", "density": "default", "glass": true,
    "brand": {"light": "#2f6bff", "dark": "#2f6bff", "on": "#ffffff"}, "figure": "clamp(3rem, 16vw, 4.2rem)"}
+  "brand" may also name a palette from data/mini-apps/palettes.json ("brand": "teal"): the fill and the text
+  colour are picked per scheme so the pair reaches 4.5:1 (the default colour, else its increased-contrast
+  variant with white text, else the default colour with black text). An existing project keeps its own colour.
 
 What a style may change: shape, density, type emphasis, glass, and the colour of ONE brand moment per
 screen. What it may not: the theme colours (G1 of the Telegram design guidelines); surfaces, text and the
@@ -27,6 +31,7 @@ import sys
 
 SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STYLES = os.path.join(SKILL, "data", "mini-apps", "styles.json")
+PALETTES = os.path.join(SKILL, "data", "mini-apps", "palettes.json")
 KIT_CSS = os.path.join(SKILL, "examples", "mini-apps", "_kit", "tma.css")
 HEX = re.compile(r"^#[0-9a-fA-F]{6}$")
 RADIUS = {"sharp": 0.5, "default": 1.0, "round": 1.25}
@@ -60,10 +65,31 @@ def contrast(a: str, b: str) -> float:
     return (la + 0.05) / (lb + 0.05)
 
 
+def load_palettes() -> dict:
+    with open(PALETTES, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def palette_brand(name: str) -> dict | None:
+    """A named palette as a brand pair: per scheme the first of (default + white), (increased contrast + white),
+    (default + black) that reaches 4.5:1."""
+    row = load_palettes()["system"].get(name)
+    if not row:
+        return None
+    out = {}
+    for scheme in ("light", "dark"):
+        for fill, on in ((row[scheme], "#ffffff"), (row[f"ic_{scheme}"], "#ffffff"), (row[scheme], "#000000")):
+            if contrast(fill, on) >= 4.5:
+                out[scheme], out["on" if scheme == "light" else "on_dark"] = fill, on
+                break
+    return out
+
+
 def resolve(profile: dict, data: dict) -> tuple[dict[str, str], list[str], list[str]]:
     """(tokens, errors, warnings) for a profile; a preset name is a profile with only `base`."""
     errors, warnings = [], []
     known = {"base", "radius", "density", "glass", "brand", "figure", "$comment"}
+    profile = dict(profile)
     for k in profile:
         if k not in known:
             errors.append(f"unknown key {k!r} (known: {', '.join(sorted(known - {'$comment'}))})")
@@ -105,14 +131,23 @@ def resolve(profile: dict, data: dict) -> tuple[dict[str, str], list[str], list[
         else:
             tokens["--tma-figure-size"] = profile["figure"]
     brand = profile.get("brand")
+    if isinstance(brand, str):
+        named = palette_brand(brand)
+        if named is None:
+            errors.append(f"brand {brand!r} is not a palette ({', '.join(load_palettes()['system'])})")
+            brand = None
+        else:
+            brand = profile["brand"] = named
     if brand is not None:
-        if not isinstance(brand, dict) or not all(HEX.match(str(brand.get(k, ""))) for k in ("light", "dark", "on")):
-            errors.append('brand needs "light", "dark" and "on" as #RRGGBB')
+        if not isinstance(brand, dict) or not all(HEX.match(str(brand.get(k, ""))) for k in ("light", "dark", "on")) \
+                or ("on_dark" in brand and not HEX.match(str(brand["on_dark"]))):
+            errors.append('brand needs "light", "dark" and "on" as #RRGGBB (optional "on_dark"), or a palette name')
         else:
             for scheme in ("light", "dark"):
-                ratio = contrast(brand[scheme], brand["on"])
+                on = brand.get("on_dark", brand["on"]) if scheme == "dark" else brand["on"]
+                ratio = contrast(brand[scheme], on)
                 if ratio < 4.5:
-                    errors.append(f"brand {scheme} {brand[scheme]} with text {brand['on']}: contrast {ratio:.2f} < 4.5")
+                    errors.append(f"brand {scheme} {brand[scheme]} with text {on}: contrast {ratio:.2f} < 4.5")
             warnings.append("brand colours one moment per screen (hero, promo); buttons, links and surfaces stay the theme's")
     if profile.get("glass") is False:
         warnings.append("glass off: floating controls become solid surfaces")
@@ -122,6 +157,9 @@ def resolve(profile: dict, data: dict) -> tuple[dict[str, str], list[str], list[
 
 
 def css(profile: dict, data: dict) -> str:
+    profile = dict(profile)
+    if isinstance(profile.get("brand"), str) and palette_brand(profile["brand"]):
+        profile["brand"] = palette_brand(profile["brand"])
     tokens, errors, _ = resolve(profile, data)
     if errors:
         raise ValueError("; ".join(errors))
@@ -133,8 +171,8 @@ def css(profile: dict, data: dict) -> str:
         body.append(f"--tma-brand: {brand['light']};")
         body.append(f"--tma-on-brand: {brand['on']};")
     lines.append(":root { " + " ".join(body) + " }" if body else ":root { }")
-    if brand and brand["dark"] != brand["light"]:
-        lines.append(f':root[data-tma-scheme="dark"] {{ --tma-brand: {brand["dark"]}; }}')
+    if brand and (brand["dark"] != brand["light"] or brand.get("on_dark", brand["on"]) != brand["on"]):
+        lines.append(f':root[data-tma-scheme="dark"] {{ --tma-brand: {brand["dark"]}; --tma-on-brand: {brand.get("on_dark", brand["on"])}; }}')
     if profile.get("glass") is False or (profile.get("base") == "dense" and profile.get("glass") is not True):
         lines.append(".tma-glass { background: var(--tma-surface); -webkit-backdrop-filter: none; "
                      "backdrop-filter: none; box-shadow: 0 1px 0 var(--tma-separator); }")
@@ -181,6 +219,7 @@ def main(argv=None) -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("presets")
     sub.add_parser("check-presets")
+    sub.add_parser("palettes")
     for name in ("show", "css", "check"):
         sub.add_parser(name).add_argument("target", help="preset name or a style.json path")
     args = ap.parse_args(argv)
@@ -199,6 +238,18 @@ def main(argv=None) -> int:
         else:
             for k, v in data["presets"].items():
                 print(f"{k:<8} {v['title']:<16} {', '.join(v['use_for'])}")
+        return 0
+    if args.cmd == "palettes":
+        pal = load_palettes()
+        rows = {k: palette_brand(k) for k in pal["system"]}
+        if args.json:
+            print(json.dumps({"source": pal["source"], "palettes": rows, "by_product": pal["by_product"]}, ensure_ascii=False, indent=1))
+            return 0
+        print(f"Apple system colours ({pal['source']}, values {pal['values_dated']}); one brand moment per screen")
+        for k, b in rows.items():
+            print(f"{k:<7} light {b['light']} on {b['on']} ({contrast(b['light'], b['on']):.1f}:1)   "
+                  f"dark {b['dark']} on {b['on_dark']} ({contrast(b['dark'], b['on_dark']):.1f}:1)")
+        print("by product: " + "; ".join(f"{k}: {', '.join(v)}" for k, v in pal["by_product"].items() if not k.startswith("$")))
         return 0
     if args.cmd == "check-presets":
         errors = check_presets(data)

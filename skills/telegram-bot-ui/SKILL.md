@@ -297,7 +297,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 | `scripts/validate_rich.py` | Rich Message Limits, drafts, media refs |
 | `scripts/validate_widget.py` / `build_widget.py` / `preview_widget.py` | widget size (zlib-9), runtime gaps, `--strict`; build from the kit; mock preview (proves nothing about real clients) |
 | `scripts/webapp_lookup.py` | `show`, `search`, `since`, `gates`, `theme` over the `Telegram.WebApp` catalog |
-| `scripts/miniapp_lint.py` / `miniapp_rework.py` / `miniapp_layout.py` / `miniapp_style.py` / `preview_miniapp.py` | Mini App lint (34 rules); staged rework plan with colour and type maps; layout rules (`show`, `review`); styles and brand profiles; mock client preview (proves nothing about real clients) |
+| `scripts/miniapp_lint.py` / `miniapp_rework.py` / `miniapp_layout.py` / `miniapp_style.py` / `preview_miniapp.py` | Mini App lint (35 rules); staged rework plan with colour and type maps; layout rules (`show`, `review`); styles and brand profiles; mock client preview (proves nothing about real clients) |
 | `scripts/tg_post.py` | validate, preview and publish a post (dry-run by default) |
 | `scripts/emoji_packs.py` | `resolve`, `suggest`, `verify`, `capture`, `apply`, `strip` premium emoji |
 | `scripts/audit_icons.py`, `scripts/audit_copy.py` | one icon family; i18n placeholders, label length, HTML |

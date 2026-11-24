@@ -63,8 +63,18 @@ const media = (ratio: string, src: string, alt: string, extra: Kid[] = [], cls =
 const priceEl = (p: number, old?: number, from = false) =>
   h('span', { class: 'tma-price' }, from ? h('span', { class: 'tma-price__from' }, 'from') : null, money.format(p),
     old ? h('span', { class: 'tma-price__old' }, money.format(old)) : null);
+const glyph = (cls: string, name: string): SVGSVGElement => {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', cls); svg.setAttribute('aria-hidden', 'true');
+  const use = document.createElementNS('http://www.w3.org/2000/svg', 'use');
+  use.setAttribute('href', `../_kit/icons.svg#i-${name}`);
+  svg.append(use);
+  return svg;
+};
+// ratings and Stars prices draw SVG glyphs, never emoji characters (anti-slop MA13)
 const stars = (r: number, n: number) => h('span', { class: 'tma-rating-inline', 'aria-label': `Rated ${r} of 5 by ${n} people` },
-  `★ ${r.toFixed(1)} (${n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n})`);
+  glyph('tma-rating-inline__star', 'stars'), `${r.toFixed(1)} (${n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n})`);
+const starsPrice = (amount: string) => h('span', { class: 'tma-amount is-stars' }, glyph('tma-star', 'stars'), amount);
 
 /* ---------------------------------------------------------------- state and navigation */
 let tab: 'books' | 'trainers' | 'workouts' = 'books';
@@ -294,7 +304,7 @@ function openPlans(): void {
           h('div', { style: 'display:flex;justify-content:space-between;align-items:baseline;gap:var(--tma-s2)' },
             h('span', { class: 'tma-headline' }, p.name), p.recommended ? h('span', { class: 'tma-tag' }, 'Most chosen') : null),
           h('span', { class: 'tma-meta' }, p.who),
-          h('span', { class: 'tma-price is-lg' }, `⭐ ${price(p.month)}`,h('span', { class: 'tma-price__period' }, period())),
+          h('span', { class: 'tma-price is-lg' }, starsPrice(price(p.month)), h('span', { class: 'tma-price__period' }, period())),
           h('ul', { class: 'tma-checks' }, ...p.features.map((f) => h('li', {}, f)),
             ...p.missing.map((f) => h('li', { class: 'is-no' }, 'No ' + f.toLowerCase())))))),
       h('p', { class: 'tma-footnote', style: 'padding:0 var(--tma-s4)' }, 'Paid in Telegram Stars and renewed automatically until you cancel.'));

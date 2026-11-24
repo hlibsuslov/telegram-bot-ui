@@ -128,15 +128,26 @@ key-value list. **[Heuristic]**
 
 ## 6c. Icons
 
-`examples/mini-apps/_kit/icons.svg` is an own line set: 81 icons on a 24 px grid, stroke 1.8, round caps,
-drawn with `currentColor`. `data/mini-apps/icons.json` maps every id to the SF Symbol and Material Symbols
-name with the same meaning, so a brief that names "magnifyingglass" or "shopping_cart" maps to
-`i-search` or `i-cart`. Apple's and Google's glyphs are not shipped (licences). **[Heuristic]**
+`examples/mini-apps/_kit/icons.svg` is an own line set: 83 icons on a 24 px grid, stroke 1.8, round caps,
+drawn with `currentColor` (the Stars sign `i-stars` is the one filled glyph). `data/mini-apps/icons.json` maps
+every id to the SF Symbol, Material Symbols and **Lucide** name with the same meaning, so a brief that names
+"magnifyingglass" or "shopping_cart" maps to `i-search` or `i-cart`. **[Heuristic]**
 
-- One set per app, one size per context (22 in rows and tabs, 16 inline in chips and pills).
+**Icons always come from SVG, never from emoji.** The order:
+
+1. The kit's own set (`_kit/icons.svg`).
+2. An icon the kit lacks: **one open-licence SVG library per app**, Lucide first (ISC, same 24 px line grid;
+   set `stroke-width: 1.8`), else Tabler (MIT), Phosphor (MIT, one weight) or Material Symbols Outlined
+   (Apache-2.0, for Android-first apps). Inline the SVG or add it to the sprite; no icon font from a CDN for a
+   few glyphs. Names for every kit id: `icons.json` → `lucide`. Libraries and licences: `icons.json` →
+   `open_libraries`.
+3. Never: Unicode emoji (★ ⭐ 🔥 ✅ included) as icons, bullets, status or decoration; SF Symbols artwork
+   (Apple licence: names only, for mapping); two libraries on one screen.
+
+- One size per context (22 in rows and tabs, 16 inline in chips and pills); the same stroke everywhere.
 - Icon-only buttons carry `aria-label`; decorative icons `aria-hidden="true"`.
-- Unicode emoji are never UI icons; animated or premium emoji only as the one moment ([anti-slop.md](anti-slop.md) §3).
-- An icon the set lacks: draw it on the same grid and stroke, add it to `icons.svg` and `icons.json`.
+- Ratings draw the filled `i-stars` glyph (`.tma-rating-inline__star`) before the number, not the ★ character.
+- Animated or premium stickers from the bot's packs only as the one moment ([anti-slop.md](anti-slop.md) §3).
 
 ## 6d. Settings rows (iOS 27 trailing types)
 

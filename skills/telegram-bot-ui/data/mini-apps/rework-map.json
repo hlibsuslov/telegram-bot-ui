@@ -174,7 +174,7 @@
   },
   "MA13": {
    "stage": 5,
-   "telegram": "line icons from the kit; emoji only as the Stars sign before an amount",
+   "telegram": "no emoji anywhere: kit icons or one open SVG library (Lucide first); the Stars sign as the .tma-star SVG",
    "kit": "_kit/icons.svg",
    "ref": "components.md section 6c"
   },
@@ -213,6 +213,12 @@
    "telegram": "sentence case in the type roles (caption, footnote)",
    "kit": ".tma-text-caption1, .tma-footnote",
    "ref": "anti-slop.md section 4"
+  },
+  "MA35": {
+   "stage": 5,
+   "telegram": "one surface level: rows inside one card or list; a second level is a pushed screen or a sheet",
+   "kit": ".tma-section, .tma-list, .tma-kv",
+   "ref": "design-system.md section 3"
   }
  },
  "patterns": [

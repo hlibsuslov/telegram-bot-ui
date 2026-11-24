@@ -27,7 +27,8 @@ in references/mini-apps/anti-slop.md#linter-rules):
     MA10 infinite         G4  an infinite animation on something that is not a loader
     MA11 gradient-text    A   background-clip: text
     MA12 glass-fallback   A   backdrop-filter without a reduced-transparency or @supports fallback
-    MA13 emoji-ui         A   Unicode emoji as a label in buttons, navigation, headings or bottom-button text
+    MA13 emoji-ui         A   any Unicode emoji in visible markup or in a UI string; only "⭐ 250" in plain-text-only
+                              surfaces (MainButton text, popups) is allowed: markup draws the Stars sign as an SVG
     MA14 local-storage    S   localStorage / sessionStorage: CloudStorage / DeviceStorage, secrets in SecureStorage
     MA15 version-gate     G3  a Telegram.WebApp member newer than 6.0 used with no isVersionAtLeast in the file
     MA16 web-font         A   @font-face or a web-font CDN for UI text: system font
@@ -52,6 +53,7 @@ in references/mini-apps/anti-slop.md#linter-rules):
     MA32 glow             R   coloured glow shadows (blur >= 20 px) or :hover scale effects
     MA33 client-identity  S   initDataUnsafe sent to the server: send the raw initData (Authorization: tma <initData>) (error)
     MA34 caps-label       R   uppercase labels with letter-spacing: sentence case in the type roles
+    MA35 nested-surface   R   a surface inside a surface (card in card, list in card, tinted box in a card): one level
 """
 from __future__ import annotations
 
@@ -79,7 +81,7 @@ RULES = {
     "MA25": ("error", "pay-form"), "MA26": ("warn", "client-price"), "MA27": ("warn", "paid-unlock"),
     "MA28": ("warn", "currency-label"), "MA29": ("error", "trust-mark"),
     "MA30": ("warn", "nav-drawer"), "MA31": ("warn", "hype-copy"), "MA32": ("warn", "glow"),
-    "MA33": ("error", "client-identity"), "MA34": ("warn", "caps-label"),
+    "MA33": ("error", "client-identity"), "MA34": ("warn", "caps-label"), "MA35": ("warn", "nested-surface"),
 }
 TOKEN = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b|\bBOT_TOKEN\b|\bTELEGRAM_BOT_TOKEN\b")
 COLOR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\([^)]*\)")
@@ -179,6 +181,45 @@ def _neutral(color: str) -> bool:
         return False
     alpha = float(m.group(4).rstrip("%")) / (100 if m.group(4).endswith("%") else 1)
     return m.group(1) == m.group(2) == m.group(3) and alpha < 1
+
+
+SURFACE = re.compile(r"(?:^|\s)(?:tma-card|tma-list|tma-kv|tma-plan|[\w-]*card(?:-inner)?|[\w-]*panel|[\w-]*surface|[\w-]*-box)(?=\s|$)")
+
+
+def nested_surfaces(text: str) -> list[tuple[int, str, str]]:
+    """(offset, outer class, inner class) for each element with a surface class inside another one."""
+    from html.parser import HTMLParser
+
+    found: list[tuple[int, str, str]] = []
+    lines = [0]
+    for ln in text.split("\n"):
+        lines.append(lines[-1] + len(ln) + 1)
+
+    class P(HTMLParser):
+        stack: list[tuple[str, str | None]] = []
+
+        def handle_starttag(self, tag, attrs):
+            if tag in ("br", "img", "input", "meta", "link", "hr", "source", "use", "path", "circle", "rect"):
+                return
+            cls = dict(attrs).get("class") or ""
+            m = SURFACE.search(cls)
+            surf = m.group(0).strip() if m else None
+            outer = next((c for _, c in reversed(self.stack) if c), None)
+            if surf and outer:
+                line, col = self.getpos()
+                found.append((lines[line - 1] + col, outer, surf))
+            self.stack.append((tag, surf))
+
+        def handle_endtag(self, tag):
+            for i in range(len(self.stack) - 1, -1, -1):
+                if self.stack[i][0] == tag:
+                    del self.stack[i:]
+                    break
+
+    p = P()
+    p.stack = []
+    p.feed(re.sub(r"<(script|style)\b.*?</\1>", lambda m: " " * len(m.group(0)), text, flags=re.S | re.I))
+    return found
 
 
 def _css_rules(css: str):
@@ -323,10 +364,16 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
                 add("MA04", path, text, m.start(), "another <script> runs before telegram-web-app.js")
             if "<html" in text.lower() and not re.search(r'name=["\']viewport["\']', head, re.I):
                 add("MA23", path, text, 0, "no <meta name=\"viewport\">")
-            for m in re.finditer(r"<(button|nav|h[1-6]|a)\b[^>]*>(.*?)</\1>", text, re.S | re.I):
-                inner = re.sub(r"<[^>]+>", "", m.group(2))
-                if EMOJI.search(STARS_AMOUNT.sub("", inner)):
-                    add("MA13", path, text, m.start(), f"emoji in <{m.group(1)}> {inner.strip()[:30]!r}: a line icon or text")
+            # every emoji in visible text, the Stars sign included: markup has the SVG glyph (.tma-star)
+            visible = re.sub(r"<!--.*?-->|<(script|style)\b.*?</\1>|<[^>]+>", lambda m: " " * len(m.group(0)), text, flags=re.S | re.I)
+            for n, m in enumerate(EMOJI.finditer(visible)):
+                if n == 10:
+                    break
+                line = visible[visible.rfind("\n", 0, m.start()) + 1:visible.find("\n", m.start())].strip()
+                add("MA13", path, text, m.start(), f"emoji {m.group(0)!r} in {line[:40]!r}: a kit line icon (open SVG set) or "
+                    "text; the Stars sign is the .tma-star SVG")
+            for pos, outer, inner in nested_surfaces(text)[:5]:
+                add("MA35", path, text, pos, f"{inner!r} inside {outer!r}: one surface level; rows or plain content inside a card")
             own_back = re.search(r"history\.back\s*\(|<(?:button|a)\b[^>]*(?:class|id)=[\"'][^\"']*\b(?:back-btn|btn-back|back-button|nav-back)\b", text, re.I)
             if own_back:
                 add("MA19", path, text, own_back.start(), "own back control: Telegram's BackButton, driven by one navigation stack")
@@ -345,11 +392,20 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
                 m = re.search(r"fonts\.googleapis\.com|fonts\.gstatic\.com|use\.typekit", text)
                 add("MA16", path, text, m.start(), "web font for UI text: Telegram's system font loads instantly and matches the client")
 
-        # ---- bottom-button labels with emoji (JS)
-        if code:
-            for m in re.finditer(r"(?:setText\s*\(|\btext\s*:)\s*[`'\"]([^`'\"]*)", code):
-                if EMOJI.search(STARS_AMOUNT.sub("", m.group(1))):
-                    add("MA13", path, text, m.start(), f"emoji in a button label {m.group(1)[:30]!r}: use iconCustomEmojiId (9.5) or plain text")
+        # ---- emoji in UI strings (JS): only "⭐ <amount>" for plain-text surfaces (MainButton, popups)
+        if code and not server and not in_kit and ".test." not in os.path.basename(path):  # the kit's starsText() builds the plain-text form
+            hits = 0
+            for lit in re.finditer(r"`([^`]*)`|'([^'\n]*)'|\"([^\"\n]*)\"", code):
+                body = next(g for g in lit.groups() if g is not None)
+                plain_surface = re.search(r"(?:\btext|message|title)\s*:\s*$|(?:setText|showAlert|showConfirm|showPopup)\s*\(\s*$",
+                                          code[max(0, lit.start() - 40):lit.start()])
+                e = EMOJI.search(body if not plain_surface else STARS_AMOUNT.sub("", body))
+                if e:
+                    add("MA13", path, text, lit.start(), f"emoji {e.group(0)!r} in a UI string {body.strip()[:30]!r}: an SVG icon in markup, "
+                        "plain words in button text (iconCustomEmojiId 9.5 for a custom emoji)")
+                    hits += 1
+                    if hits == 10:
+                        break
 
         # ---- CSS
         for css, offset in css_parts:

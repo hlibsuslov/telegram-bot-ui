@@ -36,6 +36,7 @@ wallet: [../wallet-and-ton.md](../wallet-and-ton.md).
 - **Render.**
   - In markup: `<span class="tma-amount is-stars"><svg class="tma-star"><use href="icons.svg#i-stars"/></svg>250</span>`.
     The glyph is the kit's own drawing in `--tma-star` gold, not Telegram's artwork **[Heuristic]**.
+  - Never the ⭐ character in markup (headings, rows, prices, footnotes): lint MA13.
   - Where only text fits (MainButton, popups, bot messages): `starsText(250)` → `⭐ 250`; a period:
     `⭐ 250 / month` **[Heuristic]**. The ⭐ before an amount is the one emoji the lint accepts in labels (MA13).
   - A balance: `formatStarBalance(amount, nanostars)` shows at most two decimals and truncates, so it never

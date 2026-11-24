@@ -60,12 +60,13 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `data/mini-apps/design-sources.json` | iOS 27 colours, type scale, glass, sizes; mapping to theme roles |
 | `data/mini-apps/styles.json` | named design styles: intent, tokens, components, do and don't |
 | `data/mini-apps/components.json` | 126 elements (structure, navigation, actions, settings, input, display, media, tables, overlays, Telegram's own values) with variants, states, kit class, native replacement and status |
-| `data/mini-apps/icons.json` | 83 kit icons mapped to SF Symbol and Material names, including the Stars sign |
+| `data/mini-apps/icons.json` | 83 kit icons mapped to SF Symbol, Material and Lucide names; the open SVG libraries allowed when the kit lacks an icon |
+| `data/mini-apps/palettes.json` | named brand palettes for new apps: Apple's system colours (light, dark, increased contrast) from the HIG, a starting choice per product type |
 | `scripts/webapp_lookup.py` | `show`, `search`, `since`, `gates`, `theme`, `sync` over the catalog |
 | `data/mini-apps/layouts.json` | layout rules L01-L25 and 16 content types (image ratio, card slots, price, primary action, detail order) |
 | `scripts/miniapp_layout.py` | `entities`, `show`, `rules`, `review` a screen description (validated against `schema`), `example` |
-| `scripts/miniapp_style.py` | `presets`, `show`, `css`, `check` for styles and custom brand profiles |
-| `scripts/miniapp_lint.py` | 34 rules: security, native controls, theme, motion, labels, slop, payments, Telegram's own marks, rework tells (`--json`, `--strict`) |
+| `scripts/miniapp_style.py` | `presets`, `palettes`, `show`, `css`, `check` for styles and brand profiles (`"brand": "teal"` or own colours) |
+| `scripts/miniapp_lint.py` | 35 rules: security, native controls, theme, motion, labels, slop, payments, Telegram's own marks, rework tells (`--json`, `--strict`) |
 | `scripts/miniapp_rework.py` | `plan` (staged rework plan with replacements, colour map, type map), `colours`, `type` |
 | `data/mini-apps/rework-map.json` | every lint rule and 13 web patterns → the Telegram replacement, kit part and reference |
 | `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions, invoice outcomes; `--api mock.json` for the app's own server routes |

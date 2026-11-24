@@ -110,7 +110,7 @@ class Styles(unittest.TestCase):
                          "brand": {"light": "#1f5fe0", "dark": "#2a63d4", "on": "#ffffff"}}, self.data)
         self.assertIn("--tma-avatar: 44px;", css)
         self.assertIn("--tma-brand: #1f5fe0;", css)
-        self.assertIn('[data-tma-scheme="dark"] { --tma-brand: #2a63d4; }', css)
+        self.assertIn('[data-tma-scheme="dark"] { --tma-brand: #2a63d4; --tma-on-brand: #ffffff; }', css)
         self.assertIn("backdrop-filter: none", css)
         self.assertEqual(re.findall(r"--[\w-]+:", style.css({"base": "native"}, self.data)), [])
 

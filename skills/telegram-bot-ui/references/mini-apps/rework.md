@@ -107,9 +107,15 @@ the plan prints the rows that apply. The ones every rework meets:
   - neutrals become surface, page, text, hint and separator roles;
   - red and green become danger and success;
   - decoration (gradients, glows, shadows, filters) is dropped.
-  - The most used saturated colour is the **brand candidate**. It keeps one moment per screen (hero, promo)
-    through a style profile: the plan prints the `style.json` to check with `miniapp_style.py check`. Buttons
-    and links take the user's theme (`--tma-accent`, `--tma-link`), never the brand **[Official: G1]**.
+  - The most used saturated colour is the **brand candidate**: the project's own colour, kept (never swapped
+    for a palette the agent prefers). It keeps one moment per screen (hero, promo) through a style profile:
+    the plan prints the `style.json` to check with `miniapp_style.py check`. Buttons and links take the
+    user's theme (`--tma-accent`, `--tma-link`), never the brand **[Official: G1]**. A project with no colour
+    of its own picks a named palette ([design-system.md](design-system.md) §9.4).
+- **Surfaces.** One level: flatten cards in cards, stat-card grids and tinted panels into one grouped list or
+  one card with rows (design-system §3, lint MA35).
+- **Emoji and icons.** Every emoji goes: icons from the kit or one open SVG library (Lucide first,
+  [components.md](components.md) §6c), the Stars sign as the SVG glyph.
 - **Dark mode.** Delete the app's dark palette: the theme comes from Telegram. A literal dark surface is
   always wrong.
 - **Type.** Each size maps to the nearest iOS 27 role (`.tma-text-<role>`); nothing below caption2 (11 px).

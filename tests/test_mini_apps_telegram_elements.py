@@ -90,3 +90,51 @@ class LintRules(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class StricterVisualRules(unittest.TestCase):
+    """No emoji in the interface, SVG icons from the kit or Lucide, one surface level, palettes from the HIG."""
+
+    def test_no_emoji_in_markup_or_ui_strings(self):
+        page = '<!doctype html><html><head><meta name="viewport" content="x"></head><body>{}</body></html>'
+        for bad in ("<p>Saved ✅</p>", "<li>🔥 Popular</li>", '<span class="tma-price">⭐ 250</span>', "<small>★ 4.8</small>"):
+            self.assertIn("MA13", lint_text("a.html", page.format(bad)), bad)
+        self.assertIn("MA13", lint_text("a.ts", "el.textContent = `Booked 🎉`;\n"))
+        self.assertIn("MA13", lint_text("a.ts", "h('span', {}, `⭐ ${price}`);\n"))
+        for fine in ("tma.mainButton({ text: `Pay ⭐ ${n}`, onClick });\n", "tg.showAlert('Pay ⭐ 120?');\n"):
+            self.assertNotIn("MA13", lint_text("a.ts", fine), fine)
+        self.assertNotIn("MA13", lint_text("a.html", page.format("<!-- ⭐ in a comment --><p>Saved</p>")))
+
+    def test_every_kit_icon_has_a_lucide_name_and_libraries_are_open(self):
+        icons = _paths.load("data", "mini-apps", "icons.json")
+        for name, row in icons["icons"].items():
+            self.assertRegex(row.get("lucide", ""), r"^[a-z0-9]+(-[a-z0-9]+)*$", name)
+        libs = icons["open_libraries"]
+        self.assertEqual(libs["order"][0], "lucide")
+        for lib in libs["order"]:
+            self.assertIn(libs[lib]["licence"], {"ISC", "MIT", "Apache-2.0"}, lib)
+        self.assertTrue(any("emoji" in n for n in libs["never"]))
+
+    def test_nested_surfaces(self):
+        self.assertIn("MA35", lint_text("a.html", '<div class="tma-card"><ul class="tma-list"><li>x</li></ul></div>'))
+        self.assertIn("MA35", lint_text("a.html", '<div class="stat-card"><div class="stat-card-inner">1</div></div>'))
+        self.assertNotIn("MA35", lint_text("a.html", '<section class="tma-section"><ul class="tma-list"><li>x</li></ul></section>'
+                                                     '<div class="tma-card"><p>text</p></div>'))
+
+    def test_named_palettes_pass_contrast_in_both_schemes(self):
+        import miniapp_style as style
+        pal = _paths.load("data", "mini-apps", "palettes.json")
+        self.assertIn("human-interface-guidelines/color", pal["source"])
+        self.assertEqual(len(pal["system"]), 12)
+        for name in pal["system"]:
+            b = style.palette_brand(name)
+            self.assertGreaterEqual(style.contrast(b["light"], b["on"]), 4.5, name)
+            self.assertGreaterEqual(style.contrast(b["dark"], b["on_dark"]), 4.5, name)
+        for product, names in pal["by_product"].items():
+            if not product.startswith("$"):
+                self.assertLessEqual(set(names), set(pal["system"]), product)
+        css = style.css({"base": "native", "brand": "teal"}, style.load())
+        self.assertIn("--tma-brand: #008198", css)
+        self.assertIn('[data-tma-scheme="dark"] { --tma-brand: #00d2e0; --tma-on-brand: #000000; }', css)
+        _, errors, _ = style.resolve({"brand": "neon"}, style.load())
+        self.assertTrue(errors)

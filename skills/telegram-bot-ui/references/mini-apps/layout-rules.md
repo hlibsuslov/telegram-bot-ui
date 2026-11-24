@@ -60,7 +60,7 @@ cropped; media cards and tiles put the image on top at full width; rows put the 
    it varies; the period after it (`€12 / month`); Stars as `⭐ 250`, grams as `12.5 GRAM`
    ([telegram-elements.md](telegram-elements.md)). Never in an accent pill, never on the
    image. **Listings** are the exception: price leads, it is the deciding fact.
-4. **Rating** as a short meta: `★ 4.8 (120)`; star rows only in the detail screen's reviews.
+4. **Rating** as a short meta: a star icon (SVG) and `4.8 (120)`; star rows only in the detail screen's reviews.
 5. **Availability** as quiet text: `In stock · ships in 2 days`, `3 spots left`, `Sold out` (dimmed card,
    still listed: L08). Never only a colour.
 6. At most **one tag** (`−23 %`, `New`, `Ends 30 Nov`) at the media's top start or after the title. No
@@ -157,7 +157,7 @@ Generated from `data/mini-apps/layouts.json` (the test suite keeps them in step)
 | L04 | Image position by card variant | Media cards and grid tiles: image on top, full width. Rows: a thumbnail at the start (people round, products square, covers 2:3); food menus may put a square photo at the end. Never an image on both sides. |
 | L05 | Title first among the text, clamped | Order the text: title, then meta, then price. Titles take 2 lines at most in cards and 1 in rows, with an ellipsis. |
 | L06 | Price under the title, plain and comparable | Price in headline weight with tabular figures and the user's locale; an old price struck through in hint after it; 'from' for variable prices; the period after it ('/ month'); never in an accent pill or on the image. |
-| L07 | Rating is a short meta, not a star row | Show '★ 4.8 (120)' in subhead hint next to or under the title; five-star rows only on the detail screen's reviews section. |
+| L07 | Rating is a short meta, not a star row | Show a star icon (SVG) with '4.8 (120)' in subhead hint next to or under the title; five-star rows only on the detail screen's reviews section. |
 | L08 | Unavailable stays visible | Sold out, full or closed items stay in the list, dimmed, with the reason in text ('Sold out', 'Full · join waitlist'); never hidden or shown only by colour. |
 | L09 | Grid columns by width | 2 columns from 320 to 559 px, 3 from 560 px, gaps 8-12 px; equal tile heights from a fixed media ratio and clamped titles. |
 | L10 | Horizontal scrollers only for featured or related | At most one horizontal scroller per screen and never as the main catalogue; 10 items at most, the next card peeking. |
