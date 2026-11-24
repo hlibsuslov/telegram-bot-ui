@@ -5,6 +5,88 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## Unreleased
+
+- `references/user-profile.md` and `tgkit/profile.py`: the baseline user record every bot keeps from the first
+  contact (identity without history, lifecycle and block state from `my_chat_member`, first-touch acquisition
+  from allowlisted payloads, terms version and marketing opt-in, language, time zone, notification choices,
+  labels, a `getChat` snapshot with active usernames, private-forwards and voice restrictions, share theme and
+  gift colours, Stars rating, community role and tags), when to refresh it, and how it adapts the interface:
+  a personal accent from the user's share theme or gift colours on their own surfaces, no voice notes when
+  restricted, mentions by username, quiet hours. Optional modules: trust, CAS, MTProto flags; undocumented
+  lists such as lols.bot not supported. SQL schema, retention, checklist; tested in `tests/test_user_profile.py`.
+- README (en, ru, uk): the Mini Apps section shows one full-width image of five example screens (classes with
+  Stars, a catalogue, a points wallet, gifts, an Android menu) in light and dark, on the widget gallery's
+  background; captured by `docs/assets/mini-apps/capture_showcase.py` and composed by `compose_showcase.py`.
+  The rework before / after stay linked.
+- `references/user-data.md` §3.1-3.2: what users tell a bot about themselves and the easiest mechanism for
+  each (verified phone and email through Passport, live location, inline location, shipping address, time
+  zone, birthday, preferences, files, friends, referrals, biometrics, wallets), and what MTProto adds for a
+  bot (Telegram's scam / fake / verified flags, username resolution) and does not.
+- `references/user-trust.md` and `tgkit/trust.py`: anti-abuse friction without judging people. What the Bot
+  API gives (Stars rating, join requests, Telegram's own anti-spam; no creation date, reports or scam labels),
+  the bot's own records as the main signals, account age from the id as a bracket from the bot's own anchors
+  (`IdAgeEstimator`, never a ban on its own), optional external lists with conditions (CAS endpoint, no appeal
+  there, disclosure, the id only, fail open), four tiers with graduated actions, human review and appeals,
+  what the skill declines, storage and expiry. Tested in `tests/test_user_trust.py`.
+- `references/user-data.md` and `data/user-data.json`: what a bot or Mini App receives about a user in four
+  tiers (automatic, readable by API under the user's privacy settings, on request through native prompts,
+  never available), every field checked against the API catalogs; the obligations from Telegram's Bot
+  Developer Terms, the Standard Bot Privacy Policy and the Mini App Terms; turning "collect everything" into a
+  data inventory; the prompt pattern (the reason, the native button, a working refusal, the
+  `contact.user_id` check); storage, logs, retention, `/mydata` and `/deletedata`; what the skill declines
+  and the compliant alternative.
+- `references/mini-apps/materials-and-trends.md`: four tests a trend must pass; the three layers of a Mini App
+  (Telegram's chrome, the WebView engine, the app) and how fast each changes; glass as a material system
+  (what it is for, levels, fallbacks, text on glass, no fake refraction, Android) and the procedure when a
+  platform redesigns; a trend radar with adopt / adapt / avoid decisions (Liquid Glass, Material 3
+  Expressive, bento, mesh gradients, dynamic colour, AI surfaces, foldables and more); new web platform
+  features with first versions and fallbacks; where to dig. Kit: glass rebuilt from `--tma-glass-*` tokens
+  with `.is-thin` and `.is-thick` levels and `.tma-scroll-edge`; values in `design-sources.json` →
+  `web_materials`, pinned by a test.
+- `references/mini-apps/anti-slop.md`: a polish pass adapted from impeccable (evidence first, classify each
+  problem by where its fix belongs, a fixed order, quieter without becoming generic, verify the whole path)
+  and new tells: side stripes, hard offset shadows, eyebrow labels, section numbers, glass as decoration,
+  trend chasing. Lint MA42 (side stripe), MA43 (hard shadow), MA44 (eyebrow).
+- Kit fix: a section, list or key-value group placed directly in `.tma-stack` lost the 24 px gap, because the
+  component's own `margin: 0` came later in `tma.css` with the same specificity (seen on the rework example's
+  Profile screen). The stack rule now out-ranks such resets.
+- `references/mini-apps/forms-and-data.md`: what not to ask (Telegram already knows it), field markup for
+  every kind of data (`autocomplete`, `inputmode`, `enterkeyhint`), the on-screen keyboard on iOS, Android and
+  Desktop, validation, the MainButton in forms, drafts and the closing confirmation; loading, cache and
+  freshness, growing lists; five kinds of failure with the text and action for each; doing an action once
+  (blocked second tap, idempotency keys, checking the outcome after a timeout); testing and where to dig
+  further. Kit: `tma.api()` (raw `initData`, timeout, safe retries, `ApiError` kinds), `idempotencyKey()`,
+  `tma.hideKeyboard()`, with tests. Stand: a Network select (slow, flaky, offline, 500, 401) for the app's
+  own requests. Lint MA40 (`type="number"`) and MA41 (`autofocus`).
+- `references/mini-apps/accessibility-and-language.md`: screen readers (names, roles and states for every kit
+  component, focus on route changes and sheets, announcements, gestures), text size, contrast under the
+  user's own Telegram theme, motion, touch targets; the user's language (app choice, `language_code`,
+  browser), string catalogs, plurals, `Intl` for numbers, money, dates and lists, Telegram's own terms from
+  translations.telegram.org; right to left (logical properties, what mirrors and what does not, `dir="auto"`,
+  `<bdi>`); testing and where to dig further. Kit: `tma.locale()` sets `<html lang dir>`, `.tma-sr-only`, RTL
+  mirroring of chevrons and arrows, the switch knob fixed in RTL. Stars amounts in the examples now read as
+  "120 Stars". Stand: a Language select. Lint MA38 (icon-only controls without a name) and MA39 (physical
+  left / right).
+- `references/mini-apps/haptics-and-device.md`: haptics (the Taptic Engine on iPhone) with every impact style,
+  notification type and selection mapped to interface moments and rules (one per moment, after the visible
+  change, outcomes from the server, never in streams, a switch in games); motion sensors, location,
+  biometrics, fullscreen and orientation, home screen, QR, clipboard, sharing and downloads with versions and
+  rules; the permission pattern; testing; how to dig further. Kit: `tma.haptic.impact()` / `notify()` with a
+  burst guard and an in-app switch, `tma.motion()` (stops when hidden) and `tma.location()`, with tests. Stand:
+  synthetic motion sensors and demo location. Gallery: a Device group. Lint MA36 (haptics in event streams)
+  and MA37 (sensors never stopped).
+- `references/mini-apps/native-anatomy.md`: the iOS 27 kit re-read page by page through the Figma MCP (rows,
+  list headers and footers, buttons, tab bar, sheets, alerts, empty states, text fields, the foldable iPhone's
+  layout) and the Telegram Mini Apps UI Kit's three template apps, each turned into a rule; values in
+  `design-sources.json` → `ios27.anatomy`. `references/mini-apps/figma-workflow.md`: how to read a kit or the
+  person's own design through the Figma MCP and map it to kit roles, scale and tokens.
+- Kit: section headers are the iOS 27 nested header by default (17 semibold); `.is-prominent`, `.is-extra` and `.is-small`
+  (the older 13 pt caption) with an end action; footers 8/6;
+  empty-state icon circle and a 22 pt message; label-above-value rows (`.tma-kv.is-stacked`); sheets float
+  6 pt from the edges with a 60 x 4 grabber on iOS; button paddings and regular labels as in iOS 27; semibold
+  tab labels; outlined fields on Android. The stand gains a 669 pt width (foldable inner display).
+
 ## 3.1.0 - 2026-11-24
 
 The skill now builds and reworks Telegram Mini Apps, not only bots: when to build one, how to launch it,
@@ -30,7 +112,7 @@ Bot API 10.5 and https://core.telegram.org/bots/webapps on 2026-11-23.
 - Layout rules L01-L25 for images, titles, prices, ratings, availability, galleries, filters, forms,
   booking and plans across 16 content types, with `scripts/miniapp_layout.py show / review`;
   screen patterns for shops, gyms and trainers, bookstores, SaaS dashboards, clinics, events and more.
-- Anti-slop rules with a 35-rule lint (`scripts/miniapp_lint.py`), security (`initData` HMAC and
+- Anti-slop rules with a 44-rule lint (`scripts/miniapp_lint.py`), security (`initData` HMAC and
   Ed25519, freshness, sessions, storage, CSP), performance and testing.
 - Payments inside a Mini App (`references/mini-apps/payments.md`): rail by goods (Stars for digital,
   subscriptions, a provider for physical goods), the cart-to-receipt flow with a signed payload bound to the

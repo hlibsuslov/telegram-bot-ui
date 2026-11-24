@@ -219,6 +219,60 @@
    "telegram": "one surface level: rows inside one card or list; a second level is a pushed screen or a sheet",
    "kit": ".tma-section, .tma-list, .tma-kv",
    "ref": "design-system.md section 3"
+  },
+  "MA36": {
+   "stage": 5,
+   "telegram": "one haptic per user moment, paired with a visible change; never on scroll, typing or timers",
+   "kit": "tma.haptic (burst guard)",
+   "ref": "haptics-and-device.md"
+  },
+  "MA37": {
+   "stage": 2,
+   "telegram": "start sensors on a user action, stop them when the screen closes or the app hides",
+   "kit": "tma.motion() returns stop()",
+   "ref": "haptics-and-device.md"
+  },
+  "MA38": {
+   "stage": 5,
+   "telegram": "every control has a name a screen reader can say; icons are aria-hidden",
+   "kit": "aria-label on the button, .tma-sr-only for glyph amounts",
+   "ref": "accessibility-and-language.md"
+  },
+  "MA39": {
+   "stage": 3,
+   "telegram": "logical properties, so the layout mirrors for Arabic, Hebrew and Persian",
+   "kit": "tma.css uses inline-start / -end; tma.locale() sets dir",
+   "ref": "accessibility-and-language.md"
+  },
+  "MA40": {
+   "stage": 6,
+   "telegram": "amounts and codes as text with inputmode, parsed in the user's locale",
+   "kit": ".tma-input inputmode=\"decimal\"",
+   "ref": "forms-and-data.md"
+  },
+  "MA41": {
+   "stage": 2,
+   "telegram": "the keyboard opens on the user's tap, never on launch",
+   "kit": "tma.hideKeyboard() after submit",
+   "ref": "forms-and-data.md"
+  },
+  "MA42": {
+   "stage": 5,
+   "telegram": "kind and status in a tag, an icon or the section header",
+   "kit": ".tma-tag, section headers",
+   "ref": "anti-slop.md"
+  },
+  "MA43": {
+   "stage": 5,
+   "telegram": "depth from theme surfaces; soft shadow only for floating things",
+   "kit": "--tma-glass-lift",
+   "ref": "anti-slop.md"
+  },
+  "MA44": {
+   "stage": 5,
+   "telegram": "the heading alone, in the type scale",
+   "kit": ".tma-section__header",
+   "ref": "anti-slop.md"
   }
  },
  "patterns": [

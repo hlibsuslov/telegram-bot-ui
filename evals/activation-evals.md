@@ -87,6 +87,9 @@ description is updated.
 | P39 | "Let me invite our five testers to the bot and greet them." | botinvite link, `WriteAccessAllowed.inviter` (10.5) | `bot-settings.md`, `onboarding-and-first-run.md` |
 | P40 | "Open my bot's screens in a local editor so I can change the texts myself." | bot-ui Studio, local preview | `bot-ui-projects.md` |
 | P41 | "Поменяй экран checkout.payment.confirm в нашем bot-ui проекте." | change by stable screen ID | `bot-ui-projects.md` |
+| P42 | ru | "Научи бота собирать номер телефона и всю доступную информацию о пользователе, которую разрешает Telegram." | no | `references/user-data.md` |
+| P43 | ru | "Сделай, чтобы бот определял подозрительных пользователей: новые аккаунты по ID, жалобы, антиспам-базы." | no | `references/user-trust.md` |
+| P44 | ru | "Сохраняй в бэкенде профиль пользователя: источник привлечения, версию условий, часовой пояс, уведомления, и адаптируй интерфейс под его тему из share_theme." | no | `references/user-profile.md` |
 
 ## Negative (should NOT activate)
 
@@ -207,6 +210,10 @@ description is updated.
 | MA19 | ru | "Добавь в мини-апп элементы телеграма: звёздочки, граммы, карточки подарков, как в самом Telegram." | no | `references/mini-apps/telegram-elements.md` |
 | MA20 | en | "Show the user's wallet balance in grams and a verified tick next to trusted sellers in our Mini App." | yes | `references/mini-apps/telegram-elements.md` |
 | MA21 | ru | "Переделай наш мини-апп на Tailwind и shadcn под нормальный классический дизайн Telegram." | no | `references/mini-apps/rework.md`, `scripts/miniapp_rework.py` |
+| MA22 | ru | "Добавь в наш мини-апп вибрацию через Taptic Engine и наклон карточки по гироскопу." | no | `references/mini-apps/haptics-and-device.md` |
+| MA23 | ru | "Наш мини-апп надо перевести на арабский и сделать удобным для VoiceOver." | no | `references/mini-apps/accessibility-and-language.md` |
+| MA24 | ru | "В мини-аппе клавиатура закрывает поле ввода, а при плохой сети бронь иногда создаётся дважды." | no | `references/mini-apps/forms-and-data.md` |
+| MA25 | ru | "Хочу гласморфизм в мини-аппе, как в новом iOS, и чтобы дизайн был по последним трендам." | no | `references/mini-apps/materials-and-trends.md` |
 
 ## Negative — Mini App boundaries (should NOT activate)
 

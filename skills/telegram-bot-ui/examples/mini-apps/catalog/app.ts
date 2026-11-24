@@ -74,7 +74,8 @@ const glyph = (cls: string, name: string): SVGSVGElement => {
 // ratings and Stars prices draw SVG glyphs, never emoji characters (anti-slop MA13)
 const stars = (r: number, n: number) => h('span', { class: 'tma-rating-inline', 'aria-label': `Rated ${r} of 5 by ${n} people` },
   glyph('tma-rating-inline__star', 'stars-gold'), `${r.toFixed(1)} (${n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n})`);
-const starsPrice = (amount: string) => h('span', { class: 'tma-amount is-stars' }, glyph('tma-star', 'stars-gold'), amount);
+const starsPrice = (amount: string) => h('span', { class: 'tma-amount is-stars' }, glyph('tma-star', 'stars-gold'), amount,
+  h('span', { class: 'tma-sr-only' }, ' Stars')); // screen readers hear "120 Stars"
 
 /* ---------------------------------------------------------------- state and navigation */
 let tab: 'books' | 'trainers' | 'workouts' = 'books';

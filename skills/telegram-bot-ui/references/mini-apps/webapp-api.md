@@ -202,6 +202,8 @@ The bot side of `shareMessage`, `requestChat`, `requestWriteAccess` and `sendDat
 `typeof Telegram.WebApp.Serverless?.call === 'function'` instead of a version gate. Errors carry `type`
 (`ENDPOINT_ERROR`, `UNAUTHORIZED`), `status` and optional `parameters`. **[Official]**
 
+How and when to use haptics, sensors, location, biometrics and the screen features above: [haptics-and-device.md](haptics-and-device.md).
+
 ## 4. Events worth handling
 
 | Event | Since | Do |

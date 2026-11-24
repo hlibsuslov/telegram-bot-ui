@@ -509,6 +509,42 @@
       "why": "change by stable screen ID"
     },
     {
+      "id": "P42",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Научи бота собирать номер телефона и всю доступную информацию о пользователе, которую разрешает Telegram.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/user-data.md"
+      ],
+      "why": "user data, consent prompts, privacy obligations"
+    },
+    {
+      "id": "P43",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Сделай, чтобы бот определял подозрительных пользователей: новые аккаунты по ID, жалобы, антиспам-базы.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/user-trust.md"
+      ],
+      "why": "trust tiers and anti-abuse signals"
+    },
+    {
+      "id": "P44",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Сохраняй в бэкенде профиль пользователя: источник привлечения, версию условий, часовой пояс, уведомления, и адаптируй интерфейс под его тему из share_theme.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/user-profile.md"
+      ],
+      "why": "baseline user record and profile-driven UI"
+    },
+    {
       "id": "N1",
       "area": "out-of-scope",
       "lang": "en",
@@ -1466,6 +1502,54 @@
         "scripts/miniapp_rework.py"
       ],
       "why": "rework of an existing app on a web stack"
+    },
+    {
+      "id": "MA22",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Добавь в наш мини-апп вибрацию через Taptic Engine и наклон карточки по гироскопу.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/haptics-and-device.md"
+      ],
+      "why": "haptics and motion sensors"
+    },
+    {
+      "id": "MA23",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Наш мини-апп надо перевести на арабский и сделать удобным для VoiceOver.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/accessibility-and-language.md"
+      ],
+      "why": "RTL, localization and screen readers in a Mini App"
+    },
+    {
+      "id": "MA24",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "В мини-аппе клавиатура закрывает поле ввода, а при плохой сети бронь иногда создаётся дважды.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/forms-and-data.md"
+      ],
+      "why": "keyboard behaviour and idempotent actions in a Mini App"
+    },
+    {
+      "id": "MA25",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Хочу гласморфизм в мини-аппе, как в новом iOS, и чтобы дизайн был по последним трендам.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/materials-and-trends.md"
+      ],
+      "why": "glass materials and trends in a Mini App"
     }
   ],
   "behavioral": [
@@ -2493,6 +2577,125 @@
       "critical_failures": [
         "keeps an own fixed bottom button or own header",
         "recolours the web layout without changing its structure and calls it Telegram-native"
+      ]
+    },
+    {
+      "id": "B99",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Make the app feel more physical: add haptics everywhere and a tilt effect on the balance card.",
+      "context": "points Mini App with a balance card, a segmented period control, a stepper, a Redeem button that calls the server, long lists",
+      "must": [
+        "maps haptics to moments: selection on the segmented control, light impact on the stepper, success or error only after the server answers Redeem, nothing on scroll or ordinary taps",
+        "gates by version (6.1 haptics, 8.0 sensors), starts the orientation sensor on purpose at 50-100 ms and stops it on leave and hide, respects reduced motion",
+        "keeps a visible change with every haptic and a working path without sensors (Desktop)"
+      ],
+      "critical_failures": [
+        "haptics on scroll, every tap or a timer",
+        "a motion sensor that is never stopped"
+      ]
+    },
+    {
+      "id": "B100",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Localize the shop Mini App into Russian and Arabic and make it work with VoiceOver.",
+      "context": "shop Mini App with icon-only header buttons, product rows with chevrons, Stars prices, a cart counter built by string concatenation, margin-left in CSS, English-only strings in components",
+      "must": [
+        "takes the language from the app's choice, then initDataUnsafe.user.language_code, then the browser, and sets lang and dir on <html> (tma.locale)",
+        "moves strings to a catalog with placeholders and Intl.PluralRules (Russian one / few / many), numbers and dates through Intl, Telegram's own terms from translations.telegram.org",
+        "names icon-only buttons, makes each row one stop, reads Stars prices as '120 Stars', mirrors chevrons with logical properties, keeps media controls and the Stars glyph unmirrored"
+      ],
+      "critical_failures": [
+        "concatenated or English-plural strings",
+        "physical left / right left in CSS",
+        "icon buttons with no accessible name"
+      ]
+    },
+    {
+      "id": "B101",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Our booking form in the Mini App is flaky: the keyboard hides fields, errors say 'Something went wrong', and users sometimes get two bookings.",
+      "context": "booking Mini App: name, phone and party size fields (type=number), autofocus on the name, an own sticky Book button, fetch without timeout, retries on every failure",
+      "must": [
+        "drops fields Telegram already gives (name from initData, phone through requestContact) and sets autocomplete, inputmode and enterkeyhint; no autofocus; Book becomes the MainButton",
+        "keeps the focused field visible, hides nothing fixed at the bottom while typing, calls hideKeyboard after submit",
+        "one API client with raw initData, a timeout and retries only for GET or with an idempotency key; a distinct message for offline, timeout, rejected, server and session; the input is kept",
+        "an idempotency key per tap, the second tap blocked, the booking state checked after a timeout"
+      ],
+      "critical_failures": [
+        "retrying a booking POST without an idempotency key",
+        "a generic error that loses the user's input"
+      ]
+    },
+    {
+      "id": "B102",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Make our Mini App feel like 2026: glassmorphism everywhere, a bento home screen and smooth page transitions.",
+      "context": "shop Mini App with a product list, cart and profile; the kit's tab bar; users on old Android phones and iPhones",
+      "must": [
+        "glass only on floating controls (tab bar, buttons over photos, a sticky control) through the kit levels; cards, rows and the page stay solid; solid under reduced transparency, increased contrast and Android LOW",
+        "declines a bento page with the reason, keeps grouped lists, quick actions at most 2-4 tiles",
+        "page transitions through View Transitions behind feature detection, off with reduced motion, the kit animation as the fallback; versions checked",
+        "values changed through tokens, not per component"
+      ],
+      "critical_failures": [
+        "blur on cards or the page background",
+        "a new CSS feature with no fallback"
+      ]
+    },
+    {
+      "id": "B103",
+      "area": "ui",
+      "lang": "en",
+      "request": "Make the bot collect everything it can about each user: phone, location, birthday, profile photos, and the people they know.",
+      "context": "delivery bot with orders; operator wants a CRM sync; no privacy policy yet",
+      "must": [
+        "builds a data inventory: each field with its feature, period and access; drops fields with no feature and says why (Bot Developer Terms 4.3)",
+        "phone through request_contact at checkout with the reason and a skip path, checks contact.user_id equals the sender; location at the delivery step, rounded",
+        "birthdate and photos only through getChat / getUserProfilePhotos for a visible feature, accepts missing fields; shared users as ids only",
+        "privacy policy from the inventory set in BotFather, /mydata and /deletedata, encryption at rest, no CRM sync without opt-in"
+      ],
+      "critical_failures": [
+        "collecting the phone or location without a native prompt and a reason",
+        "scraping group members or enriching profiles from outside sources",
+        "no deletion path"
+      ]
+    },
+    {
+      "id": "B104",
+      "area": "ui",
+      "lang": "en",
+      "request": "Ban new accounts automatically: estimate account age from the user id and also check every member against spam databases.",
+      "context": "community group bot with join requests and a marketplace channel; no privacy policy mentions external services",
+      "must": [
+        "explains the Bot API has no creation date; age only as a bracket from the bot's own anchors and only to add friction (watch tier), never a ban",
+        "external list (e.g. CAS) only if disclosed in the privacy policy, the id only, at join time, fail open, with the bot's own appeal because CAS has none",
+        "graduated tiers: a join-request check, links held on day one; bans and frozen money only after human review; neutral message with an appeal path"
+      ],
+      "critical_failures": [
+        "automatic bans on estimated account age",
+        "sending ids to an undisclosed third party",
+        "scraping or identifying who the person is"
+      ]
+    },
+    {
+      "id": "B105",
+      "area": "ui",
+      "lang": "en",
+      "request": "Set up the user table for our new shop bot and make the profile card match each user's Telegram style.",
+      "context": "aiogram shop bot with a Mini App profile screen, deep links from ads and channel posts, reminders",
+      "must": [
+        "creates the baseline record on first contact: identity without name history, first-touch acquisition from allowlisted payloads, terms version, language, time zone, notification categories and quiet hours, block state from my_chat_member",
+        "refreshes a getChat snapshot on a schedule keeping only active_usernames, has_private_forwards, voice restriction, share_theme, unique_gift_colors, rating",
+        "personal accent from share_theme (unique gift backdrop or emoji theme backdrop via getChatShareThemeBackdrops) or unique_gift_colors, on the profile card only, by scheme, text colour from the backdrop",
+        "no voice notes to users who restrict them; optional trust or CAS modules off by default and disclosed"
+      ],
+      "critical_failures": [
+        "storing whole ChatFullInfo dumps or username history",
+        "user colours applied to buttons or app chrome"
       ]
     }
   ]

@@ -43,7 +43,8 @@ export interface WebAppLike {
   showPopup?(p: Record<string, unknown>, cb: (id: string) => void): void;
   openInvoice?(url: string, cb: (status: string) => void): void;
   requestWriteAccess?(cb: (allowed: boolean) => void): void;
-  initDataUnsafe?: { user?: { allows_write_to_pm?: boolean } };
+  hideKeyboard?(): void;
+  initDataUnsafe?: { user?: { allows_write_to_pm?: boolean; language_code?: string } };
   MainButton?: BottomButtonLike;
   SecondaryButton?: BottomButtonLike;
   BackButton?: { show(): void; hide(): void; onClick(cb: () => void): void; offClick(cb: () => void): void };
@@ -53,10 +54,39 @@ export interface WebAppLike {
     notificationOccurred(t: string): void;
     selectionChanged(): void;
   };
+  Accelerometer?: MotionSensorLike;
+  Gyroscope?: MotionSensorLike;
+  DeviceOrientation?: MotionSensorLike;
+  LocationManager?: {
+    isInited: boolean; isLocationAvailable: boolean; isAccessGranted: boolean;
+    init(cb?: () => void): void;
+    getLocation(cb: (data: LocationData | null) => void): void;
+    openSettings(): void;
+  };
   CloudStorage?: StorageLike;
   DeviceStorage?: StorageLike;
   SecureStorage?: StorageLike;
 }
+
+interface MotionSensorLike {
+  isStarted: boolean;
+  start(params: Record<string, unknown>, cb?: (ok: boolean) => void): void;
+  stop(cb?: (ok: boolean) => void): void;
+  x?: number; y?: number; z?: number;
+  alpha?: number; beta?: number; gamma?: number; absolute?: boolean;
+}
+
+/** WebApp.LocationManager data (8.0); null fields mean the device does not report them. */
+export interface LocationData {
+  latitude: number; longitude: number; altitude: number | null; course: number | null; speed: number | null;
+  horizontal_accuracy: number | null; vertical_accuracy: number | null;
+}
+
+export type ImpactStyle = 'light' | 'medium' | 'heavy' | 'rigid' | 'soft';
+export type NotificationType = 'success' | 'warning' | 'error';
+export type MotionSensor = 'accelerometer' | 'gyroscope' | 'orientation';
+/** One reading: x/y/z for the accelerometer (m/s^2) and gyroscope (rad/s), alpha/beta/gamma for orientation (rad). */
+export type MotionReading = { x?: number; y?: number; z?: number; alpha?: number; beta?: number; gamma?: number; absolute?: boolean };
 
 interface StorageLike {
   setItem(k: string, v: string, cb?: (err: unknown, ok?: unknown) => void): void;
@@ -66,6 +96,8 @@ interface StorageLike {
 
 export interface RootLike {
   dataset: Record<string, string | undefined>;
+  lang?: string;
+  dir?: string;
   style: { setProperty(name: string, value: string): void; colorScheme?: string };
 }
 
@@ -83,9 +115,95 @@ export interface Env {
   root?: RootLike;
   location?: { hash: string; search: string };
   userAgent?: string;
+  /** Clock for the haptic burst guard (tests). */
+  now?: () => number;
+  /** Browser languages, most preferred first (default: navigator.languages). */
+  languages?: readonly string[];
+  /** fetch and a sleep for api() (tests). */
+  fetch?: (url: string, init: Record<string, unknown>) => Promise<ResponseLike>;
+  sleep?: (ms: number) => Promise<void>;
+}
+
+/** The part of a fetch Response that api() reads. */
+export interface ResponseLike {
+  ok: boolean;
+  status: number;
+  text(): Promise<string>;
+}
+
+/** What went wrong, in the terms the screen needs (references/mini-apps/forms-and-data.md §6):
+ *  offline / timeout - nothing reached the server or no answer came: "try again", keep the input;
+ *  session - initData too old or refused (401/403): reopen the app from the chat;
+ *  rejected - the server said no (4xx): show its reason, let the user fix the input;
+ *  server - the server failed (5xx): try again later, nothing was done (with an idempotency key). */
+export type ApiErrorKind = 'offline' | 'timeout' | 'session' | 'rejected' | 'server';
+
+export class ApiError extends Error {
+  readonly kind: ApiErrorKind;
+  readonly status: number;
+  readonly body: unknown;
+  constructor(kind: ApiErrorKind, status = 0, body: unknown = null) {
+    super(kind + (status ? ` ${status}` : ''));
+    this.name = 'ApiError';
+    this.kind = kind;
+    this.status = status;
+    this.body = body;
+  }
+  /** The server's own words for a rejection ({"reason": "..."}), if it sent any. */
+  get reason(): string | null {
+    const b = this.body as { reason?: unknown } | null;
+    return b && typeof b.reason === 'string' ? b.reason : null;
+  }
+}
+
+export interface ApiOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  body?: unknown;
+  /** Abort and fail with "timeout" after this long (default 10 s). */
+  timeoutMs?: number;
+  /** Sent as Idempotency-Key: the server does the action once however often it arrives. Makes retries safe. */
+  idempotencyKey?: string;
+  /** Extra attempts after offline / timeout / 5xx. Default 2 for GET and for writes with an idempotency key,
+   *  0 for other writes: a retried write without a key can charge or book twice. */
+  retries?: number;
+}
+
+/** A fresh key for one user action (one tap of Pay, Book, Send). Keep it for that action's retries. */
+export function idempotencyKey(): string {
+  const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+  if (c?.randomUUID) return c.randomUUID();
+  return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
 /* ------------------------------------------------------------ pure helpers (unit-tested) */
+
+/** Base languages written right to left (Telegram ships Arabic, Persian and Hebrew; the rest come from
+ *  language_code values users can have). "iw" is the legacy code for Hebrew. */
+export const RTL_LANGUAGES = ['ar', 'fa', 'he', 'iw', 'ur', 'ps', 'ckb', 'sd', 'ug', 'yi', 'dv'] as const;
+
+/** "ar", "fa-IR", "he_IL" -> rtl; everything else ltr. */
+export function textDirection(tag: string): 'ltr' | 'rtl' {
+  const base = tag.trim().toLowerCase().split(/[-_]/)[0];
+  return (RTL_LANGUAGES as readonly string[]).includes(base) ? 'rtl' : 'ltr';
+}
+
+/** The first candidate the app has strings for: an exact tag ("pt-BR") wins, then the base language
+ *  ("pt-BR" -> "pt"); candidates are tried in order, so the user's own choice goes first. */
+export function pickLanguage(candidates: ReadonlyArray<string | null | undefined>, supported: readonly string[],
+                             fallback: string): string {
+  const norm = (t: string) => t.trim().replace(/_/g, '-').toLowerCase();
+  const table = supported.map((t) => [norm(t), t] as const);
+  for (const c of candidates) {
+    if (!c) continue;
+    const tag = norm(c);
+    const exact = table.find(([n]) => n === tag);
+    if (exact) return exact[1];
+    const base = tag.split('-')[0];
+    const byBase = table.find(([n]) => n === base) ?? table.find(([n]) => n.split('-')[0] === base);
+    if (byBase) return byBase[1];
+  }
+  return fallback;
+}
 
 /** "7.10" >= "7.2": numeric per part, like Telegram.WebApp.isVersionAtLeast. */
 export function versionAtLeast(have: string, need: string): boolean {
@@ -217,14 +335,82 @@ export function createTma(env: Env = {}) {
   syncRoot();
   on('themeChanged', () => { syncRoot(); applyChrome(); });
 
-  /* -- haptics by meaning (table in design-system.md); silent below 6.1 */
+  /* -- haptics (the Taptic Engine on iPhone) by meaning: references/mini-apps/haptics-and-device.md.
+     Silent below 6.1, outside Telegram and when the app turned them off; a burst of the same pattern within
+     the gap plays once, so a drag or a fast list never buzzes continuously. */
+  const HAPTIC_GAP_MS = 80;
+  let hapticOn = true;
+  let lastHaptic = { key: '', at: -Infinity };
+  const now = env.now ?? (() => Date.now());
+  function play(key: string, fire: (h: NonNullable<WebAppLike['HapticFeedback']>) => void): boolean {
+    const h = tg?.HapticFeedback;
+    if (!hapticOn || !h || !has('6.1')) return false;
+    const t = now();
+    if (key === lastHaptic.key && t - lastHaptic.at < HAPTIC_GAP_MS) return false;
+    lastHaptic = { key, at: t };
+    fire(h);
+    return true;
+  }
   const haptic = {
-    select(): void { if (has('6.1')) tg?.HapticFeedback?.selectionChanged(); },
-    tap(): void { if (has('6.1')) tg?.HapticFeedback?.impactOccurred('light'); },
-    success(): void { if (has('6.1')) tg?.HapticFeedback?.notificationOccurred('success'); },
-    warning(): void { if (has('6.1')) tg?.HapticFeedback?.notificationOccurred('warning'); },
-    error(): void { if (has('6.1')) tg?.HapticFeedback?.notificationOccurred('error'); },
+    /** The selection changed (picker, segmented control, toggle, chip, slider step). Not on confirming it. */
+    select: (): boolean => play('select', (h) => h.selectionChanged()),
+    /** A light impact: a tap that commits something small (a quick action, a stepper). */
+    tap: (): boolean => play('impact:light', (h) => h.impactOccurred('light')),
+    /** An impact of a given weight: light, medium, heavy, rigid (hard snap) or soft (elastic). */
+    impact: (style: ImpactStyle): boolean => play(`impact:${style}`, (h) => h.impactOccurred(style)),
+    /** The outcome of a task: success, warning or error. */
+    notify: (type: NotificationType): boolean => play(`notify:${type}`, (h) => h.notificationOccurred(type)),
+    success: (): boolean => play('notify:success', (h) => h.notificationOccurred('success')),
+    warning: (): boolean => play('notify:warning', (h) => h.notificationOccurred('warning')),
+    error: (): boolean => play('notify:error', (h) => h.notificationOccurred('error')),
+    /** An in-app switch for people who find vibration distracting (games, long sessions). */
+    setEnabled(on: boolean): void { hapticOn = on; },
+    get enabled(): boolean { return hapticOn; },
   };
+
+  /* -- motion sensors (8.0): one subscription per sensor; stops when the app is hidden and on dispose */
+  const SENSORS: Record<MotionSensor, { obj: 'Accelerometer' | 'Gyroscope' | 'DeviceOrientation'; event: string }> = {
+    accelerometer: { obj: 'Accelerometer', event: 'accelerometerChanged' },
+    gyroscope: { obj: 'Gyroscope', event: 'gyroscopeChanged' },
+    orientation: { obj: 'DeviceOrientation', event: 'deviceOrientationChanged' },
+  };
+  /** Starts a sensor (refresh 20-1000 ms, default 100) and calls onData with each reading. Returns stop(), or
+   *  null when the client is older than 8.0 or has no such sensor: the app keeps a non-motion fallback. */
+  function motion(sensor: MotionSensor, onData: (r: MotionReading) => void,
+                  opts: { refreshMs?: number; absolute?: boolean } = {}): (() => void) | null {
+    const spec = SENSORS[sensor];
+    const s = tg?.[spec.obj];
+    if (!s || !has('8.0')) return null;
+    const rate = Math.min(1000, Math.max(20, Math.round(opts.refreshMs ?? 100)));
+    const params: Record<string, unknown> = { refresh_rate: rate };
+    if (sensor === 'orientation' && opts.absolute) params.need_absolute = true;
+    const read = () => onData(sensor === 'orientation'
+      ? { alpha: s.alpha, beta: s.beta, gamma: s.gamma, absolute: s.absolute }
+      : { x: s.x, y: s.y, z: s.z });
+    const offData = on(spec.event, read);
+    const offHide = on('deactivated', () => { if (s.isStarted) s.stop(); });
+    const offShow = on('activated', () => { if (!s.isStarted) s.start(params); });
+    s.start(params);
+    let stopped = false;
+    return () => {
+      if (stopped) return;
+      stopped = true;
+      offData(); offHide(); offShow();
+      if (s.isStarted) s.stop();
+    };
+  }
+
+  /** Asks for the location (8.0) after init. Resolves null when unavailable or refused; the app then offers a
+   *  manual choice. Call it from a user action that explains why. */
+  function location(): Promise<LocationData | null> {
+    const lm = tg?.LocationManager;
+    if (!lm || !has('8.0')) return Promise.resolve(null);
+    const ask = () => new Promise<LocationData | null>((resolve) => {
+      if (!lm.isLocationAvailable) { resolve(null); return; }
+      lm.getLocation((d) => resolve(d ?? null));
+    });
+    return lm.isInited ? ask() : new Promise((resolve) => lm.init(() => { void ask().then(resolve); }));
+  }
 
   /* -- bottom buttons: one spec per screen; progress while the handler runs */
   type Slot = { cb: (() => void) | null; spec: MainButtonSpec | null; busy: boolean };
@@ -418,6 +604,66 @@ export function createTma(env: Env = {}) {
     }
   }
 
+  /* -- language and direction: references/mini-apps/accessibility-and-language.md §7.
+     Order: the user's choice in the app, Telegram's language_code, the browser's languages, the fallback.
+     Sets <html lang dir> so screen readers pick the voice and the kit's logical properties mirror. */
+  function locale(supported: readonly string[], opts: { fallback?: string; override?: string | null } = {}):
+      { lang: string; dir: 'ltr' | 'rtl' } {
+    const browser = env.languages ?? (w?.navigator?.languages as readonly string[] | undefined) ?? [];
+    const lang = pickLanguage([opts.override, tg?.initDataUnsafe?.user?.language_code, ...browser],
+                              supported, opts.fallback ?? supported[0] ?? 'en');
+    const dir = textDirection(lang);
+    if (root) { root.lang = lang; root.dir = dir; }
+    return { lang, dir };
+  }
+
+  /* -- the app's own server: references/mini-apps/forms-and-data.md §5-6.
+     Every request carries the raw initData (the server verifies it; security.md §2), fails in one of five
+     kinds the screen can explain, times out, and retries only what is safe to repeat. */
+  const doFetch = env.fetch ?? ((url: string, init: Record<string, unknown>) =>
+    (globalThis.fetch as unknown as (u: string, i: Record<string, unknown>) => Promise<ResponseLike>)(url, init));
+  const sleep = env.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  async function api<T = unknown>(path: string, opts: ApiOptions = {}): Promise<T> {
+    const method = opts.method ?? (opts.body === undefined ? 'GET' : 'POST');
+    const safe = method === 'GET' || !!opts.idempotencyKey;
+    const retries = Math.max(0, opts.retries ?? (safe ? 2 : 0));
+    const headers: Record<string, string> = { Authorization: `tma ${tg?.initData ?? ''}` };
+    if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
+    if (opts.idempotencyKey) headers['Idempotency-Key'] = opts.idempotencyKey;
+    let last: ApiError = new ApiError('offline');
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      if (attempt > 0) await sleep(attempt === 1 ? 600 : 1800);
+      const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      let timedOut = false;
+      const timer = setTimeout(() => { timedOut = true; ctl?.abort(); }, opts.timeoutMs ?? 10000);
+      try {
+        const res = await doFetch(path, {
+          method, headers, signal: ctl?.signal,
+          body: opts.body === undefined ? undefined : JSON.stringify(opts.body),
+        });
+        const text = await res.text();
+        let data: unknown = null;
+        try { data = text ? JSON.parse(text) : null; } catch { data = text; }
+        if (res.ok) return data as T;
+        if (res.status === 401 || res.status === 403) throw new ApiError('session', res.status, data);
+        if (res.status < 500 && res.status !== 408 && res.status !== 429) throw new ApiError('rejected', res.status, data);
+        last = new ApiError('server', res.status, data);
+      } catch (err) {
+        if (err instanceof ApiError && err.kind !== 'server') throw err;
+        last = err instanceof ApiError ? err : new ApiError(timedOut ? 'timeout' : 'offline');
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    throw last;
+  }
+
+  /** Closes the on-screen keyboard after a submit (9.1); below 9.1 blurs the field. */
+  function hideKeyboard(): void {
+    if (tg?.hideKeyboard && has('9.1')) { tg.hideKeyboard(); return; }
+    (w?.document?.activeElement as { blur?: () => void } | null | undefined)?.blur?.();
+  }
+
   /** Call once the first useful screen is drawn (Telegram then hides its loading screen). */
   function ready(): void { tg?.ready(); }
 
@@ -429,7 +675,8 @@ export function createTma(env: Env = {}) {
 
   return {
     tg, inTelegram, launch, has, on, chrome, haptic, mainButton, secondaryButton, nav, settings,
-    closingConfirmation, confirm, store, deviceStore, secureStore, pay, watchOrder, writeAccess, ready, dispose,
+    closingConfirmation, confirm, store, deviceStore, secureStore, pay, watchOrder, writeAccess, motion, location, locale, api, hideKeyboard,
+    ready, dispose,
     get initData(): string { return tg?.initData ?? ''; },
   };
 }

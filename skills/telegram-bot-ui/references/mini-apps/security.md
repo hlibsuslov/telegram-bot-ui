@@ -89,6 +89,9 @@ Telegram sets no lifetime; it only says to check the field "to prevent the use o
 - A verified `initData` works like a bearer credential until it expires: actions that move money or change
   state also carry an idempotency key. **[Heuristic]**
 
+The kit's `tma.api()` does this with a timeout, safe retries, idempotency keys and typed errors
+([forms-and-data.md](forms-and-data.md) §5-7). Without the kit:
+
 ```js
 // Client: one fetch wrapper for every API call.
 export async function api(path, body) {

@@ -160,12 +160,20 @@ body {
   overscroll-behavior-y: none;
   overflow-x: clip;                  /* screen pushes slide in from the side */
 }
-body.tma-flat { background: var(--tma-bg); }
+body.tma-flat { background: var(--tma-bg); --tma-edge: var(--tma-bg); }
 ::selection { background: color-mix(in srgb, var(--tma-accent) 28%, transparent); }
 input, textarea { caret-color: var(--tma-accent); }
 a { color: var(--tma-link); text-underline-offset: .18em; }
 :focus-visible { outline: 2px solid var(--tma-accent); outline-offset: 2px; }
 :focus:not(:focus-visible) { outline: none; }
+/* Read by screen readers, not drawn: the words behind an icon or a glyph ("250 Stars" next to the star). */
+.tma-sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+/* RTL (html dir="rtl", set by tma.locale): mirror what points along the reading direction - chevrons,
+   back / forward arrows, send, sign out. Never media controls, clocks, check marks, charts' time axis or logos. */
+:root[dir="rtl"] .tma-cell__chevron,
+:root[dir="rtl"] .tma-flip-rtl,
+:root[dir="rtl"] svg:has(> use[href$="#i-chevron-right"], > use[href$="#i-chevron-left"], > use[href$="#i-arrow-left"],
+  > use[href$="#i-arrow-right"], > use[href$="#i-arrow-up-right"], > use[href$="#i-send"], > use[href$="#i-logout"]) { transform: scaleX(-1); }
 * { scrollbar-width: thin; scrollbar-color: var(--tma-fill-strong) transparent; }
 img { max-width: 100%; display: block; }
 .tma-num { font-variant-numeric: tabular-nums; }
@@ -195,18 +203,28 @@ img { max-width: 100%; display: block; }
 @keyframes tma-push { from { transform: translateX(24px); opacity: 0; } }
 @keyframes tma-pop { from { transform: translateX(-24px); opacity: 0; } }
 .tma-header { padding: var(--tma-s2) 0 var(--tma-s4); }
-.tma-stack > * + * { margin-top: var(--tma-gap-section); }
+/* The stack's gap must win over every component's own `margin: 0` (section, list, kv, quote, steps...) and an
+   app's resets, whatever their order in the cascade: hence the doubled class (0,2,0). */
+.tma-stack.tma-stack > * + * { margin-top: var(--tma-gap-section); }
 
 /* ---------------------------------------------------------------- section, list, cell */
 .tma-section { margin: 0; }
 .tma-section + .tma-section { margin-top: var(--tma-gap-section); }
+/* List headers, iOS 27 (references/mini-apps/native-anatomy.md section 2). Default = nested: 17 semibold in the
+   section-header colour. <strong> or .is-prominent: 20 semibold; .is-extra: 22 bold; .is-small: the older 13 pt
+   caption for settings-like lists. A trailing <span> is a quiet note, a trailing <a>/<button> an action. */
 .tma-section__header {
   display: flex; align-items: baseline; justify-content: space-between; gap: var(--tma-s3);
   padding: 0 var(--tma-s4) var(--tma-s2);
-  color: var(--tma-section-header); font-size: var(--tma-fs-footnote); line-height: 1.385;
+  color: var(--tma-section-header); font-size: var(--tma-fs-body); font-weight: 600; line-height: 1.294;
 }
-.tma-section__header strong { color: var(--tma-text); font-size: var(--tma-fs-title3); font-weight: 600; }
-.tma-section__footer { padding: var(--tma-s2) var(--tma-s4) 0; color: var(--tma-hint); font-size: var(--tma-fs-footnote); line-height: 1.385; }
+.tma-section__header > span { color: var(--tma-hint); font-size: var(--tma-fs-footnote); font-weight: 400; }
+.tma-section__header strong, .tma-section__header.is-prominent { color: var(--tma-text); font-size: var(--tma-fs-title3); font-weight: 600; line-height: 1.25; }
+.tma-section__header.is-nested { color: var(--tma-section-header); font-size: var(--tma-fs-body); }
+.tma-section__header.is-extra { color: var(--tma-text); font-size: var(--tma-fs-title2); font-weight: 700; line-height: 1.273; }
+.tma-section__header.is-small { font-size: var(--tma-fs-footnote); font-weight: 400; line-height: 1.385; }
+.tma-section__header > a, .tma-section__header > button { color: var(--tma-link); font-size: var(--tma-fs-subhead); font-weight: 400; background: none; border: 0; padding: 0; cursor: pointer; text-decoration: none; }
+.tma-section__footer { padding: var(--tma-s2) var(--tma-s4) 6px; color: var(--tma-hint); font-size: var(--tma-fs-footnote); line-height: 1.385; }
 .tma-list {
   list-style: none; margin: 0; padding: 0;
   background: var(--tma-surface); border-radius: var(--tma-r-group); overflow: hidden;
@@ -258,13 +276,13 @@ button.tma-cell:active, a.tma-cell:active, label.tma-cell:active { background: v
 /* ---------------------------------------------------------------- buttons in content */
 .tma-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--tma-s2);
-  min-height: 34px; padding: 0 var(--tma-s4); border: 0; border-radius: 999px;
-  background: var(--tma-fill); color: var(--tma-text); font: inherit; font-size: var(--tma-fs-subhead); font-weight: 500;
+  min-height: 34px; padding: 0 14px; border: 0; border-radius: 999px;   /* iOS 27: 28 / 34 / 50, paddings 10 / 14 / 20, regular labels */
+  background: var(--tma-fill); color: var(--tma-text); font: inherit; font-size: var(--tma-fs-subhead); font-weight: 400;
   cursor: pointer; text-decoration: none; white-space: nowrap;
   transition: transform var(--tma-dur-short) var(--tma-ease), background-color var(--tma-dur-short) var(--tma-ease);
 }
 .tma-btn:active { transform: scale(.97); }
-.tma-btn.is-sm { min-height: 28px; padding: 0 var(--tma-s3); font-size: var(--tma-fs-subhead); }
+.tma-btn.is-sm { min-height: 28px; padding: 0 10px; font-size: var(--tma-fs-subhead); }
 .tma-btn.is-lg { min-height: 50px; padding: 0 var(--tma-s5); font-size: var(--tma-fs-body); }
 .tma-btn.is-wide { width: 100%; }
 .tma-btn.is-filled { background: var(--tma-accent); color: var(--tma-on-accent); }
@@ -346,19 +364,34 @@ button.tma-cell:active, a.tma-cell:active, label.tma-cell:active { background: v
 .tma-tabbar > button {
   flex: 1; display: grid; justify-items: center; align-content: center; gap: 1px; min-height: 48px;
   border: 0; border-radius: 999px; background: none; color: var(--tma-text);
-  font: inherit; font-size: var(--tma-fs-caption2); font-weight: 500; cursor: pointer;
+  font: inherit; font-size: var(--tma-fs-caption2); font-weight: 600; cursor: pointer;
 }
 .tma-tabbar > button[aria-selected="true"] { background: var(--tma-fill); color: var(--tma-accent-text); }
 :root[data-tma-main-button="visible"] .tma-tabbar { display: none; }
 :root:has(.tma-tabbar:not([hidden])):not([data-tma-main-button="visible"]) { --tma-tabbar-space: 80px; }
 
-/* ---------------------------------------------------------------- glass: floating controls only */
-.tma-glass {
-  background: color-mix(in srgb, var(--tma-surface) 62%, transparent);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8);
-  backdrop-filter: blur(16px) saturate(1.8);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / .35), inset 0 -1px 0 rgb(0 0 0 / .08), 0 8px 24px rgb(0 0 0 / .14);
+/* ---------------------------------------------------------------- glass: floating controls only
+   A material, not a look: every value is a token, so the next platform redesign changes the tokens and
+   data/mini-apps/design-sources.json -> web_materials, not the components (references/mini-apps/
+   materials-and-trends.md section 2). Levels: .is-thin over media (iOS 27 frost "regular"), default for
+   floating bars (frost "medium-large"), .is-thick for sticky controls over text. Switches on <html>:
+   data-tma-glass="off" (solid), and the OS settings below. */
+:root {
+  --tma-glass-tint: 62%;                         /* share of the surface colour that stays opaque */
+  --tma-glass-blur: 16px;
+  --tma-glass-saturate: 1.8;
+  --tma-glass-rim: rgb(255 255 255 / .35);       /* top inner highlight */
+  --tma-glass-rim-low: rgb(0 0 0 / .08);         /* bottom inner edge */
+  --tma-glass-lift: 0 8px 24px rgb(0 0 0 / .14); /* separation from the content below */
 }
+.tma-glass {
+  background: color-mix(in srgb, var(--tma-surface) var(--tma-glass-tint), transparent);
+  -webkit-backdrop-filter: blur(var(--tma-glass-blur)) saturate(var(--tma-glass-saturate));
+  backdrop-filter: blur(var(--tma-glass-blur)) saturate(var(--tma-glass-saturate));
+  box-shadow: inset 0 1px 0 var(--tma-glass-rim), inset 0 -1px 0 var(--tma-glass-rim-low), var(--tma-glass-lift);
+}
+.tma-glass.is-thin { --tma-glass-tint: 45%; --tma-glass-blur: 6px; --tma-glass-lift: 0 4px 12px rgb(0 0 0 / .12); }
+.tma-glass.is-thick { --tma-glass-tint: 80%; --tma-glass-blur: 24px; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .tma-glass { background: var(--tma-surface); }
 }
@@ -367,6 +400,12 @@ button.tma-cell:active, a.tma-cell:active, label.tma-cell:active { background: v
 }
 :root[data-tma-glass="off"] .tma-glass { background: var(--tma-surface); -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: 0 1px 0 var(--tma-separator); }
 :root[data-tma-perf="low"] .tma-glass { background: var(--tma-surface); -webkit-backdrop-filter: none; backdrop-filter: none; }
+/* Scroll edge under a sticky glass control at the top: content fades out instead of colliding with it. */
+.tma-scroll-edge { position: sticky; top: 0; z-index: 9; }
+.tma-scroll-edge::after {
+  content: ""; position: absolute; inset-inline: 0; top: 100%; height: 12px; pointer-events: none;
+  background: linear-gradient(var(--tma-edge, var(--tma-page)), transparent);
+}
 
 /* ---------------------------------------------------------------- cards, banner, placeholder */
 .tma-card { background: var(--tma-surface); border-radius: var(--tma-r-group); padding: var(--tma-s4); }
@@ -377,11 +416,19 @@ button.tma-cell:active, a.tma-cell:active, label.tma-cell:active { background: v
 }
 .tma-banner__close { position: absolute; top: var(--tma-s2); inset-inline-end: var(--tma-s2); width: 32px; height: 32px; }
 .tma-placeholder { display: grid; justify-items: center; gap: var(--tma-s2); padding: var(--tma-s8) var(--tma-s6); text-align: center; }
-.tma-placeholder__title { font-size: var(--tma-fs-title3); font-weight: 600; margin: 0; }
+.tma-placeholder__title { font-size: var(--tma-fs-title2); font-weight: 600; line-height: 1.273; margin: 0; }
+.tma-placeholder__icon {
+  display: grid; place-items: center; width: 50px; height: 50px; margin-bottom: var(--tma-s2); border-radius: 50%;
+  background: var(--tma-tonal); color: var(--tma-accent-text);
+}
+.tma-placeholder__icon > .tma-icon { width: 26px; height: 26px; stroke-width: 2; }
 .tma-placeholder__text { color: var(--tma-hint); margin: 0; max-width: 32ch; }
 
 /* ---------------------------------------------------------------- inputs */
 .tma-field { display: grid; gap: 6px; }
+/* Android: outlined fields with an 8 px radius (Telegram Mini Apps UI Kit, Android templates) */
+:root[data-tma-platform="android"] .tma-field > .tma-input { background: transparent; border-radius: 8px; box-shadow: inset 0 0 0 1px var(--tma-fill-strong); }
+:root[data-tma-platform="android"] .tma-field > .tma-input:focus { box-shadow: inset 0 0 0 2px var(--tma-accent); }
 .tma-field__label { padding: 0 var(--tma-s4); color: var(--tma-section-header); font-size: var(--tma-fs-footnote); }
 .tma-field__error { padding: 0 var(--tma-s4); color: var(--tma-danger); font-size: var(--tma-fs-footnote); }
 .tma-input {
@@ -408,7 +455,7 @@ select.tma-input {
   background: var(--tma-fill-strong); cursor: pointer; transition: background-color var(--tma-dur) var(--tma-ease);
 }
 .tma-switch::after {
-  content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%;
+  content: ""; position: absolute; top: 2px; inset-inline-start: 2px; width: 27px; height: 27px; border-radius: 50%;
   background: var(--tma-fb-knob); box-shadow: 0 2px 6px rgb(0 0 0 / .2); transition: transform var(--tma-dur) var(--tma-ease);
 }
 .tma-switch:checked { background: var(--tma-success); }
@@ -461,6 +508,14 @@ select.tma-input {
   animation: tma-sheet-in var(--tma-dur) var(--tma-ease);
 }
 .tma-sheet::before { content: ""; display: block; width: 36px; height: 5px; margin: 0 auto var(--tma-s3); border-radius: 3px; background: var(--tma-fill-strong); }
+/* iOS 27: the sheet floats 6 pt from the screen edges, all corners round, a wider and thinner grabber, a soft
+   shadow; the dimming layer is overlay black at 20 % (native-anatomy.md section 5). Android keeps the edge sheet. */
+:root[data-tma-platform="ios"] .tma-sheet {
+  inset-inline: 6px; bottom: 6px;
+  border-radius: var(--tma-r-sheet); box-shadow: 0 8px 48px rgb(0 0 0 / .25);
+  padding-bottom: calc(var(--tma-safe-bottom) + var(--tma-s4));
+}
+:root[data-tma-platform="ios"] .tma-sheet::before { width: 60px; height: 4px; margin-top: -2px; border-radius: 2px; }
 @keyframes tma-sheet-in { from { transform: translateY(100%); } }
 .tma-sheet__head { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; margin-bottom: var(--tma-s4); }
 .tma-sheet__title { text-align: center; font-weight: 600; font-size: var(--tma-fs-body); }
@@ -522,6 +577,9 @@ select.tma-input {
 .tma-kv { margin: 0; background: var(--tma-surface); border-radius: var(--tma-r-group); overflow: hidden; }
 .tma-kv > div { display: flex; justify-content: space-between; gap: var(--tma-s4); min-height: 44px; align-items: center; padding: var(--tma-s2) var(--tma-s4); }
 .tma-kv > div + div { border-top: 1px solid var(--tma-separator); }
+.tma-kv.is-stacked > div { display: grid; justify-content: stretch; gap: 2px; padding-block: 10px; }
+.tma-kv.is-stacked dt { font-size: var(--tma-fs-footnote); }
+.tma-kv.is-stacked dd { text-align: start; }
 .tma-kv dt { color: var(--tma-hint); }
 .tma-kv dd { margin: 0; text-align: end; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 .tma-rank { width: 2ch; flex: none; color: var(--tma-hint); text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
@@ -789,6 +847,10 @@ select.tma-input {
   color: var(--tma-on-brand);
 }
 .tma-hero .tma-hint, .tma-hero .tma-figure__minor { color: color-mix(in srgb, var(--tma-on-brand) 72%, transparent); }
+
+/* tilt: a card that follows the device orientation (tma.motion); flat when motion is reduced */
+.tma-tilt { transition: transform 120ms linear; will-change: transform; }
+@media (prefers-reduced-motion: reduce) { .tma-tilt { transform: none !important; } }
 
 /* ---------------------------------------------------------------- motion and accessibility preferences */
 @media (prefers-reduced-motion: reduce) {

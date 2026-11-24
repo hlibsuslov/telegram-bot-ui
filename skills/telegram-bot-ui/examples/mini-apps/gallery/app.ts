@@ -4,9 +4,11 @@ import { createTma } from '../_kit/tma.ts';
 import { formatGrams, formatStars, giftVars, limitedLeft, rarityPercent, rarityTier, starsText } from '../_kit/tg-values.ts';
 
 const tma = createTma();
+// English strings only; RTL languages are accepted so the stand's Language select shows the mirrored layout.
+tma.locale(['en', 'ar', 'he', 'fa']);
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const ICONS = '../_kit/icons.svg';
-const GROUPS = ['text', 'structure', 'navigation', 'actions', 'settings', 'input', 'display', 'media', 'tables', 'overlays', 'telegram', 'icons'];
+const GROUPS = ['text', 'structure', 'navigation', 'actions', 'settings', 'input', 'display', 'media', 'tables', 'overlays', 'telegram', 'device', 'icons'];
 const icon = (id: string) => `<svg class="tma-icon" aria-hidden="true"><use href="${ICONS}#i-${id}"/></svg>`;
 
 /* type scale: every role, regular and emphasized */
@@ -115,6 +117,34 @@ $('demo-boost').onclick = () => {
   const url = 'https://t.me/boost/example_club';
   if (tma.inTelegram && tma.has('6.1')) (tma.tg as unknown as { openTelegramLink(u: string): void }).openTelegramLink(url);
   else toast('Boosts open in Telegram');
+};
+
+/* device: haptics playground, tilt, location (haptics-and-device.md) */
+const chip = (label: string, run: () => boolean) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'tma-chip'; b.textContent = label;
+  b.onclick = () => { if (!run()) toast(tma.haptic.enabled ? 'No haptics here (needs Telegram 6.1+)' : 'Vibration is off in this app'); };
+  return b;
+};
+$('impacts').replaceChildren(...(['light', 'medium', 'heavy', 'rigid', 'soft'] as const).map((s) => chip(s[0].toUpperCase() + s.slice(1), () => tma.haptic.impact(s))));
+$('notifies').replaceChildren(chip('Success', tma.haptic.success), chip('Warning', tma.haptic.warning), chip('Error', tma.haptic.error), chip('Selection', tma.haptic.select));
+($('haptic-on') as HTMLInputElement).onchange = (e) => { tma.haptic.setEnabled((e.target as HTMLInputElement).checked); tma.haptic.select(); };
+let stopTilt: (() => void) | null = null;
+$('demo-tilt').onclick = () => {
+  if (stopTilt) { stopTilt(); stopTilt = null; $('tilt').style.transform = ''; $('tilt-v').textContent = 'Stopped'; return; }
+  stopTilt = tma.motion('orientation', (r) => {
+    const rx = Math.max(-12, Math.min(12, (r.beta ?? 0) * 30)), ry = Math.max(-12, Math.min(12, (r.gamma ?? 0) * 30));
+    $('tilt').style.transform = `perspective(600px) rotateX(${rx.toFixed(1)}deg) rotateY(${ry.toFixed(1)}deg)`;
+    $('tilt-v').textContent = `beta ${(r.beta ?? 0).toFixed(2)} · gamma ${(r.gamma ?? 0).toFixed(2)} rad`;
+  }, { refreshMs: 50 });
+  if (!stopTilt) $('tilt-v').textContent = 'Motion sensors need Telegram 8.0 on a phone';
+  else tma.haptic.tap();
+};
+$('demo-location').onclick = async () => {
+  $('loc-v').textContent = 'Locating…';
+  const d = await tma.location();
+  $('loc-v').textContent = d ? `Central, 400 m away (±${d.horizontal_accuracy ?? '?'} m)` : 'Location is off: choose a pickup point from the list';
+  if (d) tma.haptic.success();
 };
 
 /* selection controls */

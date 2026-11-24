@@ -13,6 +13,12 @@ with the closest recipe (90-99) and the screen pattern for the product type.
 | "Rework / redesign our Mini App like Telegram", "make it native" | [rework.md](rework.md) | `scripts/miniapp_rework.py plan <app>` |
 | "It looks generated / web-like / cheap", "make it premium" | [anti-slop.md](anti-slop.md) §5 | `scripts/miniapp_lint.py` |
 | Stars, grams, gifts, Premium, verification in the app | [telegram-elements.md](telegram-elements.md) | `_kit/tg-values.ts` |
+| "Add vibration / haptics", "use the gyroscope / tilt", "find the user's location", "Face ID" | [haptics-and-device.md](haptics-and-device.md) | `tma.haptic`, `tma.motion`, `tma.location` |
+| "Make it accessible", "VoiceOver", "translate the app", "Arabic / RTL", "plural forms" | [accessibility-and-language.md](accessibility-and-language.md) | `tma.locale()`, `.tma-sr-only` |
+| "Add a form", "the keyboard covers the field", "handle errors / offline", "it booked twice" | [forms-and-data.md](forms-and-data.md) | `tma.api()`, `idempotencyKey()`, `tma.hideKeyboard()` |
+| "Add glassmorphism", "make it look like the new iOS", "modern / trendy", "use view transitions" | [materials-and-trends.md](materials-and-trends.md) | `.tma-glass` levels, glass tokens |
+| "Polish it", "make it cleaner", "unslop it" | [anti-slop.md](anti-slop.md) §5 | lint, stand matrix |
+| "Build it from our Figma", "match iOS 27" | [figma-workflow.md](figma-workflow.md), [native-anatomy.md](native-anatomy.md) | Figma MCP: `get_metadata`, `get_design_context` |
 | "Add a screen / a table / settings / a gallery" | `data/mini-apps/components.json`, [components.md](components.md) | the kit gallery for the markup |
 | "Check this screen", "where should the price / photo go", "make the catalogue better" | [layout-rules.md](layout-rules.md) | `scripts/miniapp_layout.py show / review` |
 | "What does an app for X look like" (gym, bookstore, SaaS, clinic, events…) | [screen-patterns.md](screen-patterns.md) | the matching example |

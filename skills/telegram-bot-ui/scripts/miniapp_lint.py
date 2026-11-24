@@ -54,6 +54,19 @@ in references/mini-apps/anti-slop.md#linter-rules):
     MA33 client-identity  S   initDataUnsafe sent to the server: send the raw initData (Authorization: tma <initData>) (error)
     MA34 caps-label       R   uppercase labels with letter-spacing: sentence case in the type roles
     MA35 nested-surface   R   a surface inside a surface (card in card, list in card, tinted box in a card): one level
+  device (D = references/mini-apps/haptics-and-device.md)
+    MA36 haptic-stream    D   haptics inside scroll / pointermove / input handlers or timers: one haptic per user moment
+    MA37 sensor-stop      D   a motion sensor or tma.motion() started and never stopped in the file: battery and privacy
+  accessibility and language (L = references/mini-apps/accessibility-and-language.md)
+    MA38 icon-name        L   a button or link with only an icon inside and no aria-label: screen readers say "button"
+    MA39 physical-side    L   margin / padding -left / -right, text-align or float left / right: logical properties mirror in RTL
+  forms (F = references/mini-apps/forms-and-data.md)
+    MA40 number-input     F   type="number": text + inputmode="decimal" / "numeric" (comma locales, codes, screen readers)
+    MA41 autofocus        F   autofocus on a field: the keyboard covers the screen before the user has seen it
+  decoration in place of structure (A)
+    MA42 side-stripe      A   a coloured border of 2 px or more on one side of a card, row or callout
+    MA43 hard-shadow      A   an offset shadow with no blur (4px 4px 0): a costume, not depth
+    MA44 eyebrow          A   an eyebrow / kicker / overline label above a heading: the heading alone
 """
 from __future__ import annotations
 
@@ -82,6 +95,10 @@ RULES = {
     "MA28": ("warn", "currency-label"), "MA29": ("error", "trust-mark"),
     "MA30": ("warn", "nav-drawer"), "MA31": ("warn", "hype-copy"), "MA32": ("warn", "glow"),
     "MA33": ("error", "client-identity"), "MA34": ("warn", "caps-label"), "MA35": ("warn", "nested-surface"),
+    "MA36": ("warn", "haptic-stream"), "MA37": ("warn", "sensor-stop"),
+    "MA38": ("warn", "icon-name"), "MA39": ("warn", "physical-side"),
+    "MA40": ("warn", "number-input"), "MA41": ("warn", "autofocus"),
+    "MA42": ("warn", "side-stripe"), "MA43": ("warn", "hard-shadow"), "MA44": ("warn", "eyebrow"),
 }
 TOKEN = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b|\bBOT_TOKEN\b|\bTELEGRAM_BOT_TOKEN\b")
 COLOR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\([^)]*\)")
@@ -328,6 +345,26 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
             ident = re.search(r"(?:JSON\.stringify|body\s*:)[^;\n]{0,200}initDataUnsafe", code)
             if ident:
                 add("MA33", path, text, ident.start(), "initDataUnsafe sent to the server: send the raw initData and verify it there (security.md)")
+        # ---- forms: number inputs and autofocus (markup and JSX / template strings)
+        if not server and not in_kit and ext in (".html", ".htm", ".js", ".mjs", ".ts", ".tsx", ".jsx"):
+            num = re.search(r"<input\b[^>]*\btype\s*=\s*[{\"']*number\b", text, re.I) \
+                or re.search(r"\btype\s*:\s*['\"]number['\"]", text)
+            if num:
+                add("MA40", path, text, num.start(), "type=\"number\": type=\"text\" with inputmode=\"decimal\" or \"numeric\", "
+                    "parsed with the user's locale")
+            af = re.search(r"<(?:input|textarea|select)\b[^>]*\bautoFocus?\b", text, re.I)
+            if af:
+                add("MA41", path, text, af.start(), "autofocus opens the keyboard over the screen on launch: focus on the user's tap")
+
+        # ---- device: haptics in streams of events, sensors left running
+        if code and not server:
+            stream = re.search(r"(?:addEventListener\(\s*['\"](?:scroll|wheel|pointermove|mousemove|touchmove|input|resize)['\"]|\bon(?:scroll|pointermove|mousemove|touchmove|input)\s*=|setInterval\s*\(|requestAnimationFrame\s*\()"
+                               r"(?:[^\n]|\n[ \t]+){0,240}?(?:impactOccurred|notificationOccurred|selectionChanged|haptic\.(?:tap|impact|select|notify|success|warning|error))", code)
+            if stream:
+                add("MA36", path, text, stream.start(), "haptic inside a scroll / move / input handler or a timer: play it once per user moment")
+            started = re.search(r"(?:Accelerometer|Gyroscope|DeviceOrientation)\??\.start\s*\(|\bmotion\(\s*['\"](?:accelerometer|gyroscope|orientation)", code)
+            if started and not in_kit and not re.search(r"(?:Accelerometer|Gyroscope|DeviceOrientation)\??\.stop\s*\(|\bstop\w*\s*\(\s*\)|\bstop\w*!?\(\)|stop\w*\?\.\(\)", code):
+                add("MA37", path, text, started.start(), "a motion sensor starts and is never stopped: stop it when the screen closes")
         # ---- Telegram's own elements: currency names users see, marks only Telegram draws
         if not server and ext in (".html", ".htm"):
             shown = re.sub(r"<(script|style)\b.*?</\1>|<[^>]+>", lambda m: " " * len(m.group(0)), text, flags=re.S | re.I)
@@ -372,11 +409,22 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
                 line = visible[visible.rfind("\n", 0, m.start()) + 1:visible.find("\n", m.start())].strip()
                 add("MA13", path, text, m.start(), f"emoji {m.group(0)!r} in {line[:40]!r}: a kit line icon (open SVG set) or "
                     "text; the Stars sign is the .tma-star SVG")
+            eyebrow = re.search(r"class\s*=\s*[\"'][^\"']*\b(?:eyebrow|kicker|overline|pretitle|supertitle)\b", text, re.I)
+            if eyebrow:
+                add("MA44", path, text, eyebrow.start(), "eyebrow label above a heading: delete it and let the heading speak")
             for pos, outer, inner in nested_surfaces(text)[:5]:
                 add("MA35", path, text, pos, f"{inner!r} inside {outer!r}: one surface level; rows or plain content inside a card")
             own_back = re.search(r"history\.back\s*\(|<(?:button|a)\b[^>]*(?:class|id)=[\"'][^\"']*\b(?:back-btn|btn-back|back-button|nav-back)\b", text, re.I)
             if own_back:
                 add("MA19", path, text, own_back.start(), "own back control: Telegram's BackButton, driven by one navigation stack")
+            for m in re.finditer(r"<(button|a)\b([^>]*)>(.*?)</\1>", text, re.S | re.I):
+                attrs, inner = m.group(2), m.group(3)
+                if re.search(r"aria-label(?:ledby)?\s*=|\btitle\s*=", attrs, re.I) or "tma-sr-only" in inner \
+                        or re.search(r"<img\b[^>]*\balt=[\"'][^\"']+", inner, re.I):
+                    continue
+                if re.search(r"<(?:svg|img|i|span)\b", inner, re.I) and not re.sub(r"<[^>]+>|&nbsp;|\s", "", inner):
+                    add("MA38", path, text, m.start(), f"<{m.group(1)}> with only an icon: aria-label names the action "
+                        "(\"Search\", \"Close\"), the icon gets aria-hidden=\"true\"")
             labels = set(re.findall(r"<label\b[^>]*\bfor=[\"']([^\"']+)", text, re.I))
             for m in re.finditer(r"<input\b([^>]*)>", text, re.I):
                 attrs = m.group(1)
@@ -410,6 +458,20 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
         # ---- CSS
         for css, offset in css_parts:
             clean = COMMENT_CSS.sub(lambda m: " " * len(m.group(0)), css)
+            if not in_kit:
+                for sel, body, pos in _css_rules(clean):
+                    stripe = re.search(r"border-(?:left|right|inline-start|inline-end)\s*:\s*([2-9]|\d{2,})(?:\.\d+)?px\s+solid", body)
+                    if stripe and re.search(r"card|item|row|cell|callout|alert|notice|note|quote|tip|warning", sel, re.I) \
+                            and not re.search(r"quote|blockquote", sel, re.I):
+                        add("MA42", path, text, offset + pos, f"side stripe on {sel.strip()[:40]!r}: a tag, an icon or the section header says what it is")
+                    hard = re.search(r"box-shadow\s*:[^;]*?(?<![\d.])-?[1-9]\d*px\s+-?\d+px\s+0(?:px)?\s+(?!\d)", body)
+                    if hard and "inset" not in hard.group(0):
+                        add("MA43", path, text, offset + pos, f"hard offset shadow on {sel.strip()[:40]!r}: theme surfaces, or a soft shadow for floating things")
+                for n, m in enumerate(re.finditer(r"(?<![-\w])(?:margin|padding)-(?:left|right)\s*:|\b(?:text-align|float)\s*:\s*(?:left|right)\b", clean)):
+                    if n == 3:
+                        break
+                    add("MA39", path, text, offset + m.start(), f"{m.group(0).rstrip(':').strip()!r} stays put in Arabic, Hebrew and Persian: "
+                        "margin-inline-start / -end, padding-inline-*, text-align: start / end")
             all_css.append(clean)
             # selectors are not colours (#add, #face): blank them, keep offsets
             no_selectors = re.sub(r"[^{}]*\{", lambda m: " " * (len(m.group(0)) - 1) + "{", clean)
