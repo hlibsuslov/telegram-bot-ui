@@ -13,10 +13,10 @@ const here = dirname(fileURLToPath(import.meta.url));
 const APPS = {
   vanilla: { 'vanilla/app.ts': 'app.js', '_kit/tma.ts': 'tma.js' },
   portfolio: { 'portfolio/app.ts': 'app.js', '_kit/tma.ts': 'tma.js' },
-  gallery: { 'gallery/app.ts': 'app.js', '_kit/tma.ts': 'tma.js' },
+  gallery: { 'gallery/app.ts': 'app.js', '_kit/tma.ts': 'tma.js', '_kit/tg-values.ts': 'tg-values.js' },
   catalog: { 'catalog/app.ts': 'app.js', '_kit/tma.ts': 'tma.js' },
 };
-const KIT_IMPORT = /from\s+['"]\.\.\/_kit\/tma\.ts['"]/g;
+const KIT_IMPORT = /from\s+['"]\.\.\/_kit\/([\w-]+)\.ts['"]/g;
 
 function build(check) {
   let stale = 0;
@@ -33,7 +33,7 @@ function build(check) {
         continue;
       }
       const js = stripTypeScriptTypes(readFileSync(from, 'utf8'), { mode: 'strip' })
-        .replace(KIT_IMPORT, "from './tma.js'");
+        .replace(KIT_IMPORT, "from './$1.js'");
       mkdirSync(dirname(to), { recursive: true });
       writeFileSync(to, `// Built by build.mjs from ${src}. Do not edit.\n${js}`);
       console.log(`built ${relative(here, to)}`);

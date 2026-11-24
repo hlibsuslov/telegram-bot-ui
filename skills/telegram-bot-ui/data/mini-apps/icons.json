@@ -69,6 +69,16 @@
    "material": "star",
    "use": "favourite, rating, Stars (with the word)"
   },
+  "stars": {
+   "sf_symbol": "star.fill",
+   "material": "star (filled)",
+   "use": "Telegram Stars currency sign before an amount (.tma-amount.is-stars); filled, gold via .tma-star"
+  },
+  "bolt": {
+   "sf_symbol": "bolt",
+   "material": "bolt",
+   "use": "boosts: \"Boost the channel\" rows and boost counts"
+  },
   "heart": {
    "sf_symbol": "heart",
    "material": "favorite",

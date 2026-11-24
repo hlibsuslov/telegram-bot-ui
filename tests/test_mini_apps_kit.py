@@ -32,7 +32,7 @@ class Lint(unittest.TestCase):
 
     def test_errors_are_the_security_and_native_rules(self):
         rep = lint_dir(BAD)
-        self.assertEqual({f.rule for f in rep.errors}, {"MA01", "MA02", "MA03", "MA04", "MA25"})
+        self.assertEqual({f.rule for f in rep.errors}, {"MA01", "MA02", "MA03", "MA04", "MA25", "MA29"})
 
     def test_kit_and_examples_are_clean(self):
         rep = lint_dir(KIT)

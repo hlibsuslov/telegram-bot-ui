@@ -43,6 +43,9 @@ in references/mini-apps/anti-slop.md#linter-rules):
   payment warnings (P = references/mini-apps/payments.md)
     MA26 client-price     P   price / amount / total sent to a checkout, invoice or order endpoint: the server prices the cart
     MA27 paid-unlock      P   unlocking on invoice status "paid" without asking the server (watchOrder or /orders)
+  Telegram's own elements (T = references/mini-apps/telegram-elements.md)
+    MA28 currency-label   T   "XTR", "Toncoin" or "12 TON" shown to users: "⭐ 250", "12 GRAM"
+    MA29 trust-mark       T   an own verified / Premium badge (class, id, aria-label, title): Telegram draws those (error)
 """
 from __future__ import annotations
 
@@ -68,10 +71,15 @@ RULES = {
     "MA19": ("warn", "own-back"), "MA20": ("warn", "web-login"), "MA21": ("warn", "hover-only"),
     "MA22": ("warn", "small-text"), "MA23": ("warn", "viewport-meta"), "MA24": ("warn", "label"),
     "MA25": ("error", "pay-form"), "MA26": ("warn", "client-price"), "MA27": ("warn", "paid-unlock"),
+    "MA28": ("warn", "currency-label"), "MA29": ("error", "trust-mark"),
 }
 TOKEN = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b|\bBOT_TOKEN\b|\bTELEGRAM_BOT_TOKEN\b")
 COLOR = re.compile(r"#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?|oklch|oklab|lab|lch)\([^)]*\)")
 EMOJI = re.compile("[\U0001F300-\U0001FAFF\U0001F000-\U0001F2FF\u2600-\u27BF\u2B50\u2B55]")
+# "XTR 250", "250 XTR", "Toncoin" (not "formerly Toncoin"), "12.5 TON": names users should not see on screen
+CURRENCY_SHOWN = re.compile(r"\bXTR\s*\d|\d[\d.,\s]*XTR\b|(?<!formerly )\bToncoin\b|\d[\d.,]*\s*TON\b")
+TRUST_MARK = re.compile(r"(?:\bclass|\bid|className)\s*[=:]\s*[\"'`][^\"'`]*\b(?:verified|verification|premium)[-_]?(?:badge|mark|check|tick|icon)\b"
+                        r"|(?:aria-label|title)\s*=\s*[\"'](?:verified|premium)\b", re.I)
 STARS_AMOUNT = re.compile(r"⭐️?\s*(?:\d|\$\{)")  # the Telegram Stars currency sign before an amount is not decoration
 TG_SCRIPT = re.compile(r"<script\b[^>]*\bsrc=[\"']https://telegram\.org/js/telegram-web-app\.js", re.I)
 STYLE_BLOCK = re.compile(r"<style[^>]*>(.*?)</style>", re.S | re.I)
@@ -248,6 +256,22 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
             paid = re.search(r"(===?|==)\s*['\"]paid['\"]|['\"]paid['\"]\s*(===?|==)", code)
             if paid and not re.search(r"watchOrder|/orders?\b|orderStatus|getOrder", code):
                 add("MA27", path, text, paid.start(), "invoice status 'paid' is a hint: ask the server for the order before unlocking")
+        # ---- Telegram's own elements: currency names users see, marks only Telegram draws
+        if not server and ext in (".html", ".htm"):
+            shown = re.sub(r"<(script|style)\b.*?</\1>|<[^>]+>", lambda m: " " * len(m.group(0)), text, flags=re.S | re.I)
+            cur = CURRENCY_SHOWN.search(shown)
+            if cur:
+                add("MA28", path, text, cur.start(), f"{cur.group(0).strip()!r} on screen: Stars as '⭐ 250', grams as '12 GRAM' (telegram-elements.md)")
+        if code and not server:
+            for lit in re.finditer(r"[`'\"]([^`'\"\n]*)[`'\"]", code):
+                cur = CURRENCY_SHOWN.search(lit.group(1)) or re.search(r"\}\s*(?:XTR|TON)\b", lit.group(1))
+                if cur:
+                    add("MA28", path, text, lit.start(), f"{cur.group(0).strip()!r} in a label: Stars as '⭐ 250', grams as '12 GRAM'")
+                    break
+        if not server and ext in (".html", ".htm", ".js", ".mjs", ".ts", ".tsx", ".jsx"):
+            mark = TRUST_MARK.search(text)
+            if mark:
+                add("MA29", path, text, mark.start(), "own verified / Premium mark: Telegram draws trust marks; say it in text (telegram-elements.md T7-T8)")
         if not server and re.search(r"telegram-widget\.js|oauth\.telegram\.org|Login with Telegram", text, re.I):
             m = re.search(r"telegram-widget\.js|oauth\.telegram\.org|Login with Telegram", text, re.I)
             add("MA20", path, text, m.start(), "web login inside a Mini App: initData already identifies the user")
@@ -267,7 +291,7 @@ def lint_files(paths: list[str], root: str | None = None) -> Report:
                 inner = re.sub(r"<[^>]+>", "", m.group(2))
                 if EMOJI.search(STARS_AMOUNT.sub("", inner)):
                     add("MA13", path, text, m.start(), f"emoji in <{m.group(1)}> {inner.strip()[:30]!r}: a line icon or text")
-            own_back = re.search(r"history\.back\s*\(|<(?:button|a)[^>]*(?:class|id)=[\"'][^\"']*(?:back-btn|btn-back|back-button|nav-back)", text, re.I)
+            own_back = re.search(r"history\.back\s*\(|<(?:button|a)\b[^>]*(?:class|id)=[\"'][^\"']*\b(?:back-btn|btn-back|back-button|nav-back)\b", text, re.I)
             if own_back:
                 add("MA19", path, text, own_back.start(), "own back control: Telegram's BackButton, driven by one navigation stack")
             labels = set(re.findall(r"<label\b[^>]*\bfor=[\"']([^\"']+)", text, re.I))

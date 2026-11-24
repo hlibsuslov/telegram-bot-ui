@@ -57,7 +57,8 @@ cropped; media cards and tiles put the image on top at full width; rows put the 
    `Beginner · 20 min · No equipment`).
 3. **Price** under the meta in headline weight, tabular figures, the user's locale
    (`Intl.NumberFormat`): `€12.90`; an old price struck through after it (`€18.50 €24.00`); `from €25` when
-   it varies; the period after it (`€12 / month`); Stars as `⭐ 250`. Never in an accent pill, never on the
+   it varies; the period after it (`€12 / month`); Stars as `⭐ 250`, grams as `12.5 GRAM`
+   ([telegram-elements.md](telegram-elements.md)). Never in an accent pill, never on the
    image. **Listings** are the exception: price leads, it is the deciding fact.
 4. **Rating** as a short meta: `★ 4.8 (120)`; star rows only in the detail screen's reviews.
 5. **Availability** as quiet text: `In stock · ships in 2 days`, `3 spots left`, `Sold out` (dimmed card,

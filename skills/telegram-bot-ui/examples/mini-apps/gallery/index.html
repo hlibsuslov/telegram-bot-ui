@@ -300,6 +300,57 @@
     </ul>
   </section>
 
+  <!-- ============================== TELEGRAM VALUES (references/mini-apps/telegram-elements.md) -->
+  <section class="tma-section" data-group="telegram" aria-labelledby="g-stars">
+    <h2 class="tma-section__header" id="g-stars"><strong>Telegram Stars</strong><span>whole numbers, own glyph</span></h2>
+    <div class="tma-card">
+      <p class="tma-caption" style="margin:0">Stars balance</p>
+      <p class="tma-figure" style="margin:var(--tma-s1) 0 0"><span class="tma-amount is-stars"><svg class="tma-star" aria-hidden="true"><use href="../_kit/icons.svg#i-stars"/></svg><span id="stars-balance">0</span></span></p>
+    </div>
+    <ul class="tma-list" style="margin-top:var(--tma-s3)">
+      <li><div class="tma-cell"><span class="tma-cell__body"><span class="tma-cell__title">Extra recipes pack</span><span class="tma-cell__subtitle">One-time purchase</span></span><span class="tma-cell__after"><span class="tma-amount is-stars"><svg class="tma-star" aria-hidden="true"><use href="../_kit/icons.svg#i-stars"/></svg><span>120</span></span></span></div></li>
+      <li><div class="tma-cell"><span class="tma-cell__body"><span class="tma-cell__title">Club membership</span><span class="tma-cell__subtitle">Renews monthly, cancel any time</span></span><span class="tma-cell__after"><span class="tma-amount is-stars"><svg class="tma-star" aria-hidden="true"><use href="../_kit/icons.svg#i-stars"/></svg><span>250</span></span> / month</span></div></li>
+      <li><button class="tma-cell" type="button" id="demo-stars"><span class="tma-cell__body"><span class="tma-cell__title">Show "Pay ⭐ 120" in the MainButton</span></span></button></li>
+    </ul>
+    <p class="tma-section__footer">Users never see "XTR". The MainButton takes plain text, so it carries the ⭐ sign.</p>
+  </section>
+  <section class="tma-section" data-group="telegram" aria-labelledby="g-grams">
+    <h2 class="tma-section__header" id="g-grams"><strong>Grams</strong><span>formerly Toncoin</span></h2>
+    <ul class="tma-list" id="grams">
+      <li><div class="tma-cell"><span class="tma-icon-tile"><svg class="tma-icon" aria-hidden="true"><use href="../_kit/icons.svg#i-wallet"/></svg></span><span class="tma-cell__body"><span class="tma-cell__title">Wallet balance</span></span><span class="tma-cell__after"><span class="tma-amount"><span data-nano="12503400000">0</span><span class="tma-amount__unit">GRAM</span></span></span></div></li>
+      <li><div class="tma-cell is-2"><span class="tma-icon-tile"><svg class="tma-icon" aria-hidden="true"><use href="../_kit/icons.svg#i-arrow-down"/></svg></span><span class="tma-cell__body"><span class="tma-cell__title">From Olena</span><span class="tma-cell__subtitle">Today, 09:12</span></span><span class="tma-cell__after"><span class="tma-amount is-positive"><span data-nano="2500000000" data-signed>0</span><span class="tma-amount__unit">GRAM</span></span></span></div></li>
+      <li><div class="tma-cell is-2"><span class="tma-icon-tile"><svg class="tma-icon" aria-hidden="true"><use href="../_kit/icons.svg#i-arrow-up"/></svg></span><span class="tma-cell__body"><span class="tma-cell__title">Network fee</span><span class="tma-cell__subtitle">Yesterday, 18:40</span></span><span class="tma-cell__after"><span class="tma-amount is-negative"><span data-nano="-41299999">0</span><span class="tma-amount__unit">GRAM</span></span></span></div></li>
+    </ul>
+    <p class="tma-section__footer">Amounts arrive in nanograms as strings; the API's currency code stays "TON", the name of the network.</p>
+  </section>
+  <section class="tma-section" data-group="telegram" aria-labelledby="g-gifts">
+    <h2 class="tma-section__header" id="g-gifts"><strong>Gifts</strong><span>colours from the API</span></h2>
+    <div class="tma-gifts" id="gifts">
+      <button class="tma-gift" type="button" data-gift="cake"><img class="tma-gift__art" src="media/gift-cake.svg" alt="Cake"><span class="tma-gift__title">Cake</span><span class="tma-gift__price"><svg class="tma-star" aria-hidden="true"><use href="../_kit/icons.svg#i-stars"/></svg>25</span><span class="tma-limited"><span class="tma-progress"><i></i></span><span></span></span></button>
+      <button class="tma-gift" type="button" data-gift="plant"><span class="tma-gift__flag">Premium</span><img class="tma-gift__art" src="media/gift-plant.svg" alt="Plant"><span class="tma-gift__title">Plant</span><span class="tma-gift__price"><svg class="tma-star" aria-hidden="true"><use href="../_kit/icons.svg#i-stars"/></svg>50</span></button>
+      <button class="tma-gift" type="button"><img class="tma-gift__art" src="media/gift-mug.svg" alt="Mug"><span class="tma-gift__title">Mug</span><span class="tma-gift__price"><svg class="tma-star" aria-hidden="true"><use href="../_kit/icons.svg#i-stars"/></svg>15</span></button>
+    </div>
+  </section>
+  <section class="tma-section" data-group="telegram" aria-labelledby="g-unique">
+    <h2 class="tma-section__header" id="g-unique">Unique gift: model, backdrop, symbol</h2>
+    <div class="tma-gift is-unique is-lg" id="unique" role="img" aria-labelledby="unique-t">
+      <span class="tma-gift__pattern" aria-hidden="true"></span>
+      <img class="tma-gift__art" src="media/gift-plant.svg" alt="">
+      <span class="tma-gift__title" id="unique-t">Plant #1042</span>
+      <span class="tma-gift__number">Collectible · on Telegram</span>
+    </div>
+    <dl class="tma-kv" id="unique-attrs" style="margin-top:var(--tma-s3)"></dl>
+  </section>
+  <section class="tma-section" data-group="telegram" aria-labelledby="g-marks">
+    <h2 class="tma-section__header" id="g-marks">Premium, boosts, levels: in words</h2>
+    <ul class="tma-list">
+      <li><div class="tma-cell is-2"><span class="tma-icon-tile"><svg class="tma-icon" aria-hidden="true"><use href="../_kit/icons.svg#i-star"/></svg></span><span class="tma-cell__body"><span class="tma-cell__title">Telegram Premium</span><span class="tma-cell__subtitle" id="premium-perk">Checking your account…</span></span></div></li>
+      <li><button class="tma-cell is-2" type="button" id="demo-boost"><span class="tma-icon-tile"><svg class="tma-icon" aria-hidden="true"><use href="../_kit/icons.svg#i-bolt"/></svg></span><span class="tma-cell__body"><span class="tma-cell__title">Boost the club channel</span><span class="tma-cell__subtitle">Opens Telegram's boost screen</span></span><svg class="tma-cell__chevron" aria-hidden="true"><use href="../_kit/icons.svg#i-chevron-right"/></svg></button></li>
+      <li><div class="tma-cell is-2"><span class="tma-icon-tile"><svg class="tma-icon" aria-hidden="true"><use href="../_kit/icons.svg#i-trophy"/></svg></span><span class="tma-cell__body"><span class="tma-cell__title">Buyer level 5</span><span class="tma-limited"><span class="tma-progress"><i style="width:64%"></i></span><span>640 of 1,000 to level 6</span></span></span></div></li>
+    </ul>
+    <p class="tma-section__footer">Verified, Premium and Scam marks next to names are Telegram's. The app never draws them.</p>
+  </section>
+
   <!-- ============================== ICONS -->
   <section class="tma-section" data-group="icons" aria-labelledby="g-icons">
     <h2 class="tma-section__header" id="g-icons"><strong>Icons</strong><span id="icon-count"></span></h2>

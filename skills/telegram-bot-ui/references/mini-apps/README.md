@@ -21,6 +21,7 @@ TON wallet: [../wallet-and-ton.md](../wallet-and-ton.md). Widgets inside a messa
 | "Does `Telegram.WebApp` have X, since which version?" | [webapp-api.md](webapp-api.md), `scripts/webapp_lookup.py` | — |
 | Verify `initData`, sessions, what to trust | [security.md](security.md) | recipe 92 |
 | Take payments: Stars, subscriptions, cards for physical goods, every `invoiceClosed` status | [payments.md](payments.md) | recipes 93, 96 |
+| Show Telegram's own things: Stars, grams (formerly Toncoin), gifts and rarity, Premium, boosts; what never to draw | [telegram-elements.md](telegram-elements.md) | gallery group Telegram |
 | Make it look like Telegram in light and dark, iOS and Android | [telegram-design-guidelines.md](telegram-design-guidelines.md), [design-sources.md](design-sources.md), [design-system.md](design-system.md) | `examples/mini-apps/_kit` |
 | "Make it look like X", "use our brand", "calmer / denser / fintech", restyle an existing app | [design-system.md](design-system.md) §9 styles, `scripts/miniapp_style.py` | `data/mini-apps/styles.json` |
 | Build a screen: shop, gym and trainers, bookstore, SaaS dashboard, form, booking, game, editor | [screen-patterns.md](screen-patterns.md), [components.md](components.md) | recipes 93-99 |
@@ -57,15 +58,15 @@ redistribution). [design-sources.md](design-sources.md) says what was taken from
 | `data/mini-apps/theme-params.json` | `themeParams` key → CSS variable → role → fallbacks |
 | `data/mini-apps/design-sources.json` | iOS 27 colours, type scale, glass, sizes; mapping to theme roles |
 | `data/mini-apps/styles.json` | named design styles: intent, tokens, components, do and don't |
-| `data/mini-apps/components.json` | 97 elements (structure, navigation, actions, settings, input, display, media, tables, overlays) with variants, states, kit class, native replacement and status |
-| `data/mini-apps/icons.json` | 81 kit icons mapped to SF Symbol and Material names |
+| `data/mini-apps/components.json` | 126 elements (structure, navigation, actions, settings, input, display, media, tables, overlays, Telegram's own values) with variants, states, kit class, native replacement and status |
+| `data/mini-apps/icons.json` | 83 kit icons mapped to SF Symbol and Material names, including the Stars sign |
 | `scripts/webapp_lookup.py` | `show`, `search`, `since`, `gates`, `theme`, `sync` over the catalog |
 | `data/mini-apps/layouts.json` | layout rules L01-L25 and 16 content types (image ratio, card slots, price, primary action, detail order) |
 | `scripts/miniapp_layout.py` | `entities`, `show`, `rules`, `review` a screen description, `example` |
 | `scripts/miniapp_style.py` | `presets`, `show`, `css`, `check` for styles and custom brand profiles |
-| `scripts/miniapp_lint.py` | 27 rules: security, native controls, theme, motion, labels, slop (`--json`, `--strict`) |
+| `scripts/miniapp_lint.py` | 29 rules: security, native controls, theme, motion, labels, slop, payments, Telegram's own marks (`--json`, `--strict`) |
 | `scripts/preview_miniapp.py` | local stand with a mock client: platforms, themes, widths, fullscreen, versions |
-| `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets), `tma.ts` (no-dependency kit), `icons.svg` |
+| `examples/mini-apps/_kit` | `tma.css` (roles, scales, primitives, style presets), `tma.ts` (no-dependency kit), `tg-values.ts` (Stars, grams, gift colours, rarity), `icons.svg` |
 | `examples/mini-apps/gallery` | every kit element on one page: open it in the stand and switch platform, theme, width, style |
 
 ## Not covered yet

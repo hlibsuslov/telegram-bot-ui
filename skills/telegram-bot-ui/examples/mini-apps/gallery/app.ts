@@ -1,11 +1,12 @@
 // Kit gallery: renders every kit component and wires the native controls so each can be checked in the
 // preview stand (platforms, schemes, widths, fullscreen, versions, styles) and on a real device.
 import { createTma } from '../_kit/tma.ts';
+import { formatGrams, formatStars, giftVars, limitedLeft, rarityPercent, rarityTier, starsText } from '../_kit/tg-values.ts';
 
 const tma = createTma();
 const $ = (id: string) => document.getElementById(id) as HTMLElement;
 const ICONS = '../_kit/icons.svg';
-const GROUPS = ['text', 'structure', 'navigation', 'actions', 'settings', 'input', 'display', 'media', 'tables', 'overlays', 'icons'];
+const GROUPS = ['text', 'structure', 'navigation', 'actions', 'settings', 'input', 'display', 'media', 'tables', 'overlays', 'telegram', 'icons'];
 const icon = (id: string) => `<svg class="tma-icon" aria-hidden="true"><use href="${ICONS}#i-${id}"/></svg>`;
 
 /* type scale: every role, regular and emphasized */
@@ -64,6 +65,57 @@ fetch(ICONS).then((r) => r.text()).then((svg) => {
     return d;
   }));
 }).catch(() => { $('icon-count').textContent = 'icons.svg did not load'; });
+
+/* Telegram's own values (telegram-elements.md): sample API data, formatted by the kit */
+$('stars-balance').textContent = formatStars(1250);
+for (const el of document.querySelectorAll<HTMLElement>('[data-nano]')) el.textContent = formatGrams(el.dataset.nano ?? '0', { signed: 'signed' in el.dataset });
+const GIFTS: Record<string, { background: { center_color: number; edge_color: number; text_color: number }; remaining?: number; total?: number }> = {
+  cake: { background: { center_color: 0xfbe3ea, edge_color: 0xf2bfcf, text_color: 0x5a2336 }, remaining: 142, total: 5000 },
+  plant: { background: { center_color: 0xdff3e4, edge_color: 0xb5dfc2, text_color: 0x1f4a2c } },
+};
+for (const b of document.querySelectorAll<HTMLElement>('[data-gift]')) {
+  const g = GIFTS[b.dataset.gift ?? ''];
+  if (!g) continue;
+  for (const [k, v] of Object.entries(giftVars(g.background))) b.style.setProperty(k, v);
+  const counter = b.querySelector<HTMLElement>('.tma-limited');
+  if (counter && g.remaining !== undefined && g.total !== undefined) {
+    const left = limitedLeft(g.remaining, g.total);
+    (counter.querySelector('i') as HTMLElement).style.width = `${Math.max(2, left.ratio * 100)}%`;
+    (counter.lastElementChild as HTMLElement).textContent = left.text;
+  }
+}
+const UNIQUE = {
+  model: { name: 'Fern', rarity_per_mille: 12 }, symbol: { name: 'Leaf', rarity_per_mille: 25 },
+  backdrop: { name: 'Moss', rarity_per_mille: 15, colors: { center_color: 0x5b8a72, edge_color: 0x2f4f3f, symbol_color: 0x1e3329, text_color: 0xffffff } },
+  crafted: 'rare',
+};
+for (const [k, v] of Object.entries(giftVars(UNIQUE.backdrop.colors))) $('unique').style.setProperty(k, v);
+$('unique').style.setProperty('--gift-symbol-image', `url("${new URL('media/gift-symbol.svg', location.href).href}")`);
+$('unique-attrs').replaceChildren(...([['Model', UNIQUE.model], ['Backdrop', UNIQUE.backdrop], ['Symbol', UNIQUE.symbol]] as const).map(([label, a]) => {
+  const row = document.createElement('div');
+  const dt = document.createElement('dt'); dt.textContent = label;
+  const dd = document.createElement('dd');
+  dd.append(`${a.name} `);
+  const chip = document.createElement('span'); chip.className = 'tma-rarity'; chip.textContent = rarityPercent(a.rarity_per_mille) ?? '';
+  dd.append(chip);
+  row.append(dt, dd);
+  return row;
+}), (() => {
+  const row = document.createElement('div');
+  row.innerHTML = '<dt>Crafted rarity</dt><dd><span class="tma-rarity"></span></dd>';
+  row.querySelector('.tma-rarity')!.textContent = rarityTier(UNIQUE.crafted); // the markup above always has the chip
+  return row;
+})());
+const user = (tma.tg as unknown as { initDataUnsafe?: { user?: { is_premium?: boolean } } } | null)?.initDataUnsafe?.user;
+$('premium-perk').textContent = user?.is_premium ? 'You have it: two extra saved recipes are on' : 'Subscribers get two extra saved recipes';
+$('demo-stars').onclick = () => {
+  tma.mainButton({ text: `Pay ${starsText(120)}`, onClick: () => { toast('This demo opens no invoice'); tma.mainButton(null); } });
+};
+$('demo-boost').onclick = () => {
+  const url = 'https://t.me/boost/example_club';
+  if (tma.inTelegram && tma.has('6.1')) (tma.tg as unknown as { openTelegramLink(u: string): void }).openTelegramLink(url);
+  else toast('Boosts open in Telegram');
+};
 
 /* selection controls */
 for (const seg of document.querySelectorAll<HTMLElement>('.tma-segmented')) {

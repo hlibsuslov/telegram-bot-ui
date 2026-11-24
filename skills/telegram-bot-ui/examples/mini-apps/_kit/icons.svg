@@ -1,4 +1,5 @@
-<!-- Mini App kit icons: an own line set on a 24 px grid, stroke 1.8, round caps (CC0 within this skill).
+<!-- Mini App kit icons: an own line set on a 24 px grid, stroke 1.8, round caps (CC0 within this skill). i-stars is the one filled glyph:
+     the Telegram Stars currency sign drawn here (not Telegram's artwork), coloured by .tma-star.
      Not Apple SF Symbols and not Material glyphs: data/mini-apps/icons.json maps each id to the SF Symbol and
      Material name with the same meaning, so a design that names those can be built without their artwork.
      Use: <svg class="tma-icon" aria-hidden="true"><use href="icons.svg#i-search"/></svg> or inline the sprite. -->
@@ -16,6 +17,8 @@
   <symbol id="i-coins" viewBox="0 0 24 24"><ellipse cx="10" cy="7" rx="6" ry="2.6"/><path d="M4 7v5c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6V7"/><path d="M8 17.4c.6 1.1 3 1.9 6 1.9 3.3 0 6-1.2 6-2.6V12c0-1-1.4-1.9-3.4-2.3"/></symbol>
   <symbol id="i-gift" viewBox="0 0 24 24"><rect x="4" y="9" width="16" height="11" rx="1.5"/><path d="M3 9h18M12 9v11M12 9c-2-4-6-4-6-1.5S12 9 12 9Zm0 0c2-4 6-4 6-1.5S12 9 12 9Z"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3.8 2.5 5.2 5.7.8-4.1 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4.1-4 5.7-.8L12 3.8Z"/></symbol>
+  <symbol id="i-stars" viewBox="0 0 24 24"><path fill="currentColor" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" d="m12 3.6 2.6 5.3 5.8.85-4.2 4.1 1 5.8L12 16.9l-5.2 2.75 1-5.8-4.2-4.1 5.8-.85L12 3.6Z"/></symbol>
+  <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13.5 3 5.5 13.5h6L10.5 21l8-10.5h-6L13.5 3Z"/></symbol>
   <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 19.5s-7.5-4.4-7.5-10A4.2 4.2 0 0 1 12 7a4.2 4.2 0 0 1 7.5 2.5c0 5.6-7.5 10-7.5 10Z"/></symbol>
   <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6.5 4h11v16L12 16l-5.5 4V4Z"/></symbol>
   <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3.5v11M8 7.5l4-4 4 4"/><path d="M7 11H5.5v9h13v-9H17"/></symbol>

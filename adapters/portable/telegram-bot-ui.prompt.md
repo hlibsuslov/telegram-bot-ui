@@ -255,6 +255,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 - Launching Mini Apps and receiving their data → `references/mini-apps-bridge.md`
 - The Mini App itself: decide, launch, `Telegram.WebApp` by version, design system and styles, components, layout rules, screen patterns, anti-slop, `initData` security, testing → `references/mini-apps/README.md`
 - "Where do the photo, title and price go", reviewing a Mini App screen → `references/mini-apps/layout-rules.md`
+- Stars, grams (formerly Toncoin), gift cards and rarity, Premium and verification marks in an app or message → `references/mini-apps/telegram-elements.md`
 - Wallet pay / sign, TON cards and transfers → `references/wallet-and-ton.md`
 
 **Premium emoji**
@@ -291,7 +292,7 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 | `scripts/validate_rich.py` | Rich Message Limits, drafts, media refs |
 | `scripts/validate_widget.py` / `build_widget.py` / `preview_widget.py` | widget size (zlib-9), runtime gaps, `--strict`; build from the kit; mock preview (proves nothing about real clients) |
 | `scripts/webapp_lookup.py` | `show`, `search`, `since`, `gates`, `theme` over the `Telegram.WebApp` catalog |
-| `scripts/miniapp_lint.py` / `miniapp_layout.py` / `miniapp_style.py` / `preview_miniapp.py` | Mini App lint (27 rules); layout rules (`show`, `review`); styles and brand profiles; mock client preview (proves nothing about real clients) |
+| `scripts/miniapp_lint.py` / `miniapp_layout.py` / `miniapp_style.py` / `preview_miniapp.py` | Mini App lint (29 rules); layout rules (`show`, `review`); styles and brand profiles; mock client preview (proves nothing about real clients) |
 | `scripts/tg_post.py` | validate, preview and publish a post (dry-run by default) |
 | `scripts/emoji_packs.py` | `resolve`, `suggest`, `verify`, `capture`, `apply`, `strip` premium emoji |
 | `scripts/audit_icons.py`, `scripts/audit_copy.py` | one icon family; i18n placeholders, label length, HTML |

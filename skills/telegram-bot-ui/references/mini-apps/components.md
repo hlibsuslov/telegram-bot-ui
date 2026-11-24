@@ -154,6 +154,12 @@ name with the same meaning, so a brief that names "magnifyingglass" or "shopping
 Every element above is rendered in `examples/mini-apps/gallery` (open it in the preview stand) and listed in
 `data/mini-apps/components.json` with its status, variants, states and native replacement.
 
+## 6e. Telegram's own values
+
+Stars amounts, gram amounts, gift cards, unique gifts with rarity, limited counters (kit); paid content,
+Premium perks, rating levels and boosts (patterns); verification marks (never drawn by the app). Rules,
+data and the kit functions: [telegram-elements.md](telegram-elements.md); catalogue group `telegram`.
+
 ## 7. Overlays
 
 | Component | Kit | Rules |

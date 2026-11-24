@@ -1,5 +1,5 @@
 {
- "$comment": "Every element a Mini App screen may need: what the read Figma sources show (ios27 = Apple iOS and iPadOS 27 kit, tgkit = Telegram Mini Apps UI Kit (Community); both read 2026-11-23), what Telegram draws natively (telegram), the TelegramUI library inventory (tgui), the reference screenshots (ref) and this skill's additions (skill). Not read and not represented: the Telegram UI community kit 1348989725141777736 and Appetite UI. status: kit = drawn by examples/mini-apps/_kit/tma.css and shown in examples/mini-apps/gallery or examples/mini-apps/catalog; native = Telegram draws it; pattern = composed from kit parts; avoid = not for Mini Apps (see note). Reference: references/mini-apps/components.md.",
+ "$comment": "Every element a Mini App screen may need: what the read Figma sources show (ios27 = Apple iOS and iPadOS 27 kit, tgkit = Telegram Mini Apps UI Kit (Community); both read 2026-11-23), what Telegram draws natively (telegram), the TelegramUI library inventory (tgui), the reference screenshots (ref), Telegram's own values (Stars, grams, gifts; group telegram) and this skill's additions (skill). Not read and not represented: the Telegram UI community kit 1348989725141777736 and Appetite UI. status: kit = drawn by examples/mini-apps/_kit/tma.css and shown in examples/mini-apps/gallery or examples/mini-apps/catalog; native = Telegram draws it; pattern = composed from kit parts; avoid = not for Mini Apps (see note). Reference: references/mini-apps/components.md.",
  "version": 1,
  "checked": "2026-11-23",
  "groups": [
@@ -11,7 +11,8 @@
   "display",
   "media",
   "tables",
-  "overlays"
+  "overlays",
+  "telegram"
  ],
  "typography": {
   "roles": {
@@ -2084,6 +2085,235 @@
    "native": null,
    "status": "kit",
    "note": "tablets and desktop (L24)"
+  },
+  "stars-amount": {
+   "group": "telegram",
+   "title": "Telegram Stars amount",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "price",
+    "balance with nanostars",
+    "subscription period",
+    "MainButton text"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-amount.is-stars .tma-star",
+   "native": null,
+   "status": "kit",
+   "note": "own gold glyph before a whole number; plain text '⭐ 250' where no markup; never 'XTR' (T1)"
+  },
+  "gram-amount": {
+   "group": "telegram",
+   "title": "Gram amount (formerly Toncoin)",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "balance",
+    "incoming / outgoing transfer"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-amount .tma-amount__unit .is-negative .is-positive",
+   "native": null,
+   "status": "kit",
+   "note": "from nanograms with formatGrams(); ticker GRAM after the number; no drawn coin logo (T2)"
+  },
+  "gift-card": {
+   "group": "telegram",
+   "title": "Gift card (regular)",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "price",
+    "limited",
+    "Premium only",
+    "upgradable"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-gifts .tma-gift .tma-gift__art .tma-gift__title .tma-gift__price .tma-gift__flag",
+   "native": null,
+   "status": "kit",
+   "note": "Gift.background colours via giftVars(); the sticker is the gift's own art (T4)"
+  },
+  "unique-gift": {
+   "group": "telegram",
+   "title": "Unique (collectible) gift",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "tile",
+    "large detail"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-gift.is-unique .tma-gift__pattern .tma-gift__number .is-lg",
+   "native": null,
+   "status": "kit",
+   "note": "backdrop centre to edge, symbol pattern, model; 'Name #1234' (T5)"
+  },
+  "rarity-chip": {
+   "group": "telegram",
+   "title": "Rarity chip",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "per mille as %",
+    "crafted tier"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-rarity",
+   "native": null,
+   "status": "kit",
+   "note": "rarityPercent() / rarityTier(); text, no invented tier colours (T5)"
+  },
+  "limited-counter": {
+   "group": "telegram",
+   "title": "Limited counter",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "left of total",
+    "sold out"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": ".tma-limited .tma-progress",
+   "native": null,
+   "status": "kit",
+   "note": "limitedLeft(); only for gifts that are limited (T4)"
+  },
+  "paid-content": {
+   "group": "telegram",
+   "title": "Paid content lock",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "blurred preview + price"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": null,
+   "native": "sendPaidMedia in chats",
+   "status": "pattern",
+   "note": "in a Mini App: a preview + an invoice (payments.md); the blur-and-star lock in chats is Telegram's (T6)"
+  },
+  "premium-perk": {
+   "group": "telegram",
+   "title": "Telegram Premium perk",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "row text",
+    "plan comparison"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": null,
+   "native": null,
+   "status": "pattern",
+   "note": "initData user.is_premium; say it in words, never draw Telegram's Premium badge (T7)"
+  },
+  "verification-mark": {
+   "group": "telegram",
+   "title": "Verified / Scam / Fake marks",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [],
+   "states": [
+    "D"
+   ],
+   "kit": null,
+   "native": "Telegram profile and chat header",
+   "status": "avoid",
+   "note": "Telegram and verifying organisations draw these; an own check mark next to a name is lint MA29 (T8)"
+  },
+  "emoji-status": {
+   "group": "telegram",
+   "title": "Emoji status",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "set from the app"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": null,
+   "native": "WebApp.setEmojiStatus (8.0)",
+   "status": "native",
+   "note": "Telegram shows the confirmation and the status (T9)"
+  },
+  "rating-level": {
+   "group": "telegram",
+   "title": "User rating level",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "level + progress"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": null,
+   "native": null,
+   "status": "pattern",
+   "note": "ChatFullInfo.rating (9.3) read by the bot; 'Level 5' text + .tma-progress (T10)"
+  },
+  "boost-row": {
+   "group": "telegram",
+   "title": "Boost row",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [
+    "boost link",
+    "boost count"
+   ],
+   "states": [
+    "D"
+   ],
+   "kit": null,
+   "native": "t.me/boost/<channel>",
+   "status": "pattern",
+   "note": "icon bolt + openTelegramLink (T11)"
+  },
+  "wallet-card": {
+   "group": "telegram",
+   "title": "TON wallet card",
+   "sources": [
+    "telegram"
+   ],
+   "variants": [],
+   "states": [
+    "D"
+   ],
+   "kit": null,
+   "native": "the profile page",
+   "status": "native",
+   "note": "ChatFullInfo.ton_wallet_card (10.4); show amounts with formatGrams() only when the user shared them (T12)"
   }
  }
 }

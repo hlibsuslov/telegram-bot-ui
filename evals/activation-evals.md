@@ -204,6 +204,8 @@ description is updated.
 | MA16 | en | "Should this be a Mini App or can the bot do it with buttons?" | no | `references/mini-apps/decide.md`, `recipes/90-mini-app-or-bot.md` |
 | MA17 | en | "Add Stars payments to my Mini App for AI credits." | yes | `references/mini-apps/payments.md`, `recipes/93-mini-app-shop.md` |
 | MA18 | ru | "Подключи оплату картой в нашем мини-аппе доставки кофе." | no | `references/mini-apps/payments.md` |
+| MA19 | ru | "Добавь в мини-апп элементы телеграма: звёздочки, граммы, карточки подарков, как в самом Telegram." | no | `references/mini-apps/telegram-elements.md` |
+| MA20 | en | "Show the user's wallet balance in grams and a verified tick next to trusted sellers in our Mini App." | yes | `references/mini-apps/telegram-elements.md` |
 
 ## Negative — Mini App boundaries (should NOT activate)
 

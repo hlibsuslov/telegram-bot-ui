@@ -47,6 +47,7 @@ adapted). A Mini App is almost always an **Operate** product (people come to do 
 | "No coloured gradients" vs a brand header and CTA | only a tonal gradient of one hue on one moment (hero, promo), fading into the page; buttons solid; cross-hue gradients and gradient text banned |
 | "No glass as decoration" vs Telegram's glass chrome on iOS | glass only on floating controls over scrolling content (tab bar, side circle), with a solid fallback; cards and cells solid |
 | "No NEW badges" vs a coachmark in the reference | a one-time coachmark naming the new feature, remembered; no permanent badges |
+| Own "verified" ticks, Premium-like star badges next to names | trust signals in text; Telegram draws its marks ([telegram-elements.md](telegram-elements.md)) |
 | Stars prices ("⭐ 250") vs "no emoji in labels" | `⭐` directly before an amount is the Telegram Stars currency sign (as in Telegram's own payment UI): allowed in prices and MainButton text; every other emoji in a label stays slop (lint MA13 makes the same exception) |
 | "Primary is off-white on dark" | in a Mini App the primary action is the MainButton in the theme's `button_color` |
 | "Own typeface for an own world" | a Mini App operates inside Telegram: system font; a brand face only inside the one moment |
@@ -125,3 +126,5 @@ not proof of how real clients render.
 | MA25 pay-form | error | own card fields (`autocomplete="cc-*"`, card number or CVV inputs) | payments §4 |
 | MA26 client-price | warning | `price` / `amount` / `total` sent to a checkout, invoice or order endpoint | payments §2 |
 | MA27 paid-unlock | warning | unlocking on invoice status `paid` without asking the server for the order | payments §3 |
+| MA28 currency-label | warning | `XTR`, `Toncoin` or `12.5 TON` shown to users ("formerly Toncoin" is fine) | telegram-elements T1-T2 |
+| MA29 trust-mark | error | an own verified or Premium badge (class, id, `aria-label`, `title`) | telegram-elements T7-T8 |

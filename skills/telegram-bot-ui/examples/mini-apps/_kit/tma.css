@@ -19,6 +19,7 @@
   --tma-fb-overlay: rgb(0 0 0 / .2);
   --tma-fb-seg-on: #ffffff;
   --tma-fb-knob: #ffffff;
+  --tma-fb-star: #f2a100;          /* Telegram Stars gold, approximated (telegram-elements.md) */
   color-scheme: light;
 }
 /* dark fallback: Telegram's scheme when known, the OS scheme in a plain browser */
@@ -34,6 +35,7 @@
   --tma-fb-separator: rgb(255 255 255 / .17);
   --tma-fb-overlay: rgb(0 0 0 / .48);
   --tma-fb-seg-on: rgb(255 255 255 / .27);
+  --tma-fb-star: #ffbf1f;
   color-scheme: dark;
 }
 @media (prefers-color-scheme: dark) {
@@ -48,6 +50,7 @@
     --tma-fb-separator: rgb(255 255 255 / .17);
     --tma-fb-overlay: rgb(0 0 0 / .48);
     --tma-fb-seg-on: rgb(255 255 255 / .27);
+    --tma-fb-star: #ffbf1f;
     color-scheme: dark;
   }
 }
@@ -78,6 +81,8 @@
   --tma-danger-tint: color-mix(in srgb, var(--tma-danger) 14%, transparent);
   --tma-overlay: var(--tma-fb-overlay);
   --tma-seg-on: var(--tma-fb-seg-on);
+  /* Telegram's own value colour: the Stars glyph only, never text, buttons or a theme */
+  --tma-star: var(--tma-fb-star);
   /* brand: one moment per screen (hero header, promo); a style profile sets it, else the accent */
   --tma-brand: var(--tma-accent);
   --tma-on-brand: var(--tma-on-accent);
@@ -222,7 +227,7 @@ button.tma-cell:active, a.tma-cell:active, label.tma-cell:active { background: v
 .tma-cell__subtitle { display: block; color: var(--tma-subtitle); font-size: var(--tma-fs-subhead); line-height: 1.333; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .tma-cell__after { flex: none; color: var(--tma-hint); text-align: end; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .tma-cell__after strong { display: block; color: var(--tma-text); font-weight: 500; }
-.tma-cell__chevron { flex: none; width: 8px; height: 13px; color: var(--tma-fill-strong); }
+.tma-cell__chevron { flex: none; width: 18px; height: 18px; margin-inline-end: -4px; fill: none; stroke: var(--tma-hint); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; opacity: .55; }
 .tma-cell.is-button { color: var(--tma-accent-text); }
 .tma-cell.is-danger { color: var(--tma-danger); }
 
@@ -577,6 +582,52 @@ select.tma-input {
 .tma-map { position: relative; aspect-ratio: 16 / 10; border-radius: var(--tma-r-group); overflow: hidden; background: var(--tma-fill); }
 .tma-qr { display: grid; place-items: center; padding: var(--tma-s4); border-radius: var(--tma-r-group); background: var(--tma-fb-knob); width: min(240px, 70vw); aspect-ratio: 1; margin: 0 auto; }
 .tma-qr > * { width: 100%; height: 100%; }
+
+/* ---------------------------------------------------------------- Telegram's own values: Stars, grams, gifts
+   references/mini-apps/telegram-elements.md; formatting in _kit/tg-values.ts. Gift colours come from the API
+   (--gift-center / --gift-edge / --gift-text / --gift-symbol, set by giftVars()); the fallbacks are theme roles. */
+.tma-amount { display: inline-flex; align-items: baseline; gap: .22em; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tma-amount__unit { color: var(--tma-hint); font-size: .72em; font-weight: 600; letter-spacing: .02em; }
+.tma-amount.is-stars { align-items: center; }
+.tma-star { flex: none; width: 1em; height: 1em; color: var(--tma-star); } /* the symbol paints itself in currentColor */
+.tma-figure .tma-star { width: .72em; height: .72em; }
+.tma-amount.is-negative { color: var(--tma-danger); }
+.tma-amount.is-positive { color: var(--tma-success); }
+
+.tma-gift {
+  position: relative; display: grid; justify-items: center; align-content: start; gap: var(--tma-s1); padding: var(--tma-s3) var(--tma-s2);
+  border: 0; border-radius: var(--tma-r-inner); overflow: hidden; text-align: center; font: inherit; cursor: pointer;
+  color: var(--gift-text, var(--tma-text));
+  background: radial-gradient(circle at 50% 38%, var(--gift-center, var(--tma-fill)), var(--gift-edge, var(--tma-fill)) 78%);
+}
+.tma-gift:not([style*="--gift-center"]) { background: var(--tma-surface); box-shadow: inset 0 0 0 1px var(--tma-separator); }
+.tma-gift__art { position: relative; width: 72px; height: 72px; object-fit: contain; }
+.tma-gift__title { font-size: var(--tma-fs-footnote); font-weight: 600; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tma-gift__price {
+  position: relative; display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--gift-text, var(--tma-text)) 16%, transparent); font-size: var(--tma-fs-footnote); font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.tma-gift__flag { position: absolute; inset-block-start: var(--tma-s2); inset-inline-end: var(--tma-s2); font-size: var(--tma-fs-caption2); font-weight: 600; opacity: .8; }
+.tma-gift__number { font-size: var(--tma-fs-caption1); opacity: .75; font-variant-numeric: tabular-nums; }
+/* unique gift: model on the backdrop, the symbol repeated as a faint pattern in its own colour */
+.tma-gift.is-unique { aspect-ratio: 1; align-content: end; padding-bottom: var(--tma-s3); }
+.tma-gift__pattern {
+  /* --gift-symbol-image: url() with an absolute URL (a relative one resolves against this stylesheet) */
+  position: absolute; inset: 0; background: var(--gift-symbol, var(--tma-fill-strong)); opacity: .18;
+  -webkit-mask: var(--gift-symbol-image) 0 0 / 30px 30px space; mask: var(--gift-symbol-image) 0 0 / 30px 30px space;
+}
+.tma-gift.is-unique .tma-gift__art { width: 58%; height: auto; aspect-ratio: 1; position: absolute; inset: 10% 0 auto; margin: auto; }
+.tma-gift.is-unique.is-lg .tma-gift__title { font-size: var(--tma-fs-title3); }
+.tma-gifts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--tma-s2); }
+.tma-limited { display: grid; gap: 6px; width: 100%; font-size: var(--tma-fs-caption1); color: var(--tma-hint); font-variant-numeric: tabular-nums; }
+.tma-gift .tma-limited { color: inherit; opacity: .8; }
+.tma-gift .tma-progress { background: color-mix(in srgb, currentColor 18%, transparent); }
+.tma-gift .tma-progress > i { background: currentColor; }
+.tma-rarity {
+  display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 999px; background: var(--tma-fill);
+  color: var(--tma-text); font-size: var(--tma-fs-caption1); font-weight: 600; font-variant-numeric: tabular-nums;
+}
 
 /* ---------------------------------------------------------------- more structure and input */
 .tma-accordion { background: var(--tma-surface); border-radius: var(--tma-r-group); overflow: hidden; }

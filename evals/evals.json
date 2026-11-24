@@ -1429,6 +1429,30 @@
         "references/mini-apps/payments.md"
       ],
       "why": "provider rail for physical goods"
+    },
+    {
+      "id": "MA19",
+      "area": "mini-apps",
+      "lang": "ru",
+      "prompt": "Добавь в мини-апп элементы телеграма: звёздочки, граммы, карточки подарков, как в самом Telegram.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/mini-apps/telegram-elements.md"
+      ],
+      "why": "Telegram's own values in a Mini App"
+    },
+    {
+      "id": "MA20",
+      "area": "mini-apps",
+      "lang": "en",
+      "prompt": "Show the user's wallet balance in grams and a verified tick next to trusted sellers in our Mini App.",
+      "expect": "activate",
+      "names_method": true,
+      "routes_to": [
+        "references/mini-apps/telegram-elements.md"
+      ],
+      "why": "gram amounts; trust marks are Telegram's"
     }
   ],
   "behavioral": [
@@ -2422,6 +2446,23 @@
       "critical_failures": [
         "unlocks in the invoiceClosed handler",
         "adds a card form for digital credits"
+      ]
+    },
+    {
+      "id": "B97",
+      "area": "mini-apps",
+      "lang": "en",
+      "request": "Make our gift shop Mini App look like Telegram: prices in Stars, balances in TON, a blue check for verified sellers.",
+      "context": "Mini App sells digital gifts for Stars; the server returns gift objects from getAvailableGifts and wallet amounts in nanograms",
+      "must": [
+        "shows Stars as the gold sign before a whole number (kit .tma-amount.is-stars / starsText), never XTR",
+        "formats nanograms exactly (formatGrams) and labels them GRAM, noting the Toncoin rename once",
+        "colours gift cards from Gift.background / backdrop via giftVars and shows rarity as a percentage",
+        "refuses to draw a verified check: Telegram draws trust marks (lint MA29); trust in text instead"
+      ],
+      "critical_failures": [
+        "draws an own verified or Premium badge next to a seller",
+        "parses nanogram strings as floats or shows '12.5 TON' / 'XTR' to users"
       ]
     }
   ]
