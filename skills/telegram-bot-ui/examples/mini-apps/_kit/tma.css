@@ -622,6 +622,8 @@ select.tma-input {
 .tma-gifts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--tma-s2); }
 .tma-limited { display: grid; gap: 6px; width: 100%; font-size: var(--tma-fs-caption1); color: var(--tma-hint); font-variant-numeric: tabular-nums; }
 .tma-gift .tma-limited { color: inherit; opacity: .8; }
+/* progress under a row title: the bar keeps its distance from the title above and the caption below */
+.tma-cell__body > .tma-limited { gap: var(--tma-s2); margin-top: var(--tma-s2); }
 .tma-gift .tma-progress { background: color-mix(in srgb, currentColor 18%, transparent); }
 .tma-gift .tma-progress > i { background: currentColor; }
 .tma-rarity {
