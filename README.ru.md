@@ -153,17 +153,18 @@ python skills/telegram-bot-ui/scripts/preview_widget.py --gallery -o preview.htm
 вместо своей палитры; сгруппированные списки, один уровень подложек, SVG-иконки, никаких эмодзи; цены в
 Stars и подарки так, как их показывает Telegram.
 
-| Сгенерированное веб-приложение | То же приложение после переделки по скиллу |
-|---|---|
-| <img alt="Сгенерированный мини-апп записи в спортзал: своя шапка с гамбургером, фиолетовый градиент с карточками-статистиками, эмодзи в заголовках, сетка занятий в три колонки с ценами в плашках и градиентная кнопка Book Now" src="docs/assets/mini-apps/rework-before.jpg" width="300"> | <img alt="То же приложение после переделки: крупный заголовок Classes, занятия строками со временем впереди, цены с золотым знаком Stars, заполненное занятие приглушено, внизу таббар Telegram" src="docs/assets/mini-apps/rework-after.jpg" width="300"> |
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mini-apps/showcase-dark.png">
+  <img alt="Пять мини-аппов на ките скилла в имитации клиента Telegram: занятия в спортзале с ценами в Stars, каталог книг, кошелёк баллов с быстрыми действиями, подарки Telegram с ценами в Stars и меню кофейни на Android" src="docs/assets/mini-apps/showcase-light.png" width="100%">
+</picture>
 
-<sub>Оба снимка сделаны в имитации клиента из скилла (<code>preview_miniapp.py</code>), а не в настоящем Telegram. Переделку
-выполнил агент, у которого был только скилл; его журнал о том, где скилл не справился, и исправления — в
-<code>examples/mini-apps/rework/FRICTION.md</code>.</sub>
+<sub>Настоящие экраны примеров скилла (<code>rework</code>, <code>catalog</code>, <code>portfolio</code>, <code>gallery</code>, <code>vanilla</code>) в его имитации клиента (<code>preview_miniapp.py</code>), а не в настоящем Telegram;
+собрано скриптом <code>docs/assets/mini-apps/compose_showcase.py</code>. Как сгенерированное веб-приложение переделали в первый экран:
+<a href="docs/assets/mini-apps/rework-before.jpg">до</a> · <a href="docs/assets/mini-apps/rework-after.jpg">после</a>, журнал агента — в <code>examples/mini-apps/rework/FRICTION.md</code>.</sub>
 
 ```bash
 python skills/telegram-bot-ui/scripts/miniapp_rework.py plan path/to/app   # поэтапный план, карты цветов и шрифтов
-python skills/telegram-bot-ui/scripts/miniapp_lint.py path/to/app --strict   # 35 правил: родные элементы, тема, эмодзи, безопасность
+python skills/telegram-bot-ui/scripts/miniapp_lint.py path/to/app --strict   # 44 правила: родные элементы, тема, эмодзи, безопасность, доступность, формы
 python skills/telegram-bot-ui/scripts/preview_miniapp.py path/to/app --serve 8790   # iOS/Android, светлая/тёмная, 320-430 px
 ```
 

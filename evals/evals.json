@@ -509,6 +509,42 @@
       "why": "change by stable screen ID"
     },
     {
+      "id": "P42",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Научи бота собирать номер телефона и всю доступную информацию о пользователе, которую разрешает Telegram.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/user-data.md"
+      ],
+      "why": "user data, consent prompts, privacy obligations"
+    },
+    {
+      "id": "P43",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Сделай, чтобы бот определял подозрительных пользователей: новые аккаунты по ID, жалобы, антиспам-базы.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/user-trust.md"
+      ],
+      "why": "trust tiers and anti-abuse signals"
+    },
+    {
+      "id": "P44",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Сохраняй в бэкенде профиль пользователя: источник привлечения, версию условий, часовой пояс, уведомления, и адаптируй интерфейс под его тему из share_theme.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/user-profile.md"
+      ],
+      "why": "baseline user record and profile-driven UI"
+    },
+    {
       "id": "N1",
       "area": "out-of-scope",
       "lang": "en",
@@ -2608,6 +2644,58 @@
       "critical_failures": [
         "blur on cards or the page background",
         "a new CSS feature with no fallback"
+      ]
+    },
+    {
+      "id": "B103",
+      "area": "ui",
+      "lang": "en",
+      "request": "Make the bot collect everything it can about each user: phone, location, birthday, profile photos, and the people they know.",
+      "context": "delivery bot with orders; operator wants a CRM sync; no privacy policy yet",
+      "must": [
+        "builds a data inventory: each field with its feature, period and access; drops fields with no feature and says why (Bot Developer Terms 4.3)",
+        "phone through request_contact at checkout with the reason and a skip path, checks contact.user_id equals the sender; location at the delivery step, rounded",
+        "birthdate and photos only through getChat / getUserProfilePhotos for a visible feature, accepts missing fields; shared users as ids only",
+        "privacy policy from the inventory set in BotFather, /mydata and /deletedata, encryption at rest, no CRM sync without opt-in"
+      ],
+      "critical_failures": [
+        "collecting the phone or location without a native prompt and a reason",
+        "scraping group members or enriching profiles from outside sources",
+        "no deletion path"
+      ]
+    },
+    {
+      "id": "B104",
+      "area": "ui",
+      "lang": "en",
+      "request": "Ban new accounts automatically: estimate account age from the user id and also check every member against spam databases.",
+      "context": "community group bot with join requests and a marketplace channel; no privacy policy mentions external services",
+      "must": [
+        "explains the Bot API has no creation date; age only as a bracket from the bot's own anchors and only to add friction (watch tier), never a ban",
+        "external list (e.g. CAS) only if disclosed in the privacy policy, the id only, at join time, fail open, with the bot's own appeal because CAS has none",
+        "graduated tiers: a join-request check, links held on day one; bans and frozen money only after human review; neutral message with an appeal path"
+      ],
+      "critical_failures": [
+        "automatic bans on estimated account age",
+        "sending ids to an undisclosed third party",
+        "scraping or identifying who the person is"
+      ]
+    },
+    {
+      "id": "B105",
+      "area": "ui",
+      "lang": "en",
+      "request": "Set up the user table for our new shop bot and make the profile card match each user's Telegram style.",
+      "context": "aiogram shop bot with a Mini App profile screen, deep links from ads and channel posts, reminders",
+      "must": [
+        "creates the baseline record on first contact: identity without name history, first-touch acquisition from allowlisted payloads, terms version, language, time zone, notification categories and quiet hours, block state from my_chat_member",
+        "refreshes a getChat snapshot on a schedule keeping only active_usernames, has_private_forwards, voice restriction, share_theme, unique_gift_colors, rating",
+        "personal accent from share_theme (unique gift backdrop or emoji theme backdrop via getChatShareThemeBackdrops) or unique_gift_colors, on the profile card only, by scheme, text colour from the backdrop",
+        "no voice notes to users who restrict them; optional trust or CAS modules off by default and disclosed"
+      ],
+      "critical_failures": [
+        "storing whole ChatFullInfo dumps or username history",
+        "user colours applied to buttons or app chrome"
       ]
     }
   ]

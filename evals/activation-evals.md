@@ -87,6 +87,9 @@ description is updated.
 | P39 | "Let me invite our five testers to the bot and greet them." | botinvite link, `WriteAccessAllowed.inviter` (10.5) | `bot-settings.md`, `onboarding-and-first-run.md` |
 | P40 | "Open my bot's screens in a local editor so I can change the texts myself." | bot-ui Studio, local preview | `bot-ui-projects.md` |
 | P41 | "Поменяй экран checkout.payment.confirm в нашем bot-ui проекте." | change by stable screen ID | `bot-ui-projects.md` |
+| P42 | ru | "Научи бота собирать номер телефона и всю доступную информацию о пользователе, которую разрешает Telegram." | no | `references/user-data.md` |
+| P43 | ru | "Сделай, чтобы бот определял подозрительных пользователей: новые аккаунты по ID, жалобы, антиспам-базы." | no | `references/user-trust.md` |
+| P44 | ru | "Сохраняй в бэкенде профиль пользователя: источник привлечения, версию условий, часовой пояс, уведомления, и адаптируй интерфейс под его тему из share_theme." | no | `references/user-profile.md` |
 
 ## Negative (should NOT activate)
 

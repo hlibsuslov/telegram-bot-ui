@@ -7,6 +7,35 @@ Each release is tagged `v<version>`.
 
 ## Unreleased
 
+- `references/user-profile.md` and `tgkit/profile.py`: the baseline user record every bot keeps from the first
+  contact (identity without history, lifecycle and block state from `my_chat_member`, first-touch acquisition
+  from allowlisted payloads, terms version and marketing opt-in, language, time zone, notification choices,
+  labels, a `getChat` snapshot with active usernames, private-forwards and voice restrictions, share theme and
+  gift colours, Stars rating, community role and tags), when to refresh it, and how it adapts the interface:
+  a personal accent from the user's share theme or gift colours on their own surfaces, no voice notes when
+  restricted, mentions by username, quiet hours. Optional modules: trust, CAS, MTProto flags; undocumented
+  lists such as lols.bot not supported. SQL schema, retention, checklist; tested in `tests/test_user_profile.py`.
+- README (en, ru, uk): the Mini Apps section shows one full-width image of five example screens (classes with
+  Stars, a catalogue, a points wallet, gifts, an Android menu) in light and dark, on the widget gallery's
+  background; captured by `docs/assets/mini-apps/capture_showcase.py` and composed by `compose_showcase.py`.
+  The rework before / after stay linked.
+- `references/user-data.md` §3.1-3.2: what users tell a bot about themselves and the easiest mechanism for
+  each (verified phone and email through Passport, live location, inline location, shipping address, time
+  zone, birthday, preferences, files, friends, referrals, biometrics, wallets), and what MTProto adds for a
+  bot (Telegram's scam / fake / verified flags, username resolution) and does not.
+- `references/user-trust.md` and `tgkit/trust.py`: anti-abuse friction without judging people. What the Bot
+  API gives (Stars rating, join requests, Telegram's own anti-spam; no creation date, reports or scam labels),
+  the bot's own records as the main signals, account age from the id as a bracket from the bot's own anchors
+  (`IdAgeEstimator`, never a ban on its own), optional external lists with conditions (CAS endpoint, no appeal
+  there, disclosure, the id only, fail open), four tiers with graduated actions, human review and appeals,
+  what the skill declines, storage and expiry. Tested in `tests/test_user_trust.py`.
+- `references/user-data.md` and `data/user-data.json`: what a bot or Mini App receives about a user in four
+  tiers (automatic, readable by API under the user's privacy settings, on request through native prompts,
+  never available), every field checked against the API catalogs; the obligations from Telegram's Bot
+  Developer Terms, the Standard Bot Privacy Policy and the Mini App Terms; turning "collect everything" into a
+  data inventory; the prompt pattern (the reason, the native button, a working refusal, the
+  `contact.user_id` check); storage, logs, retention, `/mydata` and `/deletedata`; what the skill declines
+  and the compliant alternative.
 - `references/mini-apps/materials-and-trends.md`: four tests a trend must pass; the three layers of a Mini App
   (Telegram's chrome, the WebView engine, the app) and how fast each changes; glass as a material system
   (what it is for, levels, fallbacks, text on glass, no fake refraction, Android) and the procedure when a

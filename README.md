@@ -150,18 +150,19 @@ Web apps that open inside Telegram and look like part of it: Telegram's header, 
 instead of an own top bar and a fixed "Buy" button; the user's theme instead of a fixed palette; grouped
 lists, one surface level, SVG icons, no emoji; Stars prices and gifts as Telegram shows them.
 
-| A generated web-style app | The same app after the skill's rework |
-|---|---|
-| <img alt="A generated gym-booking Mini App with an own top bar and burger menu, a purple gradient hero with stat cards, emoji in every heading, a three-column class grid with price pills and a gradient Book Now button" src="docs/assets/mini-apps/rework-before.jpg" width="300"> | <img alt="The same app reworked: a large Classes title, today's classes as rows with the time first, prices with a gold Stars sign, a full class dimmed, and Telegram's tab bar at the bottom" src="docs/assets/mini-apps/rework-after.jpg" width="300"> |
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mini-apps/showcase-dark.png">
+  <img alt="Five Mini Apps built with the skill's kit inside Telegram's mock client: gym classes with Stars prices, a book catalogue, a points wallet with quick actions, Telegram gifts with Stars price pills, and an Android coffee menu" src="docs/assets/mini-apps/showcase-light.png" width="100%">
+</picture>
 
-<sub>Both rendered in the skill's mock client (<code>preview_miniapp.py</code>), not a real Telegram app. The rework was
-done by an agent that had only the skill; its log of where the skill fell short, and the fixes, are in
-<code>examples/mini-apps/rework/FRICTION.md</code>.</sub>
+<sub>Real screens of the skill's examples (<code>rework</code>, <code>catalog</code>, <code>portfolio</code>, <code>gallery</code>, <code>vanilla</code>) in its mock client (<code>preview_miniapp.py</code>), not a real Telegram app;
+composed by <code>docs/assets/mini-apps/compose_showcase.py</code>. How a generated web-style app was reworked into the first screen:
+<a href="docs/assets/mini-apps/rework-before.jpg">before</a> · <a href="docs/assets/mini-apps/rework-after.jpg">after</a>, with the agent's log in <code>examples/mini-apps/rework/FRICTION.md</code>.</sub>
 
 ```bash
 python skills/telegram-bot-ui/scripts/miniapp_rework.py plan path/to/app   # staged plan, colour and type maps
-python skills/telegram-bot-ui/scripts/miniapp_lint.py path/to/app --strict   # 35 rules: native chrome, theme, emoji, security
-python skills/telegram-bot-ui/scripts/preview_miniapp.py path/to/app --serve 8790   # iOS/Android, light/dark, 320-430 px
+python skills/telegram-bot-ui/scripts/miniapp_lint.py path/to/app --strict   # 44 rules: native chrome, theme, emoji, security, accessibility, forms
+python skills/telegram-bot-ui/scripts/preview_miniapp.py path/to/app --serve 8790   # iOS/Android, light/dark, 320-669 px
 ```
 
 Start in [`references/mini-apps/README.md`](skills/telegram-bot-ui/references/mini-apps/README.md); a whole redesign follows

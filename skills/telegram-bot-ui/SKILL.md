@@ -226,6 +226,8 @@ Details: `references/dynamic-feedback-and-streaming.md`.
 - Reply keyboards, `ForceReply`, placeholders → `references/reply-keyboards.md`
 - Screens, back/home, commands, menu button, deep links → `references/navigation-and-flows.md`
 - First run, `/start` payloads, language choice, returning users → `references/onboarding-and-first-run.md`
+- What the bot or Mini App knows about a user (profile, phone, location, shared users, Passport), asking for it, the data inventory, privacy policy and deletion → `references/user-data.md`; spam and risk tiers, account age, blocklists, appeals → `references/user-trust.md`
+- The baseline user record every bot keeps (acquisition, terms version, time zone, notifications, labels, profile snapshot, community role) and adapting messages and personal screens to it (share theme, gift colours, voice restrictions) → `references/user-profile.md`
 - One visual language, screen anatomy, the premium pass → `references/visual-language.md`
 - Feedback mechanism → `references/dynamic-feedback-and-streaming.md`; draft state machine, Stop, races → `references/streaming-and-editing.md`
 - Personal / ephemeral answers in groups → `references/ephemeral-and-personal.md`
