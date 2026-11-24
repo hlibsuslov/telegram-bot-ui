@@ -15,6 +15,7 @@ const APPS = {
   portfolio: { 'portfolio/app.ts': 'app.js', '_kit/tma.ts': 'tma.js' },
   gallery: { 'gallery/app.ts': 'app.js', '_kit/tma.ts': 'tma.js', '_kit/tg-values.ts': 'tg-values.js' },
   catalog: { 'catalog/app.ts': 'app.js', '_kit/tma.ts': 'tma.js' },
+  rework: { 'rework/app.ts': 'app.js', '_kit/tma.ts': 'tma.js', '_kit/tg-values.ts': 'tg-values.js' },
 };
 const KIT_IMPORT = /from\s+['"]\.\.\/_kit\/([\w-]+)\.ts['"]/g;
 
