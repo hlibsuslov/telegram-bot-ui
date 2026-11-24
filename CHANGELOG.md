@@ -95,6 +95,19 @@ Each release is tagged `v<version>`.
   packs are listed with where they are used. `import --emoji-packs` runs it right after import.
 - The resolver gets `GET /api/emoji-pack/by-id?ids=...`; an older resolver without it answers
   `RESOLVER_NO_IDS` and the command asks for a bot token (the bot's own works).
+- Data views: tables, leaderboards, progress and long reports. `references/data-views.md`: which surface for which data, one visual grammar (numbers, money,
+  deltas, status with words, ranks, progress bars, sparklines, time, empty/stale states), a
+  catalog of 18 interfaces business bots need (KPI digest, report table, leaderboard, goal and
+  job progress, tracker, receipt, comparison, price list, statement, schedule, queue, alert,
+  inventory, funnel, poll results, checklist, countdown), and the ladder for a report or
+  notification that does not fit one message (shrink, summary + top N, split by rows with the
+  header repeated and one ping, file or widget page past ~3 parts).
+- `tgkit/dataview.py` and `scripts/data_view.py`: deterministic renderers for those views; Rich
+  table parts split by characters and the 500-block limit, a `<pre>` fallback aligned by display
+  width, parts numbered "(2/3) · continued" with the summary first and totals last.
+- Gallery widget `data-table`: one page of a report, sortable columns, status dots with words,
+  totals row, pager with centred chevrons, optional columns that hide under 280 px, and
+  "Full report in chat" that sends the Rich parts.
 
 ## 3.1.0 - 2026-11-24
 
