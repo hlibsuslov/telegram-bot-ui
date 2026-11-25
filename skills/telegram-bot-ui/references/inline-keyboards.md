@@ -1,3 +1,9 @@
+---
+summary: "InlineKeyboardMarkup: button types, callback_data design, answering callbacks, edit versus new message, layout, pagination, screen recipes, limits; read when building or fixing inline keyboards."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
+
 # Inline keyboards
 
 `InlineKeyboardMarkup` = `inline_keyboard`: an array of rows, each an array of

@@ -1,4 +1,23 @@
+---
+summary: "Payments and Telegram Stars: lifecycle and server state, subscriptions, paid media, refunds and the Star ledger, provider payments, rights, errors; read when a bot sells anything."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Payments and Telegram Stars
+
+## Contents
+
+- [What it is for](#what-it-is-for)
+- [Lifecycle and the state your server must keep](#lifecycle-and-the-state-your-server-must-keep)
+- [Subscriptions (bot features)](#subscriptions-bot-features)
+- [Paid media](#paid-media)
+- [Refunds and the Star ledger](#refunds-and-the-star-ledger)
+- [Physical goods (provider payments)](#physical-goods-provider-payments)
+- [Rights, availability and obligations](#rights-availability-and-obligations)
+- [What the user sees](#what-the-user-sees)
+- [Common mistakes](#common-mistakes)
+- [Error handling](#error-handling)
 
 Selling digital goods and services (Stars, `XTR`), physical goods (a payment
 provider), subscriptions, paid media, refunds and the bot's own Star ledger.

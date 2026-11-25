@@ -1,3 +1,9 @@
+---
+summary: "Worked review of a real aiogram bitcoin-tracker bot: what it already does well, what to improve, SDK notes and a before/after screen; read as a concrete example of an upgrade pass."
+verified: "2026-11-12"
+bot_api: "10.5"
+---
+
 # Case study: btc-tracker (aiogram 3.31, built for Bot API 9.4–10.2)
 
 > Source: github.com/hlibsuslov/btc-tracker at commit `857b8bd` (read 2026-11-12). The owner

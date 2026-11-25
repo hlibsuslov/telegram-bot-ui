@@ -1,4 +1,19 @@
+---
+summary: "The offline Bot API catalog in data/bot-api/ and its three stdlib tools: lookup, payload validation, refresh; read to check a method or type, validate a request or sync a new release."
+verified: "2026-11-22"
+bot_api: "10.5"
+---
+
 # Bot API catalog: offline lookup, payload checks, refresh
+
+## Contents
+
+- [The data](#the-data)
+- [Look something up — `scripts/tg_api_lookup.py`](#look-something-up--scriptstg_api_lookuppy)
+- [Check a request — `scripts/validate_payload.py`](#check-a-request--scriptsvalidate_payloadpy)
+- [Refresh when Telegram ships a release — `scripts/sync_bot_api.py`](#refresh-when-telegram-ships-a-release--scriptssync_bot_apipy)
+- [Map: API area → reference](#map-api-area--reference)
+- [What each release added (9.0 → 10.5)](#what-each-release-added-90--105)
 
 The whole Bot API (every method and type, with fields, required flags, return
 types and union members) is committed as JSON in `data/bot-api/`, together with the

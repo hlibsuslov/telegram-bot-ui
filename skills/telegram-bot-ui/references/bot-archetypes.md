@@ -1,3 +1,9 @@
+---
+summary: "Which Telegram features fit which kind of bot (monitoring, assistant, shop, group, support, wallet, games): core screens, features to use, traps; read when designing a new bot or a major rework."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Bot archetypes: which features fit which bot (Bot API 10.4)
 
 > Verified 2026-11-12. Use this when designing a new bot or a major rework, together with the

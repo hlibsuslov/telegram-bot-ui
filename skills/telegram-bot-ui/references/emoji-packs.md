@@ -1,3 +1,9 @@
+---
+summary: "Choosing, resolving and applying a premium emoji pack: decision path, catalog, own packs, capture path, migration, widgets, licensing; read when restyling a bot or post with an icon family."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Emoji packs: choosing, resolving and applying a premium icon family
 
 > Status labels: **API** = Bot API requirement, **Official** = recommendation in Telegram's

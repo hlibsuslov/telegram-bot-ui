@@ -1,3 +1,9 @@
+---
+summary: "Entry point for posted or broadcast content: delivery surfaces, bot rights in a channel, publisher updates, notification controls, mailings; read before posting to channels or to many users."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Channels, notifications, and broadcasting
 
 Entry point for anything that is **posted or broadcast** rather than replied in a chat:

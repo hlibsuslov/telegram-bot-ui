@@ -1,3 +1,8 @@
+---
+summary: "One payment pipeline for Stars and Gram: rail choice, states, payload security, refunds, reconciliation, data model, screens and microcopy, and the tgkit.payments runtime."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
 # Payments pipeline: product → invoice → payment → delivery → refund → reconciliation
 
 One pipeline for both rails a bot can take money on — **Stars** (`XTR`, invoices) and **Gram**
@@ -10,6 +15,20 @@ Checked on **2026-11-23** against the Bot API 10.5 snapshot (`py -3 scripts/tg_a
 <Name>`) and the news of November 2026. Labels: **[API]** Bot API spec · **[Official]** Telegram's
 payment guides and terms · **[News]** press and Telegram announcements, not an official spec ·
 **[H]** this skill's design rule.
+
+
+## Contents
+
+- [1. Pick the rail first](#1-pick-the-rail-first)
+- [2. The pipeline, stage by stage](#2-the-pipeline-stage-by-stage)
+- [3. States](#3-states)
+- [4. Payload and security](#4-payload-and-security)
+- [5. Refunds](#5-refunds)
+- [6. Reconciliation](#6-reconciliation)
+- [7. Data model](#7-data-model)
+- [8. Screens and microcopy](#8-screens-and-microcopy)
+- [9. Runtime (Stars)](#9-runtime-stars)
+- [Common mistakes](#common-mistakes)
 
 ## 1. Pick the rail first
 

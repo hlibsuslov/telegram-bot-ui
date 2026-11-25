@@ -1,3 +1,9 @@
+---
+summary: "Workflow to find, reuse, compose and extend the recipe and example library: search, what to reuse, extending inside the user's project, evidence levels; read when a feature may already have a recipe."
+verified: "2026-11-15"
+bot_api: "10.5"
+---
+
 # Reuse, compose and extend the example library
 
 Use this when building a new bot feature, choosing examples, or adding a scenario

@@ -1,3 +1,9 @@
+---
+summary: "Interface-relevant Bot API history by version: what 9.4 changed, the 9.3-10.2 run for AI bots, version gates to check, keeping the file honest; read to know which version a UI feature needs."
+verified: "2026-11-22"
+bot_api: "10.5"
+---
+
 # UI-relevant Bot API history and version gates
 
 Only the entries that change what a bot's **interface** can do. Every line below

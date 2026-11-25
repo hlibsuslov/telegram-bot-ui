@@ -1,4 +1,24 @@
+---
+summary: "Mini App security contract: what the client controls, initData verification (token and Ed25519), freshness, sessions, storage, inputs, hosting, logging; read before writing a Mini App backend."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
+
 # Mini App security: initData, sessions, inputs, hosting
+
+## Contents
+
+- [1. What the client controls](#1-what-the-client-controls)
+- [2. Verifying initData on your own server (bot token) [Official]](#2-verifying-initdata-on-your-own-server-bot-token-official)
+- [3. Verifying without the token (Ed25519, since 8.0) [Official]](#3-verifying-without-the-token-ed25519-since-80-official)
+- [4. Freshness: `auth_date`](#4-freshness-auth_date)
+- [5. After verification: the session](#5-after-verification-the-session)
+- [6. Where data lives on the device](#6-where-data-lives-on-the-device)
+- [7. Inputs that look harmless](#7-inputs-that-look-harmless)
+- [8. Hosting, headers and origins](#8-hosting-headers-and-origins)
+- [9. Telegram Serverless](#9-telegram-serverless)
+- [10. Logging and errors](#10-logging-and-errors)
+- [11. Checklist](#11-checklist)
 
 A Mini App is a public web page running on the user's device. Everything it sends to your server can be
 forged except the signature Telegram puts on `initData`. This page is the server's contract. Checked on

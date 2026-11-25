@@ -1,4 +1,23 @@
+---
+summary: "Custom emoji on buttons and in text: eligibility (Fragment usernames or owner Premium), silent failure, getting real IDs, unicode fallback, checklist; read before using any custom_emoji_id."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Custom emoji — on buttons and in text
+
+## Contents
+
+- [Eligibility — check this first](#eligibility--check-this-first)
+- [Eligibility per send context](#eligibility-per-send-context)
+- [Other surfaces that accept custom emoji (API)](#other-surfaces-that-accept-custom-emoji-api)
+- [An ineligible bot fails silently — verify by reading the message back](#an-ineligible-bot-fails-silently--verify-by-reading-the-message-back)
+- [Automation](#automation)
+- [Getting a real `custom_emoji_id` — never invent one](#getting-a-real-custom_emoji_id--never-invent-one)
+- [Buttons](#buttons)
+- [In message text](#in-message-text)
+- [Unicode emoji vs custom emoji — choosing](#unicode-emoji-vs-custom-emoji--choosing)
+- [Checklist](#checklist)
 
 Two different mechanisms, one eligibility rule:
 

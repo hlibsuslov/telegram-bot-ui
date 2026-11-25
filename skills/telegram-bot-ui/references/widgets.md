@@ -1,8 +1,30 @@
+---
+summary: "HTML widgets (Bot API 10.4): when to use them, availability, code and state, sending, query flow, shared widgets, runtime limits, design rules, testing; read first for any widget task."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # HTML widgets (Bot API 10.4)
 
 > Verified 2026-11-12 against the [Widgets guide](https://core.telegram.org/bots/widgets) and the
 > Bot API pages for `sendWidget` … `editSharedWidgetData`. Status of each rule: **API** = Bot API
 > requirement, **Guide** = official recommendation, **Heuristic** = this skill's design advice.
+
+## Contents
+
+- [Gallery, kit and tools (re-checked 2026-11-15)](#gallery-kit-and-tools-re-checked-2026-11-15)
+- [When a widget is the right surface](#when-a-widget-is-the-right-surface)
+- [Availability](#availability)
+- [Code and state](#code-and-state)
+- [Sending a widget](#sending-a-widget)
+- [Query flow](#query-flow)
+- [Changing state](#changing-state)
+- [Shared widgets](#shared-widgets)
+- [Groups, inline and forwards (test server)](#groups-inline-and-forwards-test-server)
+- [Runtime limits (design for them)](#runtime-limits-design-for-them)
+- [Design rules](#design-rules)
+- [Testing](#testing)
+- [Writing widgets with an LLM (Telegram's official prompt)](#writing-widgets-with-an-llm-telegrams-official-prompt)
 
 A widget is **one self-contained HTML document drawn inside a message**: fixed code plus
 state that only the bot writes. It runs in Telegram's QuickJS sandbox, **with no network**,

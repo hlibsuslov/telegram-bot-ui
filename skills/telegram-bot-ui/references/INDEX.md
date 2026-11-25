@@ -11,94 +11,94 @@ Read a file only when its command's playbook points to it; long files open with 
 
 | File | What it covers | Commands |
 |---|---|---|
-| `agent-bot-security.md` | An agent with a Telegram bot is a remote control for the agent's machine. Whoever can send it messages can try to steer it. Every rule... | agent-bot |
-| `agent-operated-bots.md` | This file is for the case where **the bot is the agent's interface**: a coding agent, CI job or autonomous worker reports to its human... | agent-bot |
-| `api-catalog.md` | The whole Bot API (every method and type, with fields, required flags, return types and union members) is committed as JSON in... | lookup |
-| `auditing-existing-bots.md` | Heuristics of this skill (first written 2026-08-05, reviewed against Bot API 10.4 on 2026-11-15). Version gates: `ui-changelog.md`;... | audit |
-| `bot-api-coverage.md` | Availability is five separate questions — spec, production, Bot API server, installed SDK, client rendering. "production" below is about... | lookup |
-| `bot-archetypes.md` | Pick the archetype(s), take the **core screens**, add the features marked ✓ where they serve the user's task, and avoid the ✗ traps.... | build |
-| `bot-settings.md` | Bot API 10.5 (2026-11-22) moved the bot's own switches into the API: one method writes them, `getMe` reads them back. Checked against... | improve |
-| `bot-style-profile.md` | The profile is one JSON file in the bot's project (default `docs/telegram-ui/profile.json`) that records every interface decision of the... | improve |
-| `bot-ui-projects.md` | Use this when the user wants to design, connect or maintain **a bot's whole interface** as files in the bot's repository: screens... | map |
-| `business-accounts.md` | A user connects your bot to their Telegram account (Settings → Telegram Business → Chatbots). The bot then receives that account's... | build |
-| `buttons-and-styles.md` | Everything here applies to both `InlineKeyboardButton` and `KeyboardButton` unless stated otherwise. Layout specifics:... | improve |
-| `case-study-btc-tracker.md` | The bot watches Bitcoin addresses and watch-only public keys, sends transaction and confirmation alerts, shows balances and statistics,... | audit, improve |
-| `channel-post-design.md` | How a channel post should look and which Bot API format carries it. Pipeline (render, validate, publish once, edit, fan-out):... | post |
-| `channels-and-broadcasting.md` | Entry point for anything that is **posted or broadcast** rather than replied in a chat: channel posts, announcements in groups, and... | post |
-| `chat-administration.md` | Bans, restrictions, promotions, permissions, invite links, join requests (incl. the 10.1 join-request queries), member tags, and the... | build |
-| `consistency-and-review.md` | A bot feels "designed" when the same thing looks and is named the same everywhere. Most UX complaints about bots are consistency... | audit |
-| `content-shape-detection.md` | Heuristics of this skill (first written 2026-08-05, reviewed 2026-11-15). Surface choice (message, rich document, keyboard, widget, Mini... | audit |
-| `custom-emoji.md` | Two different mechanisms, one eligibility rule: | emoji |
-| `data-views.md` | How a bot shows numbers and records so a person gets the answer in one glance: which surface, which layout, which symbols, and what to... | improve, post |
-| `dynamic-feedback-and-streaming.md` | A bot cannot animate arbitrary UI frame by frame. What "animation" actually means in a Telegram chat is one of these: | improve |
-| `emoji-in-posts.md` | by bots that purchased additional usernames on Fragment or in the messages directly sent by the bot to private, group and supergroup... | post, emoji |
-| `emoji-packs.md` | Use it whenever you build or restyle a bot, or compose a post, and icons/emoji are involved. | emoji |
-| `ephemeral-and-personal.md` | One member must never see another member's state: build the content from the **presser's** data on the server, check... | improve |
-| `errors-and-fallbacks.md` | Content: | fix |
-| `example-library.md` | Use this when building a new bot feature, choosing examples, or adding a scenario the library does not cover. Small wording fixes do not... | build |
-| `examples-before-after.md` | Twenty situations that cover most real UI requests: 1-7 are single-screen fixes, 8-16 come from the product playbooks (recipes 20-29 and... | improve |
+| `agent-bot-security.md` | Threat model and rules for a bot that remote-controls an agent's machine: operator allowlist, untrusted inbound text, approval binding, token redaction, rate limits; read before exposing an agent bot. | agent-bot |
+| `agent-operated-bots.md` | An AI agent working through its own Telegram bot: notifications, status cards, streaming, approvals, ask-and-wait, artifacts, topics, update intake, hooks; read when the bot is the agent's interface. | agent-bot |
+| `api-catalog.md` | The offline Bot API catalog in data/bot-api/ and its three stdlib tools: lookup, payload validation, refresh; read to check a method or type, validate a request or sync a new release. | lookup |
+| `auditing-existing-bots.md` | Procedure for improving a bot that already exists: scope, text inventory, diagnosis, ranking by reader gain, report then proposals, the rework pipeline; read before touching an existing bot. | audit |
+| `bot-api-coverage.md` | Generated registry of every Bot API 10.3-10.5 change with its use, availability, teaching section, example, check and status; read to see whether a new API feature is covered and where. | lookup |
+| `bot-archetypes.md` | Which Telegram features fit which kind of bot (monitoring, assistant, shop, group, support, wallet, games): core screens, features to use, traps; read when designing a new bot or a major rework. | build |
+| `bot-settings.md` | Bot API 10.5 setMySettings and the BotFullInfo that getMe returns: callback query mode, topics, usernames, inline settings, owner invites; read to configure a bot's switches from code. | improve |
+| `bot-style-profile.md` | The style profile JSON recording a bot's interface decisions (voice, density, keyboards, emphasis, icons, navigation, formats) and which knob touches which surface; read when tuning a bot's look. | improve |
+| `bot-ui-projects.md` | Whole-bot interface projects kept as files in the repo (bot-ui contract): screens by stable ID, locales, keyboards, scenarios, widgets, Studio and CLI; read when designing a bot as one project. | map |
+| `business-accounts.md` | Business bots acting for a connected Telegram account: connection updates, rights, sending and reading, profile, gifts and Stars, state to keep; read when building for Business Mode. | build |
+| `buttons-and-styles.md` | Inline and reply button rules: one field per type, colored style, custom emoji icons, ordering, anti-patterns, disabled buttons, force_reply; read when labelling or coloring buttons. | improve |
+| `case-study-btc-tracker.md` | Worked review of a real aiogram bitcoin-tracker bot: what it already does well, what to improve, SDK notes and a before/after screen; read as a concrete example of an upgrade pass. | audit, improve |
+| `channel-post-design.md` | How a channel post should look and which Bot API format carries it: anatomy, format per post type, buttons, custom emoji, widgets, comments, DMs, reactions; read before designing channel posts. | post |
+| `channels-and-broadcasting.md` | Entry point for posted or broadcast content: delivery surfaces, bot rights in a channel, publisher updates, notification controls, mailings; read before posting to channels or to many users. | post |
+| `chat-administration.md` | Bans, restrictions, promotion, permissions, invite links, join requests, member tags and the my_chat_member and chat_member updates; read when a bot manages a group or channel. | build |
+| `consistency-and-review.md` | Consistency inventory (actions, states, cross-surface) and the final review checklist to run before reporting a redesign done; read at the end of any interface change. | audit |
+| `content-shape-detection.md` | How to spot that bot text is secretly a table, checklist, heading tree or collapsible block, and whether to act, offer or ask; read when writing, reviewing or migrating any user-visible text. | audit |
+| `custom-emoji.md` | Custom emoji on buttons and in text: eligibility (Fragment usernames or owner Premium), silent failure, getting real IDs, unicode fallback, checklist; read before using any custom_emoji_id. | emoji |
+| `data-views.md` | Showing numbers and records in a bot: choosing the surface, visual grammar, catalog of business interfaces, splitting long tables, widget data rules; read for tables, leaderboards, KPIs and reports. | improve, post |
+| `dynamic-feedback-and-streaming.md` | What animation means in a bot: draft streaming and Stop, edit-based progress bars, the native button loader, chat actions, operation lifecycle; read when a bot feels frozen or streams answers. | improve |
+| `emoji-in-posts.md` | Premium custom emoji in channel posts, long texts and rich messages: channel eligibility, placement, accents, accessibility, decorating a post model; read when styling posts with premium emoji. | post, emoji |
+| `emoji-packs.md` | Choosing, resolving and applying a premium emoji pack: decision path, catalog, own packs, capture path, migration, widgets, licensing; read when restyling a bot or post with an icon family. | emoji |
+| `ephemeral-and-personal.md` | Personal answers on a shared timeline with ephemeral messages (Bot API 10.2-10.4): choosing the audience, addressing, editing, lifetime, fallback; read for per-user replies in groups. | improve |
+| `errors-and-fallbacks.md` | Degradation ladders for content and interface, failure classification, rules, old clients, the can't-parse-entities response, unknown outcomes; read when designing error handling and fallbacks. | fix |
+| `example-library.md` | Workflow to find, reuse, compose and extend the recipe and example library: search, what to reuse, extending inside the user's project, evidence levels; read when a feature may already have a recipe. | build |
+| `examples-before-after.md` | Twenty worked before/after scenarios: text fixes, overloaded keyboards, colors and emoji, SDK gaps, product-playbook fixes, a premium pass; read for model answers to common UI requests. | improve |
 | `floor.md` | The minimum every change obeys: rules, per-surface invariants, buttons, feedback, what to refuse and the definition of done. Read before the first edit of code, payloads or bot-ui/. | all, before the first edit |
-| `format-selection.md` | Three different "HTML"s exist and never mix: regular-message `parse_mode=HTML`, **Rich HTML** (`InputRichMessage.html`), and **widget... | improve |
-| `gifts-and-stories.md` | Sending gifts and Telegram Premium paid from the bot's Stars, reading gifts users and chats own, unique (collectible) gifts, the gift... | build |
-| `inline-keyboards.md` | `InlineKeyboardMarkup` = `inline_keyboard`: an array of rows, each an array of `InlineKeyboardButton`. It belongs to **one specific... | improve |
-| `inline-mode.md` | Users type `@yourbot query` in **any** chat and pick a result; the message is sent by the user "via @yourbot". Also covers the switch... | build |
-| `limits-and-splitting.md` | Keep these constants in **one place** in the project; never scatter magic numbers across call sites. | improve, fix |
-| `localization-and-rtl.md` | The whole interface — message text, button labels, command descriptions — must survive translation and mixed text direction. Localized... | improve |
-| `media-and-files.md` | Sending files (upload vs `file_id` vs URL), size limits, albums, `InputMedia*`, thumbnails and covers, live photos, downloading with... | improve |
-| `microcopy-and-labels.md` | Text is the bot's primary interface. This is the first layer to fix and the one that most often makes color and emoji unnecessary. | improve |
-| `mini-apps-bridge.md` | How a bot **launches** Mini Apps and **receives data** from them, and how to trust that data. The Mini App itself (the `Telegram.WebApp`... | mini-app |
-| `navigation-and-flows.md` | A bot's "pages" are messages. Its "router" is `callback_data` plus conversation state. Without an explicit map, navigation rots into... | audit, improve |
-| `official-sources.md` | When Telegram ships a newer Bot API version, or today is past the date above and the task is version-sensitive: 1. Read the **Bot API... | lookup |
-| `onboarding-and-first-run.md` | The first minute decides whether a bot is used again. A good first run answers three questions in this order: *what is this*, *what do I... | improve, build |
-| `payments-and-stars.md` | Selling digital goods and services (Stars, `XTR`), physical goods (a payment provider), subscriptions, paid media, refunds and the bot's... | build |
-| `payments-pipeline.md` | One pipeline for both rails a bot can take money on — **Stars** (`XTR`, invoices) and **Gram** (the TON wallet inside a widget) — with... | build |
-| `personalization-and-links.md` | Two adjacent surfaces that decide whether a bot feels *addressed to me* and whether its actions are reachable. | improve |
-| `polls-checklists-and-reactions.md` | Native polls and quizzes (with the 9.6 and 10.0 extensions: multiple correct answers, revoting, added options, media, members-only,... | build |
-| `project-adaptation.md` | This skill is project-agnostic. Before touching anything, build an accurate map of how the target project builds its **interface** —... | improve, build |
-| `publishing-pipeline.md` | How an agent operates a bot as a **publisher**: turn source material (a feed item, a CMS entry, an AI summary) into a channel post and... | post |
-| `redesign-orchestration.md` | Use this path when the request is bigger than fixing screens: *"make the bot feel like our product"*, *"rethink the whole menu"*, *"redo... | improve |
-| `regular-formatting.md` | There are three ways to style a **regular** message: `parse_mode="HTML"`, `parse_mode="MarkdownV2"`, or an explicit `entities` array.... | improve, fix |
-| `reply-keyboards.md` | `ReplyKeyboardMarkup` replaces the user's letter keyboard with your buttons. Pressing a plain button **sends its `text` as an ordinary... | improve |
-| `rich-media.md` | Covers media inside Rich Messages (`InputRichMessageMedia` + media blocks) and the choice between embedding media vs. separate media... | improve |
-| `sdk-compatibility.md` | The project's SDK — not your memory — decides which UI and formatting features are reachable. Establish the SDK, its version, and the... | fix, lookup |
-| `security-and-escaping.md` | Convert through a controlled builder and whitelist. - Whitelist **tags**, **attributes**, and **URL schemes**. Reject everything else. -... | fix |
-| `specialized-updates.md` | 10.3: `can_send_welcome_messages` in `ChatAdministratorRights`, `ChatMemberAdministrator` and `promoteChatMember` — "manage chat welcome... | build |
-| `streaming-and-editing.md` | STARTED → GENERATING → COMPLETED (model finished → final send) → STOP_REQUESTED → STOPPED (Stop pressed → cancel upstream → policy) →... | improve, fix |
-| `tables.md` | Reach for a table when the content is **two or more parallel records with shared attributes**, or **label → value pairs** you want... | improve |
-| `telegram-capabilities.md` | This is a compact map, not a copy of the docs. When the task depends on an exact field, open the official page for that object/method... | improve, lookup |
-| `testing-playbook.md` | `icon_custom_emoji_id`, and that every `callback_data` is unchanged and ≤64 bytes. - Rendered output string for the chosen `parse_mode`,... | audit, fix |
-| `topics-and-contexts.md` | `MessageGenerationStopped` carries `chat` + optional `message_thread_id` + `draft_id` — match all three. Per-conversation state... | improve |
-| `ui-changelog.md` | Only the entries that change what a bot's **interface** can do. Every line below was read from the official changelog... | improve, lookup |
-| `updates-and-delivery.md` | How updates reach the bot (`getUpdates` vs webhook), what `allowed_updates` really does, offsets, the secret token, ordering and... | fix |
-| `use-case-playbooks.md` | For broader discovery, search `recipes/use-cases.json` and read the [reuse/extension contract](example-library.md). Recipes R80–R87 add... | build |
-| `user-data.md` | What Telegram gives a bot or a Mini App about the person using it, how each piece arrives, how to ask for more, and what the developer... | build |
-| `user-profile.md` | Every bot built with the skill keeps one record per user from the first contact. The record holds: - who they are, as Telegram shows... | improve, build |
-| `user-trust.md` | How a bot decides how much friction to put in front of a user: new accounts in a group, a first order in a shop, a referral payout, a... | build |
-| `visual-language.md` | A professional bot looks like **one product**: the same symbol always means the same thing, icons come from one drawing style, every... | improve, emoji |
-| `wallet-and-ton.md` | `SuggestedPostPrice.currency` is `XTR` or `TON`, `amount` in Stars or nanograms. Older material says "nanotons": the same unit. Label... | widget |
-| `widget-design-system.md` | A widget is part of a message, not a web page. It should read like Telegram drew it: the chat's palette and text size, the client's own... | widget |
-| `widget-patterns.md` | Ask in order; take the first "yes". | widget |
-| `widgets.md` | A widget is **one self-contained HTML document drawn inside a message**: fixed code plus state that only the bot writes. It runs in... | widget |
-| `mini-apps/README.md` | This folder is the skill's branch for **Telegram Mini Apps** (web apps opened inside Telegram through `window.Telegram.WebApp`):... | mini-app |
-| `mini-apps/accessibility-and-language.md` | How a Mini App works for everyone who opens it from Telegram. That includes people who use VoiceOver or TalkBack, large text, increased... | mini-app |
-| `mini-apps/anti-slop.md` | How a Mini App ends up looking generated or "like a website in a sheet", and what to do instead. It joins three sources: Telegram's... | mini-app |
-| `mini-apps/components.md` | Every component a Mini App screen needs, with its anatomy, kit class, states, the native Telegram control that replaces it when one... | mini-app |
-| `mini-apps/decide.md` | A Mini App is a hosted web app with its own server, auth and release cycle. It is the right surface when the task needs a real... | mini-app |
-| `mini-apps/design-sources.md` | How the skill turns its design references into one Mini App design system: Telegram for structure and compatibility, iOS 27 for Liquid... | mini-app |
-| `mini-apps/design-system.md` | The one page an agent reads before designing, building or restyling a Mini App screen. It maps Telegram's theme to the kit's roles, sets... | mini-app |
-| `mini-apps/figma-workflow.md` | How an agent reads a Figma file (a design kit, or the person's own Mini App design) and turns it into rules, kit tokens or screens,... | mini-app |
-| `mini-apps/forms-and-data.md` | This file covers how a Mini App asks for input and talks to its server: - which fields to use, and which to skip because Telegram... | mini-app |
-| `mini-apps/haptics-and-device.md` | How a Mini App uses the phone itself: haptic feedback (the Taptic Engine on iPhone, the vibration motor on Android), motion sensors,... | mini-app |
-| `mini-apps/launch-and-lifecycle.md` | Where a Mini App can be opened from, what each entry gives it, how it starts, pauses and ends, and where it is hosted. Checked on... | mini-app |
-| `mini-apps/layout-rules.md` | Where the image sits and in what ratio, the order of title, meta, price, rating and availability, which card variant a content type... | mini-app |
-| `mini-apps/materials-and-trends.md` | How to keep a Mini App current when Apple, Google and Telegram redesign their interfaces without chasing every fashion. It covers: -... | mini-app |
-| `mini-apps/native-anatomy.md` | What the two design sources actually do, measured component by component through the Figma MCP on **2026-11-24**, and the rule each... | mini-app |
-| `mini-apps/orchestration.md` | The order an agent follows when a person asks to **create** a Mini App or to **improve, restyle or fix** an existing one, with the file... | mini-app |
-| `mini-apps/payments.md` | How a Mini App takes money: which rail for which goods, the end-to-end flow from cart to receipt, what each `invoiceClosed` status means... | mini-app |
-| `mini-apps/performance-and-testing.md` | Budgets that keep a Mini App fast on a weak Android phone, and the ladder of evidence from a static check to a real device. Checked on... | mini-app |
-| `mini-apps/rework.md` | The procedure for "make our Mini App look and work like Telegram": a web-style app (own header, drawer, gradients, a fixed CTA, emoji... | mini-app |
-| `mini-apps/screen-patterns.md` | What a Mini App for each common product looks like: its sections (tab roots), level-2 screens, the content types it lists (with their... | mini-app |
-| `mini-apps/security.md` | A Mini App is a public web page running on the user's device. Everything it sends to your server can be forged except the signature... | mini-app |
-| `mini-apps/telegram-design-guidelines.md` | Telegram's official design rules for Mini Apps and every design-relevant instruction elsewhere on the same page, turned into... | mini-app |
-| `mini-apps/telegram-elements.md` | Telegram has a visual vocabulary users already know from the app itself: the Stars sign, gram amounts, gift cards with their backdrops,... | mini-app |
-| `mini-apps/webapp-api.md` | A human-readable cut of `window.Telegram.WebApp`, grouped by what a screen needs, with the Bot API version each member appeared in and... | mini-app, lookup |
+| `format-selection.md` | Choosing the surface and format by what the reader must do: messages, rich messages, keyboards, widgets, Mini Apps, per-format guidance, anti-patterns; read before deciding how to send content. | improve |
+| `gifts-and-stories.md` | Sending gifts and Premium from Stars, reading owned and unique gifts, gift service messages, stories for business accounts; read when a bot deals with gifts or stories. | build |
+| `inline-keyboards.md` | InlineKeyboardMarkup: button types, callback_data design, answering callbacks, edit versus new message, layout, pagination, screen recipes, limits; read when building or fixing inline keyboards. | improve |
+| `inline-mode.md` | Inline mode: bot settings, flow, chosen_inline_result, editing inline messages, switch buttons, prepared inline messages for Mini Apps; read when a bot answers @bot queries. | build |
+| `limits-and-splitting.md` | Message, caption and rich-message limits and a format-aware splitting algorithm: safe boundaries, what never to split, what to preserve; read before sending long or large content. | improve, fix |
+| `localization-and-rtl.md` | Localizing the whole interface: button labels, command descriptions, templates, RTL and mixed text direction, escaping localized strings, testing; read when a bot has or adds languages. | improve |
+| `media-and-files.md` | Sending files (upload, file_id, URL), size limits, albums, InputMedia, thumbnails, live photos, getFile downloads, local Bot API server; read when a bot sends or receives media. | improve |
+| `microcopy-and-labels.md` | Rewriting message texts, titles, captions and button labels safely: keep facts and placeholders, body rules, tone, emoji, errors, empty states; read before editing any bot copy. | improve |
+| `mini-apps-bridge.md` | The bot side of Mini Apps: launch points, what comes back (web_app_data, answerWebAppQuery), trusting Mini App data, prepared messages and buttons; read when a bot opens a Mini App. | mini-app |
+| `navigation-and-flows.md` | Screen/state map, back, home and depth, wizards, chat-level chrome, newer navigation surfaces, notifications, checklist; read when designing or fixing navigation. | audit, improve |
+| `official-sources.md` | Verification log: primary sources, facts verified per date, stable historical facts, guidance that is not an API rule, sections to re-review on each release; read to check whether a fact is current. | lookup |
+| `onboarding-and-first-run.md` | Onboarding and first run: before Start, reading /start, first-run steps, empty states, returning users, groups; read when designing a bot's first minute. | improve, build |
+| `payments-and-stars.md` | Payments and Telegram Stars: lifecycle and server state, subscriptions, paid media, refunds and the Star ledger, provider payments, rights, errors; read when a bot sells anything. | build |
+| `payments-pipeline.md` | One payment pipeline for Stars and Gram: rail choice, states, payload security, refunds, reconciliation, data model, screens and microcopy, and the tgkit.payments runtime. | build |
+| `personalization-and-links.md` | What the API gives about a user, safe display names, functional personalization, link surfaces and previews, mentions, deep links, in-message navigation; read when personalizing or linking. | improve |
+| `polls-checklists-and-reactions.md` | Native polls and quizzes (9.6 and 10.0 extensions), checklists for business accounts and message reactions; read when a bot sends polls or checklists or handles reactions. | build |
+| `project-adaptation.md` | Steps to map how an unknown project builds its interface before changing anything: instructions, stack, UI touchpoints, classification, defects, UI map; read first in any existing repository. | improve, build |
+| `publishing-pipeline.md` | Pipeline from source material to a channel post exactly once: content model, rendering, validation, preview, approval, idempotent publish, edits, rate limits, fan-out; read when a bot publishes. | post |
+| `redesign-orchestration.md` | The deep redesign path with gates: rights, project research, brand translation, style profile, voice gate, structure, migration, build and tuning loop; read for 'rethink the whole bot' requests. | improve |
+| `regular-formatting.md` | Complete map of regular (non-Rich) formatting: HTML and MarkdownV2 parse modes, MessageEntity, nesting, captions, presentation controls, quick chooser; read when formatting regular messages. | improve, fix |
+| `reply-keyboards.md` | ReplyKeyboardMarkup, KeyboardButton request types, the plain-text trap, ForceReply, layout and migration heuristics; read when using or replacing a reply keyboard. | improve |
+| `rich-media.md` | Media inside Rich Messages: referencing files, binding to InputRichMessageMedia, media blocks, captions, ordering, rights, embed versus separate methods, fallback; read when a rich message has media. | improve |
+| `sdk-compatibility.md` | Checking what the project's SDK really supports: common SDKs, 9.4 field checks, escalation, raw payloads, verified SDK status for Bot API 10.4 and 10.5; read before promising a Bot API feature. | fix, lookup |
+| `security-and-escaping.md` | One escaping function per format, golden rules, per-format escaping, URL scheme whitelist, unicode, AI-generated content, checklist; read when putting dynamic data into any message format. | fix |
+| `specialized-updates.md` | On-demand modules for 10.3 and 10.4 details: welcome-message right, community joins, gifts, share themes, managed bots, verification, paid messages, widget permission; read only the section needed. | build |
+| `streaming-and-editing.md` | Engineering of streamed replies: operation state machine, Stop (can_stop, keep_on_stop), throttling, finalization, addressing drafts, editing rich content; read when implementing streaming. | improve, fix |
+| `tables.md` | Real Telegram tables in Rich Messages: when to use them, three build paths, cross-cutting rules, data recipes, fallback ladder, verification, compact tables; read first for any structured data. | improve |
+| `telegram-capabilities.md` | Compact map of regular versus Rich Messages: version history, object model, send and edit methods, capability matrix, formatting quick reference, authoring defaults; read to see what a message can do. | improve, lookup |
+| `testing-playbook.md` | What to assert when testing bot UI offline: keyboards, formatting, rich markdown, html and blocks, streaming, localization, regression cases, manual pass, done checklist; read before writing UI tests. | audit, fix |
+| `topics-and-contexts.md` | Context matrix of address fields per chat context, private-chat topics and topic links, channel direct messages; read to decide chat_id and thread fields for a method in a given context. | improve |
+| `ui-changelog.md` | Interface-relevant Bot API history by version: what 9.4 changed, the 9.3-10.2 run for AI bots, version gates to check, keeping the file honest; read to know which version a UI feature needs. | improve, lookup |
+| `updates-and-delivery.md` | Update intake: getUpdates versus webhook, allowed_updates, offsets, secret token, ordering, duplicates, and every update type; read when wiring or debugging how updates reach a bot. | fix |
+| `use-case-playbooks.md` | Complete product playbooks for 'build me a bot for X', indexed by product and by user phrase, with shared invariants and a newest-feature chooser; read when a request names a whole product. | build |
+| `user-data.md` | What Telegram gives a bot or Mini App about a user, how to ask for more, and the duties that follow: tiers, data inventory, consent, storage, deletion, review; read before collecting user data. | build |
+| `user-profile.md` | The baseline per-user record: identity, origin, accepted terms, language, time zone, notification choices, how the profile shapes the interface, storage; read when designing user storage. | improve, build |
+| `user-trust.md` | Deciding friction for new or risky users: Telegram and own signals, account age from the id, optional anti-spam lists, a tiered policy with appeal, retention; read for anti-abuse or trust scoring. | build |
+| `visual-language.md` | Icon systems, emoji discipline, screen anatomy, button label, color and icon rules, audit checklist and the premium pass; read when giving a bot a consistent visual identity. | improve, emoji |
+| `wallet-and-ton.md` | Telegram side of TON wallet features: wallet card and sign_data queries, payment flow, signing verification, cards and transfers, TON addresses; read for wallet actions in widgets. | widget |
+| `widget-design-system.md` | Design rules for HTML widgets: canvas, tokens, type, spacing, kit primitives, states, motion, RTL, accessibility, localization, icons, design profiles; read when designing a widget. | widget |
+| `widget-patterns.md` | Widget state, data and interaction patterns: decision guide, state architecture, requests, charts, lists, forms, timers, images, wallet, shared widgets; read when implementing widgets. | widget |
+| `widgets.md` | HTML widgets (Bot API 10.4): when to use them, availability, code and state, sending, query flow, shared widgets, runtime limits, design rules, testing; read first for any widget task. | widget |
+| `mini-apps/README.md` | Start page for Telegram Mini Apps: routing by task, reading order, sources and labels, offline data and tools, what is not covered yet; read first for any Mini App task. | mini-app |
+| `mini-apps/accessibility-and-language.md` | Mini App accessibility and language: screen readers, text size, contrast, motion, touch targets, localization, RTL, testing, checklist; read before building or reviewing any Mini App screen. | mini-app |
+| `mini-apps/anti-slop.md` | How a Mini App ends up looking generated and what to do instead: Telegram-specific tells, conflicts and decisions, general AI-UI tells, polish pass, checklist; read when polishing or reviewing. | mini-app |
+| `mini-apps/components.md` | Every Mini App component: anatomy, states, kit class, the native Telegram control to use instead, platform differences, TelegramUI mapping; read when choosing or building a component. | mini-app |
+| `mini-apps/decide.md` | Deciding between messages, an HTML widget and a Mini App for a task: signals for and against, decision path, hybrids, per-interface defaults, anti-patterns; read before proposing a Mini App. | mini-app |
+| `mini-apps/design-sources.md` | What the skill takes from each Mini App design source (Telegram guidelines, iOS 27 kit, UI kit, dark-fintech direction): colour, type, shape, Liquid Glass; read to see where design values come from. | mini-app |
+| `mini-apps/design-system.md` | The Mini App design system (TMA profile 1): order of authority, colour roles, type, space, platforms, motion, states, named styles, kit usage; read before designing or restyling a screen. | mini-app |
+| `mini-apps/figma-workflow.md` | How an agent reads a Figma file through the Figma MCP and turns it into rules, tokens or screens without copying what it must not; read when given a Figma design or kit. | mini-app |
+| `mini-apps/forms-and-data.md` | Mini App forms and server talk: fields, on-screen keyboard, validation, drafts, tma.api(), errors, once-only actions, sending the result to the chat; read for any screen with input or API calls. | mini-app |
+| `mini-apps/haptics-and-device.md` | Haptics and device features in Mini Apps: Taptic Engine, motion sensors, location, biometrics, fullscreen, QR, clipboard, the permission pattern; read before using any device feature. | mini-app |
+| `mini-apps/launch-and-lifecycle.md` | Mini App entry points, startapp and opening mode, main app, startup, running, ending, hosting, test environment; read when wiring how an app is opened and lives through a session. | mini-app |
+| `mini-apps/layout-rules.md` | Layout rules L01-L25 for Mini App screens: card variants, image ratio, text order, lists, details, forms, booking, plans, dashboards, review; read when laying out or reviewing a screen. | mini-app |
+| `mini-apps/materials-and-trends.md` | Keeping a Mini App current: materials as tokens, trend radar, web platform features in Telegram WebViews, handling platform redesigns; read when asked for glass, 'modern' or new CSS. | mini-app |
+| `mini-apps/native-anatomy.md` | Measured anatomy of iOS 27 and Telegram screens (layout, lists, buttons, tab bar, sheets, alerts, empty states, fields) turned into rules; read to make a screen sit next to Telegram's own chrome. | mini-app |
+| `mini-apps/orchestration.md` | The order of work to create or rework a Mini App, the file or tool for each step, and a coverage map of every element; read at the start of any Mini App create or rework task. | mini-app |
+| `mini-apps/payments.md` | Payments inside a Mini App: which rail, the Stars purchase flow, invoiceClosed statuses, subscriptions, card payments, the Serverless variant; read for the app side of taking money. | mini-app |
+| `mini-apps/performance-and-testing.md` | Mini App budgets, weak-device rules, the ladder of evidence from static check to real device, the preview stand, PR screenshots; read before shipping or testing a Mini App. | mini-app |
+| `mini-apps/rework.md` | Procedure to rework a web-style Mini App into classic Telegram design: loop, stages, translation table, colours, copy, framework bridge, acceptance, report; read when asked to make an app native. | mini-app |
+| `mini-apps/screen-patterns.md` | Screen patterns by product type (commerce, booking, learning, SaaS, money, social): sections, screens, content types, primary actions, routes, mistakes; read to plan or audit a Mini App. | mini-app |
+| `mini-apps/security.md` | Mini App security contract: what the client controls, initData verification (token and Ed25519), freshness, sessions, storage, inputs, hosting, logging; read before writing a Mini App backend. | mini-app |
+| `mini-apps/telegram-design-guidelines.md` | Telegram's official Mini App design rules G1-G7 and other design-relevant instructions turned into implementation steps and checks; read before judging a Mini App against Telegram's rules. | mini-app |
+| `mini-apps/telegram-elements.md` | Telegram's own visual vocabulary (Stars, grams, gifts, Premium, verification marks, emoji status, boosts, TON card) rendered from API data; read when a screen shows these elements. | mini-app |
+| `mini-apps/webapp-api.md` | The Telegram.WebApp client API grouped by task, with the version each member appeared in, events and launch parameters; read when calling any WebApp member or gating by version. | mini-app, lookup |

@@ -1,3 +1,9 @@
+---
+summary: "What to assert when testing bot UI offline: keyboards, formatting, rich markdown, html and blocks, streaming, localization, regression cases, manual pass, done checklist; read before writing UI tests."
+verified: "2026-11-15"
+bot_api: "10.5"
+---
+
 # Testing playbook
 
 > Use the **project's existing test infrastructure**. Do not add a new test

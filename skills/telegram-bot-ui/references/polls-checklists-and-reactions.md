@@ -1,3 +1,9 @@
+---
+summary: "Native polls and quizzes (9.6 and 10.0 extensions), checklists for business accounts and message reactions; read when a bot sends polls or checklists or handles reactions."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Polls, checklists and reactions
 
 Native polls and quizzes (with the 9.6 and 10.0 extensions: multiple correct answers,

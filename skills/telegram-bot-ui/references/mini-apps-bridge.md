@@ -1,3 +1,9 @@
+---
+summary: "The bot side of Mini Apps: launch points, what comes back (web_app_data, answerWebAppQuery), trusting Mini App data, prepared messages and buttons; read when a bot opens a Mini App."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Mini App bridge (bot side only)
 
 How a bot **launches** Mini Apps and **receives data** from them, and how to trust that
