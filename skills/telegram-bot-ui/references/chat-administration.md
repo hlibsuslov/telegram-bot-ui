@@ -1,4 +1,24 @@
+---
+summary: "Bans, restrictions, promotion, permissions, invite links, join requests, member tags and the my_chat_member and chat_member updates; read when a bot manages a group or channel."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Chat administration and member updates
+
+## Contents
+
+- [The member model](#the-member-model)
+- [Member updates](#member-updates)
+- [Rights the bot needs](#rights-the-bot-needs)
+- [Moderation](#moderation)
+- [Promotion](#promotion)
+- [Invite links and join requests](#invite-links-and-join-requests)
+- [Tags (9.5) and chat settings](#tags-95-and-chat-settings)
+- [State to keep](#state-to-keep)
+- [What users see](#what-users-see)
+- [Common mistakes](#common-mistakes)
+- [Error handling](#error-handling)
 
 Bans, restrictions, promotions, permissions, invite links, join requests (incl. the
 10.1 join-request queries), member tags, and the `my_chat_member` / `chat_member`

@@ -5,6 +5,7 @@ import {
 import { Copy, Maximize2, MessageSquarePlus, Minus, Play, Plus, Search, Zap } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { renderScreen, type Logical } from "@/core/render.ts";
+import { screenRichActionIds } from "@/core/rich.ts";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -56,7 +57,8 @@ const ScreenNode = memo(function ScreenNode({ data }: NodeProps<ScreenNodeT>) {
         <div className="relative py-2.5 pr-3 pl-3.5">
           {input && kt !== "force_reply" && port("input")}
           <Bubble logical={logical} widget={logical.widget} hl={hl} clampText tail
-            onPress={(aid) => data.onAction(sid, aid)} buttonSlot={kt === "inline" ? (aid) => port(`a:${aid}`) : undefined} />
+            onPress={(aid) => data.onAction(sid, aid)}
+            buttonSlot={kt === "inline" || logical.format === "rich.html" ? (aid) => port(`a:${aid}`) : undefined} />
         </div>
         {kt === "reply" && <ReplyKeyboard logical={logical} hl={hl} onKey={() => undefined} buttonSlot={(aid) => port(`a:${aid}`)} />}
         {kt === "force_reply" && (
@@ -218,7 +220,7 @@ function Canvas({ selected, selectedAction, onAction }: { selected: string | nul
     }
     const s = working.screens[id];
     const actions = s.actions ?? {};
-    const onKb = new Set((s.keyboard?.rows ?? []).flat());
+    const onKb = new Set([...(s.keyboard?.rows ?? []).flat(), ...screenRichActionIds(s)]);
     const unplaced = Object.entries<any>(actions)
       .filter(([aid, a]) => (!onKb.has(aid) || a.hidden) && list.some((e) => e.from === id && e.actionId === aid))
       .map(([aid, a]) => ({ aid, label: (typeof a.label === "object" ? a.label[editLocale] ?? a.label[def] : a.label) ?? aid }));

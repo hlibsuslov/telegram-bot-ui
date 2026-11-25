@@ -92,7 +92,7 @@ class Reference(unittest.TestCase):
             self.assertTrue(os.path.exists(os.path.join(REF, link)), link)
 
     def test_routed(self):
-        self.assertIn("references/user-data.md", read(_paths.ROOT, "SKILL.md"))
+        self.assertIn("references/user-data.md", _paths.routing_text())
 
 
 if __name__ == "__main__":

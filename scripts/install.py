@@ -40,7 +40,7 @@ NAME = "telegram-bot-ui"
 MARKER = ".telegram-bot-ui-install.json"
 HOSTS = ("claude", "codex", "cursor", "gemini", "copilot")
 # Entries of the skill folder (skills/telegram-bot-ui/) that make up the installed skill.
-SKILL_CONTENT = ("SKILL.md", "LICENSE", "agents/openai.yaml",
+SKILL_CONTENT = ("SKILL.md", "LICENSE", "agents/openai.yaml", "commands",
                  "references", "recipes", "examples", "scripts", "data")
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "node_modules", ".DS_Store")
 
@@ -93,10 +93,17 @@ class Installer:
 
     def backup(self, path: str) -> None:
         target = f"{path}.bak-{self.stamp}"
-        n = 1
+        parent = os.path.dirname(path)
+        if os.path.isdir(path) and os.path.basename(parent) == "skills":
+            # Hosts load every folder under skills/, so a backup there would be a second copy.
+            folder = os.path.join(os.path.dirname(parent), "skill-backups")
+            if not self.dry_run:
+                os.makedirs(folder, exist_ok=True)
+            target = os.path.join(folder, f"{os.path.basename(path)}.bak-{self.stamp}")
+        first, n = target, 1  # a collision numbers the same backup folder, never falls back into skills/
         while os.path.lexists(target):
             n += 1
-            target = f"{path}.bak-{self.stamp}-{n}"
+            target = f"{first}-{n}"
         self.say("backup", f"{path} -> {target}")
         if not self.dry_run:
             if os.path.isdir(path) and not os.path.islink(path):

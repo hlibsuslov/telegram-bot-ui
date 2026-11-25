@@ -11,7 +11,7 @@ export interface Toast { id: number; text: string; tone: "info" | "success" | "e
 export interface Highlight { sid: string; part: "text" | "action" | "keyboard" | "input" | "title"; actionId?: string; state?: string }
 
 /** A note for the agent about a screen, queued in this browser until it is handed off. */
-export interface AgentRequest { id: string; sid: string | null; text: string; at: number }
+export interface AgentRequest { id: string; sid: string | null; text: string; at: number; serverId?: string }
 export interface GitFile { path: string; status: string; screenId?: string; widgetId?: string }
 export interface GitStatus { git: boolean; branch?: string; head?: string; projectPath?: string; files: GitFile[]; diff: string }
 export interface Handoff { at: number; signature: string }
@@ -51,6 +51,9 @@ interface Ctx {
   copyId: (sid: string) => void;
   copyRequest: (sid: string) => void;
   requests: AgentRequest[];
+  /** Also write each new request to bot-ui/context/requests/, where the agent reads it. Off by default: the text lands in git. */
+  requestsToProject: boolean;
+  setRequestsToProject: (on: boolean) => void;
   addRequest: (sid: string | null, text: string) => void;
   removeRequest: (id: string) => void;
   git: GitStatus | null;
@@ -99,6 +102,7 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
   const saving = useRef(false);
   const projKey = `${initial.projectId}:${initial.rootKey}`;
   const [requests, setRequests] = useState<AgentRequest[]>(() => readJson(`bot-ui-studio:requests:${projKey}`, []));
+  const [requestsToProject, setRequestsToProjectState] = useState<boolean>(() => readJson(`bot-ui-studio:requests-to-project:${projKey}`, false));
   const [handoff, setHandoff] = useState<Handoff | null>(() => readJson(`bot-ui-studio:handoff:${projKey}`, null));
   const [git, setGit] = useState<GitStatus | null>(null);
   const studio = loaded.mode === "studio";
@@ -246,17 +250,40 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
     widgets: !!f.widgets,
   };
 
+  const setRequestsToProject = useCallback((on: boolean) => {
+    setRequestsToProjectState(on);
+    writeJson(`bot-ui-studio:requests-to-project:${projKey}`, on);
+  }, [projKey]);
   const addRequest = useCallback((sid: string | null, text: string) => {
+    const localId = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
     setRequests((r) => {
-      const next = [...r, { id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, sid, text: text.trim(), at: Date.now() }];
+      const next = [...r, { id: localId, sid, text: text.trim(), at: Date.now() }];
       writeJson(`bot-ui-studio:requests:${projKey}`, next);
       return next;
     });
+    if (requestsToProject && loaded.mode === "studio") {
+      void api<{ request: { id: string }; path: string }>("/api/requests/save", { sid, text: text.trim() }).then((res) => {
+        if (res.ok) {
+          // keep the saved file's id, so removing the request here can cancel it there
+          setRequests((r) => { const next = r.map((x) => (x.id === localId ? { ...x, serverId: res.data.request.id } : x)); writeJson(`bot-ui-studio:requests:${projKey}`, next); return next; });
+          notify(`Saved to bot-ui/${res.data.path}: your agent sees it when asked to do the Studio requests`, "success");
+        } else { const d = res.data as { message?: string; error?: { message?: string } }; notify(`Kept in this browser only: ${d?.message ?? d?.error?.message ?? "the save failed"}`, "error"); }
+      });
+      return;
+    }
     notify(sid ? `Request for ${sid} queued for your agent` : "Request queued for your agent", "success");
-  }, [projKey, notify]);
+  }, [projKey, notify, requestsToProject, loaded.mode]);
   const removeRequest = useCallback((id: string) => {
+    const gone = requests.find((x) => x.id === id);
     setRequests((r) => { const next = r.filter((x) => x.id !== id); writeJson(`bot-ui-studio:requests:${projKey}`, next); return next; });
-  }, [projKey]);
+    if (gone?.serverId && loaded.mode === "studio") {
+      void api("/api/requests/cancel", { id: gone.serverId }).then((res) => {
+        if (res.ok) return;
+        const d = res.data as { message?: string; error?: { message?: string } };
+        notify(`Removed here, but the saved request stays for your agent: ${d?.message ?? d?.error?.message ?? "the cancel failed"}`, "error");
+      });
+    }
+  }, [projKey, requests, notify, loaded.mode]);
   const refreshGit = useCallback(async () => {
     if (!studio) return;
     const res = await api<GitStatus>("/api/git-status", {});
@@ -288,7 +315,7 @@ export function StudioProvider({ initial, children }: { initial: Loaded; childre
     loaded, store, version, working, diags, validating, caps, pendingBase, adoptPendingBase, reload,
     replaceLoaded, saving, saveDiags, setSaveDiags, notify, toasts, focusField,
     editLocale, setEditLocale, highlight, setHighlight, copyId, copyRequest,
-    requests, addRequest, removeRequest, git, refreshGit, handoff, markHandedOff, workSignature, pro, setPro, changeState,
+    requests, requestsToProject, setRequestsToProject, addRequest, removeRequest, git, refreshGit, handoff, markHandedOff, workSignature, pro, setPro, changeState,
   };
   return <StudioContext.Provider value={value}>{children}</StudioContext.Provider>;
 }

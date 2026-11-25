@@ -15,14 +15,15 @@ import uuid
 
 from . import PATCH_FORMAT, SCHEMA_VERSION, TOOL_VERSION
 from .engine import parity_view, run_scenario
-from .project import Snapshot, find_root, open_snapshot
+from .project import Snapshot, find_root, open_snapshot, replace_dir
 from .render import bot_request, render_screen
 from .store import StoreError, load_patch, write_patch
 from .validate import summary, targets, validate
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-TEMPLATES = os.path.join(os.path.dirname(HERE), "templates")
+TEMPLATES = os.path.join(HERE, "templates")
 EXIT = {"REVISION_CONFLICT": 3, "VALIDATION_FAILED": 1}
+KEEP_ON_INIT = ("context",)
 
 for _s in (sys.stdout, sys.stderr):
     try:
@@ -68,7 +69,9 @@ def cmd_init(args) -> int:
     src = os.path.join(TEMPLATES, args.template)
     if not os.path.isdir(src):
         return _fail(args, "TEMPLATE_UNKNOWN", f"no template {args.template!r} (have: {', '.join(sorted(os.listdir(TEMPLATES)))})", 2)
-    if os.path.exists(target) and os.listdir(target):
+    # The skill's saved review (context/) may exist before the map; init keeps it.
+    existing = os.listdir(target) if os.path.isdir(target) else []
+    if os.path.exists(target) and [n for n in existing if n not in KEEP_ON_INIT]:
         return _fail(args, "TARGET_NOT_EMPTY", f"{target} exists and is not empty; init never overwrites", 4)
     parent = os.path.dirname(target)
     os.makedirs(parent, exist_ok=True)
@@ -80,9 +83,22 @@ def cmd_init(args) -> int:
         shutil.rmtree(stage, ignore_errors=True)
         return _fail(args, "TEMPLATE_INVALID", "the template does not validate", 1, diagnostics=[d.to_json() for d in errors])
     shutil.rmtree(os.path.join(stage, ".bot-ui"), ignore_errors=True)
-    if os.path.exists(target):
-        os.rmdir(target)
-    os.replace(stage, target)
+    moved: list[str] = []
+    try:
+        if os.path.exists(target):
+            for name in existing:
+                os.replace(os.path.join(target, name), os.path.join(stage, name))
+                moved.append(name)
+            os.rmdir(target)
+        replace_dir(stage, target)
+    except OSError as err:  # the saved review must survive a failed publish
+        os.makedirs(target, exist_ok=True)
+        for name in moved:
+            kept = os.path.join(stage, name)
+            if os.path.lexists(kept) and not os.path.lexists(os.path.join(target, name)):
+                os.replace(kept, os.path.join(target, name))
+        shutil.rmtree(stage, ignore_errors=True)
+        return _fail(args, "INIT_FAILED", f"could not publish {target}: {err}; its saved files are back in place", 4)
     _emit(args, {"ok": True, "project": target, "projectId": snap.project["projectId"], "revision": snap.revision,
                  "files": sorted(snap.files)},
           f"created {target} ({len(snap.files)} files), revision {snap.revision}")

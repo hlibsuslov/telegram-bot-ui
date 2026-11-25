@@ -1,5 +1,5 @@
 // builder/v1 schema types (studio/docs/widget-builder.md). The Studio renders whatever
-// /api/widget/builder-schema returns (studio/bot_ui/builder.py owns the content).
+// /api/widget/builder-schema returns (skills/telegram-bot-ui/scripts/bot_ui/builder.py owns the content).
 import type { Doc } from "@/core/render.ts";
 
 export interface BField {

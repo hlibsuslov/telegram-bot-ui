@@ -9,6 +9,7 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -79,7 +80,11 @@ class AdapterGeneratorTest(unittest.TestCase):
             else:
                 self.assertIn(f"\n## {heading}\n", text)
         self.assertIn("## Left out of this prompt", text)
-        self.assertIn("references/widgets.md", text.split("## Left out of this prompt")[1])
+        self.assertIn("llms.txt", text.split("## Left out of this prompt")[1])
+        # The floor travels with the router: the rules hold even where no file can be opened.
+        self.assertIn("## Floor (`references/floor.md`)", text)
+        self.assertIn("### Definition of done", text)
+        self.assertLess(len(text.encode("utf-8")), 16_000)
 
     def test_llms_txt_follows_the_format(self):
         lines = ba.build()["llms.txt"].splitlines()
@@ -295,10 +300,26 @@ class InstallerTest(unittest.TestCase):
         with open(os.path.join(foreign, "SKILL.md"), "w") as fh:
             fh.write("mine")
         self.run_install("--host", "claude", "--scope", "project", "--no-agents")
-        backups = [n for n in os.listdir(self.p(".claude", "skills")) if ".bak-" in n]
+        # A backup inside skills/ would be discovered by the host as a second copy of the skill.
+        self.assertEqual([n for n in os.listdir(self.p(".claude", "skills")) if ".bak-" in n], [])
+        backups = [n for n in os.listdir(self.p(".claude", "skill-backups")) if ".bak-" in n]
         self.assertEqual(len(backups), 1)
-        with open(os.path.join(self.p(".claude", "skills", backups[0]), "SKILL.md")) as fh:
+        with open(os.path.join(self.p(".claude", "skill-backups", backups[0]), "SKILL.md")) as fh:
             self.assertEqual(fh.read(), "mine")
+
+    def test_two_backups_of_one_skill_in_a_second_never_land_under_skills(self):
+        skills = self.p(".claude", "skills")
+        folder = os.path.join(skills, "telegram-bot-ui")
+        inst = install.Installer(self.home, self.project, False, False)
+        for body in ("first", "second"):
+            os.makedirs(folder, exist_ok=True)
+            with open(os.path.join(folder, "SKILL.md"), "w") as fh:
+                fh.write(body)
+            with contextlib.redirect_stdout(io.StringIO()):
+                inst.backup(folder)
+            shutil.rmtree(folder)
+        self.assertEqual(os.listdir(skills), [])
+        self.assertEqual(len(os.listdir(self.p(".claude", "skill-backups"))), 2)
 
     def test_foreign_agent_file_backed_up_and_kept_on_uninstall(self):
         agents = self.p(".claude", "agents")

@@ -11,10 +11,10 @@ design system and tools.
    a three-button menu is a keyboard, not a widget.
 2. Start from the widget patterns and design system references; keep one visual
    language with the bot's other screens.
-3. Build with `scripts/build_widget.py` when present and always check the result with
-   `python <skill-dir>/scripts/validate_widget.py <file>`: compressed size by the
+3. Follow `commands/widget.md`. Build with `tgui.py widget build` and always check the
+   result with `tgui.py check widget <file> --strict`: compressed size by the
    server's algorithm, state bytes, production versus test-server context, runtime gaps.
-4. Preview with `scripts/preview_widget.py` when present. A browser preview is not proof
+4. Preview with `tgui.py widget preview`. A browser preview is not proof
    of rendering in the Telegram apps; say so in the report.
 5. Wire the server side: `widget_query` / `shared_widget_query` in `allowed_updates`,
    every query answered exactly once within the documented time, state changed only

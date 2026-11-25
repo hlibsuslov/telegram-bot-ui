@@ -150,6 +150,24 @@ class PayloadValidation(unittest.TestCase):
         self.ok("setMyCommands", {"commands": [{"command": "start", "description": "Start"}],
                                   "scope": {"type": "all_private_chats"}})
 
+    def test_prose_rules_of_reactions_and_commands(self):
+        react = {"chat_id": 1, "message_id": 2}
+        self.bad("setMessageReaction", {**react, "reaction": [{"type": "emoji", "emoji": "👍"}] * 2}, "at most one")
+        self.bad("setMessageReaction", {**react, "reaction": [{"type": "paid"}]}, "paid")
+        self.bad("setMessageReaction", {**react, "reaction": [{"type": "emoji", "emoji": "✅"}]}, "not a reaction emoji")
+        ok = {"command": "start", "description": "Start"}
+        self.bad("setMyCommands", {"commands": [{**ok, "command": "Start!"}]}, "1-32 lowercase")
+        self.bad("setMyCommands", {"commands": [ok, ok]}, "listed twice")
+
+    def test_a_list_or_object_where_a_string_belongs_is_an_error_not_a_crash(self):
+        for bad in ([], {}, [[]], 5, None):
+            with self.subTest(bad=bad):
+                rep = V.check_request("setMessageReaction", {"chat_id": 1, "message_id": 2,
+                                                             "reaction": [{"type": "emoji", "emoji": bad}]})
+                self.assertFalse(rep.ok)
+                rep = V.check_request("setMyCommands", {"commands": [{"command": bad, "description": "x"}] * 2})
+                self.assertFalse(rep.ok)
+
     def test_shared_discriminator_resolved_structurally(self):
         cached = {"type": "photo", "id": "1", "photo_file_id": "AgAD"}
         by_url = {"type": "photo", "id": "2", "photo_url": "https://e.x/p.jpg", "thumbnail_url": "https://e.x/t.jpg"}

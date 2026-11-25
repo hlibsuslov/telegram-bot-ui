@@ -53,7 +53,7 @@ class Reference(unittest.TestCase):
 
     def test_routes_link_the_reference(self):
         self.assertIn("telegram-elements.md", read(REF, "README.md"))
-        self.assertIn("telegram-elements.md", read(_paths.ROOT, "SKILL.md"))
+        self.assertIn("telegram-elements.md", _paths.routing_text())
 
     def test_star_colour_is_a_fallback_token_in_every_scheme(self):
         css = read(KIT, "_kit", "tma.css")

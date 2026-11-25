@@ -5,6 +5,7 @@ import hashlib
 import json
 import os
 import re
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -113,6 +114,19 @@ def canonical_json(doc: Any, kind: str | None = None) -> bytes:
 def normalize_bytes(data: bytes) -> bytes:
     """Revision input: CRLF -> LF, so a Git checkout with autocrlf has the same revision."""
     return data.replace(b"\r\n", b"\n")
+
+
+def replace_dir(src: str, dst: str, attempts: int = 8) -> None:
+    """os.replace for a freshly written folder. On Windows an antivirus or indexer can hold the
+    new folder for a moment and the rename fails with "Access is denied"; wait and try again."""
+    for i in range(attempts):
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            if os.name != "nt" or i == attempts - 1:
+                raise
+            time.sleep(0.05 * 2 ** i)
 
 
 def revision_of(files: dict[str, bytes]) -> str:
@@ -233,8 +247,16 @@ def parse_files(root: str, files: dict[str, bytes]) -> Snapshot:
     return snap
 
 
-def open_snapshot(root: str) -> Snapshot:
+def open_snapshot(root: str, *, recover: bool = True) -> Snapshot:
+    """The project as it is on disk. recover=False never writes: a pending journal of an interrupted
+    write is reported (WRITE_PENDING) instead of rolled back, for read-only callers such as MCP tools."""
     from .store import recover_if_needed
+    if not recover:
+        snap = parse_files(root, read_files(root))
+        if os.path.exists(os.path.join(root, STATE_DIR, "journal.json")):
+            snap.load_diagnostics.append(Diagnostic("WRITE_PENDING", "warning", f"{STATE_DIR}/journal.json", "",
+                                                    "an interrupted write is pending; any bot-ui write command rolls it back"))
+        return snap
     recovered = recover_if_needed(root)
     snap = parse_files(root, read_files(root))
     if recovered:

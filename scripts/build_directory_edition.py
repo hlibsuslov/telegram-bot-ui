@@ -50,7 +50,8 @@ LOOKUP_HINT = (
 EDITION_NOTE = (
     "> **Directory edition.** This copy is the documentation-only build published to the Claude "
     "plugin directory. It ships without `scripts/` and the runnable code in `examples/` (Python, "
-    "TypeScript, widget kits). Where a step below names a script, do the same check by hand: "
+    "TypeScript, widget kits). Where a step names `tgui.py` or a script, follow the playbook's "
+    "*Without scripts* path and do the same check by hand: "
     f"{LOOKUP_HINT}. Count `callback_data` and other byte limits in UTF-8 bytes, not characters. "
     "If the user wants the validators, publishing and widget tools, tell them the full toolset "
     f"installs from {REPO_URL}."
@@ -98,7 +99,7 @@ def _annotate_skill(out: str) -> None:
     with open(path, encoding="utf-8") as fh:
         text = fh.read()
     title = "\n# Telegram Bot UI\n"
-    tools = "\n## Tools (offline, stdlib, no token)\n"
+    tools = "\n## Tools\n"
     if text.count(title) != 1 or text.count(tools) != 1:
         raise SystemExit("SKILL.md layout changed: update the anchors in build_directory_edition.py")
     text = text.replace(title, f"{title}\n{EDITION_NOTE}\n", 1)
@@ -147,7 +148,7 @@ def build(out: str) -> list[str]:
                                  and d != "__pycache__")
             for name in sorted(filenames):
                 rel = os.path.relpath(os.path.join(dirpath, name), ROOT).replace(os.sep, "/")
-                if _keep(rel):
+                if _keep(rel) and not rel.startswith(f"{SKILL_REL}/scripts/"):
                     _copy(rel, rel, out)
     with open(os.path.join(out, "README.md"), "w", encoding="utf-8", newline="\n") as fh:
         fh.write(README)

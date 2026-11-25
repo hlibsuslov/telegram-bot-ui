@@ -38,6 +38,13 @@ LIMITS = {"chars": 32768, "blocks": 500, "depth": 16, "media": 50, "columns": 20
 MEDIA_TYPES = {"photo", "video", "animation", "audio", "voice_note", "document"}
 MEDIA_REF_RE = re.compile(r"tg://(photo|video|document|audio)\?id=([^\s\"')>]+)")
 MEDIA_ID_RE = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
+# Markdown code (fenced to the closing fence or the end, then inline spans) shows tags, it does not use them.
+FENCE_RE = re.compile(r"^ {0,3}(?P<f>`{3,}|~{3,})[^\n]*\n.*?(?:^ {0,3}(?P=f)[`~]*[ \t]*$|\Z)", re.M | re.S)
+CODE_SPAN_RE = re.compile(r"(?<!`)(`+)(?!`).+?(?<!`)\1(?!`)", re.S)
+
+
+def _without_markdown_code(src: str) -> str:
+    return CODE_SPAN_RE.sub(" ", FENCE_RE.sub("\n", src))
 
 
 def _text_len(rt) -> int:
@@ -128,6 +135,11 @@ def validate(payload: dict, *, draft: bool = False):
         for unused in sorted(ids - refs):
             warnings.append(f"media id {unused!r} is never referenced")
         c.media = len(media)
+        from bot_ui import rich as rich_html  # button rows, button types and styles in the HTML tags
+        for code, sev, message in rich_html.check(_without_markdown_code(src) if "markdown" in msg else src, draft=draft):
+            if code == "TEXT_TOO_LONG" or (code == "RICH_TAG_UNSUPPORTED" and "markdown" in msg):
+                continue  # length is counted below; Rich Markdown may hold other HTML
+            (errors if sev == "error" else warnings).append(f"{code}: {message}")
     checks = [("chars", c.chars), ("blocks", c.blocks), ("media", c.media), ("depth", c.max_depth)]
     for name, value in checks:
         if value > LIMITS[name]:

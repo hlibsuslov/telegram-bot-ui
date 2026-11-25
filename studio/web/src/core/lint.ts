@@ -1,7 +1,8 @@
 // Client-side checks of the surfaces the Studio and the artifact edit (texts, labels, targets,
-// rules, keyboard references). A subset of studio/bot_ui/validate.py with the same codes and
+// rules, keyboard references). A subset of skills/telegram-bot-ui/scripts/bot_ui/validate.py with the same codes and
 // pointers; the CLI and the Studio server run the full validator before any write.
 import { type Doc, MEDIA_TYPES, keyboardRows, placeholders } from "./render.ts";
+import { richCheck } from "./rich.ts";
 import type { Snapshot } from "./engine.ts";
 
 export interface Diag { code: string; severity: "error" | "warning" | "info"; file: string; pointer: string; message: string; screenId?: string }
@@ -38,6 +39,9 @@ export function lintScreen(snap: Snapshot, sid: string): Diag[] {
     for (const [loc, t] of Object.entries(value)) {
       if (typeof t !== "string") continue;
       for (const name of placeholders(t)) if (!(name in fields)) add("PLACEHOLDER_UNDECLARED", "error", `${pointer}/${loc}`, `{${name}} is not a declared field in project.json fields`);
+      if (fmt === "rich.html") {
+        for (const [code, sev, message] of richCheck(t)) add(code, sev, `${pointer}/${loc}`, message);
+      }
       if (fmt === "regular.html") {
         const stack: string[] = [];
         for (const m of t.matchAll(/<(\/?)([a-zA-Z-]+)[^>]*>/g)) {

@@ -26,6 +26,7 @@ import re
 import time
 import uuid
 import urllib.error
+import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable
@@ -281,6 +282,37 @@ class _Resolver:
         if status != 200 or not isinstance(doc, dict) or not doc.get("ok"):
             err = (doc.get("error") if isinstance(doc, dict) else None) or {}
             raise EmojiError(str(err.get("code") or "RESOLVER_ERROR"), str(err.get("message") or f"HTTP {status}"))
+        return doc
+
+    def search(self, query: str, pack: str | None = None) -> dict:
+        """The library's ranked search (GET <origin>/api/emoji-search?q=...&pack=...): emoji with
+        real ids and the packs they come from. Only the query words leave this machine."""
+        params = {"q": query[:160]}
+        if pack:
+            if not PACK_NAME.match(pack):
+                raise EmojiError("PACK_NAME", f"not a pack name: {pack!r}")
+            params["pack"] = pack
+        status, _, body = self._get(f"{self.origin}/api/emoji-search?{urllib.parse.urlencode(params)}", BODY_MAX)
+        try:
+            doc = json.loads(body.decode("utf-8")) if len(body) <= BODY_MAX else None
+        except (UnicodeDecodeError, ValueError):
+            doc = None
+        if status != 200 or not isinstance(doc, dict) or not doc.get("ok"):
+            err = (doc.get("error") if isinstance(doc, dict) else None) or {}
+            raise EmojiError(str(err.get("code") or "RESOLVER_ERROR"), str(err.get("message") or f"search: HTTP {status}"))
+        return doc
+
+    def facets(self) -> dict:
+        """GET <origin>/api/emoji-facets: the tag taxonomy and every listed pack's faceted tags with their
+        confidence (style, colour, theme fit, motion, topic, mood, interface roles, bot categories)."""
+        status, _, body = self._get(f"{self.origin}/api/emoji-facets", BODY_MAX)
+        try:
+            doc = json.loads(body.decode("utf-8")) if len(body) <= BODY_MAX else None
+        except (UnicodeDecodeError, ValueError):
+            doc = None
+        if status != 200 or not isinstance(doc, dict) or not doc.get("ok") or not isinstance(doc.get("packs"), list):
+            err = (doc.get("error") if isinstance(doc, dict) else None) or {}
+            raise EmojiError(str(err.get("code") or "RESOLVER_ERROR"), str(err.get("message") or f"facets: HTTP {status}"))
         return doc
 
     def sets_of(self, ids: list[str]) -> dict[str, str]:

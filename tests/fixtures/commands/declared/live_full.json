@@ -1,0 +1,14 @@
+{
+  "lists": [
+    {"scope": {"type": "default"}, "language_code": "", "result": [
+      {"command": "start", "description": "Open the main menu"},
+      {"command": "help", "description": "How the bot works"}
+    ]},
+    {"scope": {"type": "default"}, "language_code": "ru", "result": [
+      {"command": "start", "description": "Открыть меню"}
+    ]},
+    {"scope": {"type": "all_private_chats"}, "language_code": "de", "result": [
+      {"command": "start", "description": "Menü"}
+    ]}
+  ]
+}

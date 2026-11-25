@@ -1,0 +1,17 @@
+{
+  "scenarioId": "receipt.pay",
+  "title": "Buttons inside a rich receipt route like keyboard buttons",
+  "locale": "en",
+  "context": {"chat": "private"},
+  "data": {"order.no": "4821", "order.total": "$12.90", "order.url": "https://example.com/o/4821"},
+  "steps": [
+    {"command": "start"},
+    {"expect": {"screen": "receipt.view"}},
+    {"press": "why"},
+    {"expect": {"screen": "receipt.view"}},
+    {"press": "pay"},
+    {"expect": {"screen": "receipt.paid"}},
+    {"press": "back"},
+    {"expect": {"screen": "receipt.view"}}
+  ]
+}

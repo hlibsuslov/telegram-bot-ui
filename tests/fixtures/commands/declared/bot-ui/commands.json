@@ -1,0 +1,26 @@
+{
+  "format": "bot-ui-commands/v1",
+  "default_language": "en",
+  "lists": [
+    {
+      "scope": {"type": "default"},
+      "language_code": "",
+      "commands": [
+        {"command": "start", "description": {"en": "Open the main menu", "ru": "Открыть меню"}},
+        {"command": "help", "description": {"en": "How the bot works", "ru": "Как работает бот"}},
+        {"command": "admin", "description": "Admin tools", "hidden": true}
+      ]
+    },
+    {
+      "scope": {"type": "all_group_chats"},
+      "language_code": "",
+      "commands": [
+        {"command": "help", "description": {"en": "How the bot works", "ru": "Как работает бот"}},
+        {"command": "stats", "description": {"en": "Chat statistics", "ru": "Статистика чата"}, "is_ephemeral": true}
+      ]
+    }
+  ],
+  "remove": [
+    {"scope": {"type": "all_private_chats"}, "language_code": "de"}
+  ]
+}

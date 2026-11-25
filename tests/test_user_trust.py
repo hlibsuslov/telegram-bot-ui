@@ -77,7 +77,7 @@ class Reference(unittest.TestCase):
             self.assertIn(s, self.flat, s)
 
     def test_routed(self):
-        skill = open(os.path.join(_paths.ROOT, "SKILL.md"), encoding="utf-8").read()
+        skill = _paths.routing_text()
         self.assertIn("references/user-trust.md", skill)
         self.assertIn("user-trust.md", open(os.path.join(_paths.ROOT, "references", "user-data.md"), encoding="utf-8").read())
 

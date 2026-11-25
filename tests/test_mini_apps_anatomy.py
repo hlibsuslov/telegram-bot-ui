@@ -61,7 +61,7 @@ class Anatomy(unittest.TestCase):
             self.assertIn(step, wf)
         self.assertRegex(wf, r"SF Symbols and other artwork")
         self.assertIn("figma-workflow.md", read(os.path.join(REF, "README.md")))
-        self.assertIn("native-anatomy.md", read(os.path.join(_paths.ROOT, "SKILL.md")))
+        self.assertIn("native-anatomy.md", _paths.routing_text())
 
     def test_stand_offers_the_foldable_width(self):
         import preview_miniapp as preview

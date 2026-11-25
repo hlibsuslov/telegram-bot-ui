@@ -52,7 +52,7 @@ class Reference(unittest.TestCase):
     def test_routed(self):
         for f in ("README.md", "orchestration.md", "rework.md"):
             self.assertIn("accessibility-and-language.md", read(REF, f), f)
-        self.assertIn("references/mini-apps/accessibility-and-language.md", read(_paths.ROOT, "SKILL.md"))
+        self.assertIn("references/mini-apps/accessibility-and-language.md", _paths.routing_text())
 
 
 class Kit(unittest.TestCase):

@@ -1,3 +1,9 @@
+---
+summary: "Engineering of streamed replies: operation state machine, Stop (can_stop, keep_on_stop), throttling, finalization, addressing drafts, editing rich content; read when implementing streaming."
+verified: "2026-11-12"
+bot_api: "10.5"
+---
+
 # Streaming, Stop, and editing (engineering)
 
 > Verified 2026-11-12: `sendMessageDraft`, `sendRichMessageDraft`, `MessageGenerationStopped`,

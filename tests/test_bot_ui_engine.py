@@ -1,4 +1,4 @@
-"""bot-ui simulation engine and the Python/TypeScript parity (studio/bot_ui/engine.py, studio/web/src/core)."""
+"""bot-ui simulation engine and the Python/TypeScript parity (skills/telegram-bot-ui/scripts/bot_ui/engine.py, studio/web/src/core)."""
 from __future__ import annotations
 
 import json

@@ -15,12 +15,22 @@ ROOT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
 SRC = os.path.join(ROOT, "recipes", "registry.json")
 OUT = os.path.join(ROOT, "references", "bot-api-coverage.md")
 
-INTRO = """# Bot API {versions_title} coverage registry
+INTRO = """---
+summary: "{summary}"
+verified: "{verified}"
+bot_api: "{bot_api}"
+---
+
+# Bot API {versions_title} coverage registry
 
 > Generated from `recipes/registry.json` by `scripts/render_registry.py` — edit the JSON.
 > Verified {verified} against {source}. Newest release on that date: {newest}.
 > Every bullet of these releases is one row: what changed, why it's useful, where it works, the
 > skill section that teaches it, a concrete example, and the automated check that exercises it.
+
+## Contents
+
+{contents}
 
 Availability is five separate questions — spec, production, Bot API server, installed SDK,
 client rendering. "production" below is about Telegram's servers; SDK support is in
@@ -29,6 +39,10 @@ client rendering. "production" below is about Telegram's servers; SDK support is
 Status: {statuses}
 
 Totals: **{total} rows** — {per_version}; ready {ready}, test-server only {test}, dry-run {dry}; not covered: **{missing}**.
+"""
+
+SECTION = """
+## Bot API {version}
 
 | ID | Change | Use | Availability | Skill section | Example | Check | Status |
 |---|---|---|---|---|---|---|---|
@@ -40,17 +54,26 @@ def render() -> str:
     rows = reg["rows"]
     count = lambda st: sum(r["status"] == st for r in rows)  # noqa: E731
     versions = sorted({r["version"] for r in rows}, key=lambda v: tuple(map(int, v.split("."))))
-    out = INTRO.format(verified=reg["verified"], source=reg["source"], newest=reg["newest_release"],
+    by_version: dict[str, list[dict]] = {}
+    for r in rows:
+        by_version.setdefault(r["version"], []).append(r)
+    summary = (f"Generated registry of every Bot API {versions[0]}-{versions[-1]} change with its use, availability, "
+               "teaching section, example, check and status; read to see whether a new API feature is covered and where.")
+    out = INTRO.format(summary=summary, verified=reg["verified"], bot_api=reg["newest_release"].split()[0],
+                       source=reg["source"], newest=reg["newest_release"],
+                       contents="\n".join(f"- [Bot API {v}](#bot-api-{v.replace('.', '')})" for v in by_version),
                        statuses="; ".join(f"**{k}** = {v}" for k, v in reg["statuses"].items()),
                        versions_title=" / ".join(versions),
                        total=len(rows), per_version=", ".join(f"{v}: {sum(r['version'] == v for r in rows)}" for v in versions),
                        ready=count("ready"),
                        test=count("ready-test-server"), dry=count("ready-dry-run"),
                        missing=sum(r["status"] not in reg["statuses"] for r in rows))
-    for r in rows:
-        skill = r["skill"].replace("references/", "")
-        out += (f"| {r['id']} | {r['change']} | {r['use']} | {r['availability']} | `{skill}` | "
-                f"`{r['example']}` | `{r['check']}` | {r['status']} |\n")
+    for version, group in by_version.items():
+        out += SECTION.format(version=version)
+        for r in group:
+            skill = r["skill"].replace("references/", "")
+            out += (f"| {r['id']} | {r['change']} | {r['use']} | {r['availability']} | `{skill}` | "
+                    f"`{r['example']}` | `{r['check']}` | {r['status']} |\n")
     return out
 
 

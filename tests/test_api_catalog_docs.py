@@ -9,7 +9,7 @@ import _paths
 import tg_api_lookup as lookup
 import validate_payload as vp
 
-REFS = ["api-catalog.md", "payments-and-stars.md", "inline-mode.md", "business-accounts.md",
+REFS = ["api-catalog.md", "payments-and-stars.md", "payments-pipeline.md", "inline-mode.md", "business-accounts.md",
         "updates-and-delivery.md", "media-and-files.md", "chat-administration.md",
         "polls-checklists-and-reactions.md", "gifts-and-stories.md", "mini-apps-bridge.md"]
 FENCE = re.compile(r"```json\n(.*?)```", re.S)

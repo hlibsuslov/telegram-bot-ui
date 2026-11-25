@@ -1,5 +1,5 @@
 // bot-ui-patch/v1 from a saved and a draft screen: the same smallest-ops rule as
-// studio/bot_ui/store.py (_diff_ops, ALLOWED_PATHS). Each op carries `from` (the saved
+// skills/telegram-bot-ui/scripts/bot_ui/store.py (_diff_ops, ALLOWED_PATHS). Each op carries `from` (the saved
 // value) so a newer revision can be checked field by field.
 import type { Doc } from "./render.ts";
 

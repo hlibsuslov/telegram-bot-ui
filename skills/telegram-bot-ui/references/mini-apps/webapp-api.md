@@ -1,4 +1,19 @@
+---
+summary: "The Telegram.WebApp client API grouped by task, with the version each member appeared in, events and launch parameters; read when calling any WebApp member or gating by version."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
+
 # Telegram.WebApp: the client API by task
+
+## Contents
+
+- [1. Load the script and read the version](#1-load-the-script-and-read-the-version)
+- [2. Gate by version, degrade on purpose](#2-gate-by-version-degrade-on-purpose)
+- [3. Members by task](#3-members-by-task)
+- [4. Events worth handling](#4-events-worth-handling)
+- [5. Launch parameters](#5-launch-parameters)
+- [6. Not in this skill](#6-not-in-this-skill)
 
 A human-readable cut of `window.Telegram.WebApp`, grouped by what a screen needs, with the Bot API
 version each member appeared in and what to do on an older client. The full member list (286 fields,

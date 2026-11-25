@@ -39,7 +39,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from . import SCHEMA_VERSION
-from .project import canonical_json, check_id, open_snapshot
+from .project import canonical_json, check_id, open_snapshot, replace_dir
 from .validate import validate
 
 SKIP_DIRS = {".git", ".venv", "venv", "env", "node_modules", "__pycache__", "bot-ui", ".bot-ui", "tests", "test"}
@@ -1168,7 +1168,7 @@ def import_bot(source: str, into: str, *, project_id: str | None = None, dry_run
     os.makedirs(os.path.dirname(into), exist_ok=True)
     if os.path.isdir(into) and not os.listdir(into):
         os.rmdir(into)
-    os.replace(stage, into)
+    replace_dir(stage, into)
     result["revision"] = open_snapshot(into).revision
     return result
 

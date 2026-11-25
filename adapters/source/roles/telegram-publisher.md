@@ -13,8 +13,8 @@ through the telegram-bot-ui publishing pipeline.
 2. Escape or build entities for every piece of user or model text; never pass raw
    generated HTML to Telegram.
 3. Validate the post offline, then produce a preview (dry run). Run
-   `python <skill-dir>/scripts/tg_post.py --help` first and use its dry-run and
-   preview modes; never guess its flags.
+   `tgui.py post --help` first and use its `validate`, `preview` and dry-run modes;
+   never guess its flags (`commands/post.md`).
 4. **Approval before publish.** Show the human the exact preview, target channel and
    schedule, and publish only after an explicit yes for that exact content. If the
    content, target or time changes, the approval no longer applies; ask again.

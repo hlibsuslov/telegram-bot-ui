@@ -2,6 +2,7 @@ import {
   Bot, ChevronDown, Copy, FolderGit2, ImagePlus, Keyboard, MessageSquarePlus, PencilLine, RotateCcw, Settings2, TextCursorInput, Type, Waypoints, X,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import { RICH_TEXT_MAX, screenRichActionIds } from "@/core/rich.ts";
 import { CAPTION_MAX, CAPTION_MEDIA, EDITABLE_FORMATS, keyboardRows, mediaOf, MEDIA_TYPES, renderScreen, SPOILER_MEDIA, type Doc } from "@/core/render.ts";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -106,7 +107,7 @@ export function ScreenInspector({ sid, compact, selectedAction }: { sid: string;
   // Premium emoji in a plain-text message: switch it to regular.html (escaped) in the same edit.
   const toHtml = (base: (doc: Doc) => Doc) => (loc: string, text: string) =>
     set((doc) => { doc.message ??= {}; plainToHtml(doc.message); const o = base(doc); o.text = { ...(typeof o.text === "object" && o.text ? o.text : {}), [loc]: text }; }, `text:${loc}`);
-  const placed = new Set(keyboardRows(screen).flat());
+  const placed = new Set([...keyboardRows(screen).flat(), ...screenRichActionIds(screen)]);
   const actions = Object.entries<Doc>(screen.actions ?? {});
   const inputFields = Object.entries<Doc>(loaded.project.fields ?? {}).filter(([, f]) => f.source === "input");
   const errors = diags.filter((d) => d.severity === "error").length;
@@ -132,9 +133,9 @@ export function ScreenInspector({ sid, compact, selectedAction }: { sid: string;
         {media && !CAPTION_MEDIA.has(media.type) ? (
           <p className="text-xs text-muted-foreground">A {media.type === "video_note" ? "round video message" : "sticker"} is sent without text; put any text on its own screen.</p>
         ) : <LocaleText sid={sid} pointer="/message/text" label={media ? "Caption" : "Message"} value={msg.text} disabled={!caps.text || !editableFormat} diags={diags}
-          max={media ? CAPTION_MAX : 4096} emoji={fmt === "regular.html"} emojiPlain={fmt === "regular.plain" ? toHtml((doc) => doc.message) : undefined}
+          max={media ? CAPTION_MAX : fmt === "rich.html" ? RICH_TEXT_MAX : 4096} emoji={fmt === "regular.html" || fmt === "rich.html"} emojiPlain={fmt === "regular.plain" ? toHtml((doc) => doc.message) : undefined}
           hl={{ part: "text" }} onChange={setText((doc) => (doc.message ??= {}))}
-          hint={fmt === "regular.html" ? "Bold: <b>…</b>, italic: <i>…</i>, link: <a href=\"…\">…</a>, premium emoji: the Emoji button, or <tg-emoji emoji-id=\"…\">☕</tg-emoji>. {field} is filled in when sent." : "{field} is filled in when sent."} />}
+          hint={fmt === "rich.html" ? "Rich HTML: <h3>, <p>, <ul>, <table compact>, <blockquote expandable>, <details>, <hr/>. A button bound to an action: <tg-button action=\"pay\"></tg-button>, several in a row: <tg-button-row align=\"center\">…</tg-button-row>. {field} is filled in when sent." : fmt === "regular.html" ? "Bold: <b>…</b>, italic: <i>…</i>, link: <a href=\"…\">…</a>, premium emoji: the Emoji button, or <tg-emoji emoji-id=\"…\">☕</tg-emoji>. {field} is filled in when sent." : "{field} is filled in when sent."} />}
         {!editableFormat && <p className="text-xs text-muted-foreground"><span className="font-mono">{fmt}</span> is read-only here; edit <span className="font-mono">{file}</span> in your editor.</p>}
       </Group>
 
@@ -173,12 +174,12 @@ export function ScreenInspector({ sid, compact, selectedAction }: { sid: string;
       <Group icon={Settings2} title="Advanced" hint="Format, extra states, how a button shows the next screen, kind and audience." id={sp("adv")} collapsible defaultOpen={pro}>
         {editableFormat ? (
           <SelectField id={fieldDomId(sid, "/message/format")} label="Text format" value={fmt} disabled={!caps.structure}
-            options={[{ value: "regular.plain", label: "Plain text" }, { value: "regular.html", label: "Telegram HTML" }]}
+            options={[{ value: "regular.plain", label: "Plain text" }, { value: "regular.html", label: "Telegram HTML" }, { value: "rich.html", label: "Rich message (HTML)" }]}
             diags={diagsAt(diags, "/message/format")} onChange={(v) => set((doc) => { doc.message = { ...(doc.message ?? {}), format: v }; })} />
         ) : <p className="text-xs"><span className="font-mono">{fmt}</span> is read-only in the Studio (FORMAT_READ_ONLY).</p>}
         {Object.entries<Doc>(msg.states ?? {}).map(([st, v]) => (
           <LocaleText key={st} sid={sid} pointer={`/message/states/${st}/text`} label={`Text while “${st}”`} value={v?.text}
-            emoji={fmt === "regular.html"} emojiPlain={fmt === "regular.plain" ? toHtml((doc) => doc.message.states[st]) : undefined}
+            emoji={fmt === "regular.html" || fmt === "rich.html"} emojiPlain={fmt === "regular.plain" ? toHtml((doc) => doc.message.states[st]) : undefined}
             hl={{ part: "text", state: st }} disabled={!caps.text || !editableFormat} diags={diags} onChange={setText((doc) => doc.message.states[st])} />
         ))}
         {caps.structure && editableFormat && !msg.states?.loading && (

@@ -32,8 +32,9 @@ from .render import bot_request, render_screen
 from .store import StoreError, screen_patch, write_patch
 from .validate import summary, validate
 
+from .skill import trusted_web_dir
+
 HERE = os.path.dirname(os.path.abspath(__file__))
-DIST = os.path.join(os.path.dirname(HERE), "web", "dist")
 MAX_BODY = 2 * 1024 * 1024
 
 
@@ -110,6 +111,7 @@ class Studio:
         self.port = port
         self.token = secrets.token_urlsafe(24)
         self.lock = threading.Lock()
+        self.dist = trusted_web_dir(root, "dist")  # None: the client lies inside the repository being opened
 
     # ------------------------------------------------------------ API
     def api(self, path: str, body: dict) -> tuple[int, dict]:
@@ -119,6 +121,24 @@ class Studio:
             root_key = hashlib.sha256(os.path.normcase(os.path.realpath(self.root)).encode()).hexdigest()[:16]
             return 200, {**project_document(snap), "rootKey": root_key, "rootLabel": os.path.basename(self.root),
                          "cliProject": self.root}
+        if path in ("/api/requests/save", "/api/requests/list", "/api/requests/cancel"):
+            from .context import ContextError, add_request, list_requests, set_request_status
+            if path == "/api/requests/list":
+                return 200, {"requests": list_requests(os.path.join(self.root, "context"))}
+            if snap.read_only:
+                return 403, {"error": "READ_ONLY", "message": "this project is read-only"}
+            try:  # api() already runs under self.lock; the request file has its own lock for agents
+                if path == "/api/requests/cancel":
+                    doc = set_request_status(self.root, "context", str(body.get("id") or ""), "cancel",
+                                             "removed in the Studio")
+                else:
+                    doc = add_request(self.root, "context", body.get("sid") or None, str(body.get("text") or ""),
+                                      snap.revision)
+            except ContextError as err:
+                status = {1: 404, 4: 409}.get(err.exit_code, 400)
+                return status, {"error": "BAD_REQUEST" if status == 400 else "CONFLICT" if status == 409 else
+                                "NOT_FOUND", "message": str(err)}
+            return 200, {"request": doc, "path": f"context/requests/{doc['id']}.json"}
         if path == "/api/git-status":
             return 200, git_status(self.root, snap)
         if path == "/api/revision":
@@ -331,7 +351,9 @@ class Studio:
                     return self._send(200, PREVIEW_FRAME.encode("utf-8"), "text/html; charset=utf-8",
                                       {"Content-Security-Policy": PREVIEW_CSP})
                 if path in ("/", "/index.html") or not os.path.splitext(path)[1]:
-                    index = os.path.join(DIST, "index.html")
+                    if studio.dist is None:
+                        return self._send(503, REFUSED.encode("utf-8"), "text/html; charset=utf-8")
+                    index = os.path.join(studio.dist, "index.html")
                     if not os.path.isfile(index):
                         return self._send(503, NOT_BUILT.encode("utf-8"), "text/html; charset=utf-8")
                     with open(index, encoding="utf-8") as fh:
@@ -339,8 +361,9 @@ class Studio:
                     return self._send(200, html.encode("utf-8"), "text/html; charset=utf-8", {
                         "Content-Security-Policy": CSP})
                 rel = path.lstrip("/")
-                full = os.path.realpath(os.path.join(DIST, *rel.split("/")))
-                if os.path.commonpath([full, os.path.realpath(DIST)]) != os.path.realpath(DIST) or not os.path.isfile(full):
+                dist = os.path.realpath(studio.dist) if studio.dist else None
+                full = os.path.realpath(os.path.join(dist, *rel.split("/"))) if dist else None
+                if not full or os.path.commonpath([full, dist]) != dist or not os.path.isfile(full):
                     return self._json(404, {"ok": False, "error": {"code": "NOT_FOUND", "message": path}})
                 with open(full, "rb") as fh:
                     data = fh.read()
@@ -375,6 +398,13 @@ addEventListener("message", function once(e) {
 });
 parent.postMessage({k: "frame-ready"}, "*");
 </script></body></html>"""
+
+REFUSED = """<!doctype html><meta charset="utf-8"><title>bot-ui Studio</title>
+<body style="font:16px system-ui;max-width:40rem;margin:4rem auto">
+<h1>The Studio client was not served</h1>
+<p>The client folder found by default lies inside the repository you opened, and a repository could
+ship its own page there. Start the Studio again with <code>BOT_UI_STUDIO_DIR</code> set to the
+<code>studio</code> folder of a telegram-bot-ui checkout you trust.</p>"""
 
 NOT_BUILT = """<!doctype html><meta charset="utf-8"><title>bot-ui Studio</title>
 <body style="font:16px system-ui;max-width:40rem;margin:4rem auto">

@@ -35,6 +35,12 @@ loopback, and stops with Ctrl+C. Saving in the browser writes the screen file in
 repository; `git diff` shows it. Studio drafts live in the browser's local storage, never in
 the repository.
 
+The page is served from this checkout's `studio/web/dist`. If that folder lies inside the
+repository you open (for example a project-scope install, or a bot kept inside the checkout),
+the Studio refuses to serve it, because a repository could ship its own page and the Studio hands
+the page a token for its API. Set `BOT_UI_STUDIO_DIR` to the `studio` folder of a checkout you
+trust to override.
+
 ## Without a reachable port
 
 ```powershell
@@ -50,6 +56,12 @@ revision is refused with `REVISION_CONFLICT` (exit 3): export a fresh snapshot
 
 ## CLI
 
+The CLI and its core (`skills/telegram-bot-ui/scripts/bot_ui/`) ship with the skill, so an agent runs the same
+commands as `tgui.py map <command>` from any install; `py -3 studio/bot-ui.py` is the same CLI in a clone.
+Requests for the agent stay in the browser unless you switch on "Also save new requests in the project" on the
+Changes page: then each one is also written to `bot-ui/context/requests/` (and goes into git), where the agent
+picks it up with `tgui.py requests list`.
+
 | Command | What it does |
 | --- | --- |
 | `init --project P [--template checkout]` | builds the project in a temp folder next to P, validates, then moves it into place; never overwrites |
@@ -62,6 +74,7 @@ revision is refused with `REVISION_CONFLICT` (exit 3): export a fresh snapshot
 | `studio`, `export-snapshot` | the two editors |
 | `emoji import <t.me/addemoji/name> [--from-json F]`, `emoji icon --slot S --id ID`, `emoji list`, `emoji remove <pack>`, `emoji brief` | premium emoji library (`emoji/library.json`): import a pack by link (through the telegram-bot-ui resolver, no token; or your own token with the resolver off), give emoji meanings, the agent's brief |
 | `emoji import-used [--no-icon-map]` | an existing bot's premium emoji: finds the pack of every custom emoji id its screens and code use (`getCustomEmojiStickers`, through the resolver or a bot token), imports those packs and adopts the button icons into the icon map; `import --emoji-packs` does it right after `import` |
+| `import --source <bot> [--into D] [--report F] [--emoji-packs]` | builds a project from an existing aiogram bot: screens, keyboards, texts and callbacks, with a report of what needs a person |
 | `inventory --source <bot>` | read-only inventory of an existing aiogram bot: commands, callbacks, buttons, texts, proposed screens |
 
 `--json` gives a stable object on stdout; messages for people go to stderr. Exit codes: 0 ok,
@@ -71,7 +84,7 @@ set `MSYS_NO_PATHCONV=1` so `/message/text/ru` is not turned into a Windows path
 ## Adapters
 
 `adapters/aiogram_adapter.py` (aiogram 3.31.0) and `adapters/raw_adapter.py` (tgkit, no SDK)
-share `bot_ui/runtime.py`: update -> engine event -> effects -> Bot API requests through an
+share `skills/telegram-bot-ui/scripts/bot_ui/runtime.py`: update -> engine event -> effects -> Bot API requests through an
 injected transport. The project is re-read when its revision changes, so a Studio save
 reaches the next update without a restart. Replay without network:
 

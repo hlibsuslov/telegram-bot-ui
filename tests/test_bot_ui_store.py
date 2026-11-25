@@ -1,13 +1,16 @@
-"""bot-ui writes: one write path, revisions, conflicts, transactions (studio/bot_ui/store.py)."""
+"""bot-ui writes: one write path, revisions, conflicts, transactions (skills/telegram-bot-ui/scripts/bot_ui/store.py)."""
 from __future__ import annotations
 
 import json
 import os
+import pathlib
 import subprocess
 import sys
+import shutil
+import tempfile
 import unittest
 
-from _bot_ui import CLI, ProjectCase
+from _bot_ui import CLI, ROOT, ProjectCase
 from bot_ui.project import open_snapshot
 from bot_ui.store import StoreError, screen_patch, write_patch
 
@@ -172,6 +175,74 @@ class Writes(ProjectCase):
                                         "changes": [dict(change, file=bad)]})
 
 
+class CraftedJournal(ProjectCase):
+    """The journal is a file in the project, so a cloned repository can carry a crafted one: recovery
+    only restores what the project's own transaction folder holds, and read-only opens never recover."""
+
+    def _plant(self, entries):
+        state = os.path.join(self.root, ".bot-ui")
+        os.makedirs(state, exist_ok=True)
+        with open(os.path.join(state, "journal.json"), "w", encoding="utf-8") as fh:
+            json.dump({"files": entries}, fh)
+        return os.path.join(state, "journal.json")
+
+    def _victim(self, text=b"keep me"):
+        path = os.path.join(self._tmp, "victim.txt")
+        with open(path, "wb") as fh:
+            fh.write(text)
+        return path
+
+    def test_a_backup_outside_the_transaction_folder_is_refused(self):
+        victim = self._victim()
+        screen = os.path.join(self.root, "screens", "orders.pickup.json")
+        before = pathlib.Path(screen).read_bytes()
+        journal = self._plant([{"path": "screens/orders.pickup.json", "backup": victim}])
+        with self.assertRaises(StoreError) as ctx:
+            open_snapshot(self.root)
+        self.assertEqual(ctx.exception.code, "JOURNAL_INVALID")
+        self.assertEqual(pathlib.Path(screen).read_bytes(), before)
+        self.assertTrue(os.path.exists(victim))
+        self.assertTrue(os.path.exists(journal))
+
+    def test_a_target_outside_the_project_is_refused_before_anything_moves(self):
+        victim = self._victim()
+        screen = os.path.join(self.root, "screens", "orders.pickup.json")
+        txn = os.path.join(self.root, ".bot-ui", "txn")
+        os.makedirs(txn)
+        with open(os.path.join(txn, "0.bak"), "wb") as fh:
+            fh.write(b"{}")
+        self._plant([{"path": "screens/orders.pickup.json", "backup": os.path.join(txn, "0.bak")},
+                     {"path": "../victim.txt", "backup": None}])
+        with self.assertRaises(ValueError):
+            open_snapshot(self.root)
+        self.assertEqual(pathlib.Path(victim).read_bytes(), b"keep me")
+        self.assertNotEqual(pathlib.Path(screen).read_bytes(), b"{}")  # the first entry was not applied either
+
+    def test_a_journal_that_is_not_a_list_of_entries_is_refused(self):
+        for bad in ({"path": "x"}, ["screens/a.json"], [{"path": 7}], "x"):
+            journal = self._plant(bad)
+            with self.assertRaises(StoreError) as ctx:
+                open_snapshot(self.root)
+            self.assertEqual(ctx.exception.code, "JOURNAL_INVALID", bad)
+            os.remove(journal)
+
+    def test_a_journal_that_is_not_json_is_refused(self):
+        with open(self._plant([]), "w", encoding="utf-8") as fh:
+            fh.write("{not json")
+        with self.assertRaises(StoreError) as ctx:
+            open_snapshot(self.root)
+        self.assertEqual(ctx.exception.code, "JOURNAL_INVALID")
+
+    def test_read_only_open_reports_the_journal_and_changes_nothing(self):
+        screen = os.path.join(self.root, "screens", "orders.pickup.json")
+        before = pathlib.Path(screen).read_bytes()
+        journal = self._plant([{"path": "screens/orders.pickup.json", "backup": None}])  # recovery would delete the screen
+        snap = open_snapshot(self.root, recover=False)
+        self.assertIn("WRITE_PENDING", [d.code for d in snap.load_diagnostics])
+        self.assertEqual(pathlib.Path(screen).read_bytes(), before)
+        self.assertTrue(os.path.exists(journal))
+
+
 class TwoProcesses(ProjectCase):
     def test_two_writers_from_one_base_one_wins_one_conflicts(self):
         rev = open_snapshot(self.root).revision
@@ -191,6 +262,57 @@ class TwoProcesses(ProjectCase):
         loser = next(out for code, out in results if code == 3)
         self.assertEqual(loser["error"]["currentRevision"], winner["revision"])
         self.assertEqual(open_snapshot(self.root).revision, winner["revision"])
+
+
+
+class PlantedLinks(unittest.TestCase):
+    """A cloned project can ship links next to the files bot-ui writes (security audit 2026-11-25, H1)."""
+
+    def setUp(self):
+        self.work = tempfile.mkdtemp(prefix="bot-ui-links-")
+        self.proj = os.path.join(self.work, "bot-ui")
+        shutil.copytree(os.path.join(ROOT, "tests", "fixtures", "rich_project"), self.proj)
+        self.outside = os.path.join(self.work, "outside.txt")
+        with open(self.outside, "w") as fh:
+            fh.write("ORIGINAL")
+
+    def tearDown(self):
+        shutil.rmtree(self.work, ignore_errors=True)
+
+    def _write(self):
+        from bot_ui.project import open_snapshot
+        from bot_ui.store import screen_patch, write_patch
+        snap = open_snapshot(self.proj)
+        doc = dict(snap.screens["receipt.paid"])
+        doc["title"] = "changed"
+        return write_patch(self.proj, screen_patch(snap, "receipt.paid", doc))
+
+    def _untouched(self):
+        with open(self.outside) as fh:
+            self.assertEqual(fh.read(), "ORIGINAL")
+
+    def test_old_temp_name_link_is_not_written_through(self):
+        os.link(self.outside, os.path.join(self.proj, "screens", "receipt.paid.json.bot-ui-tmp"))
+        self.assertTrue(self._write().ok)
+        self._untouched()
+
+    def test_planted_backup_link_in_txn_is_not_written_through(self):
+        txn = os.path.join(self.proj, ".bot-ui", "txn")
+        os.makedirs(txn)
+        for i in range(3):
+            os.link(self.outside, os.path.join(txn, f"{i}.bak"))
+        self.assertTrue(self._write().ok)
+        self._untouched()
+
+    @unittest.skipUnless(os.name == "nt", "junctions are a Windows feature")
+    def test_state_dir_junction_is_refused(self):
+        elsewhere = os.path.join(self.work, "elsewhere")
+        os.makedirs(elsewhere)
+        subprocess.run(["cmd", "/c", "mklink", "/J", os.path.join(self.proj, ".bot-ui"), elsewhere], check=True, capture_output=True)
+        from bot_ui.store import StoreError
+        with self.assertRaises(StoreError):
+            self._write()
+        self.assertEqual(os.listdir(elsewhere), [])
 
 
 if __name__ == "__main__":

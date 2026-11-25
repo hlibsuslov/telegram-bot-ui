@@ -51,7 +51,7 @@ class Reference(unittest.TestCase):
     def test_routes(self):
         self.assertIn("haptics-and-device.md", read(REF, "README.md"))
         self.assertIn("haptics-and-device.md", read(REF, "design-system.md"))
-        self.assertIn("haptics-and-device.md", read(_paths.ROOT, "SKILL.md"))
+        self.assertIn("haptics-and-device.md", _paths.routing_text())
 
 
 class StandAndLint(unittest.TestCase):

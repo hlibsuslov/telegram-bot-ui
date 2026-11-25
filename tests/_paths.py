@@ -35,3 +35,15 @@ def load_repo(*parts):
 def read(*parts):
     with open(os.path.join(ROOT, *parts), encoding="utf-8") as fh:
         return fh.read()
+
+
+def routing_text():
+    """What routes a request to a reference: SKILL.md, the command index and the playbooks."""
+    parts = [os.path.join(ROOT, "SKILL.md"), os.path.join(ROOT, "commands", "index.json")]
+    commands = os.path.join(ROOT, "commands")
+    parts += [os.path.join(commands, n) for n in sorted(os.listdir(commands)) if n.endswith(".md")]
+    texts = []
+    for p in parts:
+        with open(p, encoding="utf-8") as fh:
+            texts.append(fh.read())
+    return "\n".join(texts)

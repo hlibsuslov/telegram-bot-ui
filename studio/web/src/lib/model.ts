@@ -106,7 +106,7 @@ export function screenFile(l: Loaded, sid: string): string {
 
 export const shortRev = (rev: string | undefined) => (rev ?? "").replace(/^sha256:/, "").slice(0, 8);
 
-// Screen IDs: the contract regex (studio/bot_ui/project.py ID_RE) plus length and reserved names.
+// Screen IDs: the contract regex (skills/telegram-bot-ui/scripts/bot_ui/project.py ID_RE) plus length and reserved names.
 const ID_RE = /^[a-z0-9][a-z0-9_-]*(\.[a-z0-9][a-z0-9_-]*)*$/;
 const RESERVED = new Set(["con", "prn", "aux", "nul", ...Array.from({ length: 9 }, (_, i) => `com${i + 1}`), ...Array.from({ length: 9 }, (_, i) => `lpt${i + 1}`)]);
 export const ACTION_ID_RE = /^[a-z0-9][a-z0-9_-]*$/;

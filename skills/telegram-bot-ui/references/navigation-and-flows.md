@@ -1,3 +1,9 @@
+---
+summary: "Screen/state map, back, home and depth, wizards, chat-level chrome, newer navigation surfaces, notifications, checklist; read when designing or fixing navigation."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
+
 # Navigation, screens, and chat-level chrome
 
 A bot's "pages" are messages. Its "router" is `callback_data` plus conversation

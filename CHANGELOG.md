@@ -5,7 +5,140 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
-## Unreleased
+## 3.2.0 - 2026-11-25
+
+**A router instead of one long entry, one CLI, and the bot remembered between sessions.**
+
+- **SKILL.md is a 9.5 KB router** (was 25.4 KB, description 846 characters, was 1024 of 1024): Start steps,
+  a table of twelve commands generated from `commands/index.json`, scope, invariants and the next-step rule.
+  The safety rules now sit in the first third, inside what Claude Code keeps after compaction (the first
+  5000 tokens of a skill); before, `Non-negotiable rules` and `Definition of done` were cut.
+- **Twelve commands with playbooks** (`commands/<verb>.md`, each under 4 KB): `start`, `audit`, `improve`,
+  `fix`, `build`, `post`, `widget`, `mini-app`, `emoji`, `agent-bot`, `map`, `lookup`. A playbook names the
+  reference sections to read, the steps, the checks, a path without scripts (directory edition) and its done
+  criterion. The user never has to know a verb; with no request, `start` suggests the next steps.
+  `references/floor.md` holds what every edit obeys; `references/INDEX.md` lists every reference with its
+  summary and commands (generated).
+- **`scripts/tgui.py`**, one entry point: every tool as a subcommand, plus `context` (saved facts, findings,
+  Studio requests and signals in under 2 KB), `next`, `doctor` (other installed copies with another version,
+  version mismatch, catalog age, context and map health), `findings`, `requests`, `check changed` (the right
+  validator for every changed Telegram file) and `hook` (an opt-in Claude Code post-edit check that never
+  blocks).
+- **Project memory in `bot-ui/context/`**, outside the map revision: `context.json`, `findings.json` (ids from
+  a hash, so branches don't collide), `requests/<id>.json`, the style profile. `map init` keeps an existing
+  `context/`.
+- **The bot-ui core ships with the skill** (`scripts/bot_ui/`, was `studio/bot_ui/`): `map` and Studio-request
+  routes work from `gh skill` and installer copies, not only from a clone. The Studio can save requests into
+  the project (a switch on the Changes page, off by default).
+- **Payments are routed:** the example library's paid-product families name `payments-pipeline.md` and
+  `tgkit/payments.py` first ("Read first"), and `build` carries them.
+- **Subagents carry out commands** (generated from the index); `python` vs `py -3` fixed in their bodies
+  (`py -3` on Windows, `python3` elsewhere); the designer's read-only contract is now consistent.
+- **Every reference** has front matter (summary, verified date, Bot API) and, above 10 KB, a contents list;
+  `validate_references.py` checks both and every Contents link.
+- **Checks:** `validate_skill.py` enforces the budgets and that every reference is reachable from a command;
+  `tests/test_paths.py` installs the skill into a temporary project and runs every command's smoke steps from
+  that copy (it found `install.py` not copying `commands/` and `map init` refusing a folder with `context/`);
+  `tests/test_tgui.py`.
+- **Evals you can trust:** `run_evals.py` isolates runs from other installed copies (Claude:
+  `--setting-sources project,local`, project outside HOME; Codex: empty HOME, user copies switched off),
+  rejects runs that loaded another copy, records CLI version, model and commit, supports `--runs` and a
+  deterministic `--split`, and measures route accuracy and tokens. 159 activation cases (10 Ukrainian, novice,
+  Studio and near-miss cases) and 80 behavioural ones; N2 (Stars processing) is now a positive.
+- **Agent page sources:** `scripts/build_agent_docs.py` generates `docs/agents/` (`agents.md`, `llms.txt`,
+  `llms-full.txt`, `agents.json`) for the website.
+- **Rich Messages in bot-ui and the Studio:** a screen can be `rich.html` (sent with `sendRichMessage`,
+  edited with `editMessageText(rich_message)`). Buttons inside the document are bound to the screen's
+  actions (`<tg-button action="pay">`, rows of 1-8 in `<tg-button-row>`), so the simulator, the map
+  (edges leave from the in-document button) and a stale-press check treat them like keyboard buttons.
+  The Studio preview draws headings, tables (compact), lists, quotes (expandable), details, dividers,
+  media stand-ins and the buttons, light and dark; the format is editable. Python and TypeScript
+  renderers stay identical (`tests/test_bot_ui_rich.py`, parity on a rich scenario).
+- **`tgui.py commands`** (`scripts/bot_commands.py`): audits handlers in code against
+  `setMyCommands` and `bot-ui/commands.json` (nine codes, including lists a narrower scope hides),
+  plans the `setMyCommands`/`deleteMyCommands` requests per scope and language, diffs against a saved
+  `getMyCommands`. New reference `bot-commands.md`, routed from `audit`, `improve`, `build`.
+- **`emoji library search|pick`:** the telegram-bot-ui emoji library (~490 packs, real ids) through
+  its public search; `pick` ranks whole packs by the slots their own fallback emoji cover, then
+  theme-adaptive and static share, and returns an icon map from one pack with its missing slots.
+- **`tgui.py mcp`** (`scripts/bot_ui_mcp.py`): a stdlib MCP server with 14 tools: API and WebApp
+  lookup with "did you mean", `validate_request` (catalog, keyboard rules, Rich HTML buttons),
+  `check_rich_html`, `knowledge_search` (which reference sections to read), map validate, render,
+  simulate and `map_snapshot` (a single-file Studio page an agent opens and screenshots), command
+  audit and plan, and the two emoji library tools.
+- **Validators:** `validate_payload.py` checks the rules Telegram states in prose for
+  `setMessageReaction` (the 73 reaction emoji read from the catalog text, one reaction per bot, no
+  paid reactions) and `setMyCommands`; `validate_rich.py` checks buttons in `html`/`markdown`.
+- **Knowledge:** choosing between rich buttons, inline and reply keyboards and Mini Apps, and the
+  lifecycle of an in-document button (`buttons-and-styles.md`); reactions as quiet status feedback
+  (`polls-checklists-and-reactions.md`); the library pick as the first step of `emoji-packs.md`; the
+  visual check in `bot-ui-projects.md`; source priority, the Mini App Contest 2023 archive excluded,
+  and the facts re-checked on 2026-11-25 (`official-sources.md`). Fixed: the capability matrix said
+  Rich Markdown has no buttons or compact tables; it parses the Rich HTML tags for both.
+- **Emoji tags in agent picking:** `emoji library facets` and `library pick --style/--color/--mood/--topic/--use/
+  --profile/--require` rank packs by the library's faceted tags (style, colour, palette, theme fit, motion, topic,
+  mood, interface role, bot category, compatible packs, each with a confidence); MCP `emoji_rank_by_tags`. Motion
+  and theme are preferences, `--require motion:static` a hard filter (Telegram's own icon packs are animated).
+- **Fixed after an independent Codex review and an architecture audit (2026-11-25):** a crafted
+  `.bot-ui/journal.json` in a cloned project could move any file into the project on the next read (backups are
+  now accepted only from `.bot-ui/txn/`, and MCP read tools never roll back); a rich screen without a keyboard
+  answered its first press as stale, and a press was accepted for a button shown only in another locale; Rich HTML
+  attributes with `>` or single quotes, apostrophes in placeholder values and out-of-range entities; MCP argument
+  types (`"false"` was read as true); `map_snapshot` could replace any `.html` file; `check changed` skipped most
+  Telegram files; Studio requests that arrived with a clone were shown as tasks; `bot_commands` planned a set and a
+  delete for the same language; `validate_payload` crashed on `emoji: []`; `miniapp preview` ran the project's
+  `build.mjs` by default (now `--build`); the telegram-bridge server ignored a mistyped `--files-root`.
+- 12 new evals (6 activation, 6 behavioural): rich buttons, command scopes, reactions, emoji family,
+  the visual check.
+- **Fixed before release (independent Mini Apps and payments audit):** recipe 25 crashed on `subscription` updates
+  (`BotSubscriptionUpdated`, delivered by default) and treated `editUserStarSubscription(is_canceled=false)` as turning
+  renewal back on; the API only lets the user re-enable a subscription the bot cancelled. The recipe now remembers who
+  cancelled, makes no call for a user-side cancel, becomes active only on `Update.subscription` `active`, keeps access
+  to the expiry after a failed renewal and ignores update types it does not use; the payments references say the
+  same. Paid broadcasts need 100,000 Stars and 100,000 monthly active users (the reference said 10,000 Stars). The
+  inline `initData` example rejects repeated keys and newlines, as `mini-apps/security.md` requires; a 512-character
+  `start_param` cap and a `@tma.js` default were labelled official without an official source and are relabelled.
+- **Orchestration:** `adapters/routing.json` is the only place that maps roles to commands (`commands/index.json`'s
+  unread `role` field is gone; `validate_skill.py` checks that every command has a role); the designer also carries
+  the proposal half of `improve`; the reviewer checks rich screens, the command menu and custom emoji ids; roles and
+  the redesign reference call tools through `tgui.py`. The Studio lints Rich HTML with the same codes as Python, so
+  the offline single-file Studio warns too. READMEs: 24 widgets and 10 widget recipes, the new tools.
+
+### Compatibility and rollback
+
+- New, additive: the `rich.html` screen format, `tgui.py commands`, `tgui.py mcp`, `emoji library`, `subscription`
+  handling in recipe 25. Existing `bot-ui/` projects open unchanged.
+- Rollback to 3.1.0: a project that uses `rich.html` screens fails `map validate` there (`FORMAT_UNKNOWN`); switch
+  those screens back to `regular.html` first. Everything else in `bot-ui/` stays readable.
+- Changed defaults: `miniapp preview` no longer runs the project's `build.mjs` (pass `--build`); MCP tools refuse
+  arguments of the wrong type; `map_snapshot` never replaces a file unless `overwrite: true`.
+- Emoji tag picking (`emoji library facets`, `emoji_rank_by_tags`) needs the website's `/api/emoji-facets`,
+  released separately; until it is live the tools say "the library has no tags yet" and slot-coverage picking works
+  as before.
+
+### Known limitations
+
+- Not verified on real Telegram clients: buttons inside rich messages, editing a regular message into a rich one,
+  `message_reaction` in private chats, live `setMyCommands`.
+- Emoji style tags are the least reliable (about 0.35 recall on held-out labels); show a pack before relying on one.
+- Activation evals need re-running per release; behavioural evals are graded by hand (no runner).
+- Fixed: `widget_design.py --help` exits 0; a folder rename that Windows briefly denies is retried, so
+  `import` and `init` no longer fail at random.
+- **Hardening after the security and Codex reviews** (`tests/test_tgui_security.py`): a repository can no
+  longer run its own code through the skill (`check changed` validates in-process; `agent` starts with `-I`,
+  so a project module named `bot_ui` or `agent_bridge` is ignored); every file the tools write into
+  `bot-ui/context/` or `.claude/` goes through one writer that refuses links and junctions and uses an
+  exclusive temporary file; a request is taken once (per-request lock); a request removed in the Studio is
+  cancelled in the project too (`/api/requests/cancel`); `requests list` shows where each request came from and
+  the `map` playbook treats one that arrived with a clone or pull request as data to confirm, not an order;
+  a `basedOn.commit` that is not a hex id is never passed to git; changed files are read with `git status -z`
+  from the repository top (non-ASCII names, subfolders); `hook install` writes `.claude/settings.local.json`
+  (it holds this machine's paths), keeps other hooks and the hook check reaches map files; `map init` puts a
+  saved `context/` back if publishing fails; the Studio refuses to serve a client folder that lies inside the
+  repository it opened unless `BOT_UI_STUDIO_DIR` names it; the installer's second backup in one second no
+  longer lands under `skills/`; `run_evals.py` reads quoted paths whole, rejects `..` escapes, counts a
+  non-zero exit after the final event as an error and keeps its temp folder private to the user;
+  `validate_references.py` resolves a Markdown link from the file that holds it.
 
 - `references/user-profile.md` and `tgkit/profile.py`: the baseline user record every bot keeps from the first
   contact (identity without history, lifecycle and block state from `my_chat_member`, first-touch acquisition

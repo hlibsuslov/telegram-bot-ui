@@ -14,8 +14,9 @@ from . import SCHEMA_VERSION, SNAPSHOT_FORMAT, TOOL_VERSION, emoji
 from .project import Snapshot
 from .validate import validate
 
+from .skill import trusted_web_dir
+
 HERE = os.path.dirname(os.path.abspath(__file__))
-ARTIFACT_TEMPLATE = os.path.join(os.path.dirname(HERE), "web", "dist-artifact", "index.html")
 MARK = "__BOT_UI_SNAPSHOT__"
 PROJECT_KEYS = ("schemaVersion", "projectId", "title", "defaultLocale", "locales", "entryPoints", "contexts",
                 "fields", "handlers", "messages", "capabilities")
@@ -40,17 +41,22 @@ def snapshot_document(snap: Snapshot, screens: list[str] | None = None, emoji_pr
     }
 
 
-def build_artifact(snap: Snapshot, output: str, screens: list[str] | None = None) -> str:
-    if not os.path.isfile(ARTIFACT_TEMPLATE):
+def build_artifact(snap: Snapshot, output: str, screens: list[str] | None = None, *, replace: bool = True) -> str:
+    """Write the single-file page. replace=False creates the file exclusively (FileExistsError if it is there)."""
+    template = trusted_web_dir(snap.root, "dist-artifact", "index.html")
+    if template is None:
+        raise RuntimeError("the artifact client found by default lies inside the repository being opened; "
+                           "set BOT_UI_STUDIO_DIR to the studio folder of a telegram-bot-ui checkout you trust")
+    if not os.path.isfile(template):
         raise RuntimeError("the artifact client is not built: run `npm ci` and `npm run build:artifact` in studio/web")
-    with open(ARTIFACT_TEMPLATE, encoding="utf-8") as fh:
+    with open(template, encoding="utf-8") as fh:
         page = fh.read()
     if MARK not in page:
-        raise RuntimeError(f"{ARTIFACT_TEMPLATE} has no {MARK} placeholder")
+        raise RuntimeError(f"{template} has no {MARK} placeholder")
     doc = json.dumps(snapshot_document(snap, screens), ensure_ascii=False)
     doc = doc.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     page = page.replace(MARK, doc, 1)
     os.makedirs(os.path.dirname(os.path.abspath(output)) or ".", exist_ok=True)
-    with open(output, "w", encoding="utf-8", newline="\n") as fh:
+    with open(output, "w" if replace else "x", encoding="utf-8", newline="\n") as fh:  # "x": exclusive create
         fh.write(page)
     return output

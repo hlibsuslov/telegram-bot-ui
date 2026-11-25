@@ -128,7 +128,7 @@ shell tool under the session sandbox — unverified).
 `interface.short_description`, `interface.icon_small`, `interface.icon_large`,
 `interface.brand_color`, `interface.default_prompt`; `policy.allow_implicit_invocation`
 (default `true`); `dependencies.tools[]` (`type`, `value`, `description`, `transport`,
-`url`). Generated here from `SKILL.md` + `adapters/routing.json`.
+`url`). Generated here from `SKILL.md` + `adapters/routing.json` (subagents also from `commands/index.json`).
 
 **`AGENTS.md`.** Global: `~/.codex/AGENTS.override.md` else `AGENTS.md` (or under
 `CODEX_HOME`). Project: from the git root down to cwd, per directory
