@@ -1,7 +1,7 @@
 ---
 summary: "Payments and Telegram Stars: lifecycle and server state, subscriptions, paid media, refunds and the Star ledger, provider payments, rights, errors; read when a bot sells anything."
-verified: "2026-11-15"
-bot_api: "10.4"
+verified: "2026-11-25"
+bot_api: "10.5"
 ---
 
 # Payments and Telegram Stars
@@ -21,7 +21,8 @@ bot_api: "10.4"
 
 Selling digital goods and services (Stars, `XTR`), physical goods (a payment
 provider), subscriptions, paid media, refunds and the bot's own Star ledger.
-Checked against Bot API 10.5 on **2026-11-23**: https://core.telegram.org/bots/api#payments
+Checked against Bot API 10.5 on **2026-11-25** (10.5 changed nothing in payments; every type and method named
+here is in the 10.5 catalog): https://core.telegram.org/bots/api#payments
 and https://core.telegram.org/bots/payments-stars. Look up any shape offline with
 `py -3 scripts/tg_api_lookup.py show <name>`; every JSON block below passes
 `scripts/validate_payload.py`. The whole pipeline across both rails (rail choice, states,
@@ -30,7 +31,8 @@ refunds, reconciliation, screens and microcopy, runtime `tgkit/payments.py`):
 
 Labels: **[API]** = stated in the Bot API spec; **[Official]** = Telegram's payments
 guide or terms; **[News]** = press or announcements, not an official spec;
-**[Heuristic]** = this skill's design advice.
+**[Heuristic]** = this skill's design advice; **[API: absence]** = the spec is silent on it;
+**[Unverified]** = not confirmed by any source yet.
 
 ## What it is for
 
@@ -84,8 +86,9 @@ sendInvoice / createInvoiceLink ──► user taps Pay ──► Update.pre_che
    answering the pre-checkout query does not guarantee a payment. Store
    `telegram_payment_charge_id` (needed for refunds and subscription edits) and mark
    the order `paid` **idempotently**: the same charge id must never deliver twice.
-4. **Refund** — `refundStarPayment(user_id, telegram_payment_charge_id)`; the chat gets
-   a `refunded_payment` service message. Mark the order `refunded`, revoke access.
+4. **Refund** — `refundStarPayment(user_id, telegram_payment_charge_id)` returns `True`: mark the
+   order `refunded`, revoke access. The API defines a `refunded_payment` service message, but does not
+   say this call produces one **[Unverified]**; treat it as a confirmation if it arrives.
 5. **[Official]** A multi-use invoice (sent to a group/channel, forwarded, inline) can be
    paid many times by many users. Your pre-checkout check is the only gate: decide
    per payment whether the order can still be fulfilled.
@@ -245,8 +248,8 @@ plan link. Do not spam on every retry. **[Heuristic]**
 - **[API]** For `invoice_payment` transactions `TransactionPartnerUser` can carry
   `invoice_payload` (and `subscription_period`), a second key to match against orders.
 - **[API]** Chargebacks at Apple/Google/provider level can debit your balance later; this
-  is outside Telegram's control. Reconcile periodically. **[Official]** The exact shape of
-  a chargeback transaction is not documented; this skill treats an outgoing transaction
+  is outside Telegram's control. Reconcile periodically. **[API: absence]** The exact shape of
+  a chargeback transaction is not documented on the Bot API or Stars pages; this skill treats an outgoing transaction
   with a known charge id the bot never refunded as a chargeback **[Heuristic]**
   (`payments-pipeline.md` §6).
 - `getMyStarBalance` (9.1) returns the bot's `StarAmount`.

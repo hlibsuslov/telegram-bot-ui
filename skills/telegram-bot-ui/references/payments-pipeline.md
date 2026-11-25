@@ -14,7 +14,7 @@ Runtime for the Stars rail: `examples/python/tgkit/payments.py`, tests in `tests
 Checked on **2026-11-23** against the Bot API 10.5 snapshot (`py -3 scripts/tg_api_lookup.py show
 <Name>`) and the news of November 2026. Labels: **[API]** Bot API spec · **[Official]** Telegram's
 payment guides and terms · **[News]** press and Telegram announcements, not an official spec ·
-**[H]** this skill's design rule.
+**[H]** this skill's design rule · **[Unverified]** not confirmed by any source yet.
 
 
 ## Contents
@@ -165,7 +165,7 @@ the answer, never before it.
 | Call | `refundStarPayment(user_id, telegram_payment_charge_id)` [API] | outgoing transfer from the bot's wallet [H] |
 | Amount | the whole payment; no amount parameter [API] | any amount up to the payment; partial allowed [H] |
 | To whom | the payer, by Telegram | the **sender address of the confirmed transaction**, not the profile wallet card [H] |
-| Proof | `True`, then `refunded_payment` service message in the chat [API] | the outgoing transaction confirmed on chain, comment `refund:<order>` [H] |
+| Proof | `True` from `refundStarPayment` [API]; the API defines a `refunded_payment` service message (`Message.refunded_payment`) but does not say a refund call produces one [Unverified]: record the refund on `True` | the outgoing transaction confirmed on chain, comment `refund:<order>` [H] |
 | Afterwards | revoke access, order `refunded`, user told once | same, order `refund_confirmed` |
 
 - Default: refunds are manual and admin-only; an automatic rule ("within N hours and unused") is an
