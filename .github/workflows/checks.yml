@@ -33,6 +33,11 @@ jobs:
         with:
           node-version: "22"
 
+      # The lockfiles are written by npm 11; npm 10 (bundled with Node 22) reads the optional wasm peers
+      # of studio/web's lockfile differently and refuses `npm ci`. Node stays 22, the oldest supported.
+      - name: npm that wrote the lockfiles
+        run: npm install -g npm@11.6.2
+
       - name: Adapters are in sync with skills/telegram-bot-ui/SKILL.md and adapters/routing.json
         run: python scripts/build_adapters.py --check
 
