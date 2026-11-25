@@ -24,7 +24,7 @@ This is a single-file version of the telegram-bot-ui Agent Skill for agents that
 | `lookup` | "does the Bot API have"; "what are sendPoll's parameters"; "есть ли в Bot API"; "чи є в Bot API кнопки іншого кольору" | Bot API and Telegram.WebApp answers from the offline catalogs; skill health |
 <!-- commands:end -->
 
-The user never has to know a verb. Pick the row from their words and say in plain language what
+Pick the row from the user's words and say in plain language what
 you are doing ("I'll review the menu first, without changing code").
 
 ## Scope
@@ -63,8 +63,8 @@ feedback and the definition of done: `references/floor.md`.
 
 ## Terms that are easy to confuse
 
-Inline keyboard ≠ reply keyboard ≠ Rich Message buttons · `style` is only `primary`, `success`,
-`danger` · `icon_custom_emoji_id` ≠ `file_id` · Rich Text ≠ Microsoft RTF; Rich Markdown ≠
+Inline keyboard ≠ reply keyboard ≠ Rich Message buttons · `style` is `primary`, `success` or
+`danger` (`link` also on Rich callback buttons) · `icon_custom_emoji_id` ≠ `file_id` · Rich Text ≠ Microsoft RTF; Rich Markdown ≠
 MarkdownV2; Rich HTML ≠ HTML parse mode ≠ widget HTML · draft ≠ ephemeral message · editing ≠
 resending · widget ≠ Mini App.
 
@@ -77,8 +77,8 @@ resending · widget ≠ Mini App.
 ## Next step
 
 End every reply that changed or found something with one line in the user's language: what you
-would do next and why, from `tgui.py next` ("Next: tidy up the three checkout screens, two open
-P1 findings. Say 'go' or name another"). Never start it without the user's go.
+would do next and why, from `tgui.py next` ("Next: tidy the checkout screens, two P1 findings
+open. Say 'go' or name another"). Never start it without the user's go.
 
 ## Floor (`references/floor.md`): rules for every change
 
@@ -169,7 +169,7 @@ verified" date stated (`references/consistency-and-review.md`).
 - `SKILL.md` section "Tools" (routing to files that are not available here).
 - `SKILL.md` section "Where knowledge lives" (routing to files that are not available here).
 - Commands: 13 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
-- References: 92 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
+- References: 93 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
 - Recipes: 81 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
-- Tools: 26 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
+- Tools: 28 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
 - Optional: 3 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.

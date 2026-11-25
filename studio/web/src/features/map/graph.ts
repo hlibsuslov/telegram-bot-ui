@@ -5,6 +5,7 @@ import { graphlib, layout as dagreLayout } from "@dagrejs/dagre";
 import type { Snapshot } from "@/core/engine.ts";
 import { edges as lintEdges } from "@/core/lint.ts";
 import { keyboardRows, type Doc } from "@/core/render.ts";
+import { screenRichActionIds } from "@/core/rich.ts";
 
 export type Pt = { x: number; y: number };
 export interface MapEdge {
@@ -31,7 +32,7 @@ function viaLabel(snap: Snapshot, from: string, actionId: string | null, via: st
 /** Which port a transition leaves from: the button, the input area, or the list of off-keyboard actions. */
 export function sourceHandle(screen: Doc, actionId: string | null, via: string): string {
   if (via === "input" || !actionId) return "input";
-  const placed = keyboardRows(screen).flat().includes(actionId) && !screen.actions?.[actionId]?.hidden;
+  const placed = (keyboardRows(screen).flat().includes(actionId) || screenRichActionIds(screen).has(actionId)) && !screen.actions?.[actionId]?.hidden;
   return placed ? `a:${actionId}` : `u:${actionId}`;
 }
 

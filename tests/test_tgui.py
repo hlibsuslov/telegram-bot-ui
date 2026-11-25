@@ -16,6 +16,7 @@ import _paths
 import tgui
 
 TGUI = os.path.join(_paths.ROOT, "scripts", "tgui.py")
+NL = "\n"
 
 
 def run(*args, cwd=None, stdin=None):
@@ -102,13 +103,46 @@ class ProjectTest(unittest.TestCase):
         self.assertIn("primary", note["additionalContext"])
         self.assertLessEqual(len(note["additionalContext"]), 600)
 
+    @unittest.skipUnless(shutil.which("git"), "needs git")
+    def test_check_changed_routes_payloads_rich_messages_and_posts_and_counts_what_it_cannot_check(self):
+        def put(name, text):
+            with open(os.path.join(self.tmp, name), "w", encoding="utf-8") as fh:
+                fh.write(text)
+
+        def changed():
+            r = run("check", "changed", "--json", "--root", self.tmp)
+            return r.returncode, json.loads(r.stdout), r
+
+        code, out, r = changed()  # only bot.py (handler code) changed: no checker reads it
+        self.assertEqual((code, out["checked"], out["unchecked"]), (0, [], ["bot.py"]), r.stdout)
+        text = run("check", "changed", "--root", self.tmp).stdout
+        self.assertIn("1 changed file(s) not checkable offline", text)
+        self.assertNotIn("no changed Telegram files", text)
+        put("payload.json", json.dumps({"method": "sendMessage", "params": {"chat_id": 1, "text": "x", "bogus": 1}}))
+        put("rich.json", json.dumps({"rich_message": {"html": '<tg-button type="url" url="https://t.me" style="link">x</tg-button>'}}))
+        put("steps.json", json.dumps({"steps": [{"method": "sendRichMessage", "params": {"chat_id": 1, "rich_message": {
+            "html": '<tg-button type="pay">Pay</tg-button>'}}}]}))
+        put("post.md", "---" + NL + "kind: announcement" + NL + "---" + NL + NL + "# Title" + NL + NL +
+            "[button: Go](javascript:alert(1))" + NL)
+        put("README.md", "# My bot" + NL + NL + "Nothing Telegram-specific to validate here." + NL)
+        put("package.json", json.dumps({"name": "bot", "html": "<p>x</p>", "markdown": "y"}))
+        code, out, r = changed()
+        by_file = {c["file"]: c for c in out["checked"]}
+        self.assertEqual(sorted(by_file), ["payload.json", "post.md", "rich.json", "steps.json"], r.stdout)
+        self.assertEqual({f: c["checker"] for f, c in by_file.items()},
+                         {"payload.json": "check payload", "rich.json": "check rich", "post.md": "post validate",
+                          "steps.json": "check payload"})
+        self.assertTrue(all(c["exit"] == 1 for c in by_file.values()), by_file)
+        self.assertTrue(any("RICH_BUTTON_TYPE" in p for p in by_file["steps.json"]["problems"]), by_file["steps.json"])
+        self.assertEqual((code, out["failed"], out["unchecked"]), (1, 4, ["bot.py"]))
+
     def test_hook_install_is_idempotent_and_reversible(self):
         for _ in range(2):
             self.assertEqual(run("hook", "install", "--root", self.tmp).returncode, 0)
-        settings = json.load(open(os.path.join(self.tmp, ".claude", "settings.json"), encoding="utf-8"))
+        settings = json.load(open(os.path.join(self.tmp, ".claude", "settings.local.json"), encoding="utf-8"))
         self.assertEqual(len(settings["hooks"]["PostToolUse"]), 1)
         self.assertEqual(run("hook", "uninstall", "--root", self.tmp).returncode, 0)
-        settings = json.load(open(os.path.join(self.tmp, ".claude", "settings.json"), encoding="utf-8"))
+        settings = json.load(open(os.path.join(self.tmp, ".claude", "settings.local.json"), encoding="utf-8"))
         self.assertNotIn("PostToolUse", settings["hooks"])
         self.assertEqual(run("hook", "install", "--host", "codex", "--root", self.tmp).returncode, 4)
 

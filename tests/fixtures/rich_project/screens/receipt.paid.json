@@ -1,0 +1,9 @@
+{
+  "id": "receipt.paid",
+  "title": "Paid",
+  "kind": "result",
+  "audience": "private",
+  "message": {"id": "main", "format": "regular.html", "text": {"en": "✅ <b>Paid</b>", "ru": "✅ <b>Оплачено</b>"}},
+  "keyboard": {"type": "inline", "rows": [["back"]]},
+  "actions": {"back": {"label": {"en": "Back", "ru": "Назад"}, "type": "back", "fallback": "receipt.view"}}
+}

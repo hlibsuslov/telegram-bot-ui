@@ -83,7 +83,7 @@ Reference implementations without dependencies (Python stdlib with an RFC 8032 v
 ## 4. Freshness: `auth_date`
 
 Telegram sets no lifetime; it only says to check the field "to prevent the use of outdated data".
-**[Official]** `@tma.js/init-data` defaults to 24 hours. This skill's rule **[Heuristic]**:
+**[Third-party]** `@tma.js/init-data` defaults to 24 hours. This skill's rule **[Heuristic]**:
 
 | Action | Maximum age of `initData` |
 |---|---|

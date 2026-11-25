@@ -13,6 +13,7 @@ mandate A0, see `references/redesign-orchestration.md` §0).
 - A diff: `references/consistency-and-review.md` "Final review checklist", and
   `references/testing-playbook.md` for the tests the change needs.
 - A worked example of a real audit: `references/case-study-btc-tracker.md`.
+- The command menu: `references/bot-commands.md` "The lifecycle" (`tgui.py commands audit`).
 
 ## Steps
 

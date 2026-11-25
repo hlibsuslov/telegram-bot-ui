@@ -85,7 +85,7 @@ The Telegram-side chrome must agree with the in-message UI:
 - [ ] Exactly one action field per inline button; ≤1 non-text field on reply
       buttons.
 - [ ] `callback_data` ≤ 64 bytes.
-- [ ] `style` only `primary` / `success` / `danger`, assigned by meaning.
+- [ ] `style` only `primary` / `success` / `danger` on keyboard buttons (plus `link` on a Rich `<tg-button>` callback button), assigned by meaning.
 - [ ] ≤1 `primary` per screen; `danger` only for real destruction, with a
       confirmation step.
 - [ ] Every label readable and unambiguous with no color and no emoji (strip test:

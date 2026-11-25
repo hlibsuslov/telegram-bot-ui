@@ -19,6 +19,7 @@ import json
 import os
 import re
 import shutil
+import tempfile
 import time
 from contextlib import contextmanager
 from dataclasses import dataclass, field
@@ -86,8 +87,15 @@ class WriteResult:
 
 # ------------------------------------------------------------------ lock and journal
 
+def _is_link(path: str) -> bool:
+    return os.path.islink(path) or (hasattr(os.path, "isjunction") and os.path.isjunction(path))
+
+
 def _state_dir(root: str) -> str:
+    """<root>/.bot-ui, refused when a cloned project ships it as a link (every write goes through it)."""
     path = os.path.join(root, STATE_DIR)
+    if _is_link(path):
+        raise StoreError("STATE_DIR_LINK", f"{STATE_DIR} is a symbolic link or junction; remove it and retry")
     os.makedirs(path, exist_ok=True)
     gi = os.path.join(path, ".gitignore")
     if not os.path.exists(gi):
@@ -155,35 +163,69 @@ def recover_if_needed(root: str) -> int:
     journal = os.path.join(root, STATE_DIR, "journal.json")
     if not os.path.exists(journal):
         return 0
-    with open(journal, encoding="utf-8") as fh:
-        entries = json.load(fh)["files"]
-    for e in entries:
+    try:
+        with open(journal, encoding="utf-8") as fh:
+            entries = json.load(fh)["files"]
+    except (ValueError, KeyError, TypeError):
+        raise StoreError("JOURNAL_INVALID", f"{STATE_DIR}/journal.json is not a bot-ui journal; nothing was restored") from None
+    # The journal is a file in the project: a cloned repository can carry a crafted one. Every
+    # path is checked before anything moves: targets inside the project, backups only the
+    # transaction's own <root>/.bot-ui/txn/<n>.bak, never a link.
+    txn = os.path.realpath(os.path.join(root, STATE_DIR, "txn"))
+    plan = []
+    for e in entries if isinstance(entries, list) else [None]:
+        if not isinstance(e, dict) or not isinstance(e.get("path"), str):
+            raise StoreError("JOURNAL_INVALID", f"{STATE_DIR}/journal.json is not a bot-ui journal; nothing was restored")
         target = resolve_inside(root, e["path"])
-        if e["backup"] is None:
+        backup = e.get("backup")
+        if backup is not None:
+            name = os.path.basename(str(backup))
+            safe = os.path.join(txn, name)
+            if (not re.fullmatch(r"\d{1,6}\.bak", name) or os.path.realpath(str(backup)) != safe
+                    or os.path.islink(safe) or not os.path.isfile(safe)):
+                raise StoreError("JOURNAL_INVALID", f"{STATE_DIR}/journal.json names a backup outside "
+                                                    f"{STATE_DIR}/txn/ ({backup!r}); nothing was restored")
+            backup = safe
+        plan.append((target, backup))
+    for target, backup in plan:
+        if backup is None:
             if os.path.exists(target):
                 os.remove(target)
         else:
-            os.replace(e["backup"], target)
+            os.replace(backup, target)
     os.remove(journal)
     shutil.rmtree(os.path.join(root, STATE_DIR, "txn"), ignore_errors=True)
     return len(entries)
 
 
 def _atomic_write(path: str, data: bytes) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + ".bot-ui-tmp"
-    with open(tmp, "wb") as fh:
-        fh.write(data)
-        fh.flush()
-        os.fsync(fh.fileno())
-    os.replace(tmp, path)
+    """Write to a new, uniquely named file (exclusive create: never through a link or a hard link a
+    cloned project planted next to the target), then atomically replace the target entry."""
+    folder = os.path.dirname(path)
+    os.makedirs(folder, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=folder, prefix=".bot-ui-tmp-")
+    try:
+        with os.fdopen(fd, "wb") as fh:
+            fh.write(data)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp, path)
+    except BaseException:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+        raise
 
 
 def _commit(root: str, writes: dict[str, bytes | None], fail_after: int | None = None) -> None:
     """Write (bytes) or delete (None) files as one transaction. `fail_after` is a test hook."""
     sd = _state_dir(root)
     txn = os.path.join(sd, "txn")
-    os.makedirs(txn, exist_ok=True)
+    if _is_link(txn):
+        raise StoreError("STATE_DIR_LINK", f"{STATE_DIR}/txn is a symbolic link or junction; remove it and retry")
+    shutil.rmtree(txn, ignore_errors=True)   # start empty: a planted <n>.bak could be a hard link to another file
+    os.makedirs(txn)
     entries = []
     for i, rel in enumerate(sorted(writes)):
         target = resolve_inside(root, rel)

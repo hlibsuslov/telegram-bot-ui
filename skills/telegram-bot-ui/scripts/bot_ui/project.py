@@ -247,8 +247,16 @@ def parse_files(root: str, files: dict[str, bytes]) -> Snapshot:
     return snap
 
 
-def open_snapshot(root: str) -> Snapshot:
+def open_snapshot(root: str, *, recover: bool = True) -> Snapshot:
+    """The project as it is on disk. recover=False never writes: a pending journal of an interrupted
+    write is reported (WRITE_PENDING) instead of rolled back, for read-only callers such as MCP tools."""
     from .store import recover_if_needed
+    if not recover:
+        snap = parse_files(root, read_files(root))
+        if os.path.exists(os.path.join(root, STATE_DIR, "journal.json")):
+            snap.load_diagnostics.append(Diagnostic("WRITE_PENDING", "warning", f"{STATE_DIR}/journal.json", "",
+                                                    "an interrupted write is pending; any bot-ui write command rolls it back"))
+        return snap
     recovered = recover_if_needed(root)
     snap = parse_files(root, read_files(root))
     if recovered:

@@ -7,8 +7,11 @@ import html
 import re
 from typing import Any
 
-FORMATS = {"regular.plain": None, "regular.html": "HTML", "regular.markdownv2": "MarkdownV2"}
-EDITABLE_FORMATS = {"regular.plain", "regular.html"}
+from . import rich as rich_html
+
+FORMATS = {"regular.plain": None, "regular.html": "HTML", "regular.markdownv2": "MarkdownV2", "rich.html": None}
+RICH_FORMATS = {"rich.html"}
+EDITABLE_FORMATS = {"regular.plain", "regular.html", "rich.html"}
 KNOWN_FORMATS = set(FORMATS) | {"regular.entities", "rich", "media.photo"}
 PLACEHOLDER = re.compile(r"\{\{|\}\}|\{([a-z0-9_.-]+)\}")
 CALLBACK_MAX = 64
@@ -37,6 +40,8 @@ def escape(value: str, fmt: str) -> str:
         return html.escape(value, quote=False)
     if fmt == "regular.markdownv2":
         return _MD2.sub(r"\\\1", value)
+    if fmt == "rich.html":
+        return rich_html.escape(value)
     return value
 
 
@@ -73,7 +78,7 @@ def callback_data(screen_id: str, action_id: str, action: dict | None = None) ->
 
 
 def visible_text(text: str, fmt: str) -> str:
-    if fmt == "regular.html":
+    if fmt in ("regular.html", "rich.html"):
         return html.unescape(re.sub(r"<[^>]+>", "", text))
     return text
 
@@ -137,6 +142,13 @@ def render_screen(project: dict, screen: dict, *, locale: str | None = None, sta
     kb = screen.get("keyboard") or {}
     ktype = kb.get("type", "none") if kb else "none"
     actions = screen.get("actions") or {}
+    rich_buttons: list[dict] = []
+    if fmt in RICH_FORMATS:
+        def label_of(act: dict, aid: str) -> str:
+            return fill(localized(act.get("label"), locale, default) or aid, values, "regular.plain")[0]
+        text, rich_buttons, rdiags = rich_html.compile_buttons(
+            text, screen.get("id", ""), actions, label_of, lambda aid, act: callback_data(screen["id"], aid, act))
+        diags.extend(rdiags)
     rows_out = []
     for row in keyboard_rows(screen):
         out_row = []
@@ -162,6 +174,7 @@ def render_screen(project: dict, screen: dict, *, locale: str | None = None, sta
     return {"screenId": screen.get("id"), "messageId": msg.get("id", "main"), "locale": locale, "state": state,
             "format": fmt, "text": text, "parseMode": FORMATS.get(fmt),
             "keyboard": {"type": ktype, "rows": rows_out, "placeholder": localized(kb.get("placeholder"), locale, default)},
+            "richButtons": rich_buttons,
             "media": media_out, "widget": (screen.get("widget") or {}).get("ref"), "diagnostics": diags}
 
 
@@ -218,7 +231,12 @@ def bot_request(logical: dict, chat_id: int | str, *, edit_message_id: int | Non
             params["message_id"] = edit_message_id
         if markup is not None and "inline_keyboard" not in markup:
             markup = None  # only an inline keyboard can be attached by an edit
-    if media is None:
+    if logical.get("format") in RICH_FORMATS:
+        if media is not None:
+            raise ValueError("a rich screen carries its media inside the HTML (<img>, <video>, <figure>)")
+        params["rich_message"] = {"html": logical["text"]}
+        method = "editMessageText" if editing else "sendRichMessage"
+    elif media is None:
         params["text"] = logical["text"]
         if logical["parseMode"]:
             params["parse_mode"] = logical["parseMode"]

@@ -35,6 +35,12 @@ loopback, and stops with Ctrl+C. Saving in the browser writes the screen file in
 repository; `git diff` shows it. Studio drafts live in the browser's local storage, never in
 the repository.
 
+The page is served from this checkout's `studio/web/dist`. If that folder lies inside the
+repository you open (for example a project-scope install, or a bot kept inside the checkout),
+the Studio refuses to serve it, because a repository could ship its own page and the Studio hands
+the page a token for its API. Set `BOT_UI_STUDIO_DIR` to the `studio` folder of a checkout you
+trust to override.
+
 ## Without a reachable port
 
 ```powershell

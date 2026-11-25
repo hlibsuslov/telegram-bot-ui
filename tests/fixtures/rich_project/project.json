@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "projectId": "rich-receipt",
+  "title": "Rich receipt",
+  "defaultLocale": "en",
+  "locales": ["en", "ru"],
+  "entryPoints": [{"id": "start", "type": "command", "command": "start", "screen": "receipt.view"}],
+  "contexts": ["private"],
+  "fields": {
+    "order.no": {"type": "string", "source": "data", "example": "4821"},
+    "order.total": {"type": "string", "source": "data", "example": "$12.90"},
+    "order.url": {"type": "string", "source": "data", "example": "https://example.com/o/4821"}
+  },
+  "capabilities": {"richMessages": true}
+}

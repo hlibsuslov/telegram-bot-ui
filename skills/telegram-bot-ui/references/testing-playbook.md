@@ -28,7 +28,7 @@ bot_api: "10.5"
 - **Payload stability:** a golden/snapshot test asserting the set of
   `callback_data` values a screen emits — this is what catches an accidental
   scheme change during a redesign.
-- **`style`:** only `primary` / `success` / `danger`; at most one `primary` per
+- **`style`:** only `primary` / `success` / `danger` on keyboard buttons (`link` exists only on Rich callback buttons); at most one `primary` per
   screen; `danger` reachable only through a confirmation screen.
 - **Degraded render:** the keyboard with `style` and `icon_custom_emoji_id`
   stripped is still unambiguous (assert on labels alone).

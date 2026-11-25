@@ -1,5 +1,5 @@
 ---
-summary: "Start page for Telegram Mini Apps: routing by task, reading order, sources and labels, offline data and tools, what is not covered yet; read first for any Mini App task."
+summary: "Start page for Telegram Mini Apps: routing by task, reading order, sources and labels, offline data and tools, what is not covered yet; the agent's route by request is orchestration.md §1."
 verified: "2026-11-23"
 bot_api: "10.5"
 ---

@@ -163,8 +163,11 @@ sendInvoice / createInvoiceLink ──► user taps Pay ──► Update.pre_che
   payment failed). It is part of the default update set; when you pass an explicit
   `allowed_updates` list, include `"subscription"` in it.
 - **[API]** `editUserStarSubscription(user_id, telegram_payment_charge_id, is_canceled)`:
-  `true` stops renewal (access must last to the end of the paid period); `false`
-  re-enables a subscription the **bot** cancelled.
+  `true` stops renewal (access must last to the end of the paid period); `false` only
+  **allows the user to re-enable** a subscription the **bot** cancelled: the user turns it back on
+  in Telegram, and `Update.subscription` with `state: "active"` confirms it. Until then the
+  subscription is still cancelled; never mark it active on the `false` call. A subscription the
+  user cancelled in Telegram can be re-enabled only by the user. Remember who cancelled.
 - **[API]** `BotSubscriptionUpdated` has only `user`, `invoice_payload` and `state`, no
   charge id. Put the order id in the subscription's payload and find the subscription by it.
 - **State**: keep `subscription_id = first telegram_payment_charge_id`, `user_id`,
@@ -279,8 +282,9 @@ plan link. Do not spam on every retry. **[Heuristic]**
   `InputInvoiceMessageContent` (see `inline-mode.md`). Business-account invoice links:
   `createInvoiceLink.business_connection_id` (Stars only). **[API]**
 - Paid broadcasts: `allow_paid_broadcast` on send methods lifts the 30 msg/s limit up
-  to 1000 msg/s for 0.1 Star per message above the free rate; requires ≥10,000 Stars
-  on the bot balance and enabling in @BotFather. **[API]** (broadcast design itself:
+  to 1000 msg/s for 0.1 Star per message above the free rate; it is enabled in @BotFather and
+  needs at least 100,000 Stars on the bot's balance and at least 100,000 monthly active users
+  **[Official, Bots FAQ, checked 2026-11-25]**. (broadcast design itself:
   `channels-and-broadcasting.md`).
 
 ## What the user sees

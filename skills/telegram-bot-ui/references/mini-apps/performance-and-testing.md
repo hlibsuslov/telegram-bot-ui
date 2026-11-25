@@ -39,7 +39,7 @@ after the first screen is drawn, not after data arrives.
 | 1. Lint | source patterns: tokens, native controls, gates, labels, safe areas | `py -3 scripts/miniapp_lint.py <app> --strict` |
 | 2. Unit tests | kit and app logic: navigation stack, buttons, gates, storage, `start_param` parsing | `node --test` (`examples/mini-apps/_kit/tma.test.ts`) |
 | 3. Server tests | `initData` HMAC and Ed25519, expiry, tampering | `examples/mini-apps/server` tests (Python unittest, `node --test`) |
-| 4. Preview stand | layout in iOS/Android × light/dark × 320/390/430, fullscreen, compact, old versions | `py -3 scripts/preview_miniapp.py <app> --serve 8790` |
+| 4. Preview stand | layout in iOS/Android × light/dark × 320/390/430, fullscreen, compact, old versions | `py -3 scripts/preview_miniapp.py <app> --serve 8790` (add `--build` to run the app's own `build.mjs`, only for a project you trust) |
 | 5. Test environment | real client, real `initData`, real chrome | Telegram test server, test bot, plain HTTP allowed |
 | 6. Production devices | what users get | iPhone, mid-range Android (and a `LOW` one), Telegram Desktop, Telegram Web |
 

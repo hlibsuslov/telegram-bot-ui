@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "result": [
+    {"command": "help", "description": "Help"},
+    {"command": "start", "description": "Open the main menu"},
+    {"command": "old", "description": "Retired command"}
+  ]
+}

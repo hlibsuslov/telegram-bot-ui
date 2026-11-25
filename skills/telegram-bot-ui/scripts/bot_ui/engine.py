@@ -71,7 +71,8 @@ class Engine:
         return {"screenId": logical["screenId"], "state": logical["state"], "text": logical["text"],
                 "media": media["type"] if media else None,
                 "keyboard": {"type": kb["type"],
-                             "rows": [[{"actionId": b["actionId"], "text": b["text"]} for b in row] for row in kb["rows"]]}}
+                             "rows": [[{"actionId": b["actionId"], "text": b["text"]} for b in row] for row in kb["rows"]]},
+                "richButtons": [{"actionId": b["actionId"], "text": b["text"]} for b in logical.get("richButtons") or []]}
 
     def _widgets_ok(self, s: dict) -> bool:
         caps = self.project.get("capabilities") or {}
@@ -103,8 +104,11 @@ class Engine:
                       else "edit_keyboard")
             effects.append({"type": "fallback", "reason": reason, "instance": instance})
             want_edit = False
+        # The callback buttons inside this rendering of a rich document (this locale, this state):
+        # a press is checked against what the user was actually shown.
+        rich_ids = [b["actionId"] for b in logical.get("richButtons") or [] if b.get("actionId") and b.get("callbackData")]
         if want_edit and msg is not None:
-            msg["screen"], msg["state"], msg["media"] = sid, state, target_media
+            msg["screen"], msg["state"], msg["media"], msg["rich"] = sid, state, target_media, rich_ids
             effects.append({"type": "edit", "instance": instance, "render": logical, "view": self._view(logical)})
             target_instance = instance
         else:
@@ -112,7 +116,8 @@ class Engine:
             s["next"] += 1
             kind = "widget" if is_widget else "message"
             s["messages"].append({"instance": target_instance, "screen": sid, "state": state, "kind": kind,
-                                  "media": None if is_widget else target_media, "accessible": True})
+                                  "media": None if is_widget else target_media, "accessible": True,
+                                  "rich": [] if is_widget else rich_ids})
             eff = {"type": "send", "instance": target_instance, "kind": kind, "render": logical,
                    "view": self._view(logical)}
             if is_widget:
@@ -121,7 +126,7 @@ class Engine:
         if state is None:
             s["screen"] = sid
             kt = (screen.get("keyboard") or {}).get("type", "none")
-            if kt == "inline":
+            if kt == "inline" or rich_ids:
                 s["active"] = target_instance
             if kt == "reply":
                 s["reply"] = sid
@@ -212,7 +217,8 @@ class Engine:
             current = msg is not None and instance == s["active"] and msg["state"] is None
             screen = self.snap.screens.get(screen_id or "")
             act = (screen or {}).get("actions", {}).get(aid)
-            on_kb = screen is not None and any(aid in row for row in render.keyboard_rows(screen))
+            on_kb = screen is not None and (any(aid in row for row in render.keyboard_rows(screen))
+                                            or aid in (msg or {}).get("rich", []))
             if not (current and act and on_kb):
                 entry["action"] = {"screenId": screen_id, "actionId": aid, "type": "stale"}
                 entry["effects"].append({"type": "answer", "text": self._text("stale", s["locale"])})

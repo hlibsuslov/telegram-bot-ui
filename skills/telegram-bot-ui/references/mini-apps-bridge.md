@@ -79,7 +79,10 @@ import hashlib, hmac, time, urllib.parse
 
 def verify_init_data(init_data: str, bot_token: str, max_age: int = 3600) -> dict:
     """Return the parsed initData fields or raise ValueError. Stdlib only."""
-    fields = dict(urllib.parse.parse_qsl(init_data, keep_blank_values=True))
+    pairs = urllib.parse.parse_qsl(init_data, keep_blank_values=True, strict_parsing=True)
+    fields = dict(pairs)
+    if len(fields) != len(pairs) or any("\n" in v for v in fields.values()):
+        raise ValueError("repeated key or newline in initData")   # see mini-apps/security.md
     received = fields.pop("hash", "")
     check = "\n".join(f"{k}={v}" for k, v in sorted(fields.items()))
     secret = hmac.new(b"WebAppData", bot_token.encode(), hashlib.sha256).digest()

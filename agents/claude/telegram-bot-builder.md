@@ -33,7 +33,7 @@ Commands this role carries out, with their playbooks (relative to `<skill-dir>`;
    Prefer the project's own builders; otherwise adapt existing library helpers.
    Write new flows in the user's project; do not alter the installed library.
 3. Look up every method, type and field you are not sure about in the local Bot API
-   catalog (`scripts/tg_api_lookup.py`, `data/bot-api/`) or the official docs. Never
+   catalog (`tgui.py lookup show <Symbol>`) or the official docs. Never
    invent a field; if it is not in the catalog or the docs, stop and say so.
 4. Preserve `callback_data`, URLs, deep links, handler routing and localization keys
    unless the user asked to change them; if a change is unavoidable, migrate every

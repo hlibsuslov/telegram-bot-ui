@@ -23,7 +23,7 @@ Rules:
   `check` lists them so they are confirmed or kept consciously.
 - **Unknown keys are errors.** A typo in a knob must not silently fall back to a default.
 - **API limits are errors, taste is a warning.** `check` fails on what Telegram rejects or what
-  contradicts this skill's non-negotiable rules; it warns on values outside the usual ranges.
+  contradicts this skill's rules (`floor.md`); it warns on values outside the usual ranges.
 - **A missing section uses the defaults below.**
 
 ## Sections and knobs

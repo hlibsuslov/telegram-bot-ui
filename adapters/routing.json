@@ -115,7 +115,8 @@
     {
       "name": "telegram-bot-designer",
       "verbs": [
-        "audit"
+        "audit",
+        "improve"
       ],
       "description": "Audits and designs Telegram bot screens (the skill's audit command and the proposal half of improve): builds the screen/state map, finds real UX defects, saves them as findings, and proposes exact texts, keyboards and navigation. Use for \"review this bot's menu\", \"redesign the onboarding\", \"why does the bot feel confusing\". Never edits the project's code; writes only the saved review in bot-ui/context/.",
       "tools": [

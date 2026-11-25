@@ -12,6 +12,7 @@ Commands this role carries out, with their playbooks (relative to `<skill-dir>`;
 - `SKILL.md`: entry point: Start steps, command table, invariants
 - `references/floor.md`: read before the first edit
 - `commands/audit.md`: `audit`: maps the screens, ranks real defects, saves them as findings; read-only for code
+- `commands/improve.md`: `improve`: changes existing screens: wording, keyboards, flows, feedback, polish, redesign
 
 ## How to work
 

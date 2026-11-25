@@ -132,7 +132,7 @@ Apply `content-shape-detection.md` in full. The recurring finds in real bots:
 ---
 
 ### 6. Newer capabilities — what would the current Bot API do better?
-Apply the initiative rule from `SKILL.md` to what you found, within the version ceiling
+Apply the capability check (`commands/build.md` step 2) to what you found, within the version ceiling
 from Pass 0: a long AI wait with no Stop (`streaming-and-editing.md`); a form without
 disabled Submit or `force_reply` (recipe 03); personal data answered publicly in a group
 (`ephemeral-and-personal.md`); a status that is re-sent instead of one live card

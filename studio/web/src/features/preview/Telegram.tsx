@@ -7,6 +7,7 @@ import {
 import { type Logical, type Media, telegramHtmlToSafe } from "@/core/render.ts";
 import { cn } from "@/lib/utils";
 import { CustomEmoji } from "@/features/emoji/CustomEmoji";
+import { RichText } from "./RichText";
 
 type SafeNode = ReturnType<typeof telegramHtmlToSafe>[number];
 
@@ -89,8 +90,16 @@ export function InlineKeyboard({ logical, onPress, hl, buttonSlot }: Pick<Bubble
   );
 }
 
+/** The message body: Rich HTML (with its in-document buttons) or regular text. */
+function Body({ logical, onPress, hl, buttonSlot }: Pick<BubbleProps, "logical" | "onPress" | "hl" | "buttonSlot">) {
+  return logical.format === "rich.html"
+    ? <RichText html={logical.text} buttons={logical.richButtons} onPress={onPress} hlAction={hl?.actionId} buttonSlot={buttonSlot} />
+    : <MessageText text={logical.text} format={logical.format} />;
+}
+
 /** Six lines and an ellipsis; "more" opens the full text over the bubble without changing its size. */
-function ClampedText({ text, format }: { text: string; format: string }) {
+function ClampedText({ logical, onPress, hl }: Pick<BubbleProps, "logical" | "onPress" | "hl">) {
+  const { text, format } = logical;
   const ref = useRef<HTMLDivElement>(null);
   const [over, setOver] = useState(false);
   const [open, setOpen] = useState(false);
@@ -101,7 +110,7 @@ function ClampedText({ text, format }: { text: string; format: string }) {
   return (
     <div className="relative">
       <div ref={ref} className="overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:6]">
-        <MessageText text={text} format={format} />
+        <Body logical={logical} onPress={onPress} hl={hl} />
       </div>
       {over && (
         <button type="button" className="nodrag mt-0.5 text-[12px] font-medium text-[var(--tg-theme-link-color)]" aria-expanded={open}
@@ -110,7 +119,7 @@ function ClampedText({ text, format }: { text: string; format: string }) {
       {open && (
         <div className="nodrag nowheel absolute -inset-x-1.5 -top-1 z-20 max-h-80 overflow-y-auto rounded-xl bg-[var(--tg-theme-bg-color)] p-2 shadow-xl ring-1 ring-black/10"
           onClick={(e) => e.stopPropagation()}>
-          <MessageText text={text} format={format} />
+          <Body logical={logical} onPress={onPress} hl={hl} />
           <button type="button" className="mt-1 text-[12px] font-medium text-[var(--tg-theme-link-color)]" onClick={() => setOpen(false)} autoFocus>less</button>
         </div>
       )}
@@ -194,7 +203,9 @@ export function Bubble({ logical, onPress, edited, meta, widget, hl, clampText, 
           </div>
         )}
         <div data-hl={hl?.text || undefined} className="rounded">
-          {clampText ? <ClampedText text={logical.text} format={logical.format} /> : <MessageText text={logical.text} format={logical.format} />}
+          {/* A rich document is not clamped: its buttons carry map ports that must stay visible. */}
+          {clampText && logical.format !== "rich.html" ? <ClampedText logical={logical} onPress={onPress} hl={hl} />
+            : <Body logical={logical} onPress={onPress} hl={hl} buttonSlot={buttonSlot} />}
         </div>
         <div className="tg-meta float-right -mb-0.5 ml-2 flex translate-y-0.5 items-center gap-1 pt-0.5 text-[11px]">
           {meta}

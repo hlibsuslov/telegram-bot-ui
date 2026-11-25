@@ -17,7 +17,10 @@ capability matrix `references/telegram-capabilities.md`, per-version items
    `lookup accepts <Type>`; Mini Apps: `tgui.py webapp show|search <name>`.
 2. Answer with the symbol, its fields, the version it appeared in and the catalog date. If the
    catalog has no such thing, say "Bot API <version> has no such method or field".
-3. "Is the skill up to date": `tgui.py doctor` (copies, versions, catalog age). Refreshing the
+3. Through MCP (`tgui.py mcp`, see `references/api-catalog.md`): `telegram_api_lookup`,
+   `webapp_lookup`, `validate_request`, `check_rich_html`, `knowledge_search` (15 tools in all,
+   listed in `references/api-catalog.md`).
+4. "Is the skill up to date": `tgui.py doctor` (copies, versions, catalog age). Refreshing the
    catalog needs the network (`tgui.py sync bot-api`): only when the user agrees.
 
 ## Without scripts

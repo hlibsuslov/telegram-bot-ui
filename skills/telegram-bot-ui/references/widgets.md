@@ -117,7 +117,7 @@ Incoming messages and `ExternalReplyInfo` can carry `widget` too (a reply to a f
 
 ```
 user taps  ->  widget: request("ship:fast")         (one call per tap, one in flight: BUSY)
-Telegram   ->  bot: Update.widget_query {id, from, chat, message_id, chat_instance, data, widget_id?}
+Telegram   ->  bot: Update.widget_query {id, from, chat, message_id, chat_instance, type, data, widget_id?}
 bot        ->  check data + from against YOUR state  (data is untrusted, like callback_data)
 bot        ->  editMessageWidgetData(...)            (only if state changes; commit after success)
 bot        ->  answerWidgetQuery(id, data≤1024B)     (EXACTLY once, within 15 s, also on failure)

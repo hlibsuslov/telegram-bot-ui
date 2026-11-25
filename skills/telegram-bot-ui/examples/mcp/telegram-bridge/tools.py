@@ -113,7 +113,9 @@ def host_from_argv(argv: list[str] | None = None, transport: Any = None,
     plus --files-root (default: AGENT_BRIDGE_FILES_ROOT or the current directory)."""
     parser = argparse.ArgumentParser(parents=[cli._common(False)], add_help=False)
     parser.add_argument("--files-root", default=os.environ.get("AGENT_BRIDGE_FILES_ROOT", os.getcwd()))
-    args, _ = parser.parse_known_args(argv)
+    args, unknown = parser.parse_known_args(argv)
+    if unknown:  # a mistyped --files-root must not silently widen what may be sent to the cwd
+        raise SystemExit(f"telegram-bridge: unknown arguments {unknown}")
     args.quiet = True                       # stdout is the protocol channel; logs go to stderr only
     bridge, _ = cli.build(args, environ, transport)
     bridge.log = lambda e: print({"log": e}, file=sys.stderr)

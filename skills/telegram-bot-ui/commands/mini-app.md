@@ -1,35 +1,31 @@
 # mini-app: a Mini App, from the decision to the release
 
 **When:** build or restyle a Mini App, `Telegram.WebApp`, `initData`, where the photo, title
-and price go, a Figma file to build from.
+and price go, a Figma file to build from, payments or haptics inside the app.
 
 ## Read
 
-- Start: `references/mini-apps/README.md` "Route by task", then
-  `references/mini-apps/orchestration.md` §1 (what to load, by request).
-- Decide first: `references/mini-apps/decide.md` (Mini App, widget or keyboard).
-- Building (all in `references/mini-apps/`): `launch-and-lifecycle.md`, `webapp-api.md`,
-  `design-system.md`, `components.md`, `layout-rules.md`, `screen-patterns.md`,
-  `native-anatomy.md`, `telegram-design-guidelines.md`, `design-sources.md`, `figma-workflow.md`,
-  `forms-and-data.md`, `haptics-and-device.md`, `accessibility-and-language.md`,
-  `telegram-elements.md`, `materials-and-trends.md`, `anti-slop.md`.
-- Reworking an existing app: `references/mini-apps/rework.md` (`tgui.py miniapp rework plan`).
-- Money `references/mini-apps/payments.md`; security `references/mini-apps/security.md`;
-  testing `references/mini-apps/performance-and-testing.md`; the bot side
-  `references/mini-apps-bridge.md`.
+One route, no hops: `references/mini-apps/orchestration.md` §1 names the file for the request
+(decide, launch, API, security, payments, Telegram elements, anatomy, device, accessibility,
+forms, materials, Figma, design system, components, layout, rework, anti-slop, testing), §2 is
+the order of work to create an app, §3 to rework one. The bot side of the launch and of sent
+data: `references/mini-apps-bridge.md`. Recipes 90-99 are the starting points.
 
 ## Steps
 
-1. Decide and say why (`decide.md`). Recipes 90-99 are the starting points.
+1. Decide and say why (`references/mini-apps/decide.md`): Mini App, widget or keyboard.
 2. Gate every `Telegram.WebApp` call by version: `tgui.py webapp show <Name>`, `webapp gates`.
-3. Layout and style: `tgui.py miniapp layout review`, `tgui.py miniapp style ...`.
-4. Validate `initData` on the server before trusting any user field.
-5. `tgui.py miniapp lint <app>` and `tgui.py miniapp preview <app>` (a mock client).
+3. Follow §2 or §3; layout and style with `tgui.py miniapp layout review` and
+   `tgui.py miniapp style ...`; a rework starts with `tgui.py miniapp rework plan <app>`.
+4. Validate `initData` on the server before trusting any user field
+   (`references/mini-apps/security.md`).
+5. `tgui.py miniapp lint <app>` and `tgui.py miniapp preview <app>` (`--build` runs the app's own `build.mjs`: trusted projects only; a mock client: it proves
+   nothing about real Telegram clients).
 
 ## Without scripts
 
 Look names up in the Telegram.WebApp catalog under `data/` and apply the lint rules from
-`performance-and-testing.md` by hand.
+`references/mini-apps/performance-and-testing.md` by hand.
 
 ## Done
 
@@ -37,4 +33,4 @@ The floor rules plus version gates, a server-side `initData` check, lint clean, 
 
 ## Next
 
-The bot side (`improve` the launch button and messages) or `build` for payments in the app.
+The bot side (`improve` the launch button and messages) or `build` for payments in the bot.

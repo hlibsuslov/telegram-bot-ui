@@ -9,6 +9,7 @@ import io
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -305,6 +306,20 @@ class InstallerTest(unittest.TestCase):
         self.assertEqual(len(backups), 1)
         with open(os.path.join(self.p(".claude", "skill-backups", backups[0]), "SKILL.md")) as fh:
             self.assertEqual(fh.read(), "mine")
+
+    def test_two_backups_of_one_skill_in_a_second_never_land_under_skills(self):
+        skills = self.p(".claude", "skills")
+        folder = os.path.join(skills, "telegram-bot-ui")
+        inst = install.Installer(self.home, self.project, False, False)
+        for body in ("first", "second"):
+            os.makedirs(folder, exist_ok=True)
+            with open(os.path.join(folder, "SKILL.md"), "w") as fh:
+                fh.write(body)
+            with contextlib.redirect_stdout(io.StringIO()):
+                inst.backup(folder)
+            shutil.rmtree(folder)
+        self.assertEqual(os.listdir(skills), [])
+        self.assertEqual(len(os.listdir(self.p(".claude", "skill-backups"))), 2)
 
     def test_foreign_agent_file_backed_up_and_kept_on_uninstall(self):
         agents = self.p(".claude", "agents")

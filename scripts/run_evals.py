@@ -226,6 +226,11 @@ BASE_DIR = re.compile(r"Base directory for this skill:[ \t]*([^\r\n]+)")
 READ_VERB = re.compile(r"\b(cat|sed|head|tail|less|more|nl|bat|type|get-content|gc|rg|grep|awk|"
                        r"select-string|sls)\b", re.I)
 SKILL_PATH = re.compile(r"""[^\s'"`|;&<>()=,]*telegram-bot-ui/[^\s'"`|;&<>()=,]+""")
+# A path in a shell command: quoted without nested quotes (spaces allowed, taken whole) or bare. Quoted
+# first, so "C:/Users/Some One/.codex/skills/telegram-bot-ui/SKILL.md" is not cut down to a relative tail.
+COMMAND_PATH = re.compile(r"""(?P<q>["'])(?P<quoted>[^"']*telegram-bot-ui/[^"']+)(?P=q)|(?P<bare>"""
+                          + SKILL_PATH.pattern + ")")
+PATH_START = re.compile(r"^(?:[A-Za-z]:/|/|~|\$|%|\.{0,2}/)")   # a quoted string that is a path, not a command line
 TOKENS_USED = re.compile(r"tokens used\s*[:\n]\s*([\d,]+)", re.I)
 
 
@@ -295,7 +300,15 @@ def _codex_read_paths(command: str) -> list[str]:
     """Skill files a shell command reads (cat / sed / Get-Content ...), in order."""
     if not READ_VERB.search(command):
         return []
-    paths = SKILL_PATH.findall(_slashes(command))
+    paths: list[str] = []
+    for m in COMMAND_PATH.finditer(_slashes(command)):
+        quoted = m.group("quoted")
+        if quoted is None:
+            paths.append(m.group("bare"))
+        elif PATH_START.match(quoted):
+            paths.append(quoted)
+        else:   # a quoted command line such as "cat path": read the paths inside it
+            paths.extend(SKILL_PATH.findall(quoted))
     return [p for p in paths if re.search(r"\.[A-Za-z0-9]{1,5}$", p)]
 
 
@@ -376,7 +389,7 @@ def analyze_output(host: str, output: str, project: str | None) -> dict:
         if project is None:
             return False
         if host == "codex" and not os.path.isabs(path) and not path.startswith(("~", "$")):
-            return True   # relative to the child's working folder, which is the project
+            return inside(os.path.join(project, path), project)   # relative to the child's folder; `..` can leave it
         return inside(path, project)
 
     activated = first_load is not None
@@ -492,6 +505,20 @@ def child_env(host: str, empty_home: str) -> dict[str, str]:
     return env
 
 
+def private_folder(path: str) -> bool:
+    """Leave the current user as the only one with access: ProgramData, Public and the drive root let
+    other local users add files, and a project folder that others can write to could carry a hook."""
+    if os.name != "nt":
+        return True
+    user = os.environ.get("USERNAME")
+    if not user:
+        return False
+    domain = os.environ.get("USERDOMAIN")
+    who = domain + "\\" + user if domain else user
+    done = subprocess.run(["icacls", path, "/inheritance:r", "/grant:r", f"{who}:(OI)(CI)F"], capture_output=True)
+    return done.returncode == 0
+
+
 def make_root() -> str:
     """A new temp folder outside the real home folder: Claude Code collects `.claude/skills` from
     every parent of the working folder, so a project under ~ would still see ~/.claude/skills."""
@@ -502,10 +529,14 @@ def make_root() -> str:
         if not base or inside(base, home):
             continue
         try:
-            return tempfile.mkdtemp(prefix="tgui-evals-", dir=base)
+            root = tempfile.mkdtemp(prefix="tgui-evals-", dir=base)
         except OSError:
             continue
-    print("warning: no writable temp folder outside the home folder; a user-level copy may be visible.")
+        if private_folder(root):
+            return root
+        shutil.rmtree(root, ignore_errors=True)
+    print("warning: no private temp folder outside the home folder; using one under it, "
+          "so a user-level copy of the skill may be visible to the runs.")
     return tempfile.mkdtemp(prefix="tgui-evals-")
 
 
@@ -541,6 +572,17 @@ def _kill_tree(proc: subprocess.Popen) -> None:
         subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True, check=False)
     else:
         proc.kill()
+
+
+def run_error(info: dict, status: int | str) -> str | None:
+    """Why a run is not clean, or None: a transcript that ends well still fails when the CLI exits non-zero."""
+    if info["error"]:
+        return info["error"]
+    if status == "timeout":
+        return "timeout"
+    if not info["finished"]:
+        return f"no final event (exit {status})"
+    return f"exit {status} after the final event" if status else None
 
 
 def run_child(cmd: list[str], stdin_text: str, cwd: str, env: dict, timeout: int) -> tuple[str, int | str]:
@@ -645,8 +687,7 @@ def execute(cases: list[dict], host: str, model: str | None, timeout: int, dry_r
                 output, status = run_child(cmd, case["prompt"], project, env, timeout)
                 info = analyze_output(host, output, project)
                 models.append(info["model"])
-                error = info["error"] or ("timeout" if status == "timeout" else
-                                          None if info["finished"] else f"no final event (exit {status})")
+                error = run_error(info, status)
                 first_read, route_ok = (route_check(info["reads"], case["routes_to"], playbooks)
                                         if info["activated"] and case["expect"] == "activate" else (None, None))
                 ok = not error and info["activated"] == (case["expect"] == "activate")

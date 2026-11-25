@@ -100,10 +100,10 @@ class Installer:
             if not self.dry_run:
                 os.makedirs(folder, exist_ok=True)
             target = os.path.join(folder, f"{os.path.basename(path)}.bak-{self.stamp}")
-        n = 1
+        first, n = target, 1  # a collision numbers the same backup folder, never falls back into skills/
         while os.path.lexists(target):
             n += 1
-            target = f"{path}.bak-{self.stamp}-{n}"
+            target = f"{first}-{n}"
         self.say("backup", f"{path} -> {target}")
         if not self.dry_run:
             if os.path.isdir(path) and not os.path.islink(path):

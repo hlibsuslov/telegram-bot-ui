@@ -106,9 +106,9 @@ Always confirm the **latest** version in the changelog before starting.
 | Collage / slideshow | ➖ | ✅ | ✅ | ✅ | grouped media |
 | Map | ➖ | ✅ | ✅ | ✅ | `InputRichBlockMap` |
 | Thinking block | ➖ | ✅ | ✅ | ✅ | drafts only; real stage labels, never model reasoning |
-| Buttons (row / inline in text) | ➖ | ➖ | ✅ | ✅ | 10.3 |
+| Buttons (row / inline in text) | ➖ | ✅ via HTML tags | ✅ | ✅ | 10.3; Rich Markdown parses the Rich HTML tags (`<tg-button>`, `<tg-button-row>`), official example re-checked 2026-11-25 |
 | Document block, `tg://document` | ➖ | ✅ | ✅ | ✅ | 10.3 |
-| Compact table | ➖ | ➖ | ✅ | ✅ | 10.3 `is_compact` |
+| Compact table | ➖ | ✅ via `<table compact>` | ✅ | ✅ | 10.3 `is_compact`; a Markdown pipe table has no compact switch |
 | Custom emoji | ✅ | ✅ | ✅ | ✅ | premium/custom emoji id |
 | RTL awareness | limited | ✅ | ✅ | ✅ | see `localization-and-rtl.md` |
 | Precise offset control | via entities | ➖ | ➖ | ✅ | blocks are typed, not parsed |
@@ -118,7 +118,8 @@ Always confirm the **latest** version in the changelog before starting.
 - **Regular HTML tags (whitelist):** `b`/`strong`, `i`/`em`, `u`/`ins`,
   `s`/`strike`/`del`, `span class="tg-spoiler"` (or `tg-spoiler`), `a href`,
   `code`, `pre`, `pre><code class="language-…">`, `blockquote`,
-  `blockquote expandable`, `tg-emoji emoji-id`. No other tags/attributes.
+  `blockquote expandable`, `tg-emoji emoji-id`, `tg-time unix format` (9.5). No other
+  tags/attributes.
 - **MarkdownV2:** escape these outside entities with `\`:
   `` _ * [ ] ( ) ~ ` > # + - = | { } . ! ``. Inside `pre`/`code` escape `` ` ``
   and `\`; inside `(...)` link/emoji URLs escape `)` and `\`. See

@@ -83,7 +83,7 @@ The skill activates on its own — no API names needed. More hosts and options: 
 
 Use the skill with your coding agent to build the Telegram bot interface. Open the same `bot-ui/` project in Studio to inspect its map and use the simulator to try an order, a declined payment or a first-time visitor.
 
-Edit messages and keyboards, test branching rules and build or preview HTML widgets. Save changes to the `bot-ui/` folder in your bot’s repository and review them in Git. You can also leave a request on a screen and copy a task for your coding agent.
+Edit messages and keyboards, Rich Messages with buttons inside the text (Bot API 10.3), test branching rules and build or preview HTML widgets. Save changes to the `bot-ui/` folder in your bot’s repository and review them in Git. You can also leave a request on a screen and copy a task for your coding agent.
 
 The website demo opens the Pulloa coffee pickup bot in your browser. To work on your own bot, build and run Studio on your computer. It listens on `127.0.0.1` and opens one project at a time. Studio comes from a repository checkout and has its own setup.
 
@@ -114,7 +114,7 @@ The website demo opens the Pulloa coffee pickup bot in your browser. To work on 
 | 🛒 **Product flows** | shops, support, bookings, AI assistants, trackers: no stale "Pay" buttons, no double orders, no personal data leaking into groups (15 product recipes) |
 | 📣 **Publish to channels** | compose, validate, preview, approve and schedule channel posts; never post twice after a timeout (`skills/telegram-bot-ui/scripts/tg_post.py`, 10 recipes) |
 | 🤖 **Operate as an agent through a bot** | drive an agent from Telegram with an operator allowlist, approval buttons bound to one action, and inbound messages treated as data, not instructions (`agent_bridge` CLI, MCP server, Claude Code and Codex hooks, 10 recipes) |
-| 🧩 **Build HTML widgets** | Bot API 10.4 widgets inside messages: size limit, production context, caption and text fallback, live cards, shared polls, wallet flows (18 ready widgets, build and preview tools, 7 recipes) |
+| 🧩 **Build HTML widgets** | Bot API 10.4 widgets inside messages: size limit, production context, caption and text fallback, live cards, shared polls, wallet flows (24 ready widgets, build and preview tools, 10 recipes) |
 | 💎 **Premium emoji** | one custom emoji pack across buttons, texts, rich messages and posts: real ids resolved from the pack, all-or-nothing fallback when the bot is not eligible (6 recipes) |
 | 📚 **Look up the whole Bot API** | methods, types and fields from a local catalog; validate a payload before sending; refuse to invent a field (194 methods, 426 types, refreshable from the official docs) |
 | 📱 **Build and rework Mini Apps** | decide bot, widget or Mini App; `Telegram.WebApp` by version; a Telegram-native design system (theme roles, iOS 27 type scale, named styles, Apple system palettes); layout rules for images, titles and prices; Stars payments and gifts drawn the way Telegram draws them; `initData` verification; a lint, a mock client and a staged plan for turning a web-style app into classic Telegram design (10 recipes) |
@@ -126,7 +126,7 @@ human's yes.
 
 ## 🧩 HTML widgets
 
-Eighteen ready widgets with light and dark themes, three languages, server handlers and a
+Twenty-four ready widgets with light and dark themes, three languages, server handlers and a
 caption fallback — plus a kit to build your own, a size check that follows the server's algorithm,
 and a local preview.
 
@@ -363,6 +363,9 @@ All offline, standard library, and none of them needs a bot token.
 | Check before you ship | |
 |---|---|
 | `py -3 skills/telegram-bot-ui/scripts/tgui.py <group>` | one entry point for every tool below, plus `context`, `next`, `doctor` and `check changed` (`python3` outside Windows) |
+| `py -3 skills/telegram-bot-ui/scripts/tgui.py commands audit --root .` | the command menu: handlers in code vs `setMyCommands`, scopes that hide commands, missing languages |
+| `py -3 skills/telegram-bot-ui/scripts/tgui.py emoji library pick --needs home,back,settings` | one premium emoji pack that covers your icons, ranked by real coverage and tags (asks the public emoji library) |
+| `py -3 skills/telegram-bot-ui/scripts/tgui.py mcp` | the same tools as a local MCP server (15 tools; `claude mcp add --transport stdio telegram-bot-ui -- py -3 <skill>/scripts/bot_ui_mcp.py`) |
 | `python skills/telegram-bot-ui/scripts/validate_keyboard.py keyboard.json` | button and keyboard payload rules |
 | `python skills/telegram-bot-ui/scripts/validate_rich.py message.json` | Rich Message limits and rules |
 | `python skills/telegram-bot-ui/scripts/validate_widget.py widget.html` | widget size (server algorithm) and sandbox gaps |
@@ -378,7 +381,7 @@ All offline, standard library, and none of them needs a bot token.
 | `python skills/telegram-bot-ui/scripts/tg_post.py preview post.json` | render a channel post (publishing is opt-in) |
 | `python skills/telegram-bot-ui/scripts/build_widget.py src.html --strict` | build a widget from the kit, report its size |
 | `python skills/telegram-bot-ui/scripts/preview_widget.py widget.html` | mock preview page (not a real client) |
-| `python skills/telegram-bot-ui/scripts/preview_miniapp.py app/ --serve 8790` | Mini App in a mock Telegram client (not a real client) |
+| `python skills/telegram-bot-ui/scripts/preview_miniapp.py app/ --serve 8790` | Mini App in a mock Telegram client (not a real client); `--build` runs the app's own `build.mjs`, for projects you trust |
 | `python skills/telegram-bot-ui/scripts/emoji_packs.py capture` | how to collect real custom emoji ids |
 | `python scripts/install.py --host all --dry-run` | where the skill would be installed |
 | `python scripts/run_checks.py` | every check in this repository |

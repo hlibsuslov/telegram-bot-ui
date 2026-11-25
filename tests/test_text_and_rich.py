@@ -96,6 +96,17 @@ class RichPayloads(unittest.TestCase):
         with self.assertRaises(ValueError):
             rich.button_row([rich.rich_button(str(i), callback_data=str(i)) for i in range(9)])
 
+    def test_button_tags_inside_markdown_code_are_documentation_not_buttons(self):
+        shown = ('Use `<tg-button type="pay">Pay</tg-button>` in a message.\n\n```html\n'
+                 '<tg-button type="url" url="https://t.me" style="link">x</tg-button>\n```\n\n'
+                 '~~~\n<tg-button-row></tg-button-row>\n~~~\n\n``a `<tg-button type="x">` b``')
+        self.assertEqual(vr.validate({"markdown": shown})[0], [])
+        live = shown + '\n\n<tg-button type="pay">Pay</tg-button>'
+        self.assertTrue(any("RICH_BUTTON_TYPE" in e for e in vr.validate({"markdown": live})[0]))
+        self.assertTrue(any("RICH_BUTTON_TYPE" in e for e in vr.validate({"html": '<tg-button type="pay">Pay</tg-button>'})[0]))
+        unclosed = '```\n<tg-button type="pay">Pay</tg-button>'  # an unterminated fence runs to the end
+        self.assertEqual(vr.validate({"markdown": unclosed})[0], [])
+
 
 if __name__ == "__main__":
     unittest.main()

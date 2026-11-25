@@ -1,0 +1,22 @@
+{
+  "id": "receipt.view",
+  "title": "Receipt",
+  "kind": "result",
+  "audience": "private",
+  "message": {
+    "id": "main",
+    "format": "rich.html",
+    "text": {
+      "en": "<h3>Order #{order.no}</h3><table compact><tr><th>Item</th><th>Price</th></tr><tr><td>Latte</td><td>$4.50</td></tr></table><p>Total <b>{order.total}</b>. <tg-button action=\"why\"></tg-button></p><tg-button-row align=\"center\"><tg-button action=\"pay\"></tg-button><tg-button action=\"track\">Track &amp; trace</tg-button></tg-button-row><tg-button-row><tg-button type=\"copy_text\" text=\"{order.no}\">Copy number</tg-button></tg-button-row>",
+      "ru": "<h3>Заказ #{order.no}</h3><p>Итого <b>{order.total}</b>. <tg-button action=\"why\"></tg-button></p><tg-button-row align=\"center\"><tg-button action=\"pay\"></tg-button><tg-button action=\"track\"></tg-button></tg-button-row><tg-button-row><tg-button type=\"copy_text\" text=\"{order.no}\">Скопировать номер</tg-button></tg-button-row>"
+    }
+  },
+  "keyboard": {"type": "inline", "rows": [["back"]]},
+  "actions": {
+    "why": {"label": {"en": "Why this price?", "ru": "Почему такая цена?"}, "type": "answer", "style": "link",
+            "text": {"en": "Delivery is included", "ru": "Доставка включена"}},
+    "pay": {"label": {"en": "Pay {order.total}", "ru": "Оплатить {order.total}"}, "type": "navigate", "to": "receipt.paid", "style": "success"},
+    "track": {"label": {"en": "Track", "ru": "Отследить"}, "type": "url", "url": "https://example.com/track?a=1&b=2"},
+    "back": {"label": {"en": "Menu", "ru": "Меню"}, "type": "back", "fallback": "receipt.view"}
+  }
+}

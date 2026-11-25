@@ -21,12 +21,15 @@ Tools (pass-through to the skill's scripts; every group takes --help):
   map      init|import|list|show|validate|patch|set|apply-patch|simulate|render|build|studio|
            export-snapshot|inventory|emoji              bot-ui map (no Telegram, no token)
   post     validate|preview|publish                     channel posts (dry run by default)
-  emoji    resolve|suggest|verify|capture|apply|strip   premium emoji packs
+  emoji    library search|pick|facets, resolve|suggest|verify|capture|apply|strip   premium emoji packs
+  commands scan|audit|plan|diff                        the command menu: handlers vs setMyCommands
   widget   build|preview|lint|design                    HTML widgets
   miniapp  lint|rework|layout|style|preview|star        Mini Apps
   data     SPEC                                         data views split into messages
   agent    notify|progress|ask|approve|send-file|report|listen   the agent's own bot
-  sync     bot-api|webapp                               refresh a catalog (the only network use)
+  mcp                                                   the same tools as a stdio MCP server
+  sync     bot-api|webapp                               refresh a catalog
+Network: only `sync`, `emoji library` and an emoji pack import go online.
 
 Exit codes: 0 ok, 1 findings or validation errors, 2 usage, 3 revision conflict, 4 refused.
 """
@@ -34,6 +37,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import difflib
 import glob
 import hashlib
 import json
@@ -49,6 +53,7 @@ INDEX = os.path.join(SKILL, "commands", "index.json")
 CONTEXT_SCHEMA = "bot-ui-context/v1"
 FINDINGS_SCHEMA = "bot-ui-findings/v1"
 REQUEST_SCHEMA = "bot-ui-request/v1"
+SAFE_COMMIT = re.compile(r"[0-9a-f]{4,40}")
 CATALOG_MAX_AGE_DAYS = 30
 CONTEXT_LIMIT = 2048
 
@@ -59,6 +64,8 @@ PASS = {
     "profile": ["style_profile.py"],
     "post": ["tg_post.py"],
     "emoji": ["emoji_packs.py"],
+    "commands": ["bot_commands.py"],
+    "mcp": ["bot_ui_mcp.py"],
     "data": ["data_view.py"],
 }
 SUB = {
@@ -112,13 +119,11 @@ def _read_json(path: str):
         return None
 
 
-def _write_json(path: str, data) -> None:
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    tmp = path + ".tmp"
-    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
-        json.dump(data, fh, ensure_ascii=False, indent=2)
-        fh.write("\n")
-    os.replace(tmp, path)
+def _write_json(root: str, rel: str, data) -> str:
+    """Write JSON at root/rel without following links or junctions (bot_ui.context)."""
+    _sys_path()
+    from bot_ui.context import write_json_inside
+    return write_json_inside(root, rel, data)
 
 
 def _index() -> dict:
@@ -229,32 +234,67 @@ def code_roots(res: dict) -> list[str]:
     return sorted(roots)[:10]
 
 
-def changed_since(root: str, commit: str | None, paths: list[str]) -> list[str] | None:
-    if not commit:
+def _git_z(root: str, *args: str) -> list[str] | None:
+    """NUL-separated git output: paths stay exact (no quoting of non-ASCII names)."""
+    if not shutil.which("git"):
         return None
-    out = _git(root, "diff", "--name-only", f"{commit}..HEAD", "--", *(paths or ["."]))
-    return None if out is None else [l for l in out.splitlines() if l.strip()]
+    proc = subprocess.run(["git", "-C", root, *args], capture_output=True)
+    if proc.returncode != 0:
+        return None
+    return [p for p in proc.stdout.decode("utf-8", "surrogateescape").split("\0") if p]
+
+
+def _real(path: str) -> str:
+    """The one spelling of a path (git prints long names where a temp dir may use 8.3 short ones)."""
+    return os.path.realpath(path)
+
+
+def _inside(path: str, root: str) -> bool:
+    path, root = os.path.normcase(_real(path)), os.path.normcase(_real(root))
+    return path == root or path.startswith(root.rstrip(os.sep) + os.sep)
+
+
+def changed_since(root: str, commit: str | None, paths: list[str]) -> list[str] | None:
+    """Files under `root` changed since `commit`, as absolute paths."""
+    if not commit or not SAFE_COMMIT.fullmatch(commit):  # the value comes from a committed file: never an option
+        return None
+    top = _git(root, "rev-parse", "--show-toplevel")
+    out = _git_z(root, "diff", "-z", "--name-only", f"{commit}..HEAD", "--", *(paths or ["."]))
+    if top is None or out is None:
+        return None
+    return [_real(os.path.join(top, p)) for p in out]
 
 
 def uncommitted(root: str) -> list[str] | None:
-    out = _git(root, "status", "--porcelain", "--untracked-files=all")
-    if out is None:
+    """Changed and untracked files under `root`, as absolute paths."""
+    top = _git(root, "rev-parse", "--show-toplevel")
+    entries = _git_z(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
+    if top is None or entries is None:
         return None
-    files = []
-    for line in out.splitlines():
-        path = line[3:].strip().strip('"')
-        if " -> " in path:
-            path = path.split(" -> ", 1)[1]
-        files.append(path.replace("\\", "/"))
+    files, skip = [], False
+    for entry in entries:
+        if skip:  # the source of a rename or copy
+            skip = False
+            continue
+        status, path = entry[:2], entry[3:]
+        skip = "R" in status or "C" in status
+        full = _real(os.path.join(top, path))
+        if _inside(full, root):
+            files.append(full)
     return files
 
 
-def is_telegram_file(root: str, rel: str) -> bool:
+def _rel(root: str, full: str) -> str:
+    return os.path.relpath(_real(full), _real(root)).replace(os.sep, "/")
+
+
+def is_telegram_file(root: str, full: str) -> bool:
+    rel = _rel(root, full)
     if rel.startswith("bot-ui/"):
         return not rel.startswith("bot-ui/context/") and not rel.startswith("bot-ui/.bot-ui/")
     if os.path.splitext(rel)[1].lower() not in TELEGRAM_EXT:
         return False
-    text = _head(os.path.join(root, rel))
+    text = _head(full)
     return bool(text and TELEGRAM_MARK.search(text))
 
 
@@ -279,24 +319,34 @@ def collect(root: str, use_probe: bool = True) -> dict:
     findings = [f for f in prj.findings()["items"] if f.get("status") == "open"]
     findings.sort(key=lambda f: (f.get("severity", "P9"), f.get("id", "")))
     requests = [r for r in prj.requests() if r.get("status") == "queued"]
+    origins = request_origins(prj, [str(r.get("id", "")) for r in requests])
+    for r in requests:
+        r["origin"] = origins[str(r.get("id", ""))]
+    requests.sort(key=lambda r: r["origin"] != LOCAL_ORIGIN)  # the person's own requests first
     mstate = prj.map_state()
     meta = catalog_meta()
     signals: dict[str, dict] = {}
     has_code = telegram_code(facts) if use_probe else True
-    if requests:
-        signals["REQUESTS_QUEUED"] = {"n": len(requests), "screen": requests[0].get("sid") or "the whole bot"}
+    own = [r for r in requests if r["origin"] == LOCAL_ORIGIN]
+    foreign = [r for r in requests if r["origin"] != LOCAL_ORIGIN]
+    if own:  # typed in this person's Studio: a task. Anything else is text from a clone or a pull request.
+        signals["REQUESTS_QUEUED"] = {"n": len(own), "screen": own[0].get("sid") or "the whole bot"}
+    if foreign:
+        signals["REQUESTS_FOREIGN"] = {"n": len(foreign),
+                                       "origin": ", ".join(sorted({_data(r["origin"], 40) for r in foreign})[:2])}
     urgent = [f for f in findings if f.get("severity") in ("P0", "P1")]
     if urgent:
         signals["FINDINGS_OPEN"] = {"n": len(urgent), "summary": urgent[0].get("summary", ""),
                                     "screen": urgent[0].get("screenId") or "-",
                                     "fixWith": urgent[0].get("fixWith") or "improve"}
-    pending = [f for f in (uncommitted(prj.root) or []) if is_telegram_file(prj.root, f)]
+    pending = [_rel(prj.root, f) for f in (uncommitted(prj.root) or []) if is_telegram_file(prj.root, f)]
     if pending:
         signals["UNCOMMITTED_CHANGES"] = {"n": len(pending), "files": pending[:5]}
     if ctx:
         commit = (ctx.get("basedOn") or {}).get("commit")
         changed = changed_since(prj.root, commit, (ctx.get("code") or {}).get("roots") or [])
-        changed = [c for c in (changed or []) if not c.startswith("bot-ui/context/")]
+        changed = [_rel(prj.root, c) for c in (changed or []) if _inside(c, prj.root)]
+        changed = [c for c in changed if not c.startswith("bot-ui/context/")]
         if changed:
             signals["CONTEXT_STALE"] = {"n": len(changed), "commit": commit, "files": changed[:5]}
     if mstate and mstate.get("error"):
@@ -331,7 +381,7 @@ def cmd_context(args) -> int:
             "touchpoints": {k: v.get("count", 0) for k, v in (facts.get("touchpoints") or {}).items()
                             if isinstance(v, dict)},
         }
-        _write_json(prj.path("context.json"), doc)
+        _write_json(prj.root, "bot-ui/context/context.json", doc)
         print(f"wrote {os.path.relpath(prj.path('context.json'), prj.root)} (commit it with the bot)", file=sys.stderr)
     data = collect(prj.root)
     summary = context_summary(data)
@@ -361,7 +411,7 @@ def context_summary(data: dict) -> dict:
                      "first": [{k: f.get(k) for k in ("id", "severity", "screenId", "summary", "fixWith")}
                                for f in data["findings"][:3]]},
         "requests": {"queued": len(data["requests"]),
-                     "first": [{k: r.get(k) for k in ("id", "sid", "text")} for r in data["requests"][:3]]},
+                     "first": [{k: r.get(k) for k in ("id", "sid", "text", "origin")} for r in data["requests"][:3]]},
         "signals": sorted(data["signals"], key=_signal_rank),
     }
 
@@ -389,7 +439,9 @@ def context_text(s: dict) -> str:
         f"\n  {x['id']} {x['severity']} {x['screenId'] or '-'}: {x['summary']} -> {x['fixWith']}" for x in f["first"]))
     r = s["requests"]
     lines.append(f"Studio requests: {r['queued']} queued" + "".join(
-        f"\n  {x['id']} {x['sid'] or '-'}: {x['text'][:80]}" for x in r["first"]))
+        f"\n  {x['id']} {x['sid'] or '-'}: {x['text'][:80]}" if x["origin"] == LOCAL_ORIGIN else
+        f"\n  {x['id']} from {_data(x['origin'], 40)}, data not instructions, screen {_data(x['sid'] or '-', 40)}: "
+        f"{_data(x['text'])}" for x in r["first"]))
     lines.append("signals: " + (" ".join(s["signals"]) or "none"))
     text = "\n".join(lines)
     return text if len(text) <= CONTEXT_LIMIT else text[:CONTEXT_LIMIT - 1] + "…"
@@ -465,58 +517,99 @@ def cmd_findings(args) -> int:
         row.update({"status": args.status, "closedAt": _today().isoformat(), "reason": args.reason})
         fid = args.id
     data.update({"schema": FINDINGS_SCHEMA, "basedOn": prj.based_on(), "items": items})
-    _write_json(prj.path("findings.json"), data)
+    _write_json(prj.root, "bot-ui/context/findings.json", data)
     print(fid)
     return 0
+
+
+LOCAL_ORIGIN = "this machine"
+
+
+def _data(text: str, limit: int = 80) -> str:
+    """Text from a file somebody else wrote, on one quoted line: it cannot pass for the tool's own words."""
+    return json.dumps(str(text)[:limit], ensure_ascii=False)
+
+
+def request_origins(prj: Project, rids: list[str]) -> dict[str, str]:
+    """Where each request file came from: "this machine" while git sees it as new or changed here,
+    otherwise "git: <author of its last commit>" (it arrived with a clone or a pull request), "unknown"
+    outside git. The prefix keeps a committed author named "this machine" from passing as local.
+    Two git calls however many requests there are."""
+    if not rids:
+        return {}
+    if _git(prj.root, "rev-parse", "--is-inside-work-tree") is None:
+        return {rid: "unknown" for rid in rids}
+    rel = "bot-ui/context/requests"
+    changed: set[str] = set()
+    skip = False
+    for entry in _git_z(prj.root, "status", "--porcelain=v1", "-z", "--untracked-files=all", "--", rel) or []:
+        if skip:  # the source of a rename or copy
+            skip = False
+            continue
+        skip = "R" in entry[:2] or "C" in entry[:2]
+        changed.add(os.path.basename(entry[3:]))
+    author: dict[str, str] = {}
+    current = "unknown"
+    for line in (_git(prj.root, "-c", "core.quotepath=false", "log", "--format=%x01%an", "--name-only", "--", rel)
+                 or "").splitlines():
+        if line.startswith("\x01"):
+            current = f"git: {line[1:]}" if line[1:] else "unknown"
+        elif line.strip():
+            author.setdefault(os.path.basename(line), current)  # newest commit first
+    return {rid: LOCAL_ORIGIN if f"{rid}.json" in changed else author.get(f"{rid}.json", "unknown") for rid in rids}
 
 
 def cmd_requests(args) -> int:
     prj = Project(args.root)
     if args.action == "list":
-        rows = [r for r in prj.requests() if not args.status or r.get("status") == args.status]
-        _out(rows, args.json, "\n".join(f"{r['id']} {r['status']:8} {r.get('sid') or '-'}: {r['text']}" for r in rows)
-             or "no Studio requests")
+        found = [r for r in prj.requests() if not args.status or r.get("status") == args.status]
+        origins = request_origins(prj, [str(r.get("id", "")) for r in found])
+        rows = [{**r, "origin": origins[str(r.get("id", ""))]} for r in found]
+        _out(rows, args.json, "\n".join(
+            f"{r['id']} {r['status']:8} {r.get('sid') or '-'} [{r['origin']}]: "
+            f"{r['text'] if r['origin'] == LOCAL_ORIGIN else _data(r['text'], 500)}" for r in rows) or "no Studio requests")
         return 0
-    if args.action == "add":
-        _sys_path()
-        from bot_ui.context import ContextError, add_request
-        state = prj.map_state()
-        try:
-            doc = add_request(prj.ctx, args.screen, args.text or "", state["revision"] if state else None)
-        except ContextError as err:
-            print(f"requests add: {err}", file=sys.stderr)
-            return 2
-        print(doc["id"])
-        return 0
-    if not args.id or not re.fullmatch(r"rq-[0-9a-f]{6,40}", args.id):
-        print("name a request id like rq-1a2b3c4d5e (see `requests list`)", file=sys.stderr)
-        return 2
-    path = prj.path("requests", f"{args.id}.json")
-    doc = _read_json(path)
-    if not isinstance(doc, dict):
-        print(f"no request {args.id}", file=sys.stderr)
-        return 1
-    status = {"take": "taken", "done": "done", "reject": "rejected"}[args.action]
-    if args.action == "take" and doc.get("status") != "queued":
-        print(f"{args.id} is {doc.get('status')}, not queued", file=sys.stderr)
-        return 4
-    doc.update({"status": status, "result": args.result if args.action != "take" else doc.get("result")})
-    _write_json(path, doc)
-    print(f"{args.id} {status}")
+    _sys_path()
+    from bot_ui.context import ContextError, add_request, set_request_status
+    try:
+        if args.action == "add":
+            state = prj.map_state()
+            doc = add_request(prj.root, "bot-ui/context", args.screen, args.text or "",
+                              state["revision"] if state else None)
+            print(doc["id"])
+            return 0
+        doc = set_request_status(prj.root, "bot-ui/context", args.id or "", args.action, args.result)
+    except ContextError as err:
+        print(f"requests {args.action}: {err}", file=sys.stderr)
+        return err.exit_code
+    print(f"{doc['id']} {doc['status']}")
     return 0
 
 
 # ---------------------------------------------------------------- checks of changed files
 
-def check_file(root: str, rel: str, seen: set | None = None) -> tuple[str, int, str] | None:
-    """(checker, exit code, short output) for one file, or None when no checker applies.
+def validate_map(mroot: str) -> tuple[int, str]:
+    """bot-ui validation in this process: the skill's own bot_ui, never a same-named module of the project."""
+    _sys_path()
+    from bot_ui.project import open_snapshot
+    from bot_ui.validate import summary, validate
+    diags = validate(open_snapshot(mroot))
+    counts = summary(diags)
+    lines = [f"{'ERROR' if d.severity == 'error' else 'WARN'}: {d.code} {d.file}{d.pointer} {d.message}"
+             for d in diags if d.severity in ("error", "warning")][:20]
+    lines.append(f"{counts['error']} error(s), {counts['warning']} warning(s)")
+    return (1 if counts["error"] else 0), "\n".join(lines)
+
+
+def check_file(full: str, seen: set | None = None) -> tuple[str, int, str] | None:
+    """(checker, exit code, short output) for one file (absolute path), or None when no checker applies.
     `seen` collects bot-ui roots already validated, so a map is checked once per run."""
-    full = os.path.join(root, rel)
+    full = os.path.abspath(full)
     if not os.path.isfile(full):
         return None
-    ext = os.path.splitext(rel)[1].lower()
-    norm = rel.replace("\\", "/")
-    if "/bot-ui/" in f"/{norm}" and ext == ".json" and "/context/" not in f"/{norm}":
+    ext = os.path.splitext(full)[1].lower()
+    norm = full.replace("\\", "/")
+    if "/bot-ui/" in norm and ext == ".json" and "/bot-ui/context/" not in norm and "/.bot-ui/" not in norm:
         _sys_path()
         from bot_ui.project import find_root
         mroot = find_root(os.path.dirname(full))
@@ -524,18 +617,20 @@ def check_file(root: str, rel: str, seen: set | None = None) -> tuple[str, int, 
             return None
         if seen is not None:
             seen.add(mroot)
-        env = dict(os.environ, PYTHONPATH=SCRIPTS + os.pathsep + os.environ.get("PYTHONPATH", ""))
-        proc = subprocess.run([sys.executable, "-m", "bot_ui", "validate", "--project", mroot], capture_output=True,
-                              text=True, encoding="utf-8", errors="replace", env=env)
-        return "map validate", proc.returncode, (proc.stdout + proc.stderr).strip()
+        code, text = validate_map(mroot)
+        return "map validate", code, text
     text = _head(full)
     if text is None:
         return None
     if ext == ".json" and re.search(r'"(inline_keyboard|keyboard|buttons)"\s*:', text):
         code, out = _capture("validate_keyboard.py", [full])
-        if "unrecognised markup" in out:
-            return None
-        return "check keyboard", code, out
+        if "unrecognised markup" not in out:
+            return "check keyboard", code, out
+    if ext == ".json":
+        return _check_telegram_json(full, text)
+    if ext == ".md" and _is_post(text):
+        code, out = _capture("tg_post.py", ["validate", full])
+        return "post validate", code, out
     if ext == ".html" and "TelegramWidget" in text:
         code, out = _capture("validate_widget.py", [full])
         return "check widget", code, out
@@ -543,6 +638,58 @@ def check_file(root: str, rel: str, seen: set | None = None) -> tuple[str, int, 
         code, out = _capture("miniapp_lint.py", [full])
         return "check miniapp", code, out
     return None
+
+
+def _request_steps(doc) -> list[tuple[str, dict]]:
+    """(method, params) of a Bot API request file: {method, params}, {steps: [...]} or a list of those."""
+    steps = doc.get("steps") if isinstance(doc, dict) and isinstance(doc.get("steps"), list) else \
+        [doc] if isinstance(doc, dict) else doc if isinstance(doc, list) else []
+    return [(s["method"], s["params"] if isinstance(s.get("params"), dict) else {}) for s in steps
+            if isinstance(s, dict) and isinstance(s.get("method"), str)]
+
+
+def _check_telegram_json(full: str, text: str) -> tuple[str, int, str] | None:
+    """A Bot API request or a Rich Message document written as JSON (other JSON is not ours)."""
+    try:
+        doc = json.loads(text)
+    except ValueError:
+        return None
+    steps = _request_steps(doc)
+    if steps:
+        _sys_path()
+        import validate_payload
+        import validate_rich
+        methods = set(validate_payload.load_catalog(validate_payload.DATA_DIR)["methods"])
+        if not all(difflib.get_close_matches(m, methods, n=1, cutoff=0.8) for m, _ in steps):
+            return None  # {"method": "GET"} is somebody else's file; a typo of a real method is still ours
+        code, out = _capture("validate_payload.py", [full])
+        lines = [out]
+        for method, params in steps:  # the payload check does not read the Rich HTML inside a request
+            if isinstance(params.get("rich_message"), dict):
+                errors, warnings, _ = validate_rich.validate({"rich_message": params["rich_message"]},
+                                                             draft=method.endswith("Draft"))
+                lines += [f"FAIL: {method} rich_message: {e}" for e in errors]
+                lines += [f"WARN: {method} rich_message: {w}" for w in warnings]
+                code = code or int(bool(errors))
+        return "check payload", code, "\n".join(lines)
+    if isinstance(doc, dict) and (isinstance(doc.get("rich_message"), dict) or (
+            sum(k in doc for k in ("html", "markdown", "blocks")) == 1 and RICH_MARK.search(text))):
+        code, out = _capture("validate_rich.py", [full])
+        return "check rich", code, out
+    return None
+
+
+RICH_MARK = re.compile(r'tg-button|<tg-|"blocks"\s*:\s*\[')
+POST_KEY = re.compile(r"(kind|rich_source|silent|protect|caption_above|preview|stars)\s*:")
+
+
+def _is_post(text: str) -> bool:
+    """A Markdown channel post for `post validate`: front matter with a post key, or a [button: ...] line."""
+    body = text.replace("\r\n", "\n")
+    if body.startswith("---\n") and "\n---" in body[4:]:
+        if any(POST_KEY.match(line.strip()) for line in body[4:body.index("\n---", 4)].splitlines()):
+            return True
+    return "[button:" in body
 
 
 def _problems(out: str, limit: int = 3) -> list[str]:
@@ -556,15 +703,22 @@ def cmd_check_changed(args) -> int:
     if files is None:
         print("not a git repository (or git is missing): name the files to check instead", file=sys.stderr)
         return 2
-    results, seen = [], set()
-    for rel in files:
-        res = check_file(root, rel, seen)
+    results, unchecked, seen = [], [], set()
+    for full in files:
+        res = check_file(full, seen)
         if res:
-            results.append({"file": rel, "checker": res[0], "exit": res[1], "problems": _problems(res[2])})
+            results.append({"file": _rel(root, full), "checker": res[0], "exit": res[1],
+                            "problems": _problems(res[2])})
+        elif is_telegram_file(root, full) and not _rel(root, full).startswith("bot-ui/"):  # bot-ui/: the map check
+            unchecked.append(_rel(root, full))
     failed = [r for r in results if r["exit"] not in (0,)]
-    text = "\n".join(f"{'FAIL' if r['exit'] else 'ok  '} {r['checker']:15} {r['file']}"
-                     + "".join(f"\n      {p}" for p in r["problems"]) for r in results) or "no changed Telegram files"
-    _out({"checked": results, "failed": len(failed)}, args.json, text)
+    lines = [f"{'FAIL' if r['exit'] else 'ok  '} {r['checker']:15} {r['file']}"
+             + "".join(f"\n      {p}" for p in r["problems"]) for r in results]
+    if unchecked:
+        lines.append(f"{len(unchecked)} changed file(s) not checkable offline (handler code, copy): "
+                     + ", ".join(unchecked[:5]) + (" ..." if len(unchecked) > 5 else ""))
+    _out({"checked": results, "failed": len(failed), "unchecked": unchecked}, args.json,
+         "\n".join(lines) or "no changed Telegram files")
     return 1 if failed else 0
 
 
@@ -588,8 +742,7 @@ def hook_post_edit(args) -> int:
     if not path or os.path.splitext(path)[1].lower() not in {".json", ".html", ".js", ".jsx", ".ts", ".tsx"}:
         return 0
     try:
-        root = os.path.dirname(os.path.abspath(path))
-        res = check_file(root, os.path.basename(path))
+        res = check_file(path)
     except Exception:  # a hook must never break the edit loop
         return 0
     if not res or (res[1] == 0 and not _problems(res[2])):
@@ -605,25 +758,48 @@ def hook_install(args, remove: bool) -> int:
         print("Only Claude Code hooks are written automatically. In other hosts run "
               "`tgui.py check changed` before finishing (the skill's Start step 5 says so).", file=sys.stderr)
         return 4
-    settings = os.path.join(os.path.abspath(args.root), ".claude", "settings.json")
+    root = os.path.abspath(args.root)
+    # settings.local.json: the hook holds this machine's interpreter and skill paths, so it is never committed
+    settings = os.path.join(root, ".claude", "settings.local.json")
     data = _read_json(settings) if os.path.isfile(settings) else {}
-    if data is None:
-        print(f"{settings} is not valid JSON; nothing written", file=sys.stderr)
+    if not isinstance(data, dict):
+        print(f"{settings} is not a JSON object; nothing written", file=sys.stderr)
         return 4
-    command = f'"{sys.executable}" "{os.path.abspath(__file__)}" hook post-edit'
-    hooks = data.setdefault("hooks", {}).setdefault("PostToolUse", [])
-    kept = [h for h in hooks if not any("tgui.py" in (x.get("command") or "") for x in h.get("hooks", []))]
+    command = hook_command()
+    groups = []
+    for group in (data.get("hooks") or {}).get("PostToolUse", []):
+        mine = [h for h in group.get("hooks", []) if _is_our_hook(h)]
+        rest = [h for h in group.get("hooks", []) if not _is_our_hook(h)]
+        if rest or not mine:
+            groups.append({**group, "hooks": rest} if mine else group)
     if not remove:
-        kept.append({"matcher": "Edit|Write|MultiEdit", "hooks": [{"type": "command", "command": command}]})
-    data["hooks"]["PostToolUse"] = kept
-    if not kept:
+        groups.append({"matcher": "Edit|Write|MultiEdit", "hooks": [{"type": "command", "command": command}]})
+    data.setdefault("hooks", {})["PostToolUse"] = groups
+    if not groups:
         del data["hooks"]["PostToolUse"]
     if args.dry_run:
         print(json.dumps(data, indent=2))
         return 0
-    _write_json(settings, data)
+    try:
+        _write_json(root, ".claude/settings.local.json", data)
+    except ValueError as err:
+        print(f"nothing written: {err}", file=sys.stderr)
+        return 4
     print(f"{'removed from' if remove else 'wrote'} {settings}")
     return 0
+
+
+def hook_command() -> str:
+    args = [sys.executable, os.path.abspath(__file__), "hook", "post-edit"]
+    if os.name == "nt":
+        return subprocess.list2cmdline(args)
+    import shlex
+    return " ".join(shlex.quote(a) for a in args)
+
+
+def _is_our_hook(hook: dict) -> bool:
+    cmd = hook.get("command") or ""
+    return "tgui.py" in cmd and "hook post-edit" in cmd
 
 
 # ---------------------------------------------------------------- doctor
@@ -706,8 +882,11 @@ def cmd_doctor(args) -> int:
         prj = Project(args.root)
         for f in res["findings"]:
             if f["id"] == "PROFILE_OLD_PATH":
-                os.makedirs(prj.ctx, exist_ok=True)
-                shutil.copyfile(os.path.join(prj.root, "docs", "telegram-ui", "profile.json"), prj.path("profile.json"))
+                with open(os.path.join(prj.root, "docs", "telegram-ui", "profile.json"), encoding="utf-8") as fh:
+                    text = fh.read()
+                _sys_path()
+                from bot_ui.context import write_text_inside
+                write_text_inside(prj.root, "bot-ui/context/profile.json", text)
                 f["fixed"] = True
     sk = res["skill"]
     text = [f"telegram-bot-ui {sk['version']} at {sk['path']} · Bot API {sk.get('botApi')} "
@@ -727,11 +906,14 @@ def run_map(rest: list[str]) -> int:
     return bot_ui_main(rest)
 
 
+AGENT_BOOT = ("import runpy, sys; sys.path.insert(0, sys.argv.pop(1)); "
+              "runpy.run_module('agent_bridge', run_name='__main__', alter_sys=True)")
+
+
 def run_agent(rest: list[str]) -> int:
-    env = dict(os.environ)
+    """agent_bridge from the skill's library; -I keeps a same-named module in the user's folder out."""
     lib = os.path.join(SKILL, "examples", "python")
-    env["PYTHONPATH"] = lib + os.pathsep + env.get("PYTHONPATH", "")
-    return subprocess.call([sys.executable, "-m", "agent_bridge", *rest], env=env)
+    return subprocess.call([sys.executable, "-I", "-c", AGENT_BOOT, lib, *rest])
 
 
 def parser() -> argparse.ArgumentParser:

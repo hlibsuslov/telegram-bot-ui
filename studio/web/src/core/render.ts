@@ -1,5 +1,7 @@
 // Port of skills/telegram-bot-ui/scripts/bot_ui/render.py. Keep both in step: tests/test_bot_ui_parity.py runs the
 // same scenario fixtures through both engines and compares the results byte for byte.
+import { compileRichButtons, richEscape, type RichButton } from "./rich.ts";
+
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 export type Doc = Record<string, any>;
 
@@ -7,8 +9,10 @@ export const FORMATS: Record<string, string | null> = {
   "regular.plain": null,
   "regular.html": "HTML",
   "regular.markdownv2": "MarkdownV2",
+  "rich.html": null,
 };
-export const EDITABLE_FORMATS = new Set(["regular.plain", "regular.html"]);
+export const RICH_FORMATS = new Set(["rich.html"]);
+export const EDITABLE_FORMATS = new Set(["regular.plain", "regular.html", "rich.html"]);
 export const CALLBACK_MAX = 64;
 export const CAPTION_MAX = 1024;
 export const MEDIA_TYPES: Record<string, string> = {
@@ -31,6 +35,7 @@ export function localized(value: any, locale: string, def: string): string | nul
 export function escape(value: string, fmt: string): string {
   if (fmt === "regular.html") return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   if (fmt === "regular.markdownv2") return value.replace(MD2, "\\$1");
+  if (fmt === "rich.html") return richEscape(value);
   return value;
 }
 
@@ -91,7 +96,7 @@ export interface Media { type: string; file: string | null; source: string; spoi
 export interface Logical {
   screenId: string; messageId: string; locale: string; state: string | null; format: string; text: string;
   parseMode: string | null; keyboard: { type: string; rows: Button[][]; placeholder: string | null };
-  media: Media | null; widget: string | null; diagnostics: Doc[];
+  richButtons: RichButton[]; media: Media | null; widget: string | null; diagnostics: Doc[];
 }
 
 export function renderScreen(project: Doc, screen: Doc, opts: { locale?: string | null; state?: string | null; values?: Doc } = {}): Logical {
@@ -106,7 +111,7 @@ export function renderScreen(project: Doc, screen: Doc, opts: { locale?: string 
     source = "text" in msg.states[state] ? msg.states[state].text : source;
   }
   const raw = localized(source, locale, def) ?? "";
-  const [text, missing] = fill(raw, values, fmt);
+  let [text, missing] = fill(raw, values, fmt);
   const diagnostics: Doc[] = missing.map((name) => ({
     code: "PLACEHOLDER_VALUE_MISSING", severity: "warning", pointer: "/message/text", message: `no value for {${name}} in this run`,
   }));
@@ -124,6 +129,14 @@ export function renderScreen(project: Doc, screen: Doc, opts: { locale?: string 
   const kb = screen.keyboard ?? {};
   const ktype = screen.keyboard ? (kb.type ?? "none") : "none";
   const actions = screen.actions ?? {};
+  let richButtons: RichButton[] = [];
+  if (RICH_FORMATS.has(fmt)) {
+    const labelOf = (act: Doc, aid: string) => fill(localized(act.label, locale, def) ?? aid, values, "regular.plain")[0];
+    const [html, btns, rdiags] = compileRichButtons(text, actions, labelOf, (aid, act) => callbackData(screen.id, aid, act));
+    text = html;
+    richButtons = btns;
+    diagnostics.push(...rdiags);
+  }
   const rows: Button[][] = [];
   for (const row of keyboardRows(screen)) {
     const outRow: Button[] = [];
@@ -147,7 +160,7 @@ export function renderScreen(project: Doc, screen: Doc, opts: { locale?: string 
     screenId: screen.id, messageId: msg.id ?? "main", locale, state, format: fmt, text,
     parseMode: FORMATS[fmt] ?? null,
     keyboard: { type: ktype, rows, placeholder: localized(kb.placeholder, locale, def) },
-    media, widget: screen.widget?.ref ?? null, diagnostics,
+    richButtons, media, widget: screen.widget?.ref ?? null, diagnostics,
   };
 }
 

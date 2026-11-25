@@ -148,6 +148,23 @@ def _load_json(root: str, rel: str, errors: list[str]):
     return None
 
 
+def check_roles(root: str, errors: list[str]) -> None:
+    """adapters/routing.json is the only place that says which role carries out which command: every
+    verb a role names exists, and every command except start and lookup has a role."""
+    routing = _load_json(root, "adapters/routing.json", errors)
+    index = _load_json(root, "skills/telegram-bot-ui/commands/index.json", errors)
+    if not routing or not index:
+        return
+    verbs = {c["verb"] for c in index.get("commands", [])}
+    carried = {v for r in routing.get("roles", []) for v in r.get("verbs", [])}
+    for v in sorted(carried - verbs):
+        errors.append(f"adapters/routing.json: a role names command '{v}', which commands/index.json does not have.")
+    for v in sorted(verbs - carried - {"start", "lookup"}):
+        errors.append(f"command '{v}' is carried out by no role in adapters/routing.json.")
+    if any("role" in c for c in index.get("commands", [])):
+        errors.append("commands/index.json: 'role' is not read by anything; roles live in adapters/routing.json.")
+
+
 def check_adapters(root: str, errors: list[str]) -> None:
     sys.path.insert(0, os.path.join(root, "scripts"))
     try:
@@ -332,6 +349,7 @@ def check_metadata_version(root: str, fm: str, errors: list[str]) -> None:
 
 def check_packaging(root: str, skill_name: str, errors: list[str], warnings: list[str]) -> None:
     check_adapters(root, errors)
+    check_roles(root, errors)
     names = check_claude_agents(root, errors, warnings)
     check_codex_agents(root, errors, warnings)
     check_openai_yaml(root, errors)

@@ -52,7 +52,7 @@ the transitions between states. Only HTML widgets and Mini Apps have a layout of
 | `lookup` | "does the Bot API have"; "what are sendPoll's parameters"; "есть ли в Bot API"; "чи є в Bot API кнопки іншого кольору" | Bot API and Telegram.WebApp answers from the offline catalogs; skill health |
 <!-- commands:end -->
 
-The user never has to know a verb. Pick the row from their words and say in plain language what
+Pick the row from the user's words and say in plain language what
 you are doing ("I'll review the menu first, without changing code").
 
 ## Scope
@@ -91,8 +91,8 @@ feedback and the definition of done: `references/floor.md`.
 
 ## Terms that are easy to confuse
 
-Inline keyboard ≠ reply keyboard ≠ Rich Message buttons · `style` is only `primary`, `success`,
-`danger` · `icon_custom_emoji_id` ≠ `file_id` · Rich Text ≠ Microsoft RTF; Rich Markdown ≠
+Inline keyboard ≠ reply keyboard ≠ Rich Message buttons · `style` is `primary`, `success` or
+`danger` (`link` also on Rich callback buttons) · `icon_custom_emoji_id` ≠ `file_id` · Rich Text ≠ Microsoft RTF; Rich Markdown ≠
 MarkdownV2; Rich HTML ≠ HTML parse mode ≠ widget HTML · draft ≠ ephemeral message · editing ≠
 resending · widget ≠ Mini App.
 
@@ -105,8 +105,8 @@ resending · widget ≠ Mini App.
 ## Next step
 
 End every reply that changed or found something with one line in the user's language: what you
-would do next and why, from `tgui.py next` ("Next: tidy up the three checkout screens, two open
-P1 findings. Say 'go' or name another"). Never start it without the user's go.
+would do next and why, from `tgui.py next` ("Next: tidy the checkout screens, two P1 findings
+open. Say 'go' or name another"). Never start it without the user's go.
 
 ## Tools
 
@@ -114,10 +114,9 @@ One offline entry point, standard library only, no bot token:
 `py -3 <skill>/scripts/tgui.py <group> ...`; `--help` on every group. Exit codes: 0 ok,
 1 findings, 2 usage, 3 revision conflict, 4 refused. Groups: `context`, `next`, `doctor`,
 `findings`, `requests`, `check`, `lookup`, `webapp`, `examples`, `profile`, `map`, `post`,
-`emoji`, `widget`, `miniapp`, `data`, `agent`, `hook`, `sync` (the only one that uses the
-network). Run them; don't read their source. Libraries live in `examples/` (`tgkit` in Python
-and TypeScript, SDK adapters, an MCP server). Without Python, every playbook has a *Without
-scripts* path.
+`emoji`, `widget`, `miniapp`, `data`, `commands`, `agent`, `hook`, `mcp`, `sync`. Online only:
+`sync`, `emoji library`, pack import. Run them; don't read their source. Libraries: `examples/`
+(`tgkit` for Python and TS, SDK adapters). No Python: each playbook has a *Without scripts* path.
 
 ## Where knowledge lives
 

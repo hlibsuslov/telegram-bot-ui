@@ -1899,6 +1899,78 @@
       "names_method": false,
       "routes_to": [],
       "why": "moderation service tuning, no screen or message design"
+    },
+    {
+      "id": "RB1",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Put a Pay button right under the totals table inside our bot's receipt message, not in the keyboard at the bottom.",
+      "expect": "activate",
+      "names_method": true,
+      "routes_to": [
+        "references/buttons-and-styles.md"
+      ],
+      "why": "buttons inside a rich message (tg-button-row)"
+    },
+    {
+      "id": "RB2",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Сделай в длинном ответе бота кнопку «Подробнее» прямо рядом с абзацем, а не внизу сообщения.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/buttons-and-styles.md"
+      ],
+      "why": "inline RichTextButton next to the paragraph"
+    },
+    {
+      "id": "CM1",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Our bot's command menu still shows /promo which we deleted and misses /orders — sync it with the code for en and ru.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-commands.md"
+      ],
+      "why": "command lifecycle audit and plan"
+    },
+    {
+      "id": "CM2",
+      "area": "ui",
+      "lang": "uk",
+      "prompt": "Перевір команди нашого бота: які зареєстровані, а які обробники є в коді, і чому адміни не бачать /stats.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-commands.md"
+      ],
+      "why": "scope resolution and audit"
+    },
+    {
+      "id": "RX1",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Instead of replying 'Saved ✅' to every expense the user logs, have the bot just mark the message somehow.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/polls-checklists-and-reactions.md"
+      ],
+      "why": "reaction as acknowledgement"
+    },
+    {
+      "id": "EL1",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Find one premium emoji pack that has icons for home, back, settings, search and delete for our bot's buttons, with real ids.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/emoji-packs.md"
+      ],
+      "why": "emoji library pick"
     }
   ],
   "behavioral": [
@@ -3229,6 +3301,115 @@
         "any output or warning on a non-Telegram file",
         "blocks the edit",
         "a multi-line dump instead of one warning line"
+      ]
+    },
+    {
+      "id": "RB10",
+      "area": "ui",
+      "lang": "en",
+      "request": "A bot-ui screen receipt.view is a rich message (format rich.html). Add a 'Pay' action that navigates to receipt.paid as a green button inside the document, centered under the totals table, and keep 'Menu' in the inline keyboard.",
+      "context": "bot-ui project with tests/fixtures/rich_project-like screens; the CLI and the MCP server are available",
+      "must": [
+        "adds a new action 'pay' with type navigate, to receipt.paid and style success in actions",
+        "places it as <tg-button action=\"pay\"></tg-button> inside <tg-button-row align=\"center\"> after the table, not in keyboard.rows",
+        "keeps 'back'/'Menu' in the keyboard and does not put 'pay' in both places",
+        "runs map validate and map render (or the MCP tools) and reports the sendRichMessage request",
+        "states the evidence level as static or simulated, not real clients"
+      ],
+      "critical_failures": [
+        "writes raw callback_data by hand instead of binding the action",
+        "puts the button in reply_markup",
+        "uses an unsupported style such as 'green' or a CSS colour",
+        "claims it was tested in Telegram"
+      ]
+    },
+    {
+      "id": "RB11",
+      "area": "ui",
+      "lang": "en",
+      "request": "The 'Confirm order' button inside our rich order card can be tapped twice before the edit lands and creates two orders. Fix it.",
+      "context": "aiogram bot; the card is sent with sendRichMessage; button type callback_data",
+      "must": [
+        "explains there is no per-button edit: the whole rich_message is re-rendered with editMessageText",
+        "makes the handler idempotent with an operation id kept in server state, not in callback data",
+        "answers every callback query, including the duplicate",
+        "swaps the pressed button for a disabled status label in the edit and still checks state on the server"
+      ],
+      "critical_failures": [
+        "relies on the disabled button alone to prevent duplicates",
+        "uses editMessageReplyMarkup to change an in-document button",
+        "leaves the second press unanswered"
+      ]
+    },
+    {
+      "id": "RX10",
+      "area": "ui",
+      "lang": "en",
+      "request": "Make the bot react with ✅ when it has saved the user's note, ⏳ while it works and ❌ on failure.",
+      "context": "private chat bot, python-telegram-bot",
+      "must": [
+        "says ✅, ⏳ and ❌ are not in ReactionTypeEmoji and proposes allowed ones such as 👀 then 👍 or ✍",
+        "sets at most one reaction at a time (a new one replaces the old)",
+        "on failure removes the reaction and sends a message with what failed and what to do next",
+        "validates the setMessageReaction request (validate_payload or the MCP validate_request)"
+      ],
+      "critical_failures": [
+        "sends a setMessageReaction with ✅",
+        "sets two reactions in one call",
+        "a failure signalled only by a reaction"
+      ]
+    },
+    {
+      "id": "CM10",
+      "area": "ui",
+      "lang": "en",
+      "request": "Admins should see /stats and /broadcast, everyone /start /orders /help, in English and Russian. Set this up.",
+      "context": "aiogram 3 bot, handlers exist for all five commands",
+      "must": [
+        "declares the lists in bot-ui/commands.json or code with the default scope for users and all_chat_administrators for admins",
+        "repeats /start /orders /help in the administrators list because Telegram does not merge lists",
+        "produces one setMyCommands per scope and language (commands plan) and checks the requests",
+        "keeps a rights check inside the /stats and /broadcast handlers"
+      ],
+      "critical_failures": [
+        "admin list with only /stats and /broadcast",
+        "language_code like 'en-US' or 'rus'",
+        "treats the scope as access control"
+      ]
+    },
+    {
+      "id": "EL10",
+      "area": "ui",
+      "lang": "en",
+      "request": "Give our support bot's buttons premium icons: home, back, settings, done, help. Pick the pack.",
+      "context": "the bot owner has Telegram Premium; the network is allowed",
+      "must": [
+        "runs emoji library pick (or the MCP emoji_pick_family) for those slots and names ONE pack with its link",
+        "uses only ids from that pack's map and keeps missing slots label-only or Unicode",
+        "prefers static, theme-adaptive icons on buttons and says why",
+        "keeps the Unicode fallback and states the eligibility route"
+      ],
+      "critical_failures": [
+        "invents a custom_emoji_id",
+        "mixes icons from two unrelated packs",
+        "uses animated icons on every button without saying so"
+      ]
+    },
+    {
+      "id": "VIS1",
+      "area": "ui",
+      "lang": "en",
+      "request": "After restyling three screens of the bot-ui map, check how they look before handing over.",
+      "context": "bot-ui project outside the skill repository; studio built; a browser tool is available",
+      "must": [
+        "exports a snapshot (bot-ui export-snapshot or MCP map_snapshot) of the changed screens",
+        "opens it in the browser and takes screenshots in light and dark theme",
+        "names concrete visual problems found or none, fixes them and re-checks",
+        "says the preview is local and not proof of how Telegram clients draw it"
+      ],
+      "critical_failures": [
+        "declares the screens fine without looking",
+        "claims real-client evidence from the Studio preview"
       ]
     }
   ]

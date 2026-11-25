@@ -27,9 +27,10 @@ Reuse a Telegram `file_id` instead of re-uploading the same asset.
 
 When sending Rich Markdown or Rich HTML that references media (e.g. an image tag
 or a `tg://…?id=` link), declare each referenced item in
-`InputRichMessage.media` as an `InputRichMessageMedia` so Telegram knows the
-source (file_id / URL / upload), caption, and options. Confirm the exact field
-names for `InputRichMessageMedia` in the official object before use.
+`InputRichMessage.media` as an `InputRichMessageMedia` (`id`, `media`) so Telegram knows the
+source (file_id / URL / upload). Only the media and its own properties count: "everything except
+the media itself and its properties is ignored", so captions belong in the markdown/HTML
+(`<figcaption>`, the Markdown title), not in `media`.
 
 ## Media block types (explicit blocks)
 

@@ -33,6 +33,47 @@ def web_dir(*parts: str) -> str:
     return os.path.join(studio_dir(), "web", *parts)
 
 
+def _is_git(folder: str) -> bool:
+    """A real repository marker: a .git folder with HEAD, or a .git file pointing elsewhere (worktrees,
+    submodules). An empty `.git` stub (one in a home folder, say) does not make the folder a repository."""
+    dot = os.path.join(folder, ".git")
+    if os.path.isdir(dot):
+        return os.path.isfile(os.path.join(dot, "HEAD"))
+    if os.path.isfile(dot):
+        try:
+            with open(dot, encoding="utf-8", errors="replace") as fh:
+                return fh.read(200).startswith("gitdir:")
+        except OSError:
+            return False
+    return False
+
+
+def project_repo(project_root: str) -> str:
+    """The repository holding a bot-ui folder: the nearest parent that is a git repository, else the
+    folder's parent."""
+    start = os.path.dirname(os.path.realpath(project_root))
+    cur = start
+    while not _is_git(cur):
+        parent = os.path.dirname(cur)
+        if parent == cur:
+            return start
+        cur = parent
+    return cur
+
+
+def trusted_web_dir(project_root: str, *parts: str) -> str | None:
+    """studio/web/<parts>, or None when that folder lies inside the repository being opened.
+
+    A bot repository can carry its own `web/dist/index.html` (a project-scope install puts the default
+    folder at <repo>/.claude/studio), and the Studio hands the page it serves a token for its whole API.
+    Naming the Studio folder in BOT_UI_STUDIO_DIR is the operator's own choice and always accepted."""
+    path = web_dir(*parts)
+    if os.environ.get("BOT_UI_STUDIO_DIR"):
+        return path
+    repo, real = os.path.normcase(project_repo(project_root)), os.path.normcase(os.path.realpath(path))
+    return None if real == repo or real.startswith(repo.rstrip(os.sep) + os.sep) else path
+
+
 def _ensure_path() -> None:
     root = skill_dir()
     for sub in ("scripts", os.path.join("examples", "python")):

@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
-from . import render
+from . import render, rich
 from .project import Diagnostic, Snapshot, check_id
 
 KINDS = {"entry", "menu", "form", "confirmation", "result", "error", "empty", "loading", "notification", "status"}
@@ -153,6 +153,10 @@ def _text_checks(p: dict, file: str, pointer: str, value: Any, fmt: str, sid: st
                         f"{{{name}}} is not a declared field in project.json fields", sid)
         if fmt == "regular.html":
             _html_check(text, file, f"{pointer}/{loc}", sid, out)
+        elif fmt == "rich.html":
+            for code, sev, message in rich.check(text):
+                if code != "TEXT_TOO_LONG":  # counted below with the shared rule
+                    out.add(code, sev, file, f"{pointer}/{loc}", message, sid)
         n = render.utf16_len(render.visible_text(text, fmt))
         cap = limit or (64 if label else render.TEXT_MAX)
         if n > cap:
@@ -221,7 +225,15 @@ def _screen(p: dict, snap: Snapshot, sid: str, s: dict, out: _Out) -> None:
     if media is not None:
         _media(p, f, sid, media, out)
     mtype = media.get("type") if isinstance(media, dict) else None
-    if fmt in render.FORMATS:
+    if fmt in render.RICH_FORMATS:
+        if media is not None:
+            out.add("RICH_MEDIA_FIELD", "error", f, "/message/media",
+                    "a rich screen puts media inside its HTML (<img>, <video>, <figure>); message.media is for regular formats", sid)
+        _text_checks(p, f, "/message/text", msg.get("text"), fmt, sid, out, limit=rich.TEXT_MAX)
+        for st, var in (msg.get("states") or {}).items():
+            if isinstance(var, dict) and "text" in var:
+                _text_checks(p, f, f"/message/states/{st}/text", var["text"], fmt, sid, out, limit=rich.TEXT_MAX)
+    elif fmt in render.FORMATS:
         if mtype in ("sticker", "video_note"):
             if msg.get("text"):
                 out.add("MEDIA_NO_CAPTION", "error", f, "/message/text",
@@ -253,6 +265,17 @@ def _screen(p: dict, snap: Snapshot, sid: str, s: dict, out: _Out) -> None:
             placed[aid] = ptr
     if ktype in ("force_reply", "remove", "none") and kb.get("rows"):
         out.add("KEYBOARD_ROWS_IGNORED", "warning", f, "/keyboard/rows", f"{ktype} shows no buttons", sid)
+    in_text = rich.screen_action_ids(s)
+    for aid in sorted(in_text):
+        a = actions.get(aid)
+        if not isinstance(a, dict) or a.get("hidden"):
+            out.add("RICH_BUTTON_ACTION_MISSING", "error", f, "/message/text",
+                    f'<tg-button action="{aid}"> needs a visible action {aid!r} in actions', sid)
+        elif aid in placed:
+            out.add("RICH_BUTTON_ON_KEYBOARD", "warning", f, placed[aid],
+                    f"{aid!r} is both in the document and on the keyboard; keep one place per action", sid)
+        elif a.get("type") == "url" and a.get("style") == "link":
+            out.add("RICH_BUTTON_STYLE", "warning", f, f"/actions/{aid}/style", 'style "link" is for callback buttons only; it is dropped', sid)
     labels_seen: dict[str, str] = {}
     for aid, a in actions.items():
         ptr = f"/actions/{aid}"
@@ -265,8 +288,8 @@ def _screen(p: dict, snap: Snapshot, sid: str, s: dict, out: _Out) -> None:
         if t not in ACTION_TYPES:
             out.add("ACTION_TYPE_UNKNOWN", "error", f, ptr + "/type", f"type must be one of {sorted(ACTION_TYPES)}", sid)
             continue
-        if aid not in placed and not a.get("hidden"):
-            out.add("ACTION_NOT_PLACED", "warning", f, ptr, "the action is not on the keyboard", sid)
+        if aid not in placed and aid not in in_text and not a.get("hidden"):
+            out.add("ACTION_NOT_PLACED", "warning", f, ptr, "the action is not on the keyboard or in the document", sid)
         _text_checks(p, f, ptr + "/label", a.get("label"), "regular.plain", sid, out, label=True)
         lbl = render.localized(a.get("label"), p.get("defaultLocale", "en"), p.get("defaultLocale", "en"))
         if ktype == "reply" and lbl:

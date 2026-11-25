@@ -209,8 +209,9 @@ def collect_referenced_paths(root: str) -> set[str]:
             refs.add(m.strip("`.,);:\""))
         for target in MD_LINK_RE.findall(strip_code(text)):
             target = target.split("#", 1)[0].strip()
-            if is_local(target):
-                refs.add(target)
+            if is_local(target):  # a Markdown link is relative to the file that holds it, not to the skill root
+                full = os.path.normpath(os.path.join(os.path.dirname(path), target))
+                refs.add(os.path.relpath(full, root).replace(os.sep, "/"))
     return refs
 
 

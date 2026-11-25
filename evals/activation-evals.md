@@ -247,6 +247,12 @@ description is updated.
 | UK4 | uk | "Хочу, щоб агент писав мені в Telegram, коли збірка готова." | no | `references/agent-operated-bots.md` |
 | DR1 | en | "Is the telegram-bot-ui skill up to date?" | no | `SKILL.md` (doctor, catalog age) |
 | WH1 | en | "After moving to webhooks the bot stopped getting button presses." | no | `references/updates-and-delivery.md` |
+| RB1 | en | "Put a Pay button right under the totals table inside our bot's receipt message, not in the keyboard at the bottom." | yes | `references/buttons-and-styles.md` (buttons inside a rich message) |
+| RB2 | ru | "Сделай в длинном ответе бота кнопку «Подробнее» прямо рядом с абзацем, а не внизу сообщения." | no | `references/buttons-and-styles.md` |
+| CM1 | en | "Our bot's command menu still shows /promo which we deleted and misses /orders — sync it with the code for en and ru." | no | `references/bot-commands.md` |
+| CM2 | uk | "Перевір команди нашого бота: які зареєстровані, а які обробники є в коді, і чому адміни не бачать /stats." | no | `references/bot-commands.md` |
+| RX1 | en | "Instead of replying 'Saved ✅' to every expense the user logs, have the bot just mark the message somehow." | no | `references/polls-checklists-and-reactions.md` |
+| EL1 | en | "Find one premium emoji pack that has icons for home, back, settings, search and delete for our bot's buttons, with real ids." | no | `references/emoji-packs.md` |
 
 ## Negative — near misses (should NOT activate)
 

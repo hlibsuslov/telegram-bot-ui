@@ -10,7 +10,7 @@ const DEFAULT_TEXTS: Doc = {
 export interface Snapshot { project: Doc; screens: Record<string, Doc>; scenarios?: Record<string, Doc>; revision?: string }
 export interface Session {
   screen: string | null; locale: string; context: Doc; state: Doc; data: Doc; input: Doc; history: string[];
-  messages: { instance: number; screen: string; state: string | null; kind: string; media?: string | null; accessible: boolean }[];
+  messages: { instance: number; screen: string; state: string | null; kind: string; media?: string | null; accessible: boolean; rich?: string[] }[];
   active: number | null; reply: string | null; awaiting: string | null; next: number;
 }
 export type HandlerFn = (handlerId: string, ctx: Doc) => string;
@@ -38,7 +38,8 @@ export class Engine {
   }
   view(l: Logical): Doc {
     return { screenId: l.screenId, state: l.state, text: l.text, media: l.media ? l.media.type : null,
-      keyboard: { type: l.keyboard.type, rows: l.keyboard.rows.map((r) => r.map((b) => ({ actionId: b.actionId, text: b.text }))) } };
+      keyboard: { type: l.keyboard.type, rows: l.keyboard.rows.map((r) => r.map((b) => ({ actionId: b.actionId, text: b.text }))) },
+      richButtons: l.richButtons.map((b) => ({ actionId: b.actionId, text: b.text })) };
   }
   private widgetsOk(s: Session): boolean {
     return !!(this.project.capabilities ?? {}).widgets && (s.context.chat ?? "private") === "private";
@@ -67,15 +68,18 @@ export class Engine {
       o.effects.push({ type: "fallback", reason, instance: o.instance });
       wantEdit = false;
     }
+    // The callback buttons inside this rendering of a rich document (this locale, this state):
+    // a press is checked against what the user was actually shown.
+    const richIds = logical.richButtons.filter((b) => b.actionId && b.callbackData).map((b) => b.actionId as string);
     let target: number;
     if (wantEdit && msg) {
-      msg.screen = sid; msg.state = state; msg.media = targetMedia;
+      msg.screen = sid; msg.state = state; msg.media = targetMedia; msg.rich = richIds;
       o.effects.push({ type: "edit", instance: o.instance, render: logical, view: this.view(logical) });
       target = o.instance as number;
     } else {
       target = s.next++;
       const kind = isWidget ? "widget" : "message";
-      s.messages.push({ instance: target, screen: sid, state, kind, media: isWidget ? null : targetMedia, accessible: true });
+      s.messages.push({ instance: target, screen: sid, state, kind, media: isWidget ? null : targetMedia, accessible: true, rich: isWidget ? [] : richIds });
       const eff: Doc = { type: "send", instance: target, kind, render: logical, view: this.view(logical) };
       if (isWidget) eff.widget = screen.widget.ref;
       o.effects.push(eff);
@@ -83,7 +87,7 @@ export class Engine {
     if (state === null) {
       s.screen = sid;
       const kt = (screen.keyboard ?? {}).type ?? "none";
-      if (kt === "inline") s.active = target;
+      if (kt === "inline" || richIds.length) s.active = target;
       if (kt === "reply") s.reply = sid;
       else if (kt === "remove") s.reply = null;
       s.awaiting = screen.input && typeof screen.input === "object" ? sid : null;
@@ -155,7 +159,7 @@ export class Engine {
       const current = !!msg && instance === s.active && msg.state === null;
       screen = this.snap.screens[screenId ?? ""];
       act = screen?.actions?.[aid];
-      const onKb = !!screen && keyboardRows(screen).some((r) => r.includes(aid));
+      const onKb = !!screen && (keyboardRows(screen).some((r) => r.includes(aid)) || (msg?.rich ?? []).includes(aid));
       if (!(current && act && onKb)) {
         entry.action = { screenId, actionId: aid, type: "stale" };
         entry.effects.push({ type: "answer", text: this.text("stale", s.locale) });

@@ -4,6 +4,8 @@ Pure functions only: transcripts are synthetic stream-json lines, no agent CLI i
 """
 import json
 import os
+import re
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -204,6 +206,19 @@ class CodexClassifierTest(Folders):
         self.assertEqual(home["copy"], "other")
         self.assertEqual(elsewhere["copy"], "other")
 
+    def test_a_quoted_path_with_spaces_is_read_whole_and_is_not_the_project_copy(self):
+        folder = os.path.join(self._tmp[1].name, "Some One", ".codex", "skills", SKILL).replace("\\", "/")
+        for quote in ('"', "'"):
+            info = self.analyze(self.command(f"cat {quote}{folder}/SKILL.md{quote}"))
+            self.assertEqual((info["activated"], info["copy"]), (True, "other"), quote)
+            self.assertEqual(info["loaded"], [folder])
+
+    def test_a_relative_path_that_climbs_out_of_the_project_is_other(self):
+        for climbing in ("../../.codex/skills/telegram-bot-ui/SKILL.md", "./../x/.agents/skills/telegram-bot-ui/SKILL.md",
+                         ".agents/../../elsewhere/telegram-bot-ui/SKILL.md"):
+            self.assertEqual(self.analyze(self.command(f"cat {climbing}"))["copy"], "other", climbing)
+        self.assertEqual(self.analyze(self.command("cat ./.agents/skills/telegram-bot-ui/SKILL.md"))["copy"], "project")
+
     def test_prose_and_listing_commands_do_not_activate(self):
         prose = line(type="item.completed", item={"type": "agent_message", "text": "see telegram-bot-ui/SKILL.md"})
         listing = self.command("ls .agents/skills/telegram-bot-ui")
@@ -338,6 +353,28 @@ class CommandAndIsolationTest(unittest.TestCase):
             self.assertFalse(ev.inside(root, os.path.expanduser("~")), root)
         finally:
             ev.remove_tree(root)
+
+    def test_workspace_root_is_private_to_the_current_user(self):
+        root = ev.make_root()
+        try:
+            if os.name == "nt":
+                out = subprocess.run(["icacls", root], capture_output=True, text=True).stdout
+                principals = {m.group(1).strip().lower() for m in re.finditer(r"(\S[^:\n]*?):\(", out)}
+                self.assertTrue(principals, out)
+                open_to_others = {"everyone", "builtin\\users", "nt authority\\authenticated users"}
+                self.assertFalse(principals & open_to_others, out)
+            else:
+                self.assertEqual(os.stat(root).st_mode & 0o077, 0)
+        finally:
+            ev.remove_tree(root)
+
+    def test_a_clean_transcript_with_a_failing_exit_code_is_an_error(self):
+        done = {"error": None, "finished": True}
+        self.assertIsNone(ev.run_error(done, 0))
+        self.assertEqual(ev.run_error(done, 1), "exit 1 after the final event")
+        self.assertEqual(ev.run_error(done, "timeout"), "timeout")
+        self.assertEqual(ev.run_error({"error": None, "finished": False}, 0), "no final event (exit 0)")
+        self.assertEqual(ev.run_error({"error": "boom", "finished": True}, 0), "boom")
 
     def test_child_gets_the_prompt_on_stdin_unchanged_and_a_hung_child_is_killed(self):
         echo = [sys.executable, "-c", "import sys; sys.stdout.buffer.write(sys.stdin.buffer.read())"]

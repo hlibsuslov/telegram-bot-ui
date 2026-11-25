@@ -600,7 +600,10 @@ def main(argv: list[str] | None = None) -> int:
     changed = write(outputs)
     changed += [c for c in write(build()) if c not in changed]
     print("\n".join(f"wrote {c}" for c in changed) or "no changes")
-    return 0
+    # The website's agent docs derive from the same sources: regenerate them in the same step.
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import build_agent_docs  # noqa: PLC0415
+    return build_agent_docs.main([])
 
 
 if __name__ == "__main__":

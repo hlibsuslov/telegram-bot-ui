@@ -59,7 +59,7 @@ deciding directly. **[API]**
 ## 2. `startapp` and opening mode
 
 - `startapp=<param>` reaches the app as `initData.start_param` and as the `tgWebAppStartParam` query
-  parameter. Up to 512 characters of `[A-Za-z0-9_-]`; use base64url for structured data. **[Official]**
+  parameter. Keep it to `[A-Za-z0-9_-]` and short; use base64url for structured data. A 512-character cap is widely quoted but is not stated on core.telegram.org/bots/webapps or /api/links (checked 2026-11-25): **[Unverified]**, test the length you need.
 - It is text from a link anyone can write: parse it against an allowlist (`order-8812`, `tab-bonus`),
   never use it as a path, a SQL fragment, an HTML fragment or an authorization claim. **[Heuristic]**
 - `mode=compact` opens at half height; `mode=fullscreen` asks for fullscreen; Main Mini Apps and direct

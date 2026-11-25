@@ -31,6 +31,12 @@ with the closest recipe (90-99) and the screen pattern for the product type.
 | "Verify the user on the server" | [security.md](security.md) | `examples/mini-apps/server` |
 | "Does the API have X?" | `scripts/webapp_lookup.py show X` | [webapp-api.md](webapp-api.md) |
 | "Open it from the bot / a button / a link" | [launch-and-lifecycle.md](launch-and-lifecycle.md) | [../mini-apps-bridge.md](../mini-apps-bridge.md) |
+| "Take payments", "sell for Stars", "subscription in the app", "card payment for goods" | [payments.md](payments.md) | recipes 93, 96; bot side `../payments-pipeline.md` |
+| "Make it look like Telegram in light and dark, iOS and Android" | [telegram-design-guidelines.md](telegram-design-guidelines.md), [design-sources.md](design-sources.md) | [design-system.md](design-system.md), `examples/mini-apps/_kit` |
+| "It is slow on Android", "how do I test without a phone" | [performance-and-testing.md](performance-and-testing.md) | `scripts/preview_miniapp.py` |
+
+This table is the route the skill's `mini-app` command follows; the "Route by task" table in
+[README.md](README.md) maps the same files for people and is kept in step by a test.
 
 ## 2. Create
 

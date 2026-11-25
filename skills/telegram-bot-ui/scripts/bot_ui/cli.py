@@ -83,11 +83,22 @@ def cmd_init(args) -> int:
         shutil.rmtree(stage, ignore_errors=True)
         return _fail(args, "TEMPLATE_INVALID", "the template does not validate", 1, diagnostics=[d.to_json() for d in errors])
     shutil.rmtree(os.path.join(stage, ".bot-ui"), ignore_errors=True)
-    if os.path.exists(target):
-        for name in existing:
-            os.replace(os.path.join(target, name), os.path.join(stage, name))
-        os.rmdir(target)
-    replace_dir(stage, target)
+    moved: list[str] = []
+    try:
+        if os.path.exists(target):
+            for name in existing:
+                os.replace(os.path.join(target, name), os.path.join(stage, name))
+                moved.append(name)
+            os.rmdir(target)
+        replace_dir(stage, target)
+    except OSError as err:  # the saved review must survive a failed publish
+        os.makedirs(target, exist_ok=True)
+        for name in moved:
+            kept = os.path.join(stage, name)
+            if os.path.lexists(kept) and not os.path.lexists(os.path.join(target, name)):
+                os.replace(kept, os.path.join(target, name))
+        shutil.rmtree(stage, ignore_errors=True)
+        return _fail(args, "INIT_FAILED", f"could not publish {target}: {err}; its saved files are back in place", 4)
     _emit(args, {"ok": True, "project": target, "projectId": snap.project["projectId"], "revision": snap.revision,
                  "files": sorted(snap.files)},
           f"created {target} ({len(snap.files)} files), revision {snap.revision}")

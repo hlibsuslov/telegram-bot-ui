@@ -7,7 +7,7 @@ bot_api: "10.4"
 # Deep redesign path: research the project, rethink the menus, tune the bot
 
 > Status: **Heuristic** (this skill's process) except where marked **API**. Reviewed against
-> Bot API 10.4 on 2026-11-15. Tool: `scripts/style_profile.py`. Knobs:
+> Bot API 10.4 on 2026-11-15. Tool: `tgui.py profile` (`scripts/style_profile.py`). Knobs:
 > `bot-style-profile.md`. Builds on `project-adaptation.md` (find the interface),
 > `auditing-existing-bots.md` (inventory and diagnose) and `consistency-and-review.md`
 > (final pass).
@@ -63,7 +63,7 @@ Check A3 by looking, not by asking: sibling folders, monorepo packages (`apps/we
 `miniapp/`), `homepage` in `package.json`, URLs in the README, `DESIGN.md`, `components.json`,
 tokens files. Reach a website only when the user named it or the repo links it, and read only
 public pages. Never read `.env*` values, key files or credentials to "learn the project";
-`scripts/style_profile.py probe` skips them by design. A4 needs the user to provide the token
+`tgui.py profile probe` skips them by design. A4 needs the user to provide the token
 variable; never ask for a token in chat.
 
 **Mandate: what the agent may change.**
@@ -87,7 +87,7 @@ proceeds.
 Run the probe first; it is cheap and points at what to read:
 
 ```bash
-py -3 <skill-dir>/scripts/style_profile.py probe <project-root> --json > probe.json
+py -3 <skill-dir>/scripts/tgui.py profile probe <project-root> --json > probe.json
 ```
 
 It reports, without reading secrets: SDK and version hints, design docs, design tokens (CSS
@@ -147,14 +147,14 @@ more than two taps from home, are the raw material of §6.
 Generate a starting profile from the probe, then edit it by hand:
 
 ```bash
-py -3 <skill-dir>/scripts/style_profile.py scaffold probe.json > docs/telegram-ui/profile.json
+py -3 <skill-dir>/scripts/tgui.py profile scaffold probe.json > docs/telegram-ui/profile.json
 ```
 
 Every value carries `source` (evidence) or `"assumed"`. The knobs and their effect are in
 `bot-style-profile.md`. Check it before anything is designed from it:
 
 ```bash
-py -3 <skill-dir>/scripts/style_profile.py check docs/telegram-ui/profile.json
+py -3 <skill-dir>/scripts/tgui.py profile check docs/telegram-ui/profile.json
 ```
 
 ## 5. Voice gate: show, don't ask
@@ -181,11 +181,11 @@ Design from jobs, not from the old menu.
 4. **Map old → new**: every old screen, command and deep link gets a row: kept, merged into,
    replaced by, or removed with reason. Nothing disappears silently; users have old messages
    with old buttons in their chats.
-5. **Apply current capabilities where they serve a job** (the initiative rule in `SKILL.md`):
+5. **Apply current capabilities where they serve a job** (the capability check, `commands/build.md` step 2):
    Stop on long answers, disabled Submit and `force_reply` in forms, personal panels in
    groups, a live widget card, one emoji pack. Name each choice and its job.
 6. **Prototype 2-3 key screens** as exact payloads and validate them
-   (`scripts/validate_keyboard.py`, `scripts/audit_copy.py`). If the map removes or renames
+   (`tgui.py check keyboard`, `tgui.py check copy`). If the map removes or renames
    anything users know, this is the gate: show the map and the prototypes, then continue.
 
 Record one recommended structure. Offer an alternative only when it hinges on a product
@@ -215,16 +215,16 @@ steps yourself in this order. Roles cannot start other roles, so the main agent 
 
 | Phase | Role | Input | Done when |
 |---|---|---|---|
-| §1-§6 research and design | `telegram-bot-designer` (read-only) | this file, probe output | research, profile and plan written; prototypes validated |
+| §1-§6 research and design | `telegram-bot-designer` (read-only) | this file, probe output | research, profile and plan proposed (the main agent writes them: the role is read-only); prototypes validated |
 | widgets in the plan | `telegram-widget-builder` | the widget rows of the plan | widget built, size and lint green |
 | §7-§8 implementation | `telegram-bot-builder` | plan + profile | screens built in screen order, legacy decoder tested |
 | channel posts in scope | `telegram-publisher` | the post types of the plan | preview approved; nothing published without approval |
-| verification | `telegram-bot-reviewer` | the diff, plan, profile | findings fixed or listed |
+| verification | `telegram-bot-reviewer` | the diff, plan, profile | findings listed with file:line (read-only; the builder fixes them) |
 
 Verification is the same for every path (`consistency-and-review.md`), plus:
 
-- every screen matches the profile: run `scripts/style_profile.py check` on the profile and
-  `scripts/audit_copy.py` on the catalog; labels inside the profile's length budget in the
+- every screen matches the profile: run `tgui.py profile check` on the profile and
+  `tgui.py check copy` on the catalog; labels inside the profile's length budget in the
   longest live locale;
 - every old `callback_data`, command and deep link from the §6 map is covered by a test;
 - with A4 only: send the key screens to the test bot, read custom emoji back, and look at

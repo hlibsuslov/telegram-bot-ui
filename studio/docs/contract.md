@@ -83,9 +83,25 @@ method set by the server), `state` (set by an action's `set`), `input` (typed by
 ```
 
 - `kind`: entry, menu, form, confirmation, result, error, empty, loading, notification, status.
-- `message.format`: `regular.plain` and `regular.html` are edited in the Studio;
+- `message.format`: `regular.plain`, `regular.html` and `rich.html` are edited in the Studio;
   `regular.markdownv2` renders; `regular.entities`, `rich`, `media.photo` are kept and open
   read-only (`FORMAT_READ_ONLY`). Unknown fields anywhere are kept on write.
+- `rich.html` (Rich Message, Bot API 10.1+): the text is Rich HTML and the screen is sent with
+  `sendRichMessage(rich_message={"html": …})`, edited with `editMessageText(rich_message=…)`.
+  Headings, tables (`<table compact>`), lists, quotes, `<details>`, dividers and media tags render
+  in the preview; media sit inside the HTML (`<img src="https://…">`, `<figure>`), so
+  `message.media` is an error here (`RICH_MEDIA_FIELD`). Placeholders are escaped for HTML text and
+  quoted attributes. Limit: 32768 characters.
+- Buttons inside a rich screen are bound to its actions: `<tg-button action="pay"></tg-button>`
+  (empty content takes the action's label) or with content of its own; in a row:
+  `<tg-button-row align="center">…</tg-button-row>` (1-8). The renderer writes the official
+  attributes (`type="callback_data" data="<screen>:<action>"`, or `type="url"`) and the action's
+  `style` (`primary`, `success`, `danger`, and `link` for callback actions). Such actions count as
+  placed, route in the simulator and on the map like keyboard buttons, and a stale press is
+  answered like a stale keyboard press. A button with official attributes and no `action`
+  (`copy_text`, `switch_inline_query`, …) is sent as written. Checks: `RICH_BUTTON_ACTION_MISSING`,
+  `RICH_BUTTON_ON_KEYBOARD` (one action in two places), `RICH_BUTTON_ROW_SIZE`, `RICH_BUTTON_TYPE`,
+  `RICH_BUTTON_STYLE`, `RICH_BUTTON_DATA`, `RICH_BUTTON_TEXT`, `RICH_TAG_UNSUPPORTED`.
 - `keyboard.type`: `inline` (callback buttons), `reply` (a press arrives as text equal to the
   label), `force_reply` (asks for text; `placeholder`), `remove`, `none`.
 - Action types: `navigate` (`to` or `rule`), `back` (`fallback` after a restart), `url`

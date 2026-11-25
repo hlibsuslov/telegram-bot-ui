@@ -14,8 +14,12 @@
 
 1. Check eligibility (Fragment usernames, or owner Premium outside channels). If ineligible, say
    so and keep Unicode fallbacks: Telegram strips the emoji silently and returns no error.
-2. `tgui.py emoji suggest` → `emoji resolve` (ids from a real pack, never invented) →
-   `emoji apply`; `emoji verify` against a sent message read back.
+2. `tgui.py emoji library pick --needs <slots>` (the ~490-pack library: one family ranked by real
+   coverage, theme-adaptive, static; only slot emoji leave the machine) → `emoji apply`; offline:
+   `emoji suggest` → `emoji resolve`. Ids come from a real pack, never invented; `emoji verify`
+   against a sent message read back. One icon by meaning: `emoji library search <words>`. By look:
+   `emoji library facets --use <bot kind> --style … --theme both` (tags with confidence; style
+   tags are the least reliable, so show the pack before you rely on one).
 3. All icons of a message or none; one pack family per bot (`tgui.py check icons`).
 
 ## Without scripts
