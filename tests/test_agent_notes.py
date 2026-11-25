@@ -129,6 +129,95 @@ class Card(unittest.TestCase):
         self.assertIn("Note: none yet", data["card"])
 
 
+class ReviewFindings(unittest.TestCase):
+    """Regression tests for the Codex review of the notes code (task 20261125-164444-review-5eb8)."""
+
+    def test_parent_segments_cannot_move_a_path_out_of_its_folder(self):
+        found = problems({"sendRichMessage": {**GOOD, "refs": ["references/../SKILL.md"]}})
+        self.assertTrue(any("must be references/<file>.md" in p for p in found), found)
+        found = problems({"sendRichMessage": {**GOOD, "example": "examples/../data/bot-api/catalog.json"}})
+        self.assertTrue(any("must be a path under examples/" in p for p in found), found)
+
+    def test_a_link_out_of_the_skill_is_refused(self):
+        tmp = tempfile.mkdtemp(prefix="notes-link-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        outside = tempfile.mkdtemp(prefix="notes-outside-")
+        self.addCleanup(shutil.rmtree, outside, True)
+        os.makedirs(os.path.join(tmp, "references"))
+        try:
+            os.symlink(outside, os.path.join(tmp, "references", "out"), target_is_directory=True)
+        except (OSError, NotImplementedError):
+            self.skipTest("no permission to create a symlink")
+        self.assertIsNone(api_notes._inside(tmp, "references/out/x.md"))
+
+    def test_review_flag_does_not_break_the_size_limit_check(self):
+        note = self.note_near_limit("sendRichMessage")
+        self.assertEqual(problems({"sendRichMessage": {**note, "review": True}}), [])
+
+    def test_the_optional_line_never_pushes_a_card_over_the_limit(self):
+        sym = CAT["methods"]["sendMessage"]
+        for extra in range(0, 400, 7):
+            note = {"purpose": "Send text.", "use_when": ["x" * (900 + extra)]}
+            text = api_notes.card(sym, note, CAT["meta"])
+            if len(text.encode("utf-8")) > api_notes.CARD_LIMIT:
+                self.assertFalse(any(line.startswith("Optional") for line in text.splitlines()), extra)
+
+    def test_an_example_must_really_make_the_call(self):
+        tmp = tempfile.mkdtemp(prefix="notes-example-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        os.makedirs(os.path.join(tmp, "examples", "payloads"))
+        with open(os.path.join(tmp, "examples", "only_a_comment.py"), "w", encoding="utf-8") as fh:
+            fh.write("# sendRichMessage would go here\n")
+        with open(os.path.join(tmp, "examples", "payloads", "no-params.json"), "w", encoding="utf-8") as fh:
+            json.dump({"steps": [{"method": "sendRichMessage"}]}, fh)
+        note = {"purpose": "x"}
+        for example, expected in (("examples/only_a_comment.py", "never calls"),
+                                  ("examples/payloads/no-params.json", "records no sendRichMessage request")):
+            found = api_notes.validate([("rich.json", {"domain": "rich", "notes": {
+                "sendRichMessage": {**note, "example": example}}})], CAT, skill_dir=tmp)
+            self.assertTrue(any(expected in p for p in found), found)
+
+    def test_malformed_values_are_reported_not_raised(self):
+        for bad in ({"purpose": ["a list"]}, {"purpose": "x", "pitfalls": [{"text": "t", "source": ["API"]}]}):
+            with self.subTest(bad):
+                self.assertTrue(problems({"sendRichMessage": bad}))
+
+    def test_exporter_flags_orphaned_api_payloads_and_parses_only(self):
+        import export_payloads as ep
+        tmp = tempfile.mkdtemp(prefix="payloads-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        for name in ("api-gone.json", "api-messages.json", "r07-wallet.json"):
+            open(os.path.join(tmp, name), "w").close()
+        self.assertEqual(ep.orphans(tmp, {"api-messages", "r07-wallet"}), ["api-gone.json"])
+        self.assertEqual(ep.parse_args(["--check", "--only", "a", "b"]).only, ["a", "b"])
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+            ep.parse_args(["--only"])
+
+    @staticmethod
+    def note_near_limit(symbol):
+        sym = CAT["methods"][symbol]
+        base = {k: v for k, v in GOOD.items() if k != "example"}
+        size = len(api_notes.card(sym, base, CAT["meta"]).encode("utf-8"))
+        return {**base, "use_when": base["use_when"] + ["y" * (api_notes.CARD_LIMIT - size - 10)]}
+
+
+class SyncOrder(unittest.TestCase):
+    def test_notes_are_marked_before_the_catalog_is_replaced(self):
+        from unittest import mock
+        fix = os.path.join(_paths.TESTS, "fixtures", "api")
+        with open(os.path.join(fix, "bot_api_excerpt.html"), encoding="utf-8") as fh:
+            built = sync_bot_api.build_catalog(fh.read(), None, "2026-11-15", min_methods=5, min_types=10)
+        with tempfile.TemporaryDirectory() as out:
+            page = os.path.join(out, "api.html")
+            open(page, "w", encoding="utf-8").close()
+            with mock.patch.object(sync_bot_api, "build_catalog", return_value=built), \
+                    mock.patch.object(sync_bot_api, "mark_notes_for_review", side_effect=OSError("disk full")), \
+                    contextlib.redirect_stdout(io.StringIO()):
+                with self.assertRaises(OSError):
+                    sync_bot_api.main(["--api-html", page, "--out", out])
+            self.assertFalse(os.path.exists(os.path.join(out, "catalog.json")))
+
+
 class SyncMarksReview(unittest.TestCase):
     def test_changed_and_removed_symbols_get_review(self):
         tmp = tempfile.mkdtemp(prefix="notes-")

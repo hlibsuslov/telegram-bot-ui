@@ -6,7 +6,8 @@ A note (data/bot-api/agent-notes/<domain>.json, one file per domain) adds what a
 moment of the call and the catalog cannot say: purpose in one line, when to use it and when not, pitfalls
 with their source, related symbols, rights and chat types, the release it arrived in, the reference
 section that teaches it and a checked example. `card()` merges catalog, note and example into one text
-of at most 1.5 KB; a symbol without a note gets a catalog-only card that says so.
+of at most 1.5 KB (plus a one-line REVIEW warning while a note waits for a re-check); a symbol
+without a note gets a catalog-only card that says so.
 
 File shape:
   {"domain": "<file stem>", "notes": {"<Symbol>": {
@@ -69,11 +70,11 @@ def load_notes(notes_dir: str = NOTES_DIR) -> dict[str, dict]:
 
 
 def _inside(skill_dir: str, rel: str) -> str | None:
-    """Absolute path of a skill-relative path, or None when it leaves the skill folder."""
-    if not isinstance(rel, str) or not rel or os.path.isabs(rel) or "\\" in rel:
+    """Absolute path of a skill-relative path, or None when it climbs (`..`) or a link leads out of the skill."""
+    if not isinstance(rel, str) or not rel or os.path.isabs(rel) or "\\" in rel or ".." in rel.split("/"):
         return None
-    path = os.path.normpath(os.path.join(skill_dir, *rel.split("/")))
-    root = os.path.normpath(skill_dir)
+    root = os.path.realpath(skill_dir)
+    path = os.path.realpath(os.path.join(skill_dir, *rel.split("/")))
     return path if os.path.commonpath([root, path]) == root else None
 
 
@@ -96,7 +97,8 @@ def example_step(path: str, method: str) -> dict | None:
     except (OSError, ValueError):
         return None
     steps = doc.get("steps", []) if isinstance(doc, dict) else doc if isinstance(doc, list) else []
-    return next((s for s in steps if isinstance(s, dict) and s.get("method") == method), None)
+    return next((s for s in steps if isinstance(s, dict) and s.get("method") == method
+                 and isinstance(s.get("params"), dict)), None)
 
 
 def _strings(value) -> bool:
@@ -125,6 +127,7 @@ def validate(files: list[tuple[str, dict]], catalog: dict, skill_dir: str = SKIL
             continue
         for symbol, note in notes.items():
             at = f"{where}: {symbol}"
+            before = len(problems)
             if symbol in seen:
                 problems.append(f"{at}: also noted in {seen[symbol]}")
             seen[symbol] = where
@@ -150,7 +153,7 @@ def validate(files: list[tuple[str, dict]], catalog: dict, skill_dir: str = SKIL
                 problems += [f"{at}: pitfalls[{i}] unknown field {k!r}" for k in sorted(set(pit) - PITFALL_FIELDS)]
                 if not isinstance(pit.get("text"), str) or not pit["text"].strip():
                     problems.append(f"{at}: pitfalls[{i}] needs \"text\"")
-                if pit.get("source") not in SOURCES:
+                if not isinstance(pit.get("source"), str) or pit["source"] not in SOURCES:
                     problems.append(f"{at}: pitfalls[{i}] \"source\" must be one of {', '.join(sorted(SOURCES))}")
                 elif pit["source"] not in UNCITED_SOURCES and not (isinstance(pit.get("cite"), str) and pit["cite"].strip()):
                     problems.append(f"{at}: pitfalls[{i}] needs \"cite\" (official quote, URL or client and date)")
@@ -193,7 +196,10 @@ def validate(files: list[tuple[str, dict]], catalog: dict, skill_dir: str = SKIL
             if "example" in note:
                 problems += [f"{at}: {p}" for p in _check_example(skill_dir, note["example"], symbol,
                                                                   symbols[symbol]["kind"])]
-            text = card(symbols[symbol], note, catalog.get("meta", {}), skill_dir=skill_dir)
+            if len(problems) > before:
+                continue  # a malformed note is reported, not rendered
+            # The authored card must fit; a REVIEW line that a sync adds is allowed on top of it.
+            text = card(symbols[symbol], {**note, "review": False}, catalog.get("meta", {}), skill_dir=skill_dir)
             size = len(text.encode("utf-8"))
             if size > CARD_LIMIT:
                 problems.append(f"{at}: card is {size} bytes, the limit is {CARD_LIMIT}; shorten the note")
@@ -211,8 +217,10 @@ def _check_example(skill_dir: str, rel, symbol: str, kind: str) -> list[str]:
     if rel.endswith(".json"):
         return [] if example_step(target, symbol) else [f"example {rel!r} records no {symbol} request"]
     with open(target, encoding="utf-8", errors="replace") as fh:
-        words = set(re.findall(r"[A-Za-z0-9_]+", fh.read()))
-    return [] if symbol in words or snake(symbol) in words else [f"example {rel!r} never calls {symbol}"]
+        text = fh.read()
+    names = "|".join(re.escape(n) for n in (symbol, snake(symbol)))
+    called = re.search(rf"[\"'](?:{names})[\"']|(?<![A-Za-z0-9_])(?:{names})\s*\(", text)
+    return [] if called else [f"example {rel!r} never calls {symbol} (a quoted method name or a call)"]
 
 
 # ------------------------------------------------------------------ card
@@ -289,8 +297,9 @@ def card(sym: dict, note: dict | None, meta: dict, skill_dir: str = SKILL_DIR) -
                 break
             shown.append(name)
         cut = len(optional) - len(shown)
-        if shown or cut:
-            lines.append(label + ", ".join(shown) + (f"{', ' if shown else ''}… +{cut} more" if cut else ""))
+        line = label + ", ".join(shown) + (f"{', ' if shown else ''}… +{cut} more" if cut else "")
+        if len(fixed.encode("utf-8")) + 1 + len(line.encode("utf-8")) <= CARD_LIMIT:
+            lines.append(line)  # dropped when even the count would not fit; `lookup show` lists them
     return "\n".join(lines + tail)
 
 

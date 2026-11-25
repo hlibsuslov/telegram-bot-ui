@@ -80,15 +80,31 @@ def build(name: str) -> dict:
     }
 
 
-def main() -> int:
-    check = "--check" in sys.argv
-    only = [sys.argv[i + 1] for i, a in enumerate(sys.argv[:-1]) if a == "--only"]
+def orphans(out_dir: str, names) -> list[str]:
+    """api-*.json payloads whose recipes/api_*.py module is gone: they would still count as examples."""
+    return sorted(f for f in os.listdir(out_dir) if f.startswith("api-") and f.endswith(".json")
+                  and f[:-5] not in names)
+
+
+def parse_args(argv=None):
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--check", action="store_true", help="fail when a payload file differs from its recipe")
+    ap.add_argument("--only", nargs="+", action="extend", metavar="NAME", help="these scenarios only")
+    return ap.parse_args(argv)
+
+
+def main(argv=None) -> int:
+    args = parse_args(argv)
+    check, only = args.check, args.only or []
     unknown = [n for n in only if n not in SCENARIOS]
     if unknown:
         print("unknown scenario:", ", ".join(unknown), "- known:", ", ".join(SCENARIOS))
         return 2
     os.makedirs(OUT, exist_ok=True)
     drift = []
+    if check and not only:
+        drift += [f"{f} (no recipes/api_*.py module makes it)" for f in orphans(OUT, SCENARIOS)]
     names = only or list(SCENARIOS)
     for name in names:
         text = json.dumps(build(name), ensure_ascii=False, indent=2) + "\n"

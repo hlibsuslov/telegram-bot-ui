@@ -672,6 +672,8 @@ def main(argv=None) -> int:
     print(summarize_diff(diff))
     if args.check:
         return 0
+    # Notes first: if this step fails, the old catalog stays and a retry sees the same diff again.
+    marked = mark_notes_for_review(os.path.join(args.out, "agent-notes"), diff)
     write_json(os.path.join(args.out, "catalog.json"), cat)
     if built["changelog"]:
         write_json(os.path.join(args.out, "changelog.json"), {
@@ -682,7 +684,6 @@ def main(argv=None) -> int:
     if old is None or diff["initial"] or any(diff["added"].values()) or any(diff["removed"].values()) \
             or any(diff["changed"].values()) or not os.path.isfile(os.path.join(args.out, "diff.json")):
         write_json(os.path.join(args.out, "diff.json"), diff)
-    marked = mark_notes_for_review(os.path.join(args.out, "agent-notes"), diff)
     if marked:
         print(f"agent notes marked review: true (re-check them against the catalog): {', '.join(marked)}")
     print(f"wrote {os.path.relpath(args.out, ROOT)}")
