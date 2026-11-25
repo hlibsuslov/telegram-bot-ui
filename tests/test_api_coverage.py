@@ -130,10 +130,10 @@ class Floor(FakeSkill):
 
     def test_lost_coverage_fails(self):
         self.run_cli("--update-floor")
-        _write(self.skill, "references/messages.md", "A Widget holds parts.")
+        _write(self.skill, "references/messages.md", "Use `sendThingDraft` to stream.")
         code, out = self.run_cli("--check")
         self.assertEqual(code, 1)
-        self.assertIn("missing method.K (1): sendThingDraft", out)
+        self.assertIn("missing type.named (1): Widget", out)
 
     def test_gained_coverage_makes_the_floor_stale_until_updated(self):
         self.run_cli("--update-floor")
@@ -188,6 +188,15 @@ class Floor(FakeSkill):
             code = api_coverage.main(["--update-floor", "--skill", self.skill, "--floor", "floor.json"])
         self.assertEqual(code, 0, out.getvalue())
         self.assertTrue(os.path.isfile(os.path.join(self.skill, "floor.json")))
+
+
+class NoteIsKnowledge(FakeSkill):
+    def test_an_agent_note_explains_a_method_no_reference_names(self):
+        _write(self.skill, "data/bot-api/agent-notes/sets.json", {"domain": "sets", "notes": {
+            "makeSet": {"purpose": "Create a set."}}})
+        rows = self.rows()
+        self.assertTrue(rows["makeSet"]["K"] and rows["makeSet"]["N"])
+        self.assertFalse(rows["sendThing"]["K"])
 
 
 class UnionMembers(FakeSkill):

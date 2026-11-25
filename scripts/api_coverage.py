@@ -9,7 +9,8 @@
 
 Levels. A symbol has a level when its exact name is a whole identifier in that text:
   Bot API methods and types (data/bot-api/catalog.json)
-    K  knowledge   references/**/*.md, except the generated registry bot-api-coverage.md and INDEX.md
+    K  knowledge   references/**/*.md (except the generated registry bot-api-coverage.md and INDEX.md),
+                   or its own agent note (purpose and when to use it)
     R  recipe      recipes/*.md (top level only)
     P  practice    examples/payloads/*.json or example code (examples/**/*.py|ts|tsx|js|mjs|html);
                    a method also counts in snake_case (bot.send_message)
@@ -152,7 +153,7 @@ def measure(skill: str = SKILL) -> dict:
             is_method = kind == "methods"
             rows.append({
                 "kind": kind[:-1], "name": name, "section": sym.get("section") or "",
-                "K": name in know, "R": name in recipe,
+                "K": name in know or name in noted, "R": name in recipe,
                 "P": name in practice or (is_method and snake(name) in practice),
                 "V": name in validators or (is_method and f"_rules_{name}" in validators),
                 "N": name in noted, "C": name in carded,
