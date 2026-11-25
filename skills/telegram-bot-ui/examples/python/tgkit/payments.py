@@ -673,6 +673,11 @@ class RefundPolicy:
 Deliver = Callable[[Order, Product, Payment], None]
 
 
+# Ledger ref prefixes of the postings that reverse a charge (finalize_refund, _chargeback); any other
+# credit on bot:stars, a fee for example, never counts as a refund even when it names the same charge.
+REVERSAL_REFS = ("refund", "chargeback")
+
+
 class StarsPayments:
     """Stars rail of the pipeline. Feed it updates with `handle(update)`; pass
     `ALLOWED_UPDATES` (or a superset) to getUpdates / setWebhook."""
@@ -1236,8 +1241,10 @@ class StarsPayments:
         for ref, debit, credit in self.store.ledger_rows("bot:stars"):
             if debit:                                          # income: ref is the charge id
                 income[ref] = income.get(ref, 0) + 1
-            elif credit:                                       # refund:<charge> or chargeback:<charge>
-                reversed_ids.add(ref.partition(":")[2])
+            elif credit:                                       # only finalize_refund and _chargeback reverse a charge
+                kind, sep, charge = ref.partition(":")
+                if sep and kind in REVERSAL_REFS:
+                    reversed_ids.add(charge)
         audit = LedgerAudit(double_credits=sorted(c for c, n in income.items() if n > 1))
         while True:
             page = self.tx.call("getStarTransactions", {"offset": offset, "limit": page_size})["transactions"]

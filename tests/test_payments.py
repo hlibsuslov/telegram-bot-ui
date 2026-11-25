@@ -559,6 +559,16 @@ class LedgerAudits(unittest.TestCase):
         self.assertEqual(b.t.params_of("getStarTransactions")[-1], {"offset": 5, "limit": 100})
         self.assertEqual((again.pages, again.next_offset, again.missing_refunds), (1, 5, []))
 
+    def test_a_fee_credit_on_the_same_charge_does_not_hide_a_missing_refund(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxF")
+        b.store.post(T0 + 2, "fees", "bot:stars", 10 * NANO, "fee:stxF")      # not a reversal of stxF
+        b.t.script("getStarTransactions", {"transactions": [tx("stxF", 250, T0, **user_in()),
+                                                            tx("stxF", 250, T0 + 5, **user_out())]})
+        a = b.pay.audit_ledger()
+        self.assertEqual(a.missing_refunds, ["stxF"])
+        self.assertFalse(a.clean)
+
     def test_page_size_is_the_api_range(self):
         with self.assertRaises(ValueError):
             Bot().pay.audit_ledger(page_size=101)
