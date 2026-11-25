@@ -621,6 +621,34 @@ class ValidateRichBlocks(unittest.TestCase):
         self.assertFlags(errors([rich.buttons_block([rich.message_button("Go", url="https://t.me")], "middle")]),
                          "align must be left, center or right")
 
+    def test_malformed_values_are_errors_with_field_paths(self):
+        self.assertFlags(vr.validate({"blocks": 5})[0], "blocks: an array of InputRichBlock")
+        self.assertFlags(errors([{"type": "details", "summary": "S", "blocks": "abc"}]),
+                         "blocks[0].blocks: an array of InputRichBlock")
+        self.assertFlags(errors([{"type": "photo", "photo": {"type": "photo"}}]),
+                         "blocks[0].photo: InputMediaPhoto is missing required field 'media'")
+        self.assertFlags(errors([{"type": "paragraph", "text": None}]), "blocks[0].text: null")
+        self.assertFlags(errors([{"type": ["paragraph"], "text": "x"}]),
+                         "blocks[0]: ['paragraph'] is not an InputRichBlock type")
+        self.assertFlags(errors([rich.paragraph_block({"type": ["bold"], "text": "x"})]),
+                         "blocks[0].text: ['bold'] is not a RichText type")
+
+    def test_junk_in_any_field_never_crashes(self):
+        junk = (None, 5, True, "x", [], [1], [["x"]], {}, {"type": []}, [{"type": ["x"]}])
+        for const, name in sorted(vr._spec()[1].items()):
+            for field in TYPES[name]["fields"]:
+                if field["name"] == "type":
+                    continue
+                for value in junk:
+                    block = {"type": const, field["name"]: value}
+                    kind = field["type"]
+                    wrong = value is None or (kind.startswith("Array of") and not isinstance(value, list))                         or (kind == "RichText" and isinstance(value, (int, bool)))
+                    with self.subTest(block=block):
+                        for draft in (False, True):
+                            found, _, _ = vr.validate({"blocks": [block]}, draft=draft)
+                            if wrong:
+                                self.assertFlags(found, f"blocks[0].{field['name']}")
+
 
 if __name__ == "__main__":
     unittest.main()

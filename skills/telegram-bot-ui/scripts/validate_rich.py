@@ -116,6 +116,11 @@ def _spec() -> tuple[dict, dict[str, str], dict[str, str]]:
     return types, members("InputRichBlock"), members("RichText")
 
 
+def _array(v) -> list:
+    """The value when it is a JSON array, else nothing to walk (the wrong kind is reported where it is read)."""
+    return v if isinstance(v, list) else []
+
+
 def _int(v) -> bool:
     return isinstance(v, int) and not isinstance(v, bool)
 
@@ -158,7 +163,7 @@ def text(rt, depth: int, c: Counter, path: str) -> None:
         c.errors.append(f"{path}: RichText is a string, an array of RichText or a RichText object")
         return
     t = rt.get("type")
-    name = _spec()[2].get(t)
+    name = _spec()[2].get(t) if isinstance(t, str) else None
     if name is None:
         c.errors.append(f"{path}: {t!r} is not a RichText type")
         return
@@ -189,11 +194,14 @@ def _media(block: dict, field: dict, c: Counter, path: str) -> None:
     if not isinstance(media, dict) or media.get("type") != want:
         c.errors.append(f"{path}.{t}: a {t} block takes {expected} (type {want!r})")
         return
+    c.fields(media, expected, f"{path}.{t}")
     ignored = [k for k in IGNORED_MEDIA_KEYS if k in media]
     if ignored:
         c.warnings.append(f"{path}.{t}: {', '.join(ignored)}: \"{QUOTES['media_caption'][2]}\" "
                           f"(catalog) - put the caption in the block's caption")
     ref = media.get("media", "")
+    if "media" in media and (not isinstance(ref, str) or not ref):
+        c.errors.append(f"{path}.{t}.media: a file_id, an HTTP URL or attach://<name> (a non-empty string)")
     if c.draft and isinstance(ref, str) and (ref.startswith("attach://") or ref.startswith("http")):
         c.errors.append(f"{path}: drafts can't upload new files or fetch by URL - send the file first, reuse file_id")
 
@@ -215,7 +223,7 @@ def _ranges(block: dict, c: Counter, path: str) -> None:
 
 
 def _list(block: dict, depth: int, c: Counter, path: str) -> None:
-    for i, item in enumerate(block.get("items") or []):
+    for i, item in enumerate(_array(block.get("items"))):
         at = f"{path}.items[{i}]"
         if not isinstance(item, dict):
             c.errors.append(f"{at}: a list item is an InputRichBlockListItem object")
@@ -223,14 +231,16 @@ def _list(block: dict, depth: int, c: Counter, path: str) -> None:
         c.blocks += 1
         c.fields(item, "InputRichBlockListItem", at)
         label = item.get("type")
-        if label is not None and label not in LIST_LABELS:
+        if label is not None and (not isinstance(label, str) or label not in LIST_LABELS):
             c.errors.append(f"{at}: type {label!r}: {QUOTES['list_label'][2]}")
-        for j, b in enumerate(item.get("blocks") or []):
+        if "blocks" in item and not isinstance(item["blocks"], list):
+            c.errors.append(f"{at}.blocks: an array of InputRichBlock")
+        for j, b in enumerate(_array(item.get("blocks"))):
             walk(b, depth + 2, c, f"{at}.blocks[{j}]")
 
 
 def _table(block: dict, depth: int, c: Counter, path: str) -> None:
-    rows = block.get("cells") or []
+    rows = _array(block.get("cells"))
     c.blocks += len(rows)
     carried = [0] * len(rows)  # columns taken by rowspans from the rows above
     for r, row in enumerate(rows):
@@ -245,7 +255,7 @@ def _table(block: dict, depth: int, c: Counter, path: str) -> None:
                 continue
             c.fields(cell, "RichBlockTableCell", at)
             for key, allowed, quote in (("align", CELL_ALIGN, "cell_align"), ("valign", CELL_VALIGN, "cell_valign")):
-                if key in cell and cell[key] not in allowed:
+                if key in cell and (not isinstance(cell[key], str) or cell[key] not in allowed):
                     c.errors.append(f"{at}: {key} {cell[key]!r}: {QUOTES[quote][2]}")
             span = cell.get("colspan", 1) if _int(cell.get("colspan", 1)) else 1
             width += span
@@ -264,7 +274,7 @@ def walk(block, depth: int, c: Counter, path: str) -> None:
     c.blocks += 1
     c.deeper(depth)
     t = block.get("type")
-    name = _spec()[1].get(t)
+    name = _spec()[1].get(t) if isinstance(t, str) else None
     if name is None:
         c.errors.append(f"{path}: {t!r} is not an InputRichBlock type (one of {', '.join(sorted(_spec()[1]))})")
         return
@@ -275,23 +285,29 @@ def walk(block, depth: int, c: Counter, path: str) -> None:
         if key == "type" or key not in block:
             continue
         value, kind = block[key], f["type"]
+        if value is None:
+            c.errors.append(f"{path}.{key}: null - leave an optional field out, a required one needs a {kind}")
+            continue
+        if kind.startswith("Array of") and not isinstance(value, list):
+            c.errors.append(f"{path}.{key}: an array of {kind[len('Array of '):]}")
+            continue
         if kind == "RichText":
             text(value, depth, c, f"{path}.{key}")
         elif kind == "RichBlockCaption":
             _caption(value, depth, c, f"{path}.{key}")
         elif kind == "Array of InputRichBlock":
-            for i, b in enumerate(value if isinstance(value, list) else []):
+            for i, b in enumerate(value):
                 walk(b, depth + 1, c, f"{path}.{key}[{i}]")
         elif kind.startswith("InputMedia"):
             _media(block, f, c, path)
     if t == "mathematical_expression" and isinstance(block.get("expression"), str):
         c.chars += len(block["expression"])
     if t == "buttons":
-        for i, b in enumerate(block.get("buttons") or []):
+        for i, b in enumerate(_array(block.get("buttons"))):
             if isinstance(b, dict):  # the button rules are validate_keyboard's; the labels are text
                 text(b.get("text"), depth, c, f"{path}.buttons[{i}].text")
-    if t in ("collage", "slideshow") and any(isinstance(b, dict) and b.get("type") not in GALLERY_ITEMS
-                                             for b in block.get("blocks") or []):
+    if t in ("collage", "slideshow") and any(isinstance(b, dict) and str(b.get("type")) not in GALLERY_ITEMS
+                                             for b in _array(block.get("blocks"))):
         c.warnings.append(f"{path}: a {t} holds photos and videos (Official: Rich HTML style lists <img> and "
                           f"<video> as its children)")
     _ranges(block, c, path)
@@ -310,7 +326,9 @@ def validate(payload: dict, *, draft: bool = False):
         errors.append(f"InputRichMessage needs exactly one of html/markdown/blocks, found {forms}")
     c = Counter(draft)
     if "blocks" in msg:
-        for i, b in enumerate(msg["blocks"] if isinstance(msg["blocks"], list) else []):
+        if not isinstance(msg["blocks"], list):
+            errors.append("blocks: an array of InputRichBlock")
+        for i, b in enumerate(_array(msg["blocks"])):
             walk(b, 1, c, f"blocks[{i}]")
         if msg.get("media"):
             warnings.append(f"media: \"{QUOTES['media_field'][2]}\" - a blocks message carries its media "
