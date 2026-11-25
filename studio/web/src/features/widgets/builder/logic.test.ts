@@ -1,5 +1,5 @@
 // node --test: field applicability and the preset/custom/palette rules of the visual builder,
-// on a small schema shaped like the one studio/bot_ui/builder.py serves.
+// on a small schema shaped like the one skills/telegram-bot-ui/scripts/bot_ui/builder.py serves.
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import {

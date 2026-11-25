@@ -5,9 +5,9 @@ the CLI (`studio/bot-ui.py`), the local Studio, the interactive artifact and the
 read and write the same files through the same rules. The format version (`schemaVersion`)
 is independent of the tool version, the Bot API version and any SDK version.
 
-Executable form of this document: `studio/bot_ui/` (Python, canonical), `studio/web/src/core/`
+Executable form of this document: `skills/telegram-bot-ui/scripts/bot_ui/` (Python, canonical), `studio/web/src/core/`
 (TypeScript port for the browser, checked by `tests/test_bot_ui_parity.py`), fixtures in
-`studio/templates/checkout/` (valid project and scenarios) and `studio/fixtures/` (failures).
+`skills/telegram-bot-ui/scripts/bot_ui/templates/checkout/` (valid project and scenarios) and `studio/fixtures/` (failures).
 
 ## Files
 
@@ -179,7 +179,7 @@ Every write is a `bot-ui-patch/v1` document:
 
 ## Simulation
 
-See `studio/bot_ui/engine.py`. Session: active screen, locale, context, state, data, input,
+See `skills/telegram-bot-ui/scripts/bot_ui/engine.py`. Session: active screen, locale, context, state, data, input,
 history (Back), message instances (with accessibility), active inline message, reply keyboard,
 awaited input. Events: `command`, `text`, `press` (optionally on an older `message`), `event`
 (external `eventKey` with `data`), `context`, `locale`, `inaccessible`, `expect`. Effects:

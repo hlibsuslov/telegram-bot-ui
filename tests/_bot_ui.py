@@ -1,4 +1,4 @@
-"""Shared helpers for the bot-ui (studio/) tests."""
+"""Shared helpers for the bot-ui tests (core in skills/telegram-bot-ui/scripts/bot_ui, Studio in studio/)."""
 from __future__ import annotations
 
 import json
@@ -10,11 +10,12 @@ import unittest
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 STUDIO = os.path.join(ROOT, "studio")
-TEMPLATE = os.path.join(STUDIO, "templates", "checkout")
+CORE = os.path.join(ROOT, "skills", "telegram-bot-ui", "scripts")  # bot_ui lives in the skill
+TEMPLATE = os.path.join(CORE, "bot_ui", "templates", "checkout")
 FIXTURES = os.path.join(STUDIO, "fixtures")
 CLI = os.path.join(STUDIO, "bot-ui.py")
-if STUDIO not in sys.path:
-    sys.path.insert(0, STUDIO)
+if CORE not in sys.path:
+    sys.path.insert(0, CORE)
 if os.path.join(STUDIO, "adapters") not in sys.path:
     sys.path.insert(0, os.path.join(STUDIO, "adapters"))
 

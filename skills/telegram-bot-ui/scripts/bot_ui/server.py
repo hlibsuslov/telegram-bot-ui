@@ -32,8 +32,10 @@ from .render import bot_request, render_screen
 from .store import StoreError, screen_patch, write_patch
 from .validate import summary, validate
 
+from .skill import web_dir
+
 HERE = os.path.dirname(os.path.abspath(__file__))
-DIST = os.path.join(os.path.dirname(HERE), "web", "dist")
+DIST = web_dir("dist")
 MAX_BODY = 2 * 1024 * 1024
 
 

@@ -5,7 +5,7 @@ renders a form from the type's schema; the server generates the widget source fr
 configuration and builds it with the usual pipeline (`widgets.build`: kit, lint, runtime
 check, raw and zlib-9 budgets). Hand-written widgets are unchanged.
 
-Owner of this format: the coordinator. Generator and schema: `studio/bot_ui/builder.py`.
+Owner of this format: the coordinator. Generator and schema: `skills/telegram-bot-ui/scripts/bot_ui/builder.py`.
 Form: `studio/web/src/features/widgets/` (renders whatever the schema says).
 
 ## Storage (widget.json)

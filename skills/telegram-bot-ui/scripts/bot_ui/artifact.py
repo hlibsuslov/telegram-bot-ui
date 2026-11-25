@@ -14,8 +14,10 @@ from . import SCHEMA_VERSION, SNAPSHOT_FORMAT, TOOL_VERSION, emoji
 from .project import Snapshot
 from .validate import validate
 
+from .skill import web_dir
+
 HERE = os.path.dirname(os.path.abspath(__file__))
-ARTIFACT_TEMPLATE = os.path.join(os.path.dirname(HERE), "web", "dist-artifact", "index.html")
+ARTIFACT_TEMPLATE = web_dir("dist-artifact", "index.html")
 MARK = "__BOT_UI_SNAPSHOT__"
 PROJECT_KEYS = ("schemaVersion", "projectId", "title", "defaultLocale", "locales", "entryPoints", "contexts",
                 "fields", "handlers", "messages", "capabilities")

@@ -1,4 +1,4 @@
-"""bot-ui writes: one write path, revisions, conflicts, transactions (studio/bot_ui/store.py)."""
+"""bot-ui writes: one write path, revisions, conflicts, transactions (skills/telegram-bot-ui/scripts/bot_ui/store.py)."""
 from __future__ import annotations
 
 import json

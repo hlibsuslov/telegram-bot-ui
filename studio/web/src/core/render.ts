@@ -1,4 +1,4 @@
-// Port of studio/bot_ui/render.py. Keep both in step: tests/test_bot_ui_parity.py runs the
+// Port of skills/telegram-bot-ui/scripts/bot_ui/render.py. Keep both in step: tests/test_bot_ui_parity.py runs the
 // same scenario fixtures through both engines and compares the results byte for byte.
 export type Json = null | boolean | number | string | Json[] | { [k: string]: Json };
 export type Doc = Record<string, any>;

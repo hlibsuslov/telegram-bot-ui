@@ -1,4 +1,4 @@
-// Port of studio/bot_ui/engine.py (see its docstring for events, effects and policies).
+// Port of skills/telegram-bot-ui/scripts/bot_ui/engine.py (see its docstring for events, effects and policies).
 import { type Doc, EDITABLE_MEDIA, keyboardRows, localized, renderScreen, type Logical } from "./render.ts";
 
 export const HISTORY_MAX = 20;

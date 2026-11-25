@@ -1,5 +1,5 @@
 // Client-side checks of the surfaces the Studio and the artifact edit (texts, labels, targets,
-// rules, keyboard references). A subset of studio/bot_ui/validate.py with the same codes and
+// rules, keyboard references). A subset of skills/telegram-bot-ui/scripts/bot_ui/validate.py with the same codes and
 // pointers; the CLI and the Studio server run the full validator before any write.
 import { type Doc, MEDIA_TYPES, keyboardRows, placeholders } from "./render.ts";
 import type { Snapshot } from "./engine.ts";

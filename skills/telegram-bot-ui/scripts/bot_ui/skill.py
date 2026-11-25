@@ -1,8 +1,9 @@
-"""Bridge to the telegram-bot-ui skill: its validators, widget builder and tgkit.
+"""Bridge to the rest of the telegram-bot-ui skill (validators, widget builder, tgkit) and to
+the optional Studio web client.
 
-The Studio is an optional package next to the skill, so the skill keeps one owner for
-Telegram rules (keyboards, regular HTML, widget limits). BOT_UI_SKILL_DIR overrides the
-location, for example an installed copy of the skill.
+This package lives inside the skill (`scripts/bot_ui/`), so the skill root is two levels up.
+The web client lives only in a clone or a plugin install of the repository (`studio/web`).
+BOT_UI_SKILL_DIR and BOT_UI_STUDIO_DIR override either location.
 """
 from __future__ import annotations
 
@@ -11,7 +12,9 @@ import os
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_SKILL = os.path.normpath(os.path.join(HERE, "..", "..", "skills", "telegram-bot-ui"))
+DEFAULT_SKILL = os.path.normpath(os.path.join(HERE, "..", ".."))
+# skills/telegram-bot-ui/scripts/bot_ui -> repository root -> studio
+DEFAULT_STUDIO = os.path.normpath(os.path.join(DEFAULT_SKILL, "..", "..", "studio"))
 
 
 def skill_dir() -> str:
@@ -19,6 +22,15 @@ def skill_dir() -> str:
     if not os.path.isfile(os.path.join(path, "SKILL.md")):
         raise RuntimeError(f"telegram-bot-ui skill not found at {path}; set BOT_UI_SKILL_DIR")
     return path
+
+
+def studio_dir() -> str:
+    """Folder that holds `web/` (the Studio client); may not exist in a skill-only install."""
+    return os.environ.get("BOT_UI_STUDIO_DIR") or DEFAULT_STUDIO
+
+
+def web_dir(*parts: str) -> str:
+    return os.path.join(studio_dir(), "web", *parts)
 
 
 def _ensure_path() -> None:

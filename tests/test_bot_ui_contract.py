@@ -1,4 +1,4 @@
-"""bot-ui contract: model, IDs, validation, revisions, rendering (studio/bot_ui)."""
+"""bot-ui contract: model, IDs, validation, revisions, rendering (skills/telegram-bot-ui/scripts/bot_ui)."""
 from __future__ import annotations
 
 import json
