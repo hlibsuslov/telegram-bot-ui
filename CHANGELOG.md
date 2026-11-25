@@ -5,6 +5,47 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## 3.3.0 - 2026-11-25
+
+**Every Bot API symbol has an agent card, the emoji library is chosen by tags, and evals have a judge.**
+
+- **Agent cards for the whole Bot API:** a note and a checked request example for every one of the 194
+  methods (messages, editing, stickers, chat-admin, chat-info, bot-settings, business, forums, platform,
+  inline widgets, payments), 426 of 426 types named in a card, and 286 of 286 WebApp members with guidance
+  or code. `lookup` (and the MCP lookup) returns catalog + note + example in one card; `sync` marks changed
+  notes for review. A random sample of cards was checked against Telegram's own pages.
+- **`api_coverage.py`** measures knowledge, reference, payload and validation per symbol with a ratcheting
+  floor in `run_checks.py`; CI fails a floor lowered against the PR base.
+- **Rich Messages as JSON blocks:** block and rich-text builders mirrored from the catalog, `validate_rich.py`
+  checks blocks as deeply as HTML (errors with paths, never a crash), and `references` explain when to send
+  blocks instead of HTML. The Studio marks block screens as not supported.
+- **Payments:** a read-only ledger audit over the Star statement (`tgkit`), the shipping path in the pipeline,
+  and a pre-checkout recipe that checks payload, payer, currency and shipping option against the stored
+  order before the amount.
+- **Mini Apps:** typed, version-gated events, a state snapshot and batch storage in the kit; the official
+  base64 `Authorization` form of init data is accepted.
+- **Emoji library by tags:** the library client reads every answer and the offline export
+  (`--library-file emoji-library.ndjson.gz`) through a vendored contract; `pick --profile` compares the
+  brand accent with pack colours and says in one line why each pack was chosen. The MCP pick tools return
+  each pack's description. In the Studio, the Emoji page filters every pack by style, colour, theme fit and
+  motion and ranks packs for the slots the project's screens use; the single-file snapshot carries the same
+  catalog and works offline.
+- **Recipe R76:** the bot builds its own custom emoji pack and uses it.
+- **Evals:** 78 activation cases for the Bot API domains, routing counted through the first playbook,
+  timeouts kept apart from misses; a behavioural runner with a versioned, tool-less LLM judge, per-role
+  scores and a release gate. The judge agrees with 10 hand-labelled answers 50 of 50 times.
+- **Hardening:** the installer refuses linked project folders, junctions and reparse points before any copy;
+  `preview_widget --serve` checks Host, Origin, JSON and body size; the preview page and mock runtime act
+  only on messages from their own frame; the Telegram bridge enforces each tool's input schema; MCP null
+  optional arguments get their defaults.
+
+### Compatibility
+
+- The library client requires the `taxonomy` and `generated` fields that the website adds in this release.
+  Against an older website, online picking answers `CONTRACT_MISMATCH`; the offline export keeps working.
+  Deploy the website first.
+- `bot-ui/` projects need no change.
+
 ## 3.2.0 - 2026-11-25
 
 **A router instead of one long entry, one CLI, and the bot remembered between sessions.**

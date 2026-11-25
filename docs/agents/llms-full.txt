@@ -2,7 +2,7 @@
 
 > An open-source Agent Skill (MIT) for everything a Telegram bot shows, sends and reacts to: screens,
 > texts, keyboards, streaming AI replies, HTML widgets, Mini Apps, payments in Stars, channel posts, an
-> agent's own bot, premium emoji, and offline catalogs of Bot API 10.5. Version 3.2.0,
+> agent's own bot, premium emoji, and offline catalogs of Bot API 10.5. Version 3.3.0,
 > verified 2026-11-22.
 
 ## Install (pick your host, run one command, then verify)

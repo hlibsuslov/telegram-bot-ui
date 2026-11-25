@@ -5,7 +5,7 @@ license: MIT
 argument-hint: "[start|audit|improve|fix|build|post|widget|mini-app|emoji|agent-bot|map|lookup] [what]"
 metadata:
   author: hlibsuslov
-  version: "3.2.0"
+  version: "3.3.0"
 ---
 
 # Telegram Bot UI
