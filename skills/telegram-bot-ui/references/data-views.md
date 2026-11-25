@@ -1,4 +1,19 @@
+---
+summary: "Showing numbers and records in a bot: choosing the surface, visual grammar, catalog of business interfaces, splitting long tables, widget data rules; read for tables, leaderboards, KPIs and reports."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
+
 # Data views: tables, leaderboards, progress, KPIs and reports in a bot
+
+## Contents
+
+- [Tools](#tools)
+- [1. Pick the surface](#1-pick-the-surface)
+- [2. Visual grammar (H, one per bot)](#2-visual-grammar-h-one-per-bot)
+- [3. Catalog: interfaces business and commercial bots need](#3-catalog-interfaces-business-and-commercial-bots-need)
+- [4. When a table or notification does not fit one message](#4-when-a-table-or-notification-does-not-fit-one-message)
+- [5. Widgets for data: rules that are not obvious](#5-widgets-for-data-rules-that-are-not-obvious)
 
 How a bot shows numbers and records so a person gets the answer in one glance: which surface,
 which layout, which symbols, and what to do when the data does not fit one message.

@@ -1,4 +1,22 @@
+---
+summary: "Inline mode: bot settings, flow, chosen_inline_result, editing inline messages, switch buttons, prepared inline messages for Mini Apps; read when a bot answers @bot queries."
+verified: "2026-11-22"
+bot_api: "10.5"
+---
+
 # Inline mode
+
+## Contents
+
+- [Bot settings](#bot-settings)
+- [Flow and state](#flow-and-state)
+- [`chosen_inline_result`](#chosen_inline_result)
+- [Editing inline messages](#editing-inline-messages)
+- [Switch buttons (opening inline mode from a keyboard)](#switch-buttons-opening-inline-mode-from-a-keyboard)
+- [Prepared inline messages (Mini Apps)](#prepared-inline-messages-mini-apps)
+- [What the user sees](#what-the-user-sees)
+- [Common mistakes](#common-mistakes)
+- [Error handling](#error-handling)
 
 Users type `@yourbot query` in **any** chat and pick a result; the message is sent
 by the user "via @yourbot". Also covers the switch buttons that open inline mode,

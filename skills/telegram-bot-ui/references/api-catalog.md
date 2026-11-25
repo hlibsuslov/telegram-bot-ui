@@ -1,4 +1,20 @@
+---
+summary: "The offline Bot API catalog in data/bot-api/ and its three stdlib tools: lookup, payload validation, refresh; read to check a method or type, validate a request or sync a new release."
+verified: "2026-11-22"
+bot_api: "10.5"
+---
+
 # Bot API catalog: offline lookup, payload checks, refresh
+
+## Contents
+
+- [The data](#the-data)
+- [Look something up — `scripts/tg_api_lookup.py`](#look-something-up--scriptstg_api_lookuppy)
+- [Check a request — `scripts/validate_payload.py`](#check-a-request--scriptsvalidate_payloadpy)
+- [The same tools over MCP — `scripts/bot_ui_mcp.py`](#the-same-tools-over-mcp--scriptsbot_ui_mcppy)
+- [Refresh when Telegram ships a release — `scripts/sync_bot_api.py`](#refresh-when-telegram-ships-a-release--scriptssync_bot_apipy)
+- [Map: API area → reference](#map-api-area--reference)
+- [What each release added (9.0 → 10.5)](#what-each-release-added-90--105)
 
 The whole Bot API (every method and type, with fields, required flags, return
 types and union members) is committed as JSON in `data/bot-api/`, together with the
@@ -52,11 +68,31 @@ the object must fit it (`InlineQueryResult` cached vs URL variants share `type` 
 are resolved structurally). `{"ok": true, "result": …}` envelopes are unwrapped with
 `--type`; keys starting with `_` are treated as annotations.
 
-**It is a structural check, not semantic validation**: no length/byte limits, no
-prose-only rules ("required unless …" is printed as a note), no rights, chat types,
-production-vs-test availability. Run the specialised validators for their areas:
+**It is mostly a structural check**: no general length/byte limits, no prose-only
+rules ("required unless …" is printed as a note), no rights, chat types,
+production-vs-test availability. A few rules Telegram states in prose are checked,
+read from the catalog text itself so a refresh updates them: `setMessageReaction`
+(only the `ReactionTypeEmoji` list, one reaction from a bot, no paid reactions) and
+`setMyCommands` (name pattern, lengths, at most 100, unique, two-letter language). Run the specialised validators for their areas:
 `scripts/validate_keyboard.py` (buttons), `scripts/validate_rich.py` (rich
 messages), `scripts/validate_widget.py` (widgets) — the tool prints which apply.
+
+## The same tools over MCP — `scripts/bot_ui_mcp.py`
+
+`py -3 scripts/tgui.py mcp` (or the script itself) is a stdio MCP server, standard library
+only: `claude mcp add --transport stdio telegram-bot-ui -- py -3 <skill>/scripts/bot_ui_mcp.py`
+(Codex: an `[mcp_servers.telegram-bot-ui]` entry with the same command). Tools:
+`telegram_api_lookup` (with "did you mean" for a near miss, never an invented name),
+`telegram_api_search`, `webapp_lookup`, `validate_request` (catalog + keyboard rules +
+Rich HTML buttons), `check_rich_html`, `knowledge_search` (which reference sections to read),
+`map_validate`, `map_render`, `map_simulate` (read-only: they never roll back a pending write),
+`map_snapshot` (a single-file Studio page to screenshot; it refuses to replace a file unless
+`overwrite: true`), `commands_audit`, `commands_plan`, and three that use the network:
+`emoji_library_search`, `emoji_pick_family` (slot coverage, then the brief's tags) and
+`emoji_rank_by_tags` (packs by style, colour, mood, topic, bot category; only search words, tag
+values and pack names are sent; `BOT_UI_EMOJI_RESOLVER=off` turns them off). Arguments are
+checked against each tool's input schema.
+Nothing sends to Telegram, no tool reads a token. Tested in `tests/test_bot_ui_mcp.py`.
 
 ## Refresh when Telegram ships a release — `scripts/sync_bot_api.py`
 

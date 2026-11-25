@@ -1,3 +1,9 @@
+---
+summary: "Real Telegram tables in Rich Messages: when to use them, three build paths, cross-cutting rules, data recipes, fallback ladder, verification, compact tables; read first for any structured data."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Tables — the flagship capability
 
 > **Read this first for any structured content.** Since Bot API 10.1 introduced
@@ -11,6 +17,16 @@
 > 2026). Field names of `InputRichBlockTable` and `RichBlockTableCell` are checked
 > against the local catalog (`py -3 scripts/tg_api_lookup.py show RichBlockTableCell`).
 > See `official-sources.md`.
+
+## Contents
+
+- [When a table is the right call](#when-a-table-is-the-right-call)
+- [The three ways to build a table (pick by how the data arrives)](#the-three-ways-to-build-a-table-pick-by-how-the-data-arrives)
+- [Cross-cutting table rules (apply in all three paths)](#cross-cutting-table-rules-apply-in-all-three-paths)
+- [Data → table recipes](#data--table-recipes)
+- [Fallback ladder when Rich Messages are unavailable](#fallback-ladder-when-rich-messages-are-unavailable)
+- [Verify before you ship](#verify-before-you-ship)
+- [Compact tables](#compact-tables)
 
 ## When a table is the right call
 

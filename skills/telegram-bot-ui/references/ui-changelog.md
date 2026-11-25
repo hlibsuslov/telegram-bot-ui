@@ -1,3 +1,9 @@
+---
+summary: "Interface-relevant Bot API history by version: what 9.4 changed, the 9.3-10.2 run for AI bots, version gates to check, keeping the file honest; read to know which version a UI feature needs."
+verified: "2026-11-22"
+bot_api: "10.5"
+---
+
 # UI-relevant Bot API history and version gates
 
 Only the entries that change what a bot's **interface** can do. Every line below
@@ -14,6 +20,14 @@ is in `api-catalog.md#what-each-release-added-90--105`; any symbol's history:
 newer version — re-read the changelog; (2) the project's SDK actually exposes
 the field (`sdk-compatibility.md`). A feature existing in the Bot API is not the
 same as a feature you can call.
+
+## Contents
+
+- [The current UI toolbox by version](#the-current-ui-toolbox-by-version)
+- [What 9.4 actually changed for UI work](#what-94-actually-changed-for-ui-work)
+- [What the 9.3 → 10.2 run changed for AI-bot interfaces](#what-the-93--102-run-changed-for-ai-bot-interfaces)
+- [Version gates to check before designing](#version-gates-to-check-before-designing)
+- [Keeping this file honest](#keeping-this-file-honest)
 
 ## The current UI toolbox by version
 
@@ -91,7 +105,7 @@ Design rules for all of it: `dynamic-feedback-and-streaming.md`.
 | Custom emoji on buttons | 9.4 | Eligibility route; ID obtained, not invented |
 | Custom emoji in text via owner Premium | 9.4 | Owner's Premium is current; chat type is private/group/supergroup |
 | Custom emoji in text via Fragment usernames | 6.2 | Fragment purchase exists |
-| Localized dates in text (`date_time`) | 9.5 | MarkdownV2/entities path (HTML cannot express it) |
+| Localized dates in text (`date_time`) | 9.5 | HTML `<tg-time unix format>`, MarkdownV2 `tg://time?unix=…&format=…` or a `date_time` entity |
 | Streaming a reply before it's final | 9.3 (all bots 9.5) | Private chats only; final `sendMessage` still required |
 | Streaming a *structured* reply / `<tg-thinking>` | 10.1 | Thinking block is draft-only; final send must stay rich |
 | Per-user menus inside a group (ephemeral) | 10.2 | Edit delivery is not guaranteed |

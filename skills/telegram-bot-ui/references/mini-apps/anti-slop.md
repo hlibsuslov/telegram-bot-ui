@@ -1,4 +1,20 @@
+---
+summary: "How a Mini App ends up looking generated and what to do instead: Telegram-specific tells, conflicts and decisions, general AI-UI tells, polish pass, checklist; read when polishing or reviewing."
+verified: "2026-11-24"
+bot_api: "10.5"
+---
+
 # Anti-slop for Mini Apps
+
+## Contents
+
+- [1. The two principles](#1-the-two-principles)
+- [2. Telegram-specific tells](#2-telegram-specific-tells)
+- [3. Conflicts and decisions [Heuristic]](#3-conflicts-and-decisions-heuristic)
+- [4. General tells, adapted (unslop, impeccable)](#4-general-tells-adapted-unslop-impeccable)
+- [5. The polish pass ("make it premium / cleaner / nicer")](#5-the-polish-pass-make-it-premium--cleaner--nicer)
+- [6. Checklist](#6-checklist)
+- [Linter rules](#linter-rules)
 
 How a Mini App ends up looking generated or "like a website in a sheet", and what to do instead. It joins
 three sources: Telegram's Design Guidelines (always first), the craft floor of the impeccable skill

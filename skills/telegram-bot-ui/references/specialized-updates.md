@@ -1,3 +1,9 @@
+---
+summary: "On-demand modules for 10.3 and 10.4 details: welcome-message right, community joins, gifts, share themes, managed bots, verification, paid messages, widget permission; read only the section needed."
+verified: "2026-11-12"
+bot_api: "10.4"
+---
+
 # Specialized 10.3/10.4 modules (on demand)
 
 > Verified 2026-11-12 against the changelog and each object/method page. Runnable examples:

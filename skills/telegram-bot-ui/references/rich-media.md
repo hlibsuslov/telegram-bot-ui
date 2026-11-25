@@ -1,3 +1,9 @@
+---
+summary: "Media inside Rich Messages: referencing files, binding to InputRichMessageMedia, media blocks, captions, ordering, rights, embed versus separate methods, fallback; read when a rich message has media."
+verified: "2026-11-15"
+bot_api: "10.5"
+---
+
 # Rich media
 
 Covers media inside Rich Messages (`InputRichMessageMedia` + media blocks) and
@@ -21,9 +27,10 @@ Reuse a Telegram `file_id` instead of re-uploading the same asset.
 
 When sending Rich Markdown or Rich HTML that references media (e.g. an image tag
 or a `tg://…?id=` link), declare each referenced item in
-`InputRichMessage.media` as an `InputRichMessageMedia` so Telegram knows the
-source (file_id / URL / upload), caption, and options. Confirm the exact field
-names for `InputRichMessageMedia` in the official object before use.
+`InputRichMessage.media` as an `InputRichMessageMedia` (`id`, `media`) so Telegram knows the
+source (file_id / URL / upload). Only the media and its own properties count: "everything except
+the media itself and its properties is ignored", so captions belong in the markdown/HTML
+(`<figcaption>`, the Markdown title), not in `media`.
 
 ## Media block types (explicit blocks)
 
