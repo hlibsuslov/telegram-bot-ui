@@ -1,7 +1,27 @@
+---
+summary: "Whole-bot interface projects kept as files in the repo (bot-ui contract): screens by stable ID, locales, keyboards, scenarios, widgets, Studio and CLI; read when designing a bot as one project."
+verified: "2026-11-22"
+bot_api: "10.5"
+---
+
 # Whole-bot interface projects by stable ID (bot-ui)
 
 > Contract `bot-ui` schemaVersion 1, CLI `bot-ui 0.1.0`. Bot API facts re-checked against the
 > local catalog (Bot API 10.5, fetched 2026-11-22) on 2026-11-22.
+
+## Contents
+
+- [Where the tools are](#where-the-tools-are)
+- [Evidence labels (always state one)](#evidence-labels-always-state-one)
+- [Route 1: new interface from a description](#route-1-new-interface-from-a-description)
+- [Route 2: existing bot](#route-2-existing-bot)
+- [Route 3: change a screen by ID](#route-3-change-a-screen-by-id)
+- [Previewing and editing with a person](#previewing-and-editing-with-a-person)
+- [Media and custom emoji](#media-and-custom-emoji)
+- [Widgets in a project](#widgets-in-a-project)
+- [Route 4: groups and personal data](#route-4-groups-and-personal-data)
+- [Telegram facts this depends on](#telegram-facts-this-depends-on)
+- [Without the Studio or the CLI](#without-the-studio-or-the-cli)
 
 Use this when the user wants to design, connect or maintain **a bot's whole interface** as files
 in the bot's repository: screens addressed by ID (`checkout.payment.confirm`), their texts per

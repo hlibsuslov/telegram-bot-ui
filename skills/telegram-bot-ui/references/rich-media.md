@@ -1,3 +1,9 @@
+---
+summary: "Media inside Rich Messages: referencing files, binding to InputRichMessageMedia, media blocks, captions, ordering, rights, embed versus separate methods, fallback; read when a rich message has media."
+verified: "2026-11-15"
+bot_api: "10.5"
+---
+
 # Rich media
 
 Covers media inside Rich Messages (`InputRichMessageMedia` + media blocks) and

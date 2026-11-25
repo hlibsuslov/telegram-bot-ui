@@ -1,3 +1,9 @@
+---
+summary: "Sending gifts and Premium from Stars, reading owned and unique gifts, gift service messages, stories for business accounts; read when a bot deals with gifts or stories."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Gifts and stories
 
 Sending gifts and Telegram Premium paid from the bot's Stars, reading gifts users and

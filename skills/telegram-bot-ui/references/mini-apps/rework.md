@@ -1,4 +1,21 @@
+---
+summary: "Procedure to rework a web-style Mini App into classic Telegram design: loop, stages, translation table, colours, copy, framework bridge, acceptance, report; read when asked to make an app native."
+verified: "2026-11-24"
+bot_api: "10.5"
+---
+
 # Rework a Mini App into classic Telegram design
+
+## Contents
+
+- [1. The loop](#1-the-loop)
+- [2. Stages](#2-stages)
+- [3. Translation table: web pattern → Telegram](#3-translation-table-web-pattern--telegram)
+- [4. Colours and type](#4-colours-and-type)
+- [5. Copy](#5-copy)
+- [6. React, Vue, Tailwind, shadcn/ui](#6-react-vue-tailwind-shadcnui)
+- [7. Acceptance: is it classic Telegram?](#7-acceptance-is-it-classic-telegram)
+- [8. Report](#8-report)
 
 The procedure for "make our Mini App look and work like Telegram": a web-style app (own header, drawer,
 gradients, a fixed CTA, emoji labels, its own palette) becomes a Telegram-native one without breaking its

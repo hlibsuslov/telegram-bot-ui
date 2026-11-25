@@ -1,3 +1,9 @@
+---
+summary: "Mini App budgets, weak-device rules, the ladder of evidence from static check to real device, the preview stand, PR screenshots; read before shipping or testing a Mini App."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
+
 # Mini App performance and testing
 
 Budgets that keep a Mini App fast on a weak Android phone, and the ladder of evidence from a static check

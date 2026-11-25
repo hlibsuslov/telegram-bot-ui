@@ -1,7 +1,26 @@
+---
+summary: "Compact map of regular versus Rich Messages: version history, object model, send and edit methods, capability matrix, formatting quick reference, authoring defaults; read to see what a message can do."
+verified: "2026-11-22"
+bot_api: "10.5"
+---
+
 # Telegram message capabilities
 
 > **Last verified against official docs: 2026-11-12** (Bot API 10.4, 9 Nov 2026). All rich
 > limits are now official ("Rich Message Limits"). See `official-sources.md`.
+
+## Contents
+
+- [Two mechanisms, kept separate](#two-mechanisms-kept-separate)
+- [Bot API version history (relevant to formatting)](#bot-api-version-history-relevant-to-formatting)
+- [Object model (high level)](#object-model-high-level)
+- [Send / edit methods](#send--edit-methods)
+- [Capability matrix (feature × format)](#capability-matrix-feature--format)
+- [Regular formatting quick reference](#regular-formatting-quick-reference)
+- [Authoring conventions (styling defaults)](#authoring-conventions-styling-defaults)
+- [Do / don't](#do--dont)
+- [Rich additions (Bot API 10.3-10.5)](#rich-additions-bot-api-103-105)
+- [Quotes from rich messages](#quotes-from-rich-messages)
 
 This is a compact map, not a copy of the docs. When the task depends on an exact
 field, open the official page for that object/method and confirm.

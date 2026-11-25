@@ -1,3 +1,9 @@
+---
+summary: "Mini App entry points, startapp and opening mode, main app, startup, running, ending, hosting, test environment; read when wiring how an app is opened and lives through a session."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
+
 # Launching a Mini App and living through its session
 
 Where a Mini App can be opened from, what each entry gives it, how it starts, pauses and ends, and where

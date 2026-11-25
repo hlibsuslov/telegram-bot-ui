@@ -1,3 +1,9 @@
+---
+summary: "The deep redesign path with gates: rights, project research, brand translation, style profile, voice gate, structure, migration, build and tuning loop; read for 'rethink the whole bot' requests."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Deep redesign path: research the project, rethink the menus, tune the bot
 
 > Status: **Heuristic** (this skill's process) except where marked **API**. Reviewed against
@@ -5,6 +11,20 @@
 > `bot-style-profile.md`. Builds on `project-adaptation.md` (find the interface),
 > `auditing-existing-bots.md` (inventory and diagnose) and `consistency-and-review.md`
 > (final pass).
+
+## Contents
+
+- [0. Rights and mandate (decide before reading code)](#0-rights-and-mandate-decide-before-reading-code)
+- [1. Project research (A1-A3)](#1-project-research-a1-a3)
+- [2. Translate the brand into what Telegram allows](#2-translate-the-brand-into-what-telegram-allows)
+- [3. Current state (A0-A1)](#3-current-state-a0-a1)
+- [4. Draft the style profile](#4-draft-the-style-profile)
+- [5. Voice gate: show, don't ask](#5-voice-gate-show-dont-ask)
+- [6. Rethink the structure (M3)](#6-rethink-the-structure-m3)
+- [7. Migration (when M4 or a removed screen is involved)](#7-migration-when-m4-or-a-removed-screen-is-involved)
+- [8. Build, verify, report](#8-build-verify-report)
+- [9. Tuning loop](#9-tuning-loop)
+- [Anti-patterns](#anti-patterns)
 
 Use this path when the request is bigger than fixing screens: *"make the bot feel like our
 product"*, *"rethink the whole menu"*, *"redo navigation from scratch"*, *"adapt the bot to

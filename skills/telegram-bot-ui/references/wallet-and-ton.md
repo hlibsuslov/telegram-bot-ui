@@ -1,3 +1,9 @@
+---
+summary: "Telegram side of TON wallet features: wallet card and sign_data queries, payment flow, signing verification, cards and transfers, TON addresses; read for wallet actions in widgets."
+verified: "2026-11-12"
+bot_api: "10.4"
+---
+
 # Wallet and TON features (Bot API 10.4)
 
 > Verified 2026-11-12 (Widgets guide "Payments with the wallet", `WidgetQueryType*`,

@@ -1,3 +1,9 @@
+---
+summary: "Consistency inventory (actions, states, cross-surface) and the final review checklist to run before reporting a redesign done; read at the end of any interface change."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
+
 # Consistency between screens and states, and the final review
 
 A bot feels "designed" when the same thing looks and is named the same

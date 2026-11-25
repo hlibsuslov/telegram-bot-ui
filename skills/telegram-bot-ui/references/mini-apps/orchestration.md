@@ -1,3 +1,9 @@
+---
+summary: "The order of work to create or rework a Mini App, the file or tool for each step, and a coverage map of every element; read at the start of any Mini App create or rework task."
+verified: "2026-11-24"
+bot_api: "10.5"
+---
+
 # Orchestrating a Mini App: create or rework
 
 The order an agent follows when a person asks to **create** a Mini App or to **improve, restyle or fix**

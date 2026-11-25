@@ -1,4 +1,23 @@
+---
+summary: "Inline and reply button rules: one field per type, colored style, custom emoji icons, ordering, anti-patterns, disabled buttons, force_reply; read when labelling or coloring buttons."
+verified: "2026-11-12"
+bot_api: "10.5"
+---
+
 # Buttons, emphasis, and `style` colors
+
+## Contents
+
+- [The one structural rule](#the-one-structural-rule)
+- [`style` — colored buttons (Bot API 9.4, 2026-02-09)](#style--colored-buttons-bot-api-94-2026-02-09)
+- [Custom emoji icons](#custom-emoji-icons)
+- [Ordering and grouping](#ordering-and-grouping)
+- [Inline vs reply — which one is a "button" here](#inline-vs-reply--which-one-is-a-button-here)
+- [Anti-patterns](#anti-patterns)
+- [Before/after](#beforeafter)
+- [Three button models](#three-button-models)
+- [Disabled buttons](#disabled-buttons)
+- [force_reply on keyboards](#force_reply-on-keyboards)
 
 Everything here applies to both `InlineKeyboardButton` and `KeyboardButton`
 unless stated otherwise. Layout specifics: `inline-keyboards.md`,

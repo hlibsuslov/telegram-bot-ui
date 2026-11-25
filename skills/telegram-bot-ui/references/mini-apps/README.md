@@ -1,3 +1,9 @@
+---
+summary: "Start page for Telegram Mini Apps: routing by task, reading order, sources and labels, offline data and tools, what is not covered yet; read first for any Mini App task."
+verified: "2026-11-23"
+bot_api: "10.5"
+---
+
 # Mini Apps: start here
 
 This folder is the skill's branch for **Telegram Mini Apps** (web apps opened inside Telegram through

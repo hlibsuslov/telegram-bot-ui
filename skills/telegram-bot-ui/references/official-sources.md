@@ -1,3 +1,9 @@
+---
+summary: "Verification log: primary sources, facts verified per date, stable historical facts, guidance that is not an API rule, sections to re-review on each release; read to check whether a fact is current."
+verified: "2026-11-22"
+bot_api: "10.5"
+---
+
 # Official sources and verification log
 
 > **Last verification: 2026-11-22.** Verified against **Bot API 10.5 (released
@@ -6,6 +12,20 @@
 > snapshotted in `data/bot-api/` (see `api-catalog.md`). Before version-dependent work, re-check the changelog for a newer
 > version and update this file. Updating these references is part of maintaining the skill —
 > no separate permission step is needed when the task is to update the skill.
+
+## Contents
+
+- [How to keep this current](#how-to-keep-this-current)
+- [Machine-readable snapshot (2026-11-22)](#machine-readable-snapshot-2026-11-22)
+- [Primary sources (source of truth)](#primary-sources-source-of-truth)
+- [Facts verified on 2026-08-05 (UI surface)](#facts-verified-on-2026-08-05-ui-surface)
+- [Facts verified on 2026-07-15](#facts-verified-on-2026-07-15)
+- [Facts verified on 2026-11-22 (Bot API 10.5)](#facts-verified-on-2026-11-22-bot-api-105)
+- [Facts verified on 2026-11-12 (Bot API 10.3 and 10.4)](#facts-verified-on-2026-11-12-bot-api-103-and-104)
+- [Stable historical facts (pre-2026, unchanged)](#stable-historical-facts-pre-2026-unchanged)
+- [Design guidance that is NOT an API constraint](#design-guidance-that-is-not-an-api-constraint)
+- [Community skills reviewed (2026-11-22)](#community-skills-reviewed-2026-11-22)
+- [Sections to re-review on each Telegram release](#sections-to-re-review-on-each-telegram-release)
 
 ## How to keep this current
 

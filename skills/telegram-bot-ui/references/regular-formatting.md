@@ -1,3 +1,9 @@
+---
+summary: "Complete map of regular (non-Rich) formatting: HTML and MarkdownV2 parse modes, MessageEntity, nesting, captions, presentation controls, quick chooser; read when formatting regular messages."
+verified: "2026-07-15"
+bot_api: "10.5"
+---
+
 # Regular formatting — complete reference
 
 > Exhaustive map of **every regular (non-Rich) Telegram text-formatting feature**:

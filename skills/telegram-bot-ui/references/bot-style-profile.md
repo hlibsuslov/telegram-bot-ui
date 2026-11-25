@@ -1,3 +1,9 @@
+---
+summary: "The style profile JSON recording a bot's interface decisions (voice, density, keyboards, emphasis, icons, navigation, formats) and which knob touches which surface; read when tuning a bot's look."
+verified: "2026-11-15"
+bot_api: "10.4"
+---
+
 # Bot style profile: the knobs that tune a bot
 
 > Status: **Heuristic** (this skill's design system) except rows marked **API**. Reviewed
