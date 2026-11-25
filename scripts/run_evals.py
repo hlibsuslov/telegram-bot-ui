@@ -19,8 +19,8 @@ runs each activation prompt through the host's non-interactive mode with write t
 disabled, and records whether the agent loaded the skill and WHICH copy it loaded. It
 spends the account's usage and needs the CLI to be logged in. Results go to
 evals/results/<date>T<HHMMSS>-<host>-<runid>.json and are never merged into evals.json
-automatically. Behavioural tasks are graded by a person (see evals/behavioral-evals.md);
-this script does not grade them.
+automatically. Behavioural tasks run and are graded by scripts/run_behavioral.py (an LLM judge
+with the fixed prompt evals/judge.md); this script only validates them (role, fixture, rubric).
 
 Isolation, so a user-level copy of the skill cannot answer for the project copy:
   claude  --setting-sources project,local drops the user settings, user skills and user
@@ -80,6 +80,8 @@ LANGS = ("en", "ru")              # every area needs positives in these
 ALLOWED_LANGS = LANGS + ("uk",)    # extra languages a case may use
 REQUIRED_BEHAVIORAL = ("B20", "B21", "B22", "B30", "B31", "B32", "B40", "B41", "B42",
                        "B50", "B51", "B52", "B60")
+# The agent role a behavioural task exercises (agents/claude/telegram-<role>.md); results aggregate per role.
+ROLES = ("designer", "builder", "reviewer", "publisher", "widget-builder")
 TRANSFER_AREAS = ("publishing", "agent-ops", "widgets", "use-cases", "api-lookup")
 # Bot API domains with agent cards (data/bot-api/agent-notes/<domain>.json), plus payments and Mini App
 # events: each needs 6-10 cases in every allowed language, positives and near misses.
@@ -123,6 +125,13 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
         seen.add(cid)
         return cid
 
+    def check_fixture(item, cid):
+        if "fixture" in item:
+            fixture = item["fixture"]
+            if not (isinstance(fixture, str) and FIXTURE_NAME.fullmatch(fixture)
+                    and os.path.isdir(os.path.join(FIXTURES, fixture))):
+                errors.append(f"{cid}: fixture must name a folder in evals/fixtures: {fixture!r}")
+
     for a in data["activation"]:
         cid = check_id(a, "activation")
         if a.get("area") not in areas:
@@ -141,11 +150,7 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
             for route in a["routes_to"]:
                 if not os.path.exists(os.path.join(SKILL_DIR, *route.split("/"))):
                     errors.append(f"{cid}: routes_to path does not exist in the skill: {route}")
-        if "fixture" in a:
-            fixture = a["fixture"]
-            if not (isinstance(fixture, str) and FIXTURE_NAME.fullmatch(fixture)
-                    and os.path.isdir(os.path.join(FIXTURES, fixture))):
-                errors.append(f"{cid}: fixture must name a folder in evals/fixtures: {fixture!r}")
+        check_fixture(a, cid)
         if a.get("expect") == "skip" and (a.get("area") != "out-of-scope" or a.get("routes_to")):
             errors.append(f"{cid}: negative cases use area out-of-scope and no routes")
         if a.get("expect") == "activate" and (a.get("area") == "out-of-scope" or not a.get("routes_to")):
@@ -184,6 +189,9 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
         behavioral_ids[cid] = b
         if b.get("area") not in areas or b.get("area") == "out-of-scope":
             errors.append(f"{cid}: behavioural area must be a capability area")
+        if b.get("role") not in ROLES:
+            errors.append(f"{cid}: role must be one of {ROLES}")
+        check_fixture(b, cid)
         if b.get("lang") not in ALLOWED_LANGS:
             errors.append(f"{cid}: lang must be one of {ALLOWED_LANGS}")
         for key in ("request", "context"):
