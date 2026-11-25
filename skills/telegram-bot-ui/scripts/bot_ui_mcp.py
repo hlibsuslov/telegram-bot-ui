@@ -262,6 +262,7 @@ def _snapshot_target(root: str, output: Any) -> str:
 def map_snapshot(args: dict) -> dict:
     """Single-file Studio page of the map, to open in a browser and screenshot (the visual check)."""
     from bot_ui.artifact import build_artifact
+    from bot_ui.emoji import EmojiError
     from bot_ui.project import open_snapshot
     root = _project(args.get("project"))
     output = _snapshot_target(root, args.get("output"))
@@ -270,11 +271,14 @@ def map_snapshot(args: dict) -> dict:
         raise ToolError(f"{output} exists; pass overwrite: true to replace it")
     screens = args.get("screens") or []
     try:  # without overwrite the file is created exclusively, so a racing writer cannot be truncated
-        build_artifact(open_snapshot(root, recover=False), output, screens=[str(s) for s in screens] or None, replace=replace)
+        build_artifact(open_snapshot(root, recover=False), output, screens=[str(s) for s in screens] or None, replace=replace,
+                       emoji_library_file=args.get("library_file") or None)
     except FileExistsError:
         raise ToolError(f"{output} exists; pass overwrite: true to replace it") from None
     except RuntimeError as err:
         raise ToolError(f"export-snapshot failed: {err}") from None
+    except EmojiError as err:
+        raise ToolError(f"export-snapshot failed: {err.code} {err.message}") from None
     url = pathlib.Path(os.path.realpath(output)).as_uri()  # long path, spaces encoded
     first = screens[0] if screens else None
     return {"file": output, "url": url + (f"#/screen/{first}" if first else ""),
@@ -407,8 +411,8 @@ TOOLS: list[dict] = [
      "inputSchema": _obj({"project": S, "screen": S, "locale": S, "state": S, "values": O}, ["project", "screen"]), "annotations": RO},
     {"name": "map_simulate", "description": "Replay a bot-ui project's scenarios through the local engine (presses, edits, fallbacks).",
      "inputSchema": _obj({"project": S, "scenario": S}, ["project"]), "annotations": RO},
-    {"name": "map_snapshot", "description": "Write a single-file Studio page of the map and return its file:// URL; open it with a browser tool and screenshot it to check the look. Writes only into the system temp folder or a .bot-ui* name next to the project; never replaces a file unless overwrite is true.",
-     "inputSchema": _obj({"project": S, "output": S, "screens": A, "overwrite": {"type": "boolean"}}, ["project"]), "annotations": {"readOnlyHint": False, "openWorldHint": False}},
+    {"name": "map_snapshot", "description": "Write a single-file Studio page of the map and return its file:// URL; open it with a browser tool and screenshot it to check the look. Writes only into the system temp folder or a .bot-ui* name next to the project; never replaces a file unless overwrite is true. library_file: the emoji library's offline export, so the Emoji page filters and picks packs from it (default: the catalog the Studio last loaded, if any).",
+     "inputSchema": _obj({"project": S, "output": S, "screens": A, "overwrite": {"type": "boolean"}, "library_file": S}, ["project"]), "annotations": {"readOnlyHint": False, "openWorldHint": False}},
     {"name": "commands_audit", "description": "Audit a bot's command menu: handlers in code vs setMyCommands / bot-ui/commands.json, names, lengths, scopes that hide commands, missing locales.",
      "inputSchema": _obj({"root": S}, ["root"]), "annotations": RO},
     {"name": "commands_plan", "description": "The setMyCommands / deleteMyCommands requests (per scope and language) that make Telegram match bot-ui/commands.json; checked, not sent.",
