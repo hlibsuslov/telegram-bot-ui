@@ -1,6 +1,9 @@
-"""Rich messages as JSON blocks: tgkit.rich builders against the catalog, and validate_rich on blocks."""
+"""Rich messages as JSON blocks: tgkit.rich builders against the catalog, one document as Rich HTML and
+as blocks, and validate_rich on blocks."""
 import inspect
+import re
 import unittest
+from html.parser import HTMLParser
 
 import _paths
 import validate_payload as vp
@@ -160,6 +163,340 @@ class BuildersMirrorTheCatalog(unittest.TestCase):
         self.assertEqual(rich.expandable_quote("Long", "Ann"),
                          {"type": "expandable_blockquote", "blocks": [{"type": "paragraph", "text": "Long"}],
                           "credit": "Ann"})
+
+
+# ---- parity: one document as Rich HTML and as blocks ---------------------------------------------
+#
+# "Equivalent" means equal outlines. An outline is the list of blocks in document order; each block is
+# (type constant, properties, content):
+#   * type constant: the InputRichBlock `type` (HTML tag -> type from the catalog's "corresponding to the
+#     HTML tag" text, checked below);
+#   * properties: what both forms state - heading size, pre language, list item checkbox / value / label
+#     type, table flags and caption, cell header / align / valign / spans, quote credit, details summary
+#     and open state, media file (a tg://photo?id= link resolved through InputRichMessage.media) with its
+#     caption and credit, button row align and each button's label, action field, value and style;
+#   * content: text runs, or the nested block outlines of a container.
+# A text run is (text, styles): styles is the set of enclosing RichText types (a link adds ("url", href)).
+# Runs are compared after collapsing whitespace, merging neighbours with equal styles and trimming the ends.
+# Inline content directly inside a block container (an <li>) is one paragraph: list items hold blocks.
+# HTML tag and attribute names: core.telegram.org/bots/api#rich-html-style (Official, checked 2026-11-25).
+
+INLINE_TAGS = {"b": "bold", "strong": "bold", "i": "italic", "em": "italic", "u": "underline", "ins": "underline",
+               "s": "strikethrough", "strike": "strikethrough", "del": "strikethrough", "tg-spoiler": "spoiler",
+               "mark": "marked", "sub": "subscript", "sup": "superscript", "code": "code"}
+TAG_TO_BLOCK = {"p": "paragraph", **{f"h{n}": "heading" for n in range(1, 7)}, "pre": "pre", "footer": "footer",
+                "hr": "divider", "ul": "list", "ol": "list", "blockquote": "blockquote", "aside": "pullquote",
+                "table": "table", "details": "details", "img": "photo", "video": "video", "audio": "audio",
+                "tg-document": "document", "tg-button-row": "buttons", "tg-math-block": "mathematical_expression",
+                "tg-map": "map", "tg-collage": "collage", "tg-slideshow": "slideshow", "tg-thinking": "thinking"}
+MEDIA_TAGS = {"img", "video", "audio", "tg-document"}
+VOID_TAGS = {"hr", "br", "img", "input"}
+BUTTON_FIELDS = {"callback_data": "data", "url": "url", "copy_text": "text"}  # tg-button type -> attribute
+
+
+class _Dom(HTMLParser):
+    def __init__(self, html):
+        super().__init__(convert_charrefs=True)
+        self.root = {"tag": None, "attrs": {}, "kids": []}
+        self.stack = [self.root]
+        self.feed(html)
+        self.close()
+        assert len(self.stack) == 1, f"<{self.stack[-1]['tag']}> is not closed"
+
+    def handle_starttag(self, tag, attrs):
+        node = {"tag": tag, "attrs": dict(attrs), "kids": []}
+        self.stack[-1]["kids"].append(node)
+        if tag not in VOID_TAGS:
+            self.stack.append(node)
+
+    def handle_startendtag(self, tag, attrs):
+        self.stack[-1]["kids"].append({"tag": tag, "attrs": dict(attrs), "kids": []})
+
+    def handle_endtag(self, tag):
+        if tag in VOID_TAGS:
+            return
+        assert self.stack[-1]["tag"] == tag, f"</{tag}> closes <{self.stack[-1]['tag']}>"
+        self.stack.pop()
+
+    def handle_data(self, data):
+        self.stack[-1]["kids"].append(data)
+
+
+def _tidy(runs):
+    merged = []
+    for s, styles in runs:
+        s = re.sub(r"\s+", " ", s)
+        if merged and merged[-1][1] == styles:
+            merged[-1] = (merged[-1][0] + s, styles)
+        elif s:
+            merged.append((s, styles))
+    if merged:
+        merged[0] = (merged[0][0].lstrip(), merged[0][1])
+        merged[-1] = (merged[-1][0].rstrip(), merged[-1][1])
+    return [r for r in merged if r[0]]
+
+
+def _styled(styles, extra):
+    return tuple(sorted(set(styles) | {extra}, key=str))
+
+
+def _html_runs(kids, styles=()):
+    out = []
+    for n in kids:
+        if isinstance(n, str):
+            out.append((n, styles))
+        elif n["tag"] in INLINE_TAGS:
+            out += _html_runs(n["kids"], _styled(styles, INLINE_TAGS[n["tag"]]))
+        elif n["tag"] == "a" and "href" in n["attrs"]:
+            out += _html_runs(n["kids"], _styled(styles, ("url", n["attrs"]["href"])))
+        else:
+            raise AssertionError(f"<{n['tag']}> is not inline text")
+    return out
+
+
+def _is_inline(n):
+    return isinstance(n, str) or n["tag"] in INLINE_TAGS or (n["tag"] == "a" and "href" in n["attrs"])
+
+
+def _split(kids, tag):
+    """(the children named `tag`, the rest)."""
+    hit = [k for k in kids if isinstance(k, dict) and k["tag"] == tag]
+    return hit, [k for k in kids if not (isinstance(k, dict) and k["tag"] == tag)]
+
+
+def _html_blocks(kids, media):
+    out, inline = [], []
+
+    def flush():
+        runs = _tidy(_html_runs(inline))
+        if runs:
+            out.append(("paragraph", {}, runs))
+        inline.clear()
+    for n in kids:
+        if _is_inline(n):
+            inline.append(n)
+            continue
+        flush()
+        out.append(_html_block(n, media))
+    flush()
+    return out
+
+
+def _runs_of(nodes):
+    return _tidy(_html_runs(nodes[0]["kids"])) if nodes else []
+
+
+def _html_media(n, media, caption=None):
+    src = n["attrs"].get("src", "")
+    m = re.match(r"tg://\w+\?id=(.+)$", src)
+    ref = media[m.group(1)]["media"]["media"] if m else src
+    cite, text = _split(caption["kids"], "cite") if caption else ([], [])
+    return (TAG_TO_BLOCK[n["tag"]], {"media": ref, "caption": _tidy(_html_runs(text)), "credit": _runs_of(cite)}, [])
+
+
+def _html_cell(n):
+    a = n["attrs"]
+    return {"is_header": n["tag"] == "th", "align": a.get("align"), "valign": a.get("valign"),
+            "colspan": int(a.get("colspan", 1)), "rowspan": int(a.get("rowspan", 1)),
+            "text": _tidy(_html_runs(n["kids"]))}
+
+
+def _html_block(n, media):
+    tag, a, kids = n["tag"], n["attrs"], n["kids"]
+    if tag not in TAG_TO_BLOCK and tag != "figure":
+        raise AssertionError(f"<{tag}> has no block in this outline")
+    kind = TAG_TO_BLOCK.get(tag)
+    if kind == "heading":
+        return kind, {"size": int(tag[1])}, _tidy(_html_runs(kids))
+    if kind in ("paragraph", "footer"):
+        return kind, {}, _tidy(_html_runs(kids))
+    if kind == "pre":
+        (code,), _ = _split(kids, "code")
+        return kind, {"language": code["attrs"].get("class", "").removeprefix("language-") or None}, \
+            _tidy(_html_runs(code["kids"]))
+    if kind == "divider":
+        return kind, {}, []
+    if kind == "list":
+        items = []
+        for li in _split(kids, "li")[0]:
+            boxes, rest = _split(li["kids"], "input")
+            props = {"has_checkbox": bool(boxes), "is_checked": bool(boxes) and "checked" in boxes[0]["attrs"],
+                     "value": int(li["attrs"]["value"]) if "value" in li["attrs"] else None,
+                     "type": li["attrs"].get("type")}
+            items.append((props, _html_blocks(rest, media)))
+        return kind, {}, items
+    if kind == "blockquote":
+        cite, rest = _split(kids, "cite")
+        return ("expandable_blockquote" if "expandable" in a else kind), {"credit": _runs_of(cite)}, \
+            _html_blocks(rest, media)
+    if kind == "details":
+        summary, rest = _split(kids, "summary")
+        return kind, {"is_open": "open" in a, "summary": _runs_of(summary)}, _html_blocks(rest, media)
+    if kind == "table":
+        caption, rest = _split(kids, "caption")
+        rows = [[_html_cell(c) for c in tr["kids"] if isinstance(c, dict)] for tr in _split(rest, "tr")[0]]
+        flags = {f: f[3:] in a for f in ("is_bordered", "is_striped", "is_compact")}
+        return kind, {**flags, "caption": _runs_of(caption)}, rows
+    if tag == "figure":
+        caption, rest = _split(kids, "figcaption")
+        (item,) = [k for k in rest if isinstance(k, dict)]
+        return _html_media(item, media, caption[0] if caption else None)
+    if tag in MEDIA_TAGS:
+        return _html_media(n, media)
+    if kind == "buttons":
+        row = []
+        for b in _split(kids, "tg-button")[0]:
+            field = b["attrs"]["type"]
+            row.append(("".join(s for s, _ in _tidy(_html_runs(b["kids"]))), field,
+                        b["attrs"][BUTTON_FIELDS[field]], b["attrs"].get("style")))
+        return kind, {"align": a.get("align")}, row
+    raise AssertionError(f"<{tag}> is not in the parity document's outline yet")
+
+
+def html_outline(html, media=()):
+    by_id = {m["id"]: m for m in media}
+    return _html_blocks(_Dom(html).root["kids"], by_id)
+
+
+def _rt_runs(rt, styles=()):
+    if rt is None:
+        return []
+    if isinstance(rt, str):
+        return [(rt, styles)]
+    if isinstance(rt, list):
+        return [r for x in rt for r in _rt_runs(x, styles)]
+    style = ("url", rt["url"]) if rt["type"] == "url" else rt["type"]
+    return _rt_runs(rt.get("text"), _styled(styles, style))
+
+
+def _runs(rt):
+    return _tidy(_rt_runs(rt))
+
+
+def _block_outline(b):
+    t = b["type"]
+    if t == "heading":
+        return t, {"size": b["size"]}, _runs(b["text"])
+    if t in ("paragraph", "footer"):
+        return t, {}, _runs(b["text"])
+    if t == "pre":
+        return t, {"language": b.get("language")}, _runs(b["text"])
+    if t == "divider":
+        return t, {}, []
+    if t == "list":
+        return t, {}, [({"has_checkbox": bool(i.get("has_checkbox")), "is_checked": bool(i.get("is_checked")),
+                         "value": i.get("value"), "type": i.get("type")}, blocks_outline(i["blocks"]))
+                       for i in b["items"]]
+    if t in ("blockquote", "expandable_blockquote"):
+        return t, {"credit": _runs(b.get("credit"))}, blocks_outline(b["blocks"])
+    if t == "details":
+        return t, {"is_open": bool(b.get("is_open")), "summary": _runs(b["summary"])}, blocks_outline(b["blocks"])
+    if t == "table":
+        flags = {f: bool(b.get(f)) for f in ("is_bordered", "is_striped", "is_compact")}
+        rows = [[{"is_header": bool(c.get("is_header")), "align": c["align"], "valign": c["valign"],
+                  "colspan": c.get("colspan", 1), "rowspan": c.get("rowspan", 1), "text": _runs(c.get("text"))}
+                 for c in row] for row in b["cells"]]
+        return t, {**flags, "caption": _runs(b.get("caption"))}, rows
+    if t in ("photo", "video", "audio", "document", "animation", "voice_note"):
+        cap = b.get("caption") or {}
+        return t, {"media": b[t]["media"], "caption": _runs(cap.get("text")), "credit": _runs(cap.get("credit"))}, []
+    if t == "buttons":
+        row = []
+        for btn in b["buttons"]:
+            (field,) = [k for k in BUTTON_FIELDS if k in btn]
+            value = btn[field]["text"] if field == "copy_text" else btn[field]
+            row.append(("".join(s for s, _ in _runs(btn["text"])), field, value, btn.get("style")))
+        return t, {"align": b.get("align")}, row
+    raise AssertionError(f"{t!r} is not in the parity document's outline yet")
+
+
+def blocks_outline(blocks):
+    return [_block_outline(b) for b in blocks]
+
+
+CHART = "AgACAgIAAxkBAAEBchart"
+CHANGELOG = "https://example.com/changelog"
+DOC_HTML = (
+    "<h1>Release 2.4</h1>"
+    "<p>Payments are <b>faster</b>, refunds <i>arrive in <b>minutes</b></i>, and the "
+    f'<a href="{CHANGELOG}">changelog</a> lists <code>refund_id</code>. <u>Old links</u> <s>expire</s> keep '
+    "working; <mark>check the limits</mark> before the <tg-spoiler>launch date</tg-spoiler>.</p>"
+    "<h2>Checklist</h2>"
+    '<ul><li><input type="checkbox" checked>Migrate the webhook</li>'
+    '<li><input type="checkbox">Rotate the signing key</li></ul>'
+    '<ol><li value="1" type="1">Back up the database</li><li value="2" type="1">Deploy</li></ol>'
+    "<table bordered compact><caption>Median refund time</caption>"
+    '<tr><th align="left" valign="middle">Method</th><th align="right" valign="middle">Minutes</th></tr>'
+    '<tr><td align="left" valign="middle">Card</td><td align="right" valign="middle">4</td></tr>'
+    '<tr><td align="left" valign="middle">Stars</td><td align="right" valign="middle">1</td></tr></table>'
+    "<blockquote><p>Refunds no longer need a support ticket.</p><cite>Payments team</cite></blockquote>"
+    "<details><summary>What changed for <b>admins</b></summary>"
+    "<p>Refunds over 100 USD still need a second approval.</p></details>"
+    '<figure><img src="tg://photo?id=chart"><figcaption>Refund time by week<cite>Internal metrics</cite>'
+    "</figcaption></figure>"
+    "<hr/>"
+    '<tg-button-row align="center"><tg-button type="callback_data" data="release:ack" style="primary">Got it'
+    f'</tg-button><tg-button type="url" url="{CHANGELOG}">Full changelog</tg-button></tg-button-row>'
+    "<footer>Questions: reply to this message.</footer>"
+)
+DOC_MEDIA = [{"id": "chart", "media": {"type": "photo", "media": CHART}}]
+
+
+def doc_blocks():
+    r = rich
+    return [
+        r.heading_block("Release 2.4", 1),
+        r.paragraph_block(["Payments are ", r.bold("faster"), ", refunds ", r.italic(["arrive in ", r.bold("minutes")]),
+                           ", and the ", r.url("changelog", CHANGELOG), " lists ", r.code("refund_id"), ". ",
+                           r.underline("Old links"), " ", r.strikethrough("expire"), " keep working; ",
+                           r.marked("check the limits"), " before the ", r.spoiler("launch date"), "."]),
+        r.heading_block("Checklist", 2),
+        r.list_block([r.list_item([r.paragraph_block("Migrate the webhook")], has_checkbox=True, is_checked=True),
+                      r.list_item([r.paragraph_block("Rotate the signing key")], has_checkbox=True)]),
+        r.list_block([r.list_item([r.paragraph_block("Back up the database")], value=1, type="1"),
+                      r.list_item([r.paragraph_block("Deploy")], value=2, type="1")]),
+        r.table(["Method", "Minutes"], [["Card", "4"], ["Stars", "1"]], compact=True, numeric_cols=frozenset({1}),
+                caption="Median refund time"),
+        r.blockquote_block([r.paragraph_block("Refunds no longer need a support ticket.")], credit="Payments team"),
+        r.details_block(["What changed for ", r.bold("admins")],
+                        [r.paragraph_block("Refunds over 100 USD still need a second approval.")]),
+        r.photo_block(CHART, r.block_caption("Refund time by week", credit="Internal metrics")),
+        r.divider_block(),
+        r.buttons_block([r.message_button("Got it", callback_data="release:ack", style="primary"),
+                         r.message_button("Full changelog", url=CHANGELOG)], align="center"),
+        r.footer_block("Questions: reply to this message."),
+    ]
+
+
+class HtmlAndBlocksParity(unittest.TestCase):
+    def test_the_tag_map_is_the_catalog_text(self):
+        consts = {type_const(n): n for n in TYPES["InputRichBlock"]["subtypes"]}
+        for tag, kind in TAG_TO_BLOCK.items():
+            with self.subTest(tag):
+                self.assertIn(f"<{tag}", TYPES[consts[kind]]["description"])
+        self.assertIn("expandable", TYPES[consts["expandable_blockquote"]]["description"])
+
+    def test_one_document_as_html_and_as_blocks_has_the_same_outline(self):
+        html, blocks = html_outline(DOC_HTML, DOC_MEDIA), blocks_outline(doc_blocks())
+        self.assertEqual([b[0] for b in html], ["heading", "paragraph", "heading", "list", "list", "table",
+                                                "blockquote", "details", "photo", "divider", "buttons", "footer"])
+        for i, (h, b) in enumerate(zip(html, blocks)):
+            with self.subTest(i, block=h[0]):
+                self.assertEqual(h, b)
+        self.assertEqual(len(html), len(blocks))
+
+    def test_both_forms_are_valid(self):
+        self.assertEqual(vr.validate({"html": DOC_HTML, "media": DOC_MEDIA})[0], [])
+        self.assertEqual(vr.validate({"blocks": doc_blocks()})[0], [])
+        params = {"chat_id": 1001, "rich_message": {"blocks": doc_blocks()}}
+        self.assertEqual(V.check_request("sendRichMessage", params).errors, [])
+
+    def test_the_outline_sees_a_difference(self):
+        changed = doc_blocks()
+        changed[1]["text"][1] = rich.italic("faster")          # bold -> italic
+        self.assertNotEqual(html_outline(DOC_HTML, DOC_MEDIA)[1], blocks_outline(changed)[1])
+        with self.assertRaises(AssertionError):
+            html_outline("<blink>x</blink>")
 
 
 def errors(blocks, **kw):
