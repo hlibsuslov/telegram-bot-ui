@@ -19,10 +19,12 @@ bot-ui/
   widgets/<widgetId>/          widget.json + index.html (+ style.css, widget.js)
   widgets/_kit/                widget kit partials, vendored by `bot-ui init`
   .bot-ui/                     lock, write journal, build cache (ignored by Git and the revision)
+  context/                     the agent's saved review: facts, style profile, findings, Studio
+                               requests (outside the revision; skills/telegram-bot-ui/references/bot-ui-projects.md)
 ```
 
 The revision is `sha256:` over the sorted relative paths and bytes (CRLF read as LF) of the
-source files above. Editor history, mtime, `.bot-ui/` and anything else are ignored.
+source files above. Editor history, mtime, `.bot-ui/`, `context/` and anything else are ignored.
 
 ## Identity
 

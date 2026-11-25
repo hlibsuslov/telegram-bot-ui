@@ -89,6 +89,20 @@ class Server(ProjectCase):
         self.assertEqual(res["error"]["code"], "REVISION_CONFLICT")
         self.assertEqual(res["patch"]["changes"][0]["ops"][0]["value"], "old base", "the draft comes back")
 
+    def test_requests_saved_into_the_project_leave_the_revision_alone(self):
+        rev = self.req("POST", "/api/revision", {})[1]["revision"]
+        status, res, _ = self.req("POST", "/api/requests/save", {"sid": "checkout.payment.confirm",
+                                                                 "text": "Shorten the confirmation"})
+        self.assertEqual(status, 200, res)
+        self.assertEqual(res["request"]["status"], "queued")
+        self.assertEqual(res["request"]["baseRevision"], rev)
+        self.assertEqual(open_snapshot(self.root).revision, rev)
+        listed = self.req("POST", "/api/requests/list", {})[1]["requests"]
+        self.assertEqual([r["id"] for r in listed], [res["request"]["id"]])
+        self.assertEqual(self.req("POST", "/api/requests/save", {"sid": "../evil", "text": "x"})[0], 400)
+        self.assertEqual(self.req("POST", "/api/requests/save", {"text": "  "})[0], 400)
+        self.assertEqual(self.req("POST", "/api/requests/save", {"text": "x" * 2001})[0], 400)
+
     def test_git_status_lists_saved_but_uncommitted_screens(self):
         import subprocess
         status, doc, _ = self.req("POST", "/api/git-status", {})

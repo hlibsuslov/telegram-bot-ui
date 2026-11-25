@@ -121,6 +121,18 @@ class Studio:
             root_key = hashlib.sha256(os.path.normcase(os.path.realpath(self.root)).encode()).hexdigest()[:16]
             return 200, {**project_document(snap), "rootKey": root_key, "rootLabel": os.path.basename(self.root),
                          "cliProject": self.root}
+        if path in ("/api/requests/save", "/api/requests/list"):
+            from .context import ContextError, add_request, list_requests
+            context_dir = os.path.join(self.root, "context")
+            if path == "/api/requests/list":
+                return 200, {"requests": list_requests(context_dir)}
+            if snap.read_only:
+                return 403, {"error": "READ_ONLY", "message": "this project is read-only"}
+            try:  # api() already runs under self.lock
+                doc = add_request(context_dir, body.get("sid") or None, str(body.get("text") or ""), snap.revision)
+            except ContextError as err:
+                return 400, {"error": "BAD_REQUEST", "message": str(err)}
+            return 200, {"request": doc, "path": f"context/requests/{doc['id']}.json"}
         if path == "/api/git-status":
             return 200, git_status(self.root, snap)
         if path == "/api/revision":

@@ -119,7 +119,7 @@ const LANGS: { value: PromptLang; label: string }[] = [
 
 export function ChangesView({ anchor }: { anchor?: string | null }) {
   const { store, loaded, caps, reload, replaceLoaded, saving, setSaveDiags, saveDiags, notify, focusField, diags, pendingBase, refreshGit, git,
-    requests, removeRequest, markHandedOff, editLocale, pro } = useStudio();
+    requests, removeRequest, markHandedOff, editLocale, pro, requestsToProject, setRequestsToProject } = useStudio();
   const studio = loaded.mode === "studio";
   const [savedFiles, setSavedFiles] = useState<string[] | null>(null);
   const [patch, setPatch] = useState<Doc | null>(null);
@@ -364,7 +364,15 @@ export function ChangesView({ anchor }: { anchor?: string | null }) {
             ))}
           </ul>
         )}
-        <RequestChange sid={null} trigger={<Button size="sm" variant="outline"><MessageSquarePlus className="size-4" /> Add a general request</Button>} />
+        <div className="flex flex-wrap items-center gap-3">
+          <RequestChange sid={null} trigger={<Button size="sm" variant="outline"><MessageSquarePlus className="size-4" /> Add a general request</Button>} />
+          {studio && caps.save && (
+            <label className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Switch size="sm" checked={requestsToProject} onCheckedChange={setRequestsToProject} />
+              Also save new requests in the project (bot-ui/context/requests, goes into git)
+            </label>
+          )}
+        </div>
       </section>
 
       <section className="scroll-mt-20 space-y-3 rounded-2xl transition-shadow" id="chg-prompt" aria-labelledby="chg-prompt-h">

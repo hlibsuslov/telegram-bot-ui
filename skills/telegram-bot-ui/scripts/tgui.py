@@ -284,7 +284,7 @@ def collect(root: str, use_probe: bool = True) -> dict:
     signals: dict[str, dict] = {}
     has_code = telegram_code(facts) if use_probe else True
     if requests:
-        signals["REQUESTS_QUEUED"] = {"n": len(requests), "screen": requests[0].get("sid") or "-"}
+        signals["REQUESTS_QUEUED"] = {"n": len(requests), "screen": requests[0].get("sid") or "the whole bot"}
     urgent = [f for f in findings if f.get("severity") in ("P0", "P1")]
     if urgent:
         signals["FINDINGS_OPEN"] = {"n": len(urgent), "summary": urgent[0].get("summary", ""),
@@ -478,17 +478,19 @@ def cmd_requests(args) -> int:
              or "no Studio requests")
         return 0
     if args.action == "add":
-        if not args.text:
-            print("requests add needs --text", file=sys.stderr)
-            return 2
-        rid = "rq-" + hashlib.sha1(f"{args.screen}|{args.text}|{dt.datetime.now().isoformat()}".encode()).hexdigest()[:10]
+        _sys_path()
+        from bot_ui.context import ContextError, add_request
         state = prj.map_state()
-        doc = {"schema": REQUEST_SCHEMA, "id": rid, "sid": args.screen, "text": args.text,
-               "at": dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-               "baseRevision": state["revision"] if state else None, "status": "queued", "result": None}
-        _write_json(prj.path("requests", f"{rid}.json"), doc)
-        print(rid)
+        try:
+            doc = add_request(prj.ctx, args.screen, args.text or "", state["revision"] if state else None)
+        except ContextError as err:
+            print(f"requests add: {err}", file=sys.stderr)
+            return 2
+        print(doc["id"])
         return 0
+    if not args.id or not re.fullmatch(r"rq-[0-9a-f]{6,40}", args.id):
+        print("name a request id like rq-1a2b3c4d5e (see `requests list`)", file=sys.stderr)
+        return 2
     path = prj.path("requests", f"{args.id}.json")
     doc = _read_json(path)
     if not isinstance(doc, dict):
