@@ -32,8 +32,8 @@ for the **receiver only** — never repost them publicly; in business chats answ
 
 ## getUniqueGift
 
-10.4: `getUniqueGift(name)` → `UniqueGift`. Unknown name → 400 (validation): say "gift not found",
-don't retry.
+10.4: `getUniqueGift(name)` → `UniqueGift`. The error for an unknown name is not documented
+**[Unverified]**: treat a 400 as "gift not found", don't retry.
 
 ## deleteBusinessAccountGift
 

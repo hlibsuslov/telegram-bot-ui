@@ -82,7 +82,8 @@ also lists other bot admins), `getChatMemberCount`.
   `can_promote_members` (and only a subset of its own rights can be granted);
   invite links and join requests → `can_invite_users`; pins → `can_pin_messages`
   (channels: `can_edit_messages`); deleting others' messages → `can_delete_messages`;
-  member tags → `can_manage_tags` (9.5); welcome messages → `can_send_welcome_messages`
+  member tags → `can_manage_tags` (9.5); title and photo → `can_change_info` (its description
+  also covers "other settings": description, sticker set); welcome messages → `can_send_welcome_messages`
   (10.3; `specialized-updates.md#welcome-messages-right`).
 - **[API]** `setMyDefaultAdministratorRights(rights, for_channels)` sets the rights
   suggested when users add the bot as admin; `getMyDefaultAdministratorRights` reads

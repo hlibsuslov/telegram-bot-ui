@@ -99,7 +99,7 @@ Read directly from the pages listed above on 2026-08-05.
   private, group and supergroup chats if the owner of the bot has a Telegram
   Premium subscription."*
 - Same release, non-UI-critical but related: topics in private chats
-  (`createForumTopic`, `User.allows_users_to_create_topics`),
+  (`createForumTopic`, `User.allows_users_to_create_topics`, in `BotFullInfo` since 10.5),
   `setMyProfilePhoto` / `removeMyProfilePhoto`.
 
 **Field definitions** (object pages, verbatim):
