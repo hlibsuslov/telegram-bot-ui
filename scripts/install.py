@@ -93,6 +93,13 @@ class Installer:
 
     def backup(self, path: str) -> None:
         target = f"{path}.bak-{self.stamp}"
+        parent = os.path.dirname(path)
+        if os.path.isdir(path) and os.path.basename(parent) == "skills":
+            # Hosts load every folder under skills/, so a backup there would be a second copy.
+            folder = os.path.join(os.path.dirname(parent), "skill-backups")
+            if not self.dry_run:
+                os.makedirs(folder, exist_ok=True)
+            target = os.path.join(folder, f"{os.path.basename(path)}.bak-{self.stamp}")
         n = 1
         while os.path.lexists(target):
             n += 1

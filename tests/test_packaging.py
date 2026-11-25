@@ -299,9 +299,11 @@ class InstallerTest(unittest.TestCase):
         with open(os.path.join(foreign, "SKILL.md"), "w") as fh:
             fh.write("mine")
         self.run_install("--host", "claude", "--scope", "project", "--no-agents")
-        backups = [n for n in os.listdir(self.p(".claude", "skills")) if ".bak-" in n]
+        # A backup inside skills/ would be discovered by the host as a second copy of the skill.
+        self.assertEqual([n for n in os.listdir(self.p(".claude", "skills")) if ".bak-" in n], [])
+        backups = [n for n in os.listdir(self.p(".claude", "skill-backups")) if ".bak-" in n]
         self.assertEqual(len(backups), 1)
-        with open(os.path.join(self.p(".claude", "skills", backups[0]), "SKILL.md")) as fh:
+        with open(os.path.join(self.p(".claude", "skill-backups", backups[0]), "SKILL.md")) as fh:
             self.assertEqual(fh.read(), "mine")
 
     def test_foreign_agent_file_backed_up_and_kept_on_uninstall(self):
