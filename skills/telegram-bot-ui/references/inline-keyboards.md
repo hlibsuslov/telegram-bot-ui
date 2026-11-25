@@ -24,6 +24,7 @@ interactive surface of most bots.
 | `copy_text` | Copies text to the clipboard (`CopyTextButton.text`, **1–256 chars**) | Use for codes/addresses instead of asking users to select text |
 | `callback_game` | Launches a game — **must be the first button in the first row** | |
 | `pay` | Pay button — **must be the first button in the first row**, invoice messages only | `XTR`/star substrings become the Star icon |
+| `disabled` | Nothing: `DisabledButton` (`{}`, 10.3) — "the button is disabled and does nothing"; counts as the button's only action | Show a choice that is no longer available (`buttons-and-styles.md`) |
 
 `text`, `style`, and `icon_custom_emoji_id` are presentation and do not count as
 the action.

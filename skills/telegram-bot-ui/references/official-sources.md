@@ -169,7 +169,7 @@ Read directly from the pages listed above on 2026-08-05.
 Confirmed against official changelog / blog:
 
 - Rich Messages were introduced in **Bot API 10.1 (2026-06-11)**:
-  `RichMessage`, `RichText` (+23 `RichText*`), `RichBlock` (+`RichBlock*`),
+  `RichMessage`, `RichText` (+25 `RichText*`), `RichBlock` (+`RichBlock*`),
   `InputRichMessage`, `InputRichMessageContent`, `sendRichMessage`,
   `sendRichMessageDraft`, `editMessageText` `rich_message` param,
   `Message.rich_message`.
@@ -192,7 +192,7 @@ Confirmed against official changelog / blog:
   language, blockquote, and expandable blockquote. Blockquote/expandable cannot
   be nested; `code`/`pre` cannot contain other entities.
 - `link_preview_options` fields: `is_disabled`, `url`, `prefer_small_media`,
-  `show_above_text`.
+  `prefer_large_media`, `show_above_text`.
 
 ## Source priority and what is not a source
 
@@ -300,7 +300,8 @@ Official Telegram open source / tooling for the newest API (checked 2026-11-12):
 - No official open-source example bot for 10.3-10.5 was found; SDK support is tracked in
   `sdk-compatibility.md`.
 
-SDK status verified 2026-11-12 (re-checked 2026-11-15: aiogram 3.32.0 and
+**[Third-party]** SDK status (from the SDK packages and their registry metadata, not a Telegram fact; evidence per
+row in `sdk-compatibility.md`) verified 2026-11-12 (re-checked 2026-11-15: aiogram 3.32.0 and
 node-telegram-bot-api 2.4.0 implement 10.4): aiogram 3.31.0 (Bot API 10.3), grammY 1.46.0 /
 @grammyjs/types 5.0.0 (10.3), python-telegram-bot 22.8 (10.0 per its README).
 `sdk-compatibility.md#verified-sdk-status-2026-11-12`.

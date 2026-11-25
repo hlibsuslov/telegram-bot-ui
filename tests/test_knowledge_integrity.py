@@ -136,5 +136,87 @@ class FormattingDocsMatchSources(unittest.TestCase):
         self.assertEqual(sorted(n for n in names if f"`{n}`" not in self.ref), [])
 
 
+def catalog():
+    import json
+    with open(os.path.join(_paths.ROOT, "data", "bot-api", "catalog.json"), encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def field_names(cat, type_name: str) -> list[str]:
+    return [f["name"] for f in cat["types"][type_name]["fields"]]
+
+
+class ApiListsMatchTheCatalog(unittest.TestCase):
+    """Counts and field lists that the knowledge audit found short of the catalog (2026-11-25)."""
+
+    @classmethod
+    def setUpClass(cls):
+        import json
+        cls.cat = catalog()
+        with open(os.path.join(_paths.ROOT, "data", "bot-api", "changelog.json"), encoding="utf-8") as fh:
+            cls.log = json.load(fh)
+
+    def test_richtext_class_count_is_the_one_10_1_added(self):
+        rel = next(r for r in self.log["releases"] if r["version"] == "10.1")
+        added = {s for g in rel["groups"] for i in g["items"] if i["text"].startswith("Added the classes RichText")
+                 for s in i["symbols"] if s.startswith("RichText")}
+        self.assertGreater(len(added), 20)
+        for name in ("telegram-capabilities.md", "official-sources.md"):
+            counts = [int(n) for n in re.findall(r"(\d+) `RichText\*`", read(REF, name))]
+            self.assertTrue(counts, name)
+            self.assertEqual(set(counts), {len(added)}, name)
+
+    def test_inline_keyboard_table_lists_every_button_action(self):
+        actions = set(field_names(self.cat, "InlineKeyboardButton")) - {"text", "style", "icon_custom_emoji_id"}
+        rows = set(re.findall(r"^\| `(\w+)` \|", section(read(REF, "inline-keyboards.md"), "## Button types"), re.M))
+        self.assertEqual(sorted(actions - rows), [])
+
+    def test_link_preview_option_lists_are_complete(self):
+        fields = field_names(self.cat, "LinkPreviewOptions")
+        text = read(REF, "official-sources.md")
+        lists = [item for item in re.split(r"\n- ", text) if "`prefer_small_media`" in item]
+        self.assertTrue(lists)
+        for item in lists:
+            self.assertEqual([f for f in fields if f"`{f}`" not in item], [], item[:60])
+
+    def test_shared_widget_query_lists_every_field(self):
+        line = next(ln for ln in read(REF, "widgets.md").splitlines() if "`shared_widget_query` (" in ln)
+        listed = re.findall(r"`(\w+)`", line.split("`shared_widget_query` (", 1)[1].split(")", 1)[0])
+        self.assertEqual(sorted(listed), sorted(field_names(self.cat, "SharedWidgetQuery")))
+
+    def test_rich_media_names_every_media_block_and_link_scheme(self):
+        text = read(REF, "rich-media.md")
+        types = self.cat["types"]
+        blocks = [n for n in types["InputRichBlock"]["subtypes"]
+                  if any("InputMedia" in str(f.get("type")) for f in types[n]["fields"])]
+        self.assertGreaterEqual(len(blocks), 6)
+        self.assertEqual([b for b in blocks if f"`{b}`" not in text], [])
+        media = next(f for f in types["InputRichMessage"]["fields"] if f["name"] == "media")
+        schemes = re.findall(r"tg://\w+\?id=", media["description"])
+        self.assertEqual([s for s in schemes if f"`{s}`" not in text], [])
+
+
+class VerificationStamps(unittest.TestCase):
+    """A reference's opening "Checked/Verified against Bot API X" names the version in its front matter."""
+
+    STAMP = re.compile(r"(?i)(?<![-\w])(?:checked|verified)\b[^.]{0,80}?(?:against|\()[^.]{0,40}?Bot API \**(\d+\.\d+)")
+
+    def test_intro_stamp_matches_front_matter(self):
+        stale = []
+        for dirpath, _dirs, files in os.walk(REF):
+            for name in sorted(files):
+                if not name.endswith(".md"):
+                    continue
+                text = read(dirpath, name)
+                head = re.match(r"---\n(.*?)\n---\n", text, re.S)
+                if not head:
+                    continue
+                version = re.search(r'^bot_api: "?([\d.]+)', head.group(1), re.M)
+                stamp = self.STAMP.search(" ".join(text[head.end():].splitlines()[:25]))
+                if version and stamp and stamp.group(1) != version.group(1):
+                    stale.append(f"{name}: front matter {version.group(1)}, intro {stamp.group(1)}")
+        self.assertEqual(stale, [])
+
+
 if __name__ == "__main__":
     unittest.main()

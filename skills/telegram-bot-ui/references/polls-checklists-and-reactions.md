@@ -9,7 +9,7 @@ bot_api: "10.5"
 Native polls and quizzes (with the 9.6 and 10.0 extensions: multiple correct answers,
 revoting, added options, media, members-only, country limits), checklists (business
 accounts), and message reactions (setting, reading counts, deleting). Checked
-against Bot API 10.4 on **2026-11-15** (https://core.telegram.org/bots/api#sendpoll,
+against Bot API 10.5 on **2026-11-25** (https://core.telegram.org/bots/api#sendpoll,
 #poll, #sendchecklist, #setmessagereaction). Every JSON block passes
 `scripts/validate_payload.py`.
 

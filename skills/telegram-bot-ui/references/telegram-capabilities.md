@@ -6,8 +6,10 @@ bot_api: "10.5"
 
 # Telegram message capabilities
 
-> **Last verified against official docs: 2026-11-12** (Bot API 10.4, 9 Nov 2026). All rich
-> limits are now official ("Rich Message Limits"). See `official-sources.md`.
+> **Verified against Bot API 10.5 on 2026-11-22:** the 10.5 change here (expandable quotes hold
+> `blocks`) was re-checked then; the rest was verified on 2026-11-12 against 10.4, and 10.5 changed
+> nothing else in formatting. All rich limits are official ("Rich Message Limits"). See
+> `official-sources.md`.
 
 ## Contents
 
@@ -43,7 +45,8 @@ messages just because Rich exists.
 
 - **10.0 — 2026-05-08:** no Rich Messages (Guest Mode, chats, polls, business).
 - **10.1 — 2026-06-11:** introduced Rich Messages. Added `RichMessage`,
-  `RichText` + 23 `RichText*` classes, `RichBlock` + `RichBlock*` classes,
+  `RichText` + 25 `RichText*` classes (27 today: `RichTextButton` came in 10.3,
+  `RichTextTonAddress` in 10.4), `RichBlock` + `RichBlock*` classes,
   `InputRichMessage`, `InputRichMessageContent`, `sendRichMessage`,
   `sendRichMessageDraft`, `editMessageText` `rich_message` parameter, and the
   `rich_message` field on `Message`.
@@ -65,13 +68,16 @@ Always confirm the **latest** version in the changelog before starting.
   - `markdown` — a Rich Markdown string;
   - `html` — a Rich HTML string;
   - `blocks` — an array of explicit `InputRichBlock*` objects.
-  Plus `media` (array of `InputRichMessageMedia`) to bind media referenced from
-  markdown/html, and standard send fields (chat/business/reply/markup). Confirm
-  the exact optional-field list in the official object before use.
+  Its other fields: `media` (array of `InputRichMessageMedia`, only for media that
+  `markdown`/`html` reference), `is_rtl`, `skip_entity_detection` [API]. The send
+  fields (chat, business connection, reply, markup) are parameters of
+  `sendRichMessage`, not of this object.
 - **`InputRichMessageContent`** — an `InputMessageContent` variant for inline /
   guest / Web App query results.
-- **`InputRichMessageMedia`** — declares a media item (by file_id, HTTP(S) URL, or
-  upload) that a `tg://…?id=` link in markdown/html refers to. Blocks don't use it:
+- **`InputRichMessageMedia`** — `id` (1-64 of `A-Za-z0-9_-`) plus `media` (an
+  `InputMedia*` by file_id, HTTP(S) URL, or upload) that a `tg://…?id=` link in
+  markdown/html refers to; everything on `media` except the file and its own
+  properties is ignored. Blocks don't use it:
   a media block holds its own `InputMedia*` [API: `InputRichMessage.media`].
 
 ## Send / edit methods
@@ -99,7 +105,7 @@ Always confirm the **latest** version in the changelog before starting.
 | Lists (ordered/unordered) | ➖ | ✅ | ✅ | ✅ | `InputRichBlockList` + `ListItem` |
 | Task lists `- [ ]` / `- [x]` | ➖ | ✅ | ✅ | ✅ | |
 | Divider / horizontal rule | ➖ | ✅ | ✅ | ✅ | `---` in Rich Markdown |
-| Tables | ➖ | ✅ | ✅ | ✅ | `InputRichBlockTable`; header cells via `is_header` (render bold); `align`/colspan/rowspan; column cap 20 (official) |
+| Tables | ➖ | ✅ | ✅ | ✅ | `InputRichBlockTable`; header cells via `is_header` (how clients draw them is not documented); `align`/colspan/rowspan; column cap 20 (official) |
 | Details (collapsible) | ➖ | ✅ | ✅ | ✅ | |
 | Anchors / references / footnotes | ➖ | ✅ | ✅ | ✅ | |
 | Math (LaTeX inline `\(…\)` / block `\[…\]`) | ➖ | ✅ | ✅ | ✅ | `MathematicalExpression` |
@@ -144,8 +150,8 @@ project's Bot API version.
 > (Rich Markdown / Rich HTML / `InputRichBlockTable` code, split rules, escaping,
 > and the monospace fallback), read `tables.md`.** The essentials:
 
-- **Header row bold:** mark header cells with **`is_header: true`** (clients
-  render header cells bold) — in Rich HTML use **`<th>`** for header cells and
+- **Header row:** mark header cells with **`is_header: true`** (the API only says
+  the cell "is a header cell"; how clients draw it is **[Unverified]**) — in Rich HTML use **`<th>`** for header cells and
   `<td>` for body; in Rich Markdown the first row (above the `---|---` separator)
   is the header. Don't fake a header with manual bold on plain `<td>`/cells —
   use the header semantics so it renders and exports correctly.

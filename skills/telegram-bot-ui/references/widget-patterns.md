@@ -160,7 +160,7 @@ SVG strings (`_kit/chart.js`: `K.spark`, `K.bars`, ~600 compressed bytes) or can
 
 ## 5. Lists and pagination
 
-Nothing scrolls (Guide). Show ≤ 5–7 rows at 320 px, then:
+Nothing scrolls (Guide). Show ≤ 5–7 list rows at 320 px (one-line table rows: up to 8, `data-views.md` §5), then:
 
 * **local paging**: all items are in the state; ‹ › or "Show all 9" re-renders locally (no request);
 * **server paging**: the page index is a request (`pg:2`) whose answer carries the page
