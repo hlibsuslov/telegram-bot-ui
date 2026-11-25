@@ -19,6 +19,7 @@ bot_api: "10.5"
 - [Regular formatting quick reference](#regular-formatting-quick-reference)
 - [Authoring conventions (styling defaults)](#authoring-conventions-styling-defaults)
 - [Do / don't](#do--dont)
+- [Blocks or HTML](#blocks-or-html)
 - [Rich additions (Bot API 10.3-10.5)](#rich-additions-bot-api-103-105)
 - [Quotes from rich messages](#quotes-from-rich-messages)
 
@@ -69,8 +70,9 @@ Always confirm the **latest** version in the changelog before starting.
   the exact optional-field list in the official object before use.
 - **`InputRichMessageContent`** — an `InputMessageContent` variant for inline /
   guest / Web App query results.
-- **`InputRichMessageMedia`** — declares a media item (by file_id, `tg://…?id=`
-  reference, HTTP(S) URL, or upload) that markdown/html/blocks refer to.
+- **`InputRichMessageMedia`** — declares a media item (by file_id, HTTP(S) URL, or
+  upload) that a `tg://…?id=` link in markdown/html refers to. Blocks don't use it:
+  a media block holds its own `InputMedia*` [API: `InputRichMessage.media`].
 
 ## Send / edit methods
 
@@ -181,6 +183,38 @@ project's Bot API version.
 - **Don't** assume the whole feature set below your project's Bot API version is
   available — verify the version first (`project-adaptation.md`,
   `sdk-compatibility.md`).
+
+## Blocks or HTML
+
+`InputRichMessage.blocks` and `html` describe the same document: every `InputRichBlock*` type names
+the HTML tag it corresponds to [API], and `tests/test_rich_blocks.py` sends one report both ways and
+compares the block outline and text runs [Heuristic, tested].
+
+Send **blocks** when:
+
+- **the content is generated** from data, a CMS or an AI tool's structured output: each record maps to
+  a typed object, so no markup is produced and nothing is escaped (user text goes into `text` as is;
+  Rich HTML needs `& < >` escaped, and `"` in attributes) [Heuristic].
+- **the structure must be exact**: cell `align` / `valign` / spans, list item `type` / `value`,
+  `is_open`, heading `size` are fields, not parser decisions, and field names are checked offline
+  (`validate_payload.py`, `scripts/validate_rich.py`) [API].
+- **code edits the document**: replace one cell or tick one checklist item and resend; an edit replaces
+  the whole `rich_message` (`editMessageText`) [API].
+
+Send **html** (or Rich Markdown) when a person writes or reviews the text, templates already exist, or
+the message is short: it is far shorter and readable in a diff [Heuristic]. Media are then `tg://…?id=`
+links bound in `media`; `media` is only for markdown/html [API: `InputRichMessage.media`].
+
+What blocks cost [API]: every table cell needs `align` and `valign` (required in `RichBlockTableCell`);
+list items hold blocks, so wrap item text in a paragraph; a list has no ordered flag, ordered labels
+come from each item's `type` (`a A i I 1`) and `value`; a media block's `caption` is a
+`RichBlockCaption` (`text`, `credit`) and a caption inside its `InputMedia*` "is ignored"; there is no
+`InputRichText`, inline formatting is the shared `RichText` union. Received `RichBlock*` mirror the
+input blocks but carry received media (`PhotoSize` array, `Video`, `Document`…), so rebuild
+`InputMedia*` from the `file_id` before resending. Limits are the same for both forms (Rich Message Limits) [Official].
+
+Build blocks with `tgkit.rich` (one builder per `InputRichBlock*` and `RichText*` type, parameters
+named as the catalog fields); a checked request: `examples/payloads/api-rich.json`.
 
 ## Rich additions (Bot API 10.3-10.5)
 
