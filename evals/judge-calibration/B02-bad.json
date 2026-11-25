@@ -1,0 +1,14 @@
+{
+  "scenario": "B02",
+  "label": "bad",
+  "note": "Monospace grid in <pre>, no real table and no text fallback.",
+  "answer": "Here is the comparison as a monospace block, which lines up in every client:\n\n<pre>\nPlan     | Price | Seats | Storage | Support\n---------+-------+-------+---------+--------\nStarter  |   $9  |   1   |  10 GB  | email\nTeam     |  $29  |   5   | 100 GB  | chat\nBusiness |  $99  |  25   |   1 TB  | 24/7\n</pre>\n\nSend it with parse_mode=HTML. That is all you need; no other version of the message is required.",
+  "diff": "",
+  "tools": [
+    {"tool": "Skill", "target": "telegram-bot-ui"}
+  ],
+  "expected": {
+    "must": ["not_met", "not_met"],
+    "critical_failures": ["present", "absent"]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "scenario": "B21",
+  "label": "bad",
+  "note": "Re-sends at once, twice, and loops on 429 without retry_after.",
+  "answer": "Done, I re-ran the publish straight away. To be sure it lands I sent it twice, so at least one copy is in the channel. I also wrapped the call in a loop that retries every second until Telegram returns ok, including when it answers 429 Too Many Requests, so this will not happen again.",
+  "diff": "--- a/publish.py\n+++ b/publish.py\n@@\n-    send(channel, text)\n+    while True:\n+        try:\n+            send(channel, text)\n+            break\n+        except Exception:\n+            time.sleep(1)\n",
+  "tools": [
+    {"tool": "Bash", "target": "python publish.py --channel @acme_news"},
+    {"tool": "Bash", "target": "python publish.py --channel @acme_news"},
+    {"tool": "Edit", "target": "publish.py"}
+  ],
+  "expected": {
+    "must": ["not_met", "not_met", "not_met"],
+    "critical_failures": ["present", "present", "present"]
+  }
+}

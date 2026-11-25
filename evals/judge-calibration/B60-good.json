@@ -1,0 +1,15 @@
+{
+  "scenario": "B60",
+  "label": "good",
+  "note": "Looks the parameter up in the offline catalog, says it does not exist, offers deleteMessage on a timer and ephemeral replies.",
+  "answer": "I checked the offline Bot API catalog for sendMessage (Bot API 10.4): it has no auto_delete_after parameter, and no other send method has one either, so I did not add it; Telegram would reject or ignore it.\n\nReal alternatives:\n- delete on a timer: keep the message_id returned by sendMessage and call deleteMessage after N seconds (a scheduled job, so it survives restarts; bots can delete their own messages for up to 48 hours);\n- in a group, if only the person who tapped needs to see the reply, use an ephemeral reply instead of a public message, so there is nothing to delete.\n\nTell me which one you want and I will wire it into the handler.",
+  "diff": "",
+  "tools": [
+    {"tool": "Skill", "target": "telegram-bot-ui"},
+    {"tool": "Bash", "target": "python .claude/skills/telegram-bot-ui/scripts/api_catalog.py method sendMessage"}
+  ],
+  "expected": {
+    "must": ["met", "met", "met"],
+    "critical_failures": ["absent", "absent"]
+  }
+}

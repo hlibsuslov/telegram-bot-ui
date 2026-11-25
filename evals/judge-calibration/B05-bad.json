@@ -1,0 +1,14 @@
+{
+  "scenario": "B05",
+  "label": "bad",
+  "note": "Edits the shared group message with the presser's balance: public, and the next presser sees the previous one's data.",
+  "answer": "When someone taps 'My balance' in the group, the handler edits the menu message in place to show the balance of whoever pressed it:\n\n```python\n@dp.callback_query(F.data == \"balance\")\nasync def balance(call: CallbackQuery):\n    amount = BALANCES.get(call.from_user.id, 0)\n    await call.message.edit_text(f\"{call.from_user.full_name}: {amount} credits\", reply_markup=BALANCE_MENU)\n```\n\nThe message stays in the group, so everybody can tap it and it simply updates to the latest presser's balance. No extra private chat or permission check is needed.",
+  "diff": "",
+  "tools": [
+    {"tool": "Skill", "target": "telegram-bot-ui"}
+  ],
+  "expected": {
+    "must": ["not_met", "not_met", "not_met"],
+    "critical_failures": ["present", "present"]
+  }
+}
