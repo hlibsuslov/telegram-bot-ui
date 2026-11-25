@@ -1,0 +1,137 @@
+{
+ "ok": true,
+ "taxonomy": 2,
+ "generated": "2026-11-25",
+ "query": "checkmark",
+ "filters": [],
+ "unknownFilters": [],
+ "emoji": [
+  {
+   "pack": "checkified",
+   "id": "5325536405093384220",
+   "fallback": "✅",
+   "format": "animated",
+   "adaptive": true,
+   "preview": "/api/emoji-pack/checkified/5325536405093384220",
+   "animation": "/api/emoji-pack/checkified/5325536405093384220/anim",
+   "still": null,
+   "score": 5,
+   "facets": {
+    "palette": [
+     [
+      "monochrome",
+      0.8
+     ]
+    ],
+    "style": [
+     [
+      "glyph",
+      0.6
+     ]
+    ],
+    "topic": [
+     [
+      "status",
+      0.8
+     ]
+    ],
+    "mood": [
+     [
+      "serious",
+      0.6
+     ]
+    ],
+    "role": [
+     [
+      "status",
+      0.8
+     ]
+    ]
+   },
+   "pageUrl": "/emoji/checkified#e=5325536405093384220"
+  }
+ ],
+ "packs": [
+  {
+   "name": "checkified",
+   "score": 2.7,
+   "hits": 1,
+   "facets": {
+    "color": [
+     [
+      "white",
+      0.8
+     ]
+    ],
+    "fit": [
+     [
+      "adaptive",
+      1
+     ]
+    ],
+    "mood": [
+     [
+      "serious",
+      0.9
+     ]
+    ],
+    "motion": [
+     [
+      "animated",
+      1
+     ]
+    ],
+    "palette": [
+     [
+      "monochrome",
+      0.8
+     ]
+    ],
+    "role": [
+     [
+      "content",
+      0.9
+     ]
+    ],
+    "style": [
+     [
+      "glyph",
+      1
+     ]
+    ],
+    "topic": [
+     [
+      "interface",
+      1
+     ],
+     [
+      "brands",
+      0.9
+     ],
+     [
+      "status",
+      0.9
+     ]
+    ],
+    "use": [
+     [
+      "utility",
+      0.94
+     ],
+     [
+      "content",
+      0.81
+     ]
+    ]
+   },
+   "pageUrl": "/emoji/checkified"
+  }
+ ],
+ "suggest": {
+  "complete": [],
+  "related": [],
+  "categories": [],
+  "didYouMean": null
+ },
+ "total": 1
+}

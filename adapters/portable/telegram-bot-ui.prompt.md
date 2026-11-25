@@ -170,5 +170,5 @@ verified" date stated (`references/consistency-and-review.md`).
 - Commands: 13 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
 - References: 93 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
 - Recipes: 82 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
-- Tools: 29 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
+- Tools: 30 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
 - Optional: 3 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.

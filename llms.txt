@@ -227,6 +227,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [bot_ui_mcp.py](skills/telegram-bot-ui/scripts/bot_ui_mcp.py): bot-ui MCP server: the skill's offline tools for any MCP host (stdio, standard library only).
 - [build_widget.py](skills/telegram-bot-ui/scripts/build_widget.py): Build a Telegram HTML widget (Bot API 10.4) from a source file and the widget kit.
 - [data_view.py](skills/telegram-bot-ui/scripts/data_view.py): Render a data view as ready Telegram messages, split by the limits (references/data-views.md).
+- [emoji_contract.py](skills/telegram-bot-ui/scripts/emoji_contract.py): The telegram-bot-ui emoji library contract, skill side: the vendored schemas and a validator.
 - [emoji_packs.py](skills/telegram-bot-ui/scripts/emoji_packs.py): Premium (custom) emoji packs for a bot: resolve, suggest, verify, capture, apply, strip.
 - [example_library.py](skills/telegram-bot-ui/scripts/example_library.py): Find examples by user intent and validate the use-case catalog offline.
 - [fetch_telegram_star.py](skills/telegram-bot-ui/scripts/fetch_telegram_star.py): Download Telegram's original Stars glyph into YOUR app (not into this skill).

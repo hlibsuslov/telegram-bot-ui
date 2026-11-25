@@ -1,0 +1,1307 @@
+{
+ "ok": true,
+ "generated": "2026-11-25",
+ "taxonomy": {
+  "version": 2,
+  "facets": {
+   "motion": {
+    "label": {
+     "en": "Motion",
+     "ru": "Движение"
+    },
+    "measured": true,
+    "scope": [
+     "pack",
+     "emoji"
+    ],
+    "values": {
+     "static": {
+      "en": "Static",
+      "ru": "Статичные"
+     },
+     "animated": {
+      "en": "Animated",
+      "ru": "Анимированные"
+     },
+     "video": {
+      "en": "Video",
+      "ru": "Видео"
+     }
+    }
+   },
+   "fit": {
+    "label": {
+     "en": "Theme fit",
+     "ru": "Темы"
+    },
+    "measured": true,
+    "scope": [
+     "pack",
+     "emoji"
+    ],
+    "values": {
+     "adaptive": {
+      "en": "Adaptive (repainted in the text colour)",
+      "ru": "Адаптивные (цвет текста)"
+     },
+     "both": {
+      "en": "Light and dark themes",
+      "ru": "Светлая и тёмная темы"
+     },
+     "light": {
+      "en": "Light theme only",
+      "ru": "Только светлая тема"
+     },
+     "dark": {
+      "en": "Dark theme only",
+      "ru": "Только тёмная тема"
+     }
+    }
+   },
+   "color": {
+    "label": {
+     "en": "Colour",
+     "ru": "Цвет"
+    },
+    "measured": true,
+    "scope": [
+     "pack",
+     "emoji"
+    ],
+    "values": {
+     "red": {
+      "en": "Red",
+      "ru": "Красный"
+     },
+     "orange": {
+      "en": "Orange",
+      "ru": "Оранжевый"
+     },
+     "yellow": {
+      "en": "Yellow",
+      "ru": "Жёлтый"
+     },
+     "gold": {
+      "en": "Gold",
+      "ru": "Золотой"
+     },
+     "green": {
+      "en": "Green",
+      "ru": "Зелёный"
+     },
+     "teal": {
+      "en": "Teal",
+      "ru": "Бирюзовый"
+     },
+     "blue": {
+      "en": "Blue",
+      "ru": "Синий"
+     },
+     "purple": {
+      "en": "Purple",
+      "ru": "Фиолетовый"
+     },
+     "pink": {
+      "en": "Pink",
+      "ru": "Розовый"
+     },
+     "brown": {
+      "en": "Brown",
+      "ru": "Коричневый"
+     },
+     "black": {
+      "en": "Black",
+      "ru": "Чёрный"
+     },
+     "white": {
+      "en": "White",
+      "ru": "Белый"
+     },
+     "gray": {
+      "en": "Grey",
+      "ru": "Серый"
+     }
+    }
+   },
+   "palette": {
+    "label": {
+     "en": "Palette",
+     "ru": "Палитра"
+    },
+    "measured": true,
+    "scope": [
+     "pack",
+     "emoji"
+    ],
+    "values": {
+     "monochrome": {
+      "en": "Monochrome",
+      "ru": "Монохром"
+     },
+     "muted": {
+      "en": "Muted",
+      "ru": "Приглушённая"
+     },
+     "vivid": {
+      "en": "Vivid",
+      "ru": "Яркая"
+     },
+     "multicolor": {
+      "en": "Multicolour",
+      "ru": "Разноцветная"
+     }
+    }
+   },
+   "style": {
+    "label": {
+     "en": "Style",
+     "ru": "Стиль"
+    },
+    "measured": false,
+    "scope": [
+     "pack",
+     "emoji"
+    ],
+    "values": {
+     "outline": {
+      "en": "Outline",
+      "ru": "Контурный"
+     },
+     "glyph": {
+      "en": "Solid glyph",
+      "ru": "Заливка, глиф"
+     },
+     "flat": {
+      "en": "Flat",
+      "ru": "Плоский"
+     },
+     "3d": {
+      "en": "3D",
+      "ru": "3D"
+     },
+     "glossy": {
+      "en": "Glossy",
+      "ru": "Глянцевый"
+     },
+     "gradient": {
+      "en": "Gradient",
+      "ru": "Градиент"
+     },
+     "neon": {
+      "en": "Neon",
+      "ru": "Неон"
+     },
+     "pixel": {
+      "en": "Pixel art",
+      "ru": "Пиксель-арт"
+     },
+     "hand-drawn": {
+      "en": "Hand-drawn",
+      "ru": "Рисованный"
+     },
+     "cartoon": {
+      "en": "Cartoon",
+      "ru": "Мультяшный"
+     },
+     "realistic": {
+      "en": "Realistic",
+      "ru": "Реалистичный"
+     },
+     "native-ui": {
+      "en": "Native app icons",
+      "ru": "Как в приложении"
+     },
+     "lettering": {
+      "en": "Letters and fonts",
+      "ru": "Буквы и шрифты"
+     },
+     "emoji-like": {
+      "en": "Emoji style",
+      "ru": "Как эмодзи"
+     },
+     "mosaic": {
+      "en": "Mosaic tiles",
+      "ru": "Мозаика"
+     }
+    }
+   },
+   "topic": {
+    "label": {
+     "en": "Topic",
+     "ru": "Тематика"
+    },
+    "measured": false,
+    "scope": [
+     "pack",
+     "emoji"
+    ],
+    "values": {
+     "interface": {
+      "en": "Interface",
+      "ru": "Интерфейс"
+     },
+     "status": {
+      "en": "Status and signs",
+      "ru": "Статусы и знаки"
+     },
+     "brands": {
+      "en": "Brands and logos",
+      "ru": "Бренды и логотипы"
+     },
+     "finance": {
+      "en": "Money and crypto",
+      "ru": "Деньги и крипта"
+     },
+     "letters": {
+      "en": "Letters and numbers",
+      "ru": "Буквы и цифры"
+     },
+     "faces": {
+      "en": "Faces and emotions",
+      "ru": "Лица и эмоции"
+     },
+     "characters": {
+      "en": "Characters and memes",
+      "ru": "Персонажи и мемы"
+     },
+     "animals": {
+      "en": "Animals",
+      "ru": "Животные"
+     },
+     "food": {
+      "en": "Food and drink",
+      "ru": "Еда и напитки"
+     },
+     "nature": {
+      "en": "Nature and weather",
+      "ru": "Природа и погода"
+     },
+     "holidays": {
+      "en": "Holidays",
+      "ru": "Праздники"
+     },
+     "love": {
+      "en": "Love",
+      "ru": "Любовь"
+     },
+     "flags": {
+      "en": "Flags and places",
+      "ru": "Флаги и места"
+     },
+     "games": {
+      "en": "Games",
+      "ru": "Игры"
+     },
+     "tech": {
+      "en": "Tech and AI",
+      "ru": "Техника и ИИ"
+     },
+     "travel": {
+      "en": "Travel and transport",
+      "ru": "Путешествия и транспорт"
+     },
+     "music": {
+      "en": "Music and media",
+      "ru": "Музыка и медиа"
+     },
+     "sport": {
+      "en": "Sport",
+      "ru": "Спорт"
+     },
+     "office": {
+      "en": "Office and work",
+      "ru": "Офис и работа"
+     },
+     "people": {
+      "en": "People and gestures",
+      "ru": "Люди и жесты"
+     },
+     "symbols": {
+      "en": "Symbols and shapes",
+      "ru": "Символы и фигуры"
+     },
+     "decor": {
+      "en": "Effects and decor",
+      "ru": "Эффекты и декор"
+     }
+    }
+   },
+   "mood": {
+    "label": {
+     "en": "Mood",
+     "ru": "Настроение"
+    },
+    "measured": false,
+    "scope": [
+     "pack",
+     "emoji"
+    ],
+    "values": {
+     "joyful": {
+      "en": "Joyful",
+      "ru": "Радостное"
+     },
+     "playful": {
+      "en": "Playful",
+      "ru": "Игривое"
+     },
+     "loving": {
+      "en": "Loving",
+      "ru": "Нежное"
+     },
+     "sad": {
+      "en": "Sad",
+      "ru": "Грустное"
+     },
+     "angry": {
+      "en": "Angry",
+      "ru": "Злое"
+     },
+     "surprised": {
+      "en": "Surprised",
+      "ru": "Удивлённое"
+     },
+     "scary": {
+      "en": "Spooky",
+      "ru": "Жуткое"
+     },
+     "calm": {
+      "en": "Calm",
+      "ru": "Спокойное"
+     },
+     "serious": {
+      "en": "Neutral and business-like",
+      "ru": "Нейтральное, деловое"
+     }
+    }
+   },
+   "role": {
+    "label": {
+     "en": "Role in an interface",
+     "ru": "Роль в интерфейсе"
+    },
+    "measured": false,
+    "scope": [
+     "pack",
+     "emoji"
+    ],
+    "values": {
+     "navigation": {
+      "en": "Navigation",
+      "ru": "Навигация"
+     },
+     "action": {
+      "en": "Actions",
+      "ru": "Действия"
+     },
+     "status": {
+      "en": "Status and feedback",
+      "ru": "Статус и отклик"
+     },
+     "commerce": {
+      "en": "Shop and money",
+      "ru": "Магазин и деньги"
+     },
+     "communication": {
+      "en": "Chat and people",
+      "ru": "Общение и люди"
+     },
+     "settings": {
+      "en": "Settings and data",
+      "ru": "Настройки и данные"
+     },
+     "content": {
+      "en": "Content marks",
+      "ru": "Метки в тексте"
+     },
+     "decoration": {
+      "en": "Decoration",
+      "ru": "Украшение"
+     }
+    }
+   },
+   "use": {
+    "label": {
+     "en": "Fits bots for",
+     "ru": "Подходит ботам"
+    },
+    "measured": false,
+    "scope": [
+     "pack"
+    ],
+    "values": {
+     "utility": {
+      "en": "Tools and monitoring",
+      "ru": "Утилиты и мониторинг"
+     },
+     "shop": {
+      "en": "Shops and payments",
+      "ru": "Магазины и оплата"
+     },
+     "finance": {
+      "en": "Finance and crypto",
+      "ru": "Финансы и крипта"
+     },
+     "support": {
+      "en": "Support and AI assistants",
+      "ru": "Поддержка и ИИ-ассистенты"
+     },
+     "content": {
+      "en": "Channels and media",
+      "ru": "Каналы и медиа"
+     },
+     "community": {
+      "en": "Communities and fun",
+      "ru": "Сообщества и развлечения"
+     },
+     "games": {
+      "en": "Games",
+      "ru": "Игры"
+     },
+     "education": {
+      "en": "Learning",
+      "ru": "Обучение"
+     }
+    }
+   }
+  }
+ },
+ "thresholds": {
+  "emoji": 0.5,
+  "pack": 0.3,
+  "show": 0.55
+ },
+ "packs": [
+  {
+   "name": "ABCEmoji",
+   "category": "Letters & fonts",
+   "count": 56,
+   "meanings": 15,
+   "facets": {
+    "color": [
+     [
+      "blue",
+      1
+     ]
+    ],
+    "fit": [
+     [
+      "both",
+      0.95
+     ]
+    ],
+    "motion": [
+     [
+      "animated",
+      1
+     ]
+    ],
+    "palette": [
+     [
+      "vivid",
+      0.8
+     ]
+    ],
+    "role": [
+     [
+      "content",
+      0.9
+     ],
+     [
+      "settings",
+      0.65
+     ]
+    ],
+    "style": [
+     [
+      "lettering",
+      1
+     ],
+     [
+      "gradient",
+      0.75
+     ]
+    ],
+    "topic": [
+     [
+      "letters",
+      1
+     ]
+    ],
+    "use": [
+     [
+      "content",
+      0.9
+     ],
+     [
+      "education",
+      0.9
+     ]
+    ]
+   },
+   "compatible": [
+    [
+     "CyGroteskKoylliEmoji",
+     0.91
+    ],
+    [
+     "ColorfulFontEmoji",
+     0.9
+    ],
+    [
+     "Fire_Text",
+     0.86
+    ],
+    [
+     "TableFontEmoji",
+     0.84
+    ],
+    [
+     "FireFontEmoji",
+     0.82
+    ],
+    [
+     "FireFont",
+     0.82
+    ]
+   ],
+   "look": {
+    "characters": "none",
+    "drawn": "Rounded bold Latin letters, digits, punctuation in blue gradient with faint diagonal sheen and thin darker rim",
+    "fill": "gradient",
+    "line_weight": "thin",
+    "perspective": "front",
+    "shadows": "none"
+   },
+   "description": {
+    "en": {
+     "for": "Headings, numbered lists and answer options in channels, courses",
+     "not_for": "Cyrillic text and emotional reactions",
+     "what": "56 animated rounded bold Latin letters, digits and punctuation in a blue gradient with a faint sheen and thin darker rim."
+    },
+    "ru": {
+     "for": "Заголовки, нумерация, варианты ответов в каналах и курсах",
+     "not_for": "Кириллический текст и эмоциональные реакции",
+     "what": "56 анимированных жирных округлых латинских букв, цифр и знаков препинания в синем градиенте с лёгким бликом и тёмной каймой."
+    },
+    "uk": {
+     "for": "Заголовки, нумерація, варіанти відповідей у каналах і курсах",
+     "not_for": "Кириличний текст та емоційні реакції",
+     "what": "56 анімованих жирних округлих латинських літер, цифр і розділових знаків у синьому градієнті з легким відблиском і темною облямівкою."
+    }
+   }
+  },
+  {
+   "name": "AnimatedIconsEmoji",
+   "category": "Interface & icons",
+   "count": 38,
+   "meanings": 20,
+   "facets": {
+    "color": [
+     [
+      "blue",
+      0.9
+     ]
+    ],
+    "fit": [
+     [
+      "both",
+      0.42
+     ]
+    ],
+    "mood": [
+     [
+      "serious",
+      0.8
+     ]
+    ],
+    "motion": [
+     [
+      "animated",
+      1
+     ]
+    ],
+    "palette": [
+     [
+      "vivid",
+      0.36
+     ]
+    ],
+    "role": [
+     [
+      "action",
+      0.36
+     ]
+    ],
+    "style": [
+     [
+      "outline",
+      1
+     ],
+     [
+      "native-ui",
+      0.9
+     ]
+    ],
+    "topic": [
+     [
+      "interface",
+      1
+     ]
+    ],
+    "use": [
+     [
+      "utility",
+      0.89
+     ]
+    ]
+   },
+   "compatible": [
+    [
+     "tgramuxui",
+     0.92
+    ],
+    [
+     "EmojiStatus",
+     0.88
+    ],
+    [
+     "tgmacicons",
+     0.87
+    ],
+    [
+     "TgIos_by_e4zybot",
+     0.87
+    ],
+    [
+     "MacOSiOSepack",
+     0.87
+    ],
+    [
+     "LoadingEmoji",
+     0.86
+    ]
+   ],
+   "look": {
+    "characters": "some",
+    "drawn": "iOS-blue SF-Symbols-like stroke icons (circle, bulb, smiley, pen, arrow); about 20 cells blank mid-animation",
+    "fill": "none",
+    "line_weight": "medium",
+    "perspective": "front",
+    "shadows": "none"
+   },
+   "description": {
+    "en": {
+     "for": "Menus, buttons and tips in tool, shop or support bots",
+     "not_for": "Playful community chats and holiday decoration",
+     "what": "iOS-blue stroke icons in an SF Symbols-like style: a circle, bulb, smiley, pen, arrow and more. Animated, does not repaint."
+    },
+    "ru": {
+     "for": "Меню, кнопки и подсказки в сервисных и торговых ботах",
+     "not_for": "Шуточные чаты сообществ и праздничный декор",
+     "what": "Контурные иконки синего цвета iOS в духе SF Symbols: круг, лампочка, смайлик, ручка, стрелка. Анимированные, не перекрашиваются."
+    },
+    "uk": {
+     "for": "Меню, кнопки й підказки в сервісних і торгових ботах",
+     "not_for": "Жартівливі чати спільнот і святковий декор",
+     "what": "Контурні іконки синього кольору iOS у дусі SF Symbols: коло, лампочка, смайлик, ручка, стрілка. Анімовані, не перефарбовуються."
+    }
+   }
+  },
+  {
+   "name": "BasicinterfaceEmoji",
+   "category": "Interface & icons",
+   "count": 194,
+   "meanings": 67,
+   "facets": {
+    "fit": [
+     [
+      "dark",
+      0.71
+     ]
+    ],
+    "mood": [
+     [
+      "serious",
+      0.9
+     ]
+    ],
+    "motion": [
+     [
+      "static",
+      1
+     ]
+    ],
+    "palette": [
+     [
+      "muted",
+      0.9
+     ]
+    ],
+    "role": [
+     [
+      "action",
+      0.46
+     ]
+    ],
+    "style": [
+     [
+      "gradient",
+      0.9
+     ],
+     [
+      "outline",
+      0.9
+     ]
+    ],
+    "topic": [
+     [
+      "interface",
+      1
+     ]
+    ],
+    "use": [
+     [
+      "utility",
+      0.98
+     ]
+    ]
+   },
+   "compatible": [
+    [
+     "iconspublic",
+     0.8
+    ]
+   ],
+   "look": {
+    "characters": "none",
+    "drawn": "Interface line icons (arrows, media, text, chat) in pink/green/blue/purple strokes on pastel gradient circles",
+    "fill": "gradient",
+    "line_weight": "medium",
+    "perspective": "front",
+    "shadows": "none"
+   },
+   "description": {
+    "en": {
+     "for": "Menus and buttons, shop and support bots, tool dashboards",
+     "not_for": "Icons in the text colour; strict monochrome designs",
+     "what": "Static interface line icons for arrows, media, text and chat, in pink, green, blue and purple strokes on pastel gradient circles."
+    },
+    "ru": {
+     "for": "Меню и кнопки, боты магазинов и поддержки, панели утилит",
+     "not_for": "Значки в цвет текста; строгий монохромный дизайн",
+     "what": "Статичные линейные значки интерфейса: стрелки, медиа, текст, чат; розовые, зелёные, синие, фиолетовые штрихи на пастельных кругах."
+    },
+    "uk": {
+     "for": "Меню й кнопки, боти магазинів і підтримки, панелі утиліт",
+     "not_for": "Значки в колір тексту; суворий монохромний дизайн",
+     "what": "Статичні лінійні значки інтерфейсу: стрілки, медіа, текст, чат; рожеві, зелені, сині, фіолетові штрихи на пастельних колах."
+    }
+   }
+  },
+  {
+   "name": "CenterOfEmoji98095669",
+   "category": "Interface & icons",
+   "count": 117,
+   "meanings": 49,
+   "facets": {
+    "color": [
+     [
+      "blue",
+      1
+     ],
+     [
+      "teal",
+      0.9
+     ]
+    ],
+    "fit": [
+     [
+      "both",
+      0.95
+     ]
+    ],
+    "mood": [
+     [
+      "serious",
+      0.8
+     ]
+    ],
+    "motion": [
+     [
+      "static",
+      1
+     ]
+    ],
+    "palette": [
+     [
+      "vivid",
+      0.62
+     ]
+    ],
+    "style": [
+     [
+      "outline",
+      1
+     ]
+    ],
+    "topic": [
+     [
+      "interface",
+      1
+     ],
+     [
+      "finance",
+      0.9
+     ],
+     [
+      "office",
+      0.9
+     ]
+    ],
+    "use": [
+     [
+      "utility",
+      1
+     ],
+     [
+      "finance",
+      0.9
+     ],
+     [
+      "content",
+      0.81
+     ]
+    ]
+   },
+   "compatible": [
+    [
+     "iconspublic",
+     0.78
+    ],
+    [
+     "CustomArrows",
+     0.78
+    ],
+    [
+     "CenterOfEmoji_4",
+     0.78
+    ],
+    [
+     "Bitcoinmoji",
+     0.78
+    ]
+   ],
+   "look": {
+    "characters": "none",
+    "drawn": "Two-tone blue and mint even-stroke line icons (users, business, finance, space), occasional faint tint",
+    "fill": "none",
+    "line_weight": "thin",
+    "perspective": "front",
+    "shadows": "none"
+   },
+   "description": {
+    "en": {
+     "for": "Menus and buttons in business, finance, shop and support bots",
+     "not_for": "Playful community chats and emotional reactions",
+     "what": "117 static two-tone line icons in blue and mint with even strokes: users, business, finance and space; fixed colours."
+    },
+    "ru": {
+     "for": "Меню и кнопки деловых, финансовых, магазинных и сервисных ботов",
+     "not_for": "Шутливые чаты сообществ и эмоциональные реакции",
+     "what": "117 статичных линейных иконок в два цвета, синий и мятный, с ровным штрихом: люди, бизнес, финансы, космос."
+    },
+    "uk": {
+     "for": "Меню й кнопки ділових, фінансових, магазинних і сервісних ботів",
+     "not_for": "Жартівливі чати спільнот та емоційні реакції",
+     "what": "117 статичних лінійних іконок у два кольори, синій і м'ятний, з рівним штрихом: люди, бізнес, фінанси, космос."
+    }
+   }
+  },
+  {
+   "name": "EmojiNutrokStore",
+   "category": "Crypto & finance",
+   "count": 177,
+   "meanings": 60,
+   "facets": {
+    "color": [
+     [
+      "red",
+      1
+     ],
+     [
+      "black",
+      0.5
+     ],
+     [
+      "white",
+      0.34
+     ]
+    ],
+    "fit": [
+     [
+      "both",
+      0.87
+     ]
+    ],
+    "mood": [
+     [
+      "serious",
+      0.9
+     ],
+     [
+      "loving",
+      0.61
+     ]
+    ],
+    "motion": [
+     [
+      "video",
+      1
+     ]
+    ],
+    "palette": [
+     [
+      "vivid",
+      0.62
+     ]
+    ],
+    "role": [
+     [
+      "content",
+      1
+     ],
+     [
+      "commerce",
+      0.9
+     ]
+    ],
+    "style": [
+     [
+      "mosaic",
+      0.75
+     ],
+     [
+      "native-ui",
+      0.75
+     ]
+    ],
+    "topic": [
+     [
+      "finance",
+      1
+     ],
+     [
+      "brands",
+      0.9
+     ],
+     [
+      "interface",
+      0.9
+     ]
+    ],
+    "use": [
+     [
+      "finance",
+      0.95
+     ],
+     [
+      "content",
+      0.9
+     ],
+     [
+      "shop",
+      0.86
+     ],
+     [
+      "utility",
+      0.86
+     ]
+    ]
+   },
+   "compatible": [
+    [
+     "CryptachEmoji4",
+     0.76
+    ]
+   ],
+   "look": {
+    "characters": "none",
+    "drawn": "mixed: white glyph icons and pay logos on dark-red rounded tiles with soft edge glow; banner words cut across tiles",
+    "fill": "flat",
+    "line_weight": "thin",
+    "perspective": "front",
+    "shadows": "glow"
+   },
+   "description": {
+    "en": {
+     "for": "Shop bots: menus, prices, payment options and order status",
+     "not_for": "Bots in other colour schemes, cute or playful chats",
+     "what": "White glyphs, digits and payment logos on dark-red glowing tiles, plus Russian banner words cut across tiles. Video, does not repaint."
+    },
+    "ru": {
+     "for": "Боты магазинов: меню, цены, способы оплаты и статус заказа",
+     "not_for": "Боты в другой цветовой гамме, милые и игровые чаты",
+     "what": "Белые значки, цифры и логотипы платёжек на тёмно-красных светящихся плитках, слова-баннеры по нескольким плиткам. Видео, не перекрашиваются."
+    },
+    "uk": {
+     "for": "Боти магазинів: меню, ціни, способи оплати й статус замовлення",
+     "not_for": "Боти в іншій кольоровій гамі, милі та ігрові чати",
+     "what": "Білі значки, цифри й логотипи платіжок на темно-червоних плитках зі світінням, слова-банери на кількох плитках. Відео, не перефарбовуються."
+    }
+   }
+  },
+  {
+   "name": "FinanceAnimations",
+   "category": "Crypto & finance",
+   "count": 41,
+   "meanings": 22,
+   "facets": {
+    "color": [
+     [
+      "teal",
+      0.48
+     ]
+    ],
+    "fit": [
+     [
+      "adaptive",
+      1
+     ]
+    ],
+    "mood": [
+     [
+      "serious",
+      0.9
+     ]
+    ],
+    "motion": [
+     [
+      "animated",
+      1
+     ]
+    ],
+    "palette": [
+     [
+      "muted",
+      0.43
+     ]
+    ],
+    "role": [
+     [
+      "commerce",
+      0.9
+     ],
+     [
+      "settings",
+      0.9
+     ]
+    ],
+    "style": [
+     [
+      "outline",
+      1
+     ]
+    ],
+    "topic": [
+     [
+      "finance",
+      1
+     ],
+     [
+      "interface",
+      0.9
+     ],
+     [
+      "office",
+      0.9
+     ]
+    ],
+    "use": [
+     [
+      "finance",
+      1
+     ],
+     [
+      "content",
+      0.9
+     ],
+     [
+      "shop",
+      0.85
+     ],
+     [
+      "utility",
+      0.85
+     ]
+    ]
+   },
+   "compatible": [
+    [
+     "magiccult_adaptiveEmoji",
+     0.85
+    ],
+    [
+     "tgmacicons",
+     0.77
+    ],
+    [
+     "TgIos_by_e4zybot",
+     0.77
+    ],
+    [
+     "MacOSiOSepack",
+     0.76
+    ],
+    [
+     "tgiosicons",
+     0.75
+    ],
+    [
+     "AnimatedReactionsAdaptive",
+     0.75
+    ]
+   ],
+   "look": {
+    "characters": "none",
+    "drawn": "Finance line icons: coins, charts, calculators, money bags; even black strokes, teal accents; last cell promo text",
+    "fill": "none",
+    "line_weight": "medium",
+    "perspective": "front",
+    "shadows": "none"
+   },
+   "description": {
+    "en": {
+     "for": "Finance and payment bots, balance and report lines, shop menus",
+     "not_for": "Playful community chats, games, holiday greetings",
+     "what": "Animated finance line icons: coins, charts, calculators, money bags; even strokes with teal accents, repaint in the text colour."
+    },
+    "ru": {
+     "for": "Финансовые и платёжные боты, балансы и отчёты, меню магазина",
+     "not_for": "Шутливые чаты сообществ, игры, праздничные поздравления",
+     "what": "Анимированные линейные финансовые значки: монеты, графики, калькуляторы, мешки денег; ровный штрих, перекрашиваются в цвет текста."
+    },
+    "uk": {
+     "for": "Фінансові та платіжні боти, баланси й звіти, меню магазину",
+     "not_for": "Жартівливі чати спільнот, ігри, святкові привітання",
+     "what": "Анімовані лінійні фінансові значки: монети, графіки, калькулятори, мішки грошей; рівний штрих, перефарбовуються в колір тексту."
+    }
+   }
+  },
+  {
+   "name": "IOS27icons8",
+   "category": "Interface & icons",
+   "count": 85,
+   "meanings": 21,
+   "facets": {
+    "color": [
+     [
+      "black",
+      0.8
+     ]
+    ],
+    "fit": [
+     [
+      "adaptive",
+      1
+     ]
+    ],
+    "mood": [
+     [
+      "serious",
+      0.9
+     ]
+    ],
+    "motion": [
+     [
+      "static",
+      1
+     ]
+    ],
+    "palette": [
+     [
+      "monochrome",
+      0.8
+     ]
+    ],
+    "style": [
+     [
+      "glyph",
+      1
+     ]
+    ],
+    "topic": [
+     [
+      "interface",
+      1
+     ],
+     [
+      "games",
+      0.9
+     ]
+    ],
+    "use": [
+     [
+      "games",
+      0.72
+     ],
+     [
+      "utility",
+      0.72
+     ]
+    ]
+   },
+   "compatible": [
+    [
+     "AdaptiveGamesEmojiKtr",
+     1
+    ],
+    [
+     "pack_Energy_Drinks_Logos_by_SozdaiStickeriBot",
+     0.93
+    ],
+    [
+     "sticks_d47f2_by_TgEmojisBot",
+     0.85
+    ],
+    [
+     "NatureEmojis",
+     0.85
+    ],
+    [
+     "HalloweenIcons",
+     0.85
+    ],
+    [
+     "DMJValentinesDayEmoji",
+     0.85
+    ]
+   ],
+   "look": {
+    "characters": "some",
+    "drawn": "Black solid icons8 glyphs of pop-culture: famous faces, pixel monsters, cards, game logos, comic BAM/WOW bursts",
+    "fill": "flat",
+    "line_weight": "none",
+    "perspective": "front",
+    "shadows": "none"
+   },
+   "description": {
+    "en": {
+     "for": "Gaming and fan chats, entertainment channels, accents in text",
+     "not_for": "Shop, finance or support menus that need plain action icons",
+     "what": "Static solid pop-culture glyphs: famous faces, pixel monsters, playing cards, game logos, comic BAM and WOW bursts; repaint in text colour."
+    },
+    "ru": {
+     "for": "Игровые и фанатские чаты, развлекательные каналы, акценты в тексте",
+     "not_for": "Меню магазинов, финансов и поддержки с простыми действиями",
+     "what": "Статичные значки поп-культуры: знаменитости, пиксельные монстры, карты, логотипы игр, комиксные BAM и WOW; перекрашиваются в цвет текста."
+    },
+    "uk": {
+     "for": "Ігрові та фанатські чати, розважальні канали, акценти в тексті",
+     "not_for": "Меню магазинів, фінансів і підтримки з простими діями",
+     "what": "Статичні значки поп-культури: знаменитості, піксельні монстри, карти, логотипи ігор, коміксні BAM і WOW; перефарбовуються в колір тексту."
+    }
+   }
+  }
+ ]
+}
