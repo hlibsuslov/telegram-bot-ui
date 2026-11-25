@@ -168,7 +168,7 @@ only after `TelegramWidget.watchPublicData()`.
   arrives only in later queries) or `InputSharedWidgetMessageContent` (an existing widget). Queries
   come with `inline_message_id`, `chat_instance`, `chat_type`. Previews take no taps.
 * Forwards: no chat state ever; only shared widgets with `allow_queries` can ask, via
-  `shared_widget_query` (`id`, `from`, `data`, `widget_id` only).
+  `shared_widget_query` (`id`, `from`, `type`, `data`, `widget_id`): no chat or message.
 
 ## Runtime limits (design for them)
 

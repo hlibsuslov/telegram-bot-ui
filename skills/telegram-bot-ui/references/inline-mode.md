@@ -150,9 +150,10 @@ The bot is not a member of the chat where the inline message lives; it has no
 
 - **[API]** `editMessageText`, `editMessageCaption`, `editMessageMedia`,
   `editMessageReplyMarkup`, `editMessageLiveLocation`, `stopMessageLiveLocation`,
-  `setGameScore`, `getGameHighScores` and `editMessageWidgetData` (10.4) accept
+  `setGameScore` and `editMessageWidgetData` (10.4) accept
   `inline_message_id` (use it **instead of** `chat_id` +
-  `message_id`) and return **`True`**, not a `Message`, for inline messages.
+  `message_id`) and return **`True`**, not a `Message`, for inline messages. `getGameHighScores`
+  also takes `inline_message_id` and returns an array of `GameHighScore`.
 - **[API]** `editMessageMedia` on an inline message cannot upload a new file — use a
   `file_id` or URL.
 - **[API]** Not available for inline messages: `deleteMessage`, `stopPoll`,
@@ -189,7 +190,7 @@ with a friend" with only private chats allowed. **[Heuristic]**
   returns `PreparedInlineMessage` with `id` and `expiration_date`. Expired ids are
   unusable — create one per share action. See `mini-apps-bridge.md`.
 - **[API]** `answerWebAppQuery(web_app_query_id, result)` sends a message on behalf of the
-  user from an inline-mode Mini App; returns `SentWebAppMessage` (with
+  user to the chat the Mini App's query came from; returns `SentWebAppMessage` (with
   `inline_message_id` only when the result has an inline keyboard).
 
 ```json

@@ -1,11 +1,11 @@
 ---
 name: telegram-bot-ui
-description: "Designs, audits, builds and operates everything a Telegram bot shows, sends and reacts to, with offline catalogs of the whole Bot API and Telegram.WebApp. Use when a request concerns a Telegram bot's or channel's messages, wording, buttons, keyboards, menus, navigation, forms, streaming AI replies, HTML widgets, Mini Apps, Rich Messages, premium emoji, formatting errors, Stars payments, channel posts or mailings, a bot an agent uses to notify or ask for approval, a whole bot product, the bot-ui/ screen map or a Studio task, or whether the Bot API supports something, including the server side of these. Use it even for vague asks like 'make my bot nicer' or a pasted handler or payload. Do not use for other messengers, userbots, Telegram Ads, or hosting, CI, databases and auth that no Telegram feature depends on, or Microsoft .rtf files."
+description: "Designs, audits, builds and operates everything a Telegram bot shows, sends and reacts to, with offline catalogs of the whole Bot API and Telegram.WebApp. Use when a request concerns a Telegram bot's or channel's messages, wording, buttons, keyboards, menus, navigation, forms, streaming AI replies, HTML widgets, Mini Apps, Rich Messages, premium emoji, formatting errors, Stars payments, webhooks, channel posts or mailings, a bot an agent uses to notify or ask for approval, a whole bot product, the bot-ui/ screen map or a Studio task, or whether the Bot API supports something, including the server side of these. Use it even for vague asks like 'make my bot nicer' or a pasted handler or payload. Do not use for other messengers, userbots, Telegram Ads, server setup (nginx, TLS, hosting), or CI, databases and auth that no Telegram feature depends on, or Microsoft .rtf files."
 license: MIT
 argument-hint: "[start|audit|improve|fix|build|post|widget|mini-app|emoji|agent-bot|map|lookup] [what]"
 metadata:
   author: hlibsuslov
-  version: "3.2.0"
+  version: "3.3.0"
 ---
 
 # Telegram Bot UI
@@ -22,7 +22,7 @@ the transitions between states. Only HTML widgets and Mini Apps have a layout of
 
 1. **Load the project context once per session:**
    `py -3 <skill>/scripts/tgui.py context --root <project>` (`python3` outside Windows;
-   `<skill>` is the folder that holds this file, `<project>` the user's bot repository). It
+   `<skill>` is this file's folder, `<project>` the user's bot repository). It
    prints the bot's facts, saved findings, queued Studio requests and signals such as
    `NO_CONTEXT` or `CONTEXT_STALE`. Don't rerun it or re-audit what the findings hold. Without Python, read
    `bot-ui/context/*.json` if present, else say "no saved context yet" and go on.
@@ -54,8 +54,7 @@ the transitions between states. Only HTML widgets and Mini Apps have a layout of
 | `lookup` | "does the Bot API have"; "what are sendPoll's parameters"; "есть ли в Bot API"; "чи є в Bot API кнопки іншого кольору" | Bot API and Telegram.WebApp answers from the offline catalogs; skill health |
 <!-- commands:end -->
 
-Pick the row from the user's words and say in plain language what
-you are doing ("I'll review the menu first, without changing code").
+Say in plain language what you are doing ("I'll review the menu first, without changing code").
 
 ## Scope
 

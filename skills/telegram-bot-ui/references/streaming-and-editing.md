@@ -50,8 +50,9 @@ Partial-result policy (product choice, decide before streaming):
 `Update.stopped_message_generation` → `MessageGenerationStopped{chat, message_thread_id?, draft_id}`.
 Find the operation by `(chat.id, message_thread_id or 0, draft_id)`; unknown → ignore and log.
 Then: cancel the upstream model (stop spending tokens), drop queued chunks, cancel timers.
-Subscribe explicitly (`allowed_updates` includes `stopped_message_generation`; it is sticky) and
-check the SDK routes it (`sdk-compatibility.md`).
+The update is in the default set; it is lost only when the bot sets its own `allowed_updates` without it
+(the list is sticky: "If not specified, the previous setting will be used"). If the bot sets the list,
+include `stopped_message_generation`, and check the SDK routes it (`sdk-compatibility.md`).
 
 `draft_id`: non-zero, one per operation, never reused for another operation in the same chat/topic.
 

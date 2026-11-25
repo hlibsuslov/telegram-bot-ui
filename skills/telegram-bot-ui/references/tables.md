@@ -73,7 +73,8 @@ table = (
 bot.send_rich_message(chat_id=chat_id, markdown=table)   # exact SDK call varies
 ```
 
-- Header cells render **bold** automatically — do not also bold them by hand.
+- The first row is the header row. How clients draw header cells is not documented **[Unverified]**;
+  do not bold them by hand.
 - Escape a literal `|` inside a cell as `\|`; keep cell text on one line (use
   `<br>`-equivalent only if the project's Rich Markdown supports it — *verify*).
 - Numbers → right-aligned columns; labels → left. See alignment note below.
@@ -141,8 +142,9 @@ params = {"chat_id": chat_id, "rich_message": {"blocks": [table_block]}}
 #   py -3 scripts/validate_payload.py --method sendRichMessage params.json
 ```
 
-- **`is_header: true`** marks header cells; clients render them bold. This is the
-  *semantic* header — always use it instead of manual bold.
+- **`is_header: true`** marks header cells ("True, if the cell is a header cell" **[API]**); how
+  clients draw them is not documented **[Unverified]**. This is the *semantic* header — always
+  use it instead of manual bold.
 - **`align` and `valign` are required** on every cell.
 - Cell `text` is `RichText`: a plain string, or rich nodes (bold, link, code,
   custom emoji…) — not a list of blocks.
@@ -157,13 +159,12 @@ header with bold body cells — it breaks export and screen readers.
 ### Alignment
 Set `align` per column: **numbers/currency/dates right, text left, short flags
 center**. Right-aligned numeric columns are the single biggest readability win in
-a Telegram table. Vertical alignment (`top`/`middle`/`bottom`) exists on cells if
-the content is multi-line *(verify field name)*.
+a Telegram table. Vertical alignment is the required `valign` field
+(`top`/`middle`/`bottom`) **[API]**; it matters when cell content is multi-line.
 
 ### Spanning (merged cells)
-Use `colspan`/`rowspan` (cell field `> 1`) for merged cells — e.g. a group title
-across the top — instead of padding with empty cells. *(Verify the exact field
-names.)*
+Use the optional cell fields `colspan`/`rowspan` (values `> 1`) **[API]** for merged cells — e.g.
+a group title across the top — instead of padding with empty cells.
 
 ### Column cap
 There is a per-table **column limit** (official: 20 columns, Rich Message Limits, verified 2026-11-12). If data is wider, transpose it (attributes as rows) or split into
@@ -199,7 +200,8 @@ One escaper per format (`security-and-escaping.md`):
 - **List of records** (standings, prices, schedule): one column per attribute,
   one row per record, numeric columns right-aligned.
 - **Comparison** (plan A vs B vs C): first column = feature (row header via a
-  leading `is_header` cell per row *(verify row-header support)*), one column per
+  leading `is_header` cell per row: the API lets any cell be a header cell; how a client draws a
+  row header is **[Unverified]**), one column per
   option, ✓/✗ or values in cells.
 - **Diff / before-after:** three columns — item, before, after — with changed
   cells emphasized (bold inside the cell).

@@ -31,8 +31,9 @@ narrower scope (administrators, one chat) or stay unlisted (`"hidden": true` in 
 and their handlers check rights on every call: being unlisted is not protection.
 
 `/start` reaches every user through the Start button and deep links; list it when "back to the
-beginning" is useful, otherwise it may stay out. In groups users see `/command@botname` forms;
-commands reach the bot in privacy mode. **[API]**
+beginning" is useful, otherwise it may stay out. In groups a command can be addressed as `/command@botname`:
+with privacy mode on, the bot still receives commands explicitly meant for it, and a bare `/start`
+only if it was the last bot to post in the group **[Official, Bot Features]**.
 
 ## Names and descriptions
 
