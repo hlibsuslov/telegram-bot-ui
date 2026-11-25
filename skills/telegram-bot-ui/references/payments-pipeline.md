@@ -28,6 +28,8 @@ payment guides and terms · **[News]** press and Telegram announcements, not an 
 - [7. Data model](#7-data-model)
 - [8. Screens and microcopy](#8-screens-and-microcopy)
 - [9. Runtime (Stars)](#9-runtime-stars)
+- [10. Shipping path (provider invoices)](#10-shipping-path-provider-invoices)
+- [11. Ledger audit](#11-ledger-audit)
 - [Common mistakes](#common-mistakes)
 
 ## 1. Pick the rail first
@@ -91,7 +93,8 @@ subscription: active ─► (renewal) active │ failed │ canceled_by_user │
   (`inv:<offer>.<tag>`); every payment becomes its own order at pre-checkout [Official] for
   multi-use, [H] for the order split.
 - Subscriptions: one order per subscription; the first `telegram_payment_charge_id` is the
-  subscription id; each renewal is a new payment on the same order with `is_recurring` [API].
+  subscription id [H]; each renewal is a new payment with `is_recurring` [API], kept on the same
+  order [H].
   `Update.subscription` (`BotSubscriptionUpdated`) carries only `user`, `invoice_payload` and
   `state` [API]: find the subscription by the payload, check the user. Access by `expires_at`
   (from `subscription_expiration_date`), never by the last update [H].
@@ -317,6 +320,7 @@ def webhook(headers, update):                               # setWebhook(..., se
     return 200
 
 pay.reconcile(since=day_start, until=day_end, offset=last_offset)   # daily, in a worker
+pay.audit_ledger(offset=last_audit_offset)                          # read-only ledger check (§11)
 ```
 
 `on_deliver` runs inside the transaction that claims the delivery (the entitlement row, UNIQUE per
@@ -329,10 +333,64 @@ delivery, a crashed delivery and a crashed renewal resumed, forged and foreign p
 change at pre-checkout, an expired order, stock and per-user limits with live holds, a multi-use
 invoice in a group, a stray charge, a refund and a repeated refund, a refund that wins the race
 against delivery, per-charge subscription refunds, a lost refund answer, a `failed` subscription
-(one message), reconciliation with a chargeback, paging and a re-run, the webhook secret. Gram runtime (orders, `msg_hash`, `ChainVerifier`, refund transfers) is
+(one message), reconciliation with a chargeback, paging and a re-run, the ledger audit (a missing
+refund, a double credit, paging), the webhook secret. Gram runtime (orders, `msg_hash`, `ChainVerifier`, refund transfers) is
 the next stage; until then use `tgkit/wallet.py` and `wallet-and-ton.md`.
 
-Physical goods through a provider: documentation only here — `payments-and-stars.md#physical-goods-provider-payments`.
+Physical goods through a provider: no runtime here — the call sequence is §10 and
+`payments-and-stars.md#physical-goods-provider-payments`.
+
+## 10. Shipping path (provider invoices)
+
+Shipping exists only on a provider invoice: for Stars, `need_*` and `is_flexible` are ignored [API].
+
+1. `sendInvoice` with `provider_token`, an ISO 4217 `currency`, `need_shipping_address: true` and
+   `is_flexible: true`; `prices` may hold several items (only Stars needs exactly one) [API].
+2. Telegram sends `Update.shipping_query` (`ShippingQuery`: `id`, `from`, `invoice_payload`,
+   `shipping_address`), only for invoices with a flexible price [API].
+3. `answerShippingQuery`: `ok: true` with `shipping_options` (`ShippingOption`: `id`, `title`,
+   `prices`), or `ok: false` with `error_message`, which Telegram shows the user [API]. Price the
+   options from the server's table by `country_code` for the order the payload names [H].
+4. `pre_checkout_query` carries the chosen `shipping_option_id` and `order_info` [API]: recompute
+   the total as invoice prices plus that option's prices and decline on a mismatch [H].
+   `successful_payment` repeats both [API]; store the address with the order, never in logs [H].
+
+```json
+{"update_id": 700001, "shipping_query": {
+  "id": "sq-7711", "from": {"id": 111111111, "is_bot": false, "first_name": "Olena"},
+  "invoice_payload": "ord:5b2e91c4d0aa.3f6c0e9a81d2b7c4",
+  "shipping_address": {"country_code": "UA", "state": "", "city": "Kyiv", "street_line1": "Khreshchatyk St 1", "street_line2": "apt 5", "post_code": "01001"}
+}}
+```
+
+```json
+{"method": "answerShippingQuery", "params": {
+  "shipping_query_id": "sq-7711", "ok": true,
+  "shipping_options": [{"id": "nova", "title": "Nova Poshta branch, 1-2 days", "prices": [{"label": "Delivery", "amount": 350}]},
+                       {"id": "courier", "title": "Courier to the door, 1 day", "prices": [{"label": "Courier", "amount": 900}]}]
+}}
+```
+
+The whole recorded sequence: `examples/python/recipes/api_payments.py` →
+`examples/payloads/api-payments.json`.
+
+## 11. Ledger audit
+
+`audit_ledger(offset=…, page_size=100)` checks the ledger itself against the statement and is
+read-only: it writes, posts and sends nothing; the admin decides the correction [H].
+
+- Pages `getStarTransactions` from the stored offset (`limit` 1-100) [API] until a page shorter
+  than `limit`, and returns `next_offset` for the next run [H].
+- **Missing refund.** A refund row reuses the refunded payment's id [API]; an outgoing
+  `TransactionPartnerUser` row with `transaction_type: "invoice_payment"` whose id has no
+  `refund:<id>` or `chargeback:<id>` posting on `bot:stars` is a refund the ledger lacks — one made
+  from another tool, or a `refunded_payment` update that never arrived [H].
+- **Double credit.** A charge id is one incoming transaction (`StarTransaction.id` =
+  `SuccessfulPayment.telegram_payment_charge_id`) [API]; two income postings under one id are a
+  double credit [H]. UNIQUE `payments.charge_id` prevents it inside `tgkit`; the audit catches a
+  second writer, an import or a hand edit.
+- `reconcile()` (§6) is the run that acts (settles lost refunds, records chargebacks); run the
+  audit after it.
 
 ## Common mistakes
 
@@ -345,6 +403,8 @@ Physical goods through a provider: documentation only here — `payments-and-sta
 | Delivery on `pre_checkout_query` or `sent_transaction` | `successful_payment` / on-chain check only |
 | "Refund 50 % in Stars" | impossible: whole refund or a goodwill credit |
 | Retrying `refundStarPayment` after a timeout | outcome unknown: reconcile first |
+| Shipping options on a Stars invoice | shipping exists only on a provider invoice (§10) |
+| Income posted per update, not per charge id | one posting per charge; `audit_ledger` finds doubles |
 | Access by the last subscription update | access by `expires_at` |
 | One message per failed renewal retry | one per period |
 | Float money | integers: Stars, nanostars, nanograms |

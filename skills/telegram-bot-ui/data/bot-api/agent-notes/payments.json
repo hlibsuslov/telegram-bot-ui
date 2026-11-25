@@ -14,7 +14,7 @@
     {"text": "A custom reply_markup must start with a Pay button.", "source": "API", "cite": "reply_markup: If not empty, the first button must be a Pay button."}
    ],
    "related": ["LabeledPrice", "Invoice", "ShippingQuery", "PreCheckoutQuery", "SuccessfulPayment", "createInvoiceLink"],
-   "refs": ["references/payments-and-stars.md#lifecycle-and-the-state-your-server-must-keep"],
+   "refs": ["references/payments-and-stars.md#lifecycle-and-the-state-your-server-must-keep", "references/payments-pipeline.md#10-shipping-path-provider-invoices"],
    "example": "examples/payloads/api-payments.json"
   },
   "createInvoiceLink": {
@@ -43,7 +43,7 @@
     {"text": "Price options from your own table by address; recompute the total from it at pre-checkout.", "source": "Heuristic"}
    ],
    "related": ["ShippingQuery", "ShippingAddress", "ShippingOption", "LabeledPrice", "answerPreCheckoutQuery"],
-   "refs": ["references/payments-and-stars.md#physical-goods-provider-payments"],
+   "refs": ["references/payments-pipeline.md#10-shipping-path-provider-invoices"],
    "example": "examples/payloads/api-payments.json"
   },
   "answerPreCheckoutQuery": {
@@ -82,7 +82,7 @@
    ],
    "related": ["StarTransactions", "StarTransaction", "TransactionPartner", "RevenueWithdrawalState", "AffiliateInfo", "getMyStarBalance", "refundStarPayment"],
    "since": "7.5",
-   "refs": ["references/payments-pipeline.md#6-reconciliation"],
+   "refs": ["references/payments-pipeline.md#6-reconciliation", "references/payments-pipeline.md#11-ledger-audit"],
    "example": "examples/payloads/api-payments.json"
   },
   "refundStarPayment": {
