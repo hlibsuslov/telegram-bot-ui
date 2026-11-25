@@ -53,17 +53,26 @@ def is_local(target: str) -> bool:
     return True
 
 
+def routing_files(root: str) -> list[str]:
+    """SKILL.md routes to a command; the command's playbook and index route to references."""
+    files = [os.path.join(root, "SKILL.md"), os.path.join(root, "commands", "index.json")]
+    commands = os.path.join(root, "commands")
+    if os.path.isdir(commands):
+        files += [os.path.join(commands, n) for n in sorted(os.listdir(commands)) if n.endswith(".md")]
+    return [f for f in files if os.path.isfile(f)]
+
+
 def collect_referenced_paths(root: str) -> set[str]:
-    skill_md = os.path.join(root, "SKILL.md")
     refs: set[str] = set()
-    with open(skill_md, "r", encoding="utf-8") as fh:
-        text = fh.read()
-    for m in PATH_RE.findall(text):
-        refs.add(m.strip("`.,);:"))
-    for target in MD_LINK_RE.findall(strip_code(text)):
-        target = target.split("#", 1)[0].strip()
-        if is_local(target):
-            refs.add(target)
+    for path in routing_files(root):
+        with open(path, "r", encoding="utf-8") as fh:
+            text = fh.read()
+        for m in PATH_RE.findall(text):
+            refs.add(m.strip("`.,);:\""))
+        for target in MD_LINK_RE.findall(strip_code(text)):
+            target = target.split("#", 1)[0].strip()
+            if is_local(target):
+                refs.add(target)
     return refs
 
 
@@ -81,7 +90,7 @@ def main() -> int:
     # 1) every referenced path exists
     for rel in sorted(referenced):
         if not os.path.exists(os.path.join(root, rel)):
-            errors.append(f"SKILL.md references missing path: {rel}")
+            errors.append(f"SKILL.md or a command playbook references missing path: {rel}")
 
     # 2) bundled markdown files: non-empty, links resolve, no secrets
     linked_refs: set[str] = set()
@@ -123,7 +132,7 @@ def main() -> int:
                 continue
             rel = f"references/{fname}"
             if rel not in referenced and rel not in linked_refs:
-                warnings.append(f"reference not linked from SKILL.md: {rel}")
+                warnings.append(f"reference not routed from SKILL.md or a command: {rel}")
 
     for w in warnings:
         print(f"WARN: {w}")

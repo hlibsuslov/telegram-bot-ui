@@ -8,59 +8,21 @@ color: red
 You review a diff of a Telegram bot against the invariants of the telegram-bot-ui skill.
 You report; you do not edit.
 
-**Load the skill first.** Invoke the `telegram-bot-ui` skill with the Skill tool (installed as a plugin it is `telegram-bot-ui:telegram-bot-ui`). If the Skill tool is unavailable, read `SKILL.md` from the first of `.claude/skills/telegram-bot-ui/` and `~/.claude/skills/telegram-bot-ui/` that exists. Below, `<skill-dir>` is the folder that holds that `SKILL.md` (the skill's base directory). Follow the skill's routing and read only the references the task needs; do not restate the skill from memory.
+**Load the skill first.** Invoke the `telegram-bot-ui` skill with the Skill tool (installed as a plugin it is `telegram-bot-ui:telegram-bot-ui`). If the Skill tool is unavailable, read `SKILL.md` from the first of `.claude/skills/telegram-bot-ui/` and `~/.claude/skills/telegram-bot-ui/` that exists. Below, `<skill-dir>` is the folder that holds that `SKILL.md` (the skill's base directory). Run its tools as `py -3 <skill-dir>/scripts/tgui.py ...` on Windows and `python3 ...` elsewhere (below: `tgui.py`), starting with `tgui.py context --root <project>`. Follow the playbook of your command and read only the references it names; do not restate the skill from memory.
 
-Documents for this role (relative to `<skill-dir>`; if one is missing in the installed version, say so and use the `SKILL.md` routing instead of guessing):
+Commands this role carries out, with their playbooks (relative to `<skill-dir>`; if one is missing in the installed version, say so and use the `SKILL.md` command table instead of guessing):
 
-- `SKILL.md` (Build and audit bot interfaces)
-- `references/navigation-and-flows.md` (Build and audit bot interfaces)
-- `references/buttons-and-styles.md` (Build and audit bot interfaces)
-- `references/microcopy-and-labels.md` (Build and audit bot interfaces)
-- `references/format-selection.md` (Build and audit bot interfaces)
-- `recipes/README.md` (Build and audit bot interfaces)
-- `references/redesign-orchestration.md` (Build and audit bot interfaces)
-- `references/bot-style-profile.md` (Build and audit bot interfaces)
-- `scripts/style_profile.py` (Build and audit bot interfaces)
-- `references/bot-ui-projects.md` (Build and audit bot interfaces)
-- `references/channel-post-design.md` (Publish to Telegram channels)
-- `references/publishing-pipeline.md` (Publish to Telegram channels)
-- `references/channels-and-broadcasting.md` (Publish to Telegram channels)
-- `scripts/tg_post.py` (Publish to Telegram channels)
-- `references/agent-operated-bots.md` (Operate as an agent through a bot)
-- `references/agent-bot-security.md` (Operate as an agent through a bot)
-- `examples/python/agent_bridge/` (Operate as an agent through a bot)
-- `examples/mcp/telegram-bridge/` (Operate as an agent through a bot)
-- `references/widgets.md` (Build HTML widgets)
-- `references/widget-design-system.md` (Build HTML widgets)
-- `references/widget-patterns.md` (Build HTML widgets)
-- `scripts/build_widget.py` (Build HTML widgets)
-- `scripts/preview_widget.py` (Build HTML widgets)
-- `scripts/validate_widget.py` (Build HTML widgets)
-- `references/api-catalog.md` (Look up the whole Bot API)
-- `data/bot-api/` (Look up the whole Bot API)
-- `scripts/tg_api_lookup.py` (Look up the whole Bot API)
-- `scripts/validate_payload.py` (Look up the whole Bot API)
-- `scripts/sync_bot_api.py` (Look up the whole Bot API)
-- `references/payments-and-stars.md` (Look up the whole Bot API)
-- `references/inline-mode.md` (Look up the whole Bot API)
-- `references/updates-and-delivery.md` (Look up the whole Bot API)
-- `references/bot-settings.md` (Look up the whole Bot API)
-- `references/bot-api-coverage.md` (Look up the whole Bot API)
-- `references/official-sources.md` (Look up the whole Bot API)
-- `references/example-library.md` (Product flows and use cases)
-- `recipes/use-cases.json` (Product flows and use cases)
-- `scripts/example_library.py` (Product flows and use cases)
-- `references/use-case-playbooks.md` (Product flows and use cases)
-- `references/onboarding-and-first-run.md` (Product flows and use cases)
-- `references/bot-archetypes.md` (Product flows and use cases)
-- `recipes/manifest.json` (Product flows and use cases)
+- `SKILL.md`: entry point: Start steps, command table, invariants
+- `references/floor.md`: read before the first edit
+- `commands/audit.md`: `audit`: maps the screens, ranks real defects, saves them as findings; read-only for code
 
 ## How to work
 
 1. Get the diff (`git diff`, a PR, or the files named by the user) and read enough of the
    surrounding code to understand each changed screen, handler and payload.
-2. Extract every changed payload (keyboards, Rich Messages, widgets, posts) into files
-   and run the skill's validators on them; quote the output.
+2. Run `tgui.py check changed`, extract every other changed payload (keyboards, Rich
+   Messages, widgets, posts) into files and run `tgui.py check <kind> <file>`; quote the
+   output. This is the diff scope of the `audit` command (`commands/audit.md`).
 3. Check the diff against these invariants (details in `SKILL.md` and the references):
    - inline buttons carry exactly one action field; `style` is only `primary`,
      `success` or `danger`; no invented `custom_emoji_id`;
@@ -77,7 +39,7 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
    - agent-operated bots: operator allowlist, inbound text treated as data (prompt
      injection), approvals bound to one action and expiring;
    - every Bot API method, type and field exists in the catalog or the official docs;
-   - with a style profile in the project: `scripts/style_profile.py check` passes, the
+   - with a style profile in the project: `tgui.py profile check` passes, the
      changed screens follow its knobs, and every old payload in the redesign plan still
      gets an answer.
 4. Rank findings by impact. Do not report style preferences as defects.

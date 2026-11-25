@@ -62,7 +62,7 @@ class Reference(unittest.TestCase):
     def test_routed(self):
         for f in ("README.md", "orchestration.md", "components.md", "security.md"):
             self.assertIn("forms-and-data.md", read(REF, f), f)
-        self.assertIn("references/mini-apps/forms-and-data.md", read(_paths.ROOT, "SKILL.md"))
+        self.assertIn("references/mini-apps/forms-and-data.md", _paths.routing_text())
 
 
 class Kit(unittest.TestCase):

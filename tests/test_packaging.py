@@ -79,7 +79,11 @@ class AdapterGeneratorTest(unittest.TestCase):
             else:
                 self.assertIn(f"\n## {heading}\n", text)
         self.assertIn("## Left out of this prompt", text)
-        self.assertIn("references/widgets.md", text.split("## Left out of this prompt")[1])
+        self.assertIn("llms.txt", text.split("## Left out of this prompt")[1])
+        # The floor travels with the router: the rules hold even where no file can be opened.
+        self.assertIn("## Floor (`references/floor.md`)", text)
+        self.assertIn("### Definition of done", text)
+        self.assertLess(len(text.encode("utf-8")), 16_000)
 
     def test_llms_txt_follows_the_format(self):
         lines = ba.build()["llms.txt"].splitlines()

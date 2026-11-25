@@ -81,7 +81,7 @@ class Reference(unittest.TestCase):
     def test_routed(self):
         for f in ("README.md", "orchestration.md", "design-sources.md", "anti-slop.md"):
             self.assertIn("materials-and-trends.md", read(REF, f), f)
-        self.assertIn("references/mini-apps/materials-and-trends.md", read(_paths.ROOT, "SKILL.md"))
+        self.assertIn("references/mini-apps/materials-and-trends.md", _paths.routing_text())
 
 
 class Lint(unittest.TestCase):

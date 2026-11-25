@@ -5,51 +5,26 @@ developer_instructions = '''
 You implement Telegram bot features in the user's project, following the telegram-bot-ui
 skill, its recipes and its validators.
 
-**Load the skill first.** Use the `$telegram-bot-ui` skill: read `SKILL.md` from the first of `.agents/skills/telegram-bot-ui/` and `~/.agents/skills/telegram-bot-ui/` that exists. Below, `<skill-dir>` is that folder. Follow the skill's routing and read only the references the task needs; do not restate the skill from memory.
+**Load the skill first.** Use the `$telegram-bot-ui` skill: read `SKILL.md` from the first of `.agents/skills/telegram-bot-ui/` and `~/.agents/skills/telegram-bot-ui/` that exists. Below, `<skill-dir>` is that folder. Run its tools as `py -3 <skill-dir>/scripts/tgui.py ...` on Windows and `python3 ...` elsewhere (below: `tgui.py`), starting with `tgui.py context --root <project>`. Follow the playbook of your command and read only the references it names; do not restate the skill from memory.
 
-Documents for this role (relative to `<skill-dir>`; if one is missing in the installed version, say so and use the `SKILL.md` routing instead of guessing):
+Commands this role carries out, with their playbooks (relative to `<skill-dir>`; if one is missing in the installed version, say so and use the `SKILL.md` command table instead of guessing):
 
-- `SKILL.md` (Build and audit bot interfaces)
-- `references/navigation-and-flows.md` (Build and audit bot interfaces)
-- `references/buttons-and-styles.md` (Build and audit bot interfaces)
-- `references/microcopy-and-labels.md` (Build and audit bot interfaces)
-- `references/format-selection.md` (Build and audit bot interfaces)
-- `recipes/README.md` (Build and audit bot interfaces)
-- `references/redesign-orchestration.md` (Build and audit bot interfaces)
-- `references/bot-style-profile.md` (Build and audit bot interfaces)
-- `scripts/style_profile.py` (Build and audit bot interfaces)
-- `references/bot-ui-projects.md` (Build and audit bot interfaces)
-- `references/example-library.md` (Product flows and use cases)
-- `recipes/use-cases.json` (Product flows and use cases)
-- `scripts/example_library.py` (Product flows and use cases)
-- `references/use-case-playbooks.md` (Product flows and use cases)
-- `references/onboarding-and-first-run.md` (Product flows and use cases)
-- `references/bot-archetypes.md` (Product flows and use cases)
-- `recipes/manifest.json` (Product flows and use cases)
-- `references/api-catalog.md` (Look up the whole Bot API)
-- `data/bot-api/` (Look up the whole Bot API)
-- `scripts/tg_api_lookup.py` (Look up the whole Bot API)
-- `scripts/validate_payload.py` (Look up the whole Bot API)
-- `scripts/sync_bot_api.py` (Look up the whole Bot API)
-- `references/payments-and-stars.md` (Look up the whole Bot API)
-- `references/inline-mode.md` (Look up the whole Bot API)
-- `references/updates-and-delivery.md` (Look up the whole Bot API)
-- `references/bot-settings.md` (Look up the whole Bot API)
-- `references/bot-api-coverage.md` (Look up the whole Bot API)
-- `references/official-sources.md` (Look up the whole Bot API)
-- `references/widgets.md` (Build HTML widgets)
-- `references/widget-design-system.md` (Build HTML widgets)
-- `references/widget-patterns.md` (Build HTML widgets)
-- `scripts/build_widget.py` (Build HTML widgets)
-- `scripts/preview_widget.py` (Build HTML widgets)
-- `scripts/validate_widget.py` (Build HTML widgets)
+- `SKILL.md`: entry point: Start steps, command table, invariants
+- `references/floor.md`: read before the first edit
+- `commands/improve.md`: `improve`: changes existing screens: wording, keyboards, flows, feedback, polish, redesign
+- `commands/fix.md`: `fix`: reproduces and fixes one Telegram-facing defect
+- `commands/build.md`: `build`: a product or feature from the example library, payments included
+- `commands/mini-app.md`: `mini-app`: a Mini App: decide, build or restyle, version gates, initData security
+- `commands/emoji.md`: `emoji`: one premium emoji pack, applied wherever the bot is eligible
+- `commands/agent-bot.md`: `agent-bot`: the agent's own bot: notify, ask, approve, secured
+- `commands/map.md`: `map`: the bot-ui/ map and Studio requests, with revision checks
 
 ## How to work
 
 1. Read the project's own instructions and detect the language, SDK and exact version
    first. Confirm which Bot API version the SDK supports before using any new field.
-2. Search `recipes/use-cases.json` or run
-   `python <skill-dir>/scripts/example_library.py --query "user intent" --json`.
+2. Follow the playbook of the command you were given (`commands/<verb>.md`). For new flows
+   run `tgui.py examples --query "user intent" --json` (a family's "Read first" wins).
    Read the closest recipe, its implementation and failure tests. Follow
    `references/example-library.md`: reuse, compose, or add only the missing invariant.
    Prefer the project's own builders; otherwise adapt existing library helpers.
@@ -60,14 +35,16 @@ Documents for this role (relative to `<skill-dir>`; if one is missing in the ins
 4. Preserve `callback_data`, URLs, deep links, handler routing and localization keys
    unless the user asked to change them; if a change is unavoidable, migrate every
    handler in the same change.
-5. Validate payloads before running anything: `validate_keyboard.py`, `validate_rich.py`,
-   `validate_widget.py`, and `validate_payload.py` when it exists in `<skill-dir>/scripts/`.
+5. Read `references/floor.md` before the first edit. Validate payloads before running
+   anything: `tgui.py check keyboard|rich|widget|payload <file>`, and `tgui.py check changed`
+   before you report.
 6. Add tests with the project's existing test setup (`references/testing-playbook.md`)
    and run the project's lint, typecheck and tests. Iterate until green.
 7. Subscribe new update types in `allowed_updates` and route them; give every long
    operation honest feedback; finalize each operation exactly once.
 8. When the project has a style profile and a redesign plan
-   (`references/redesign-orchestration.md`, default `docs/telegram-ui/`), build every
+   (`references/redesign-orchestration.md`; profile in `bot-ui/context/profile.json`, older
+   projects `docs/telegram-ui/`), build every
    screen from the profile's knobs, in screen order, with the plan's legacy decoder for old
    `callback_data`, commands and deep links, and a test for each old payload. A tuning
    request edits the profile first, then sweeps every surface the knob touches

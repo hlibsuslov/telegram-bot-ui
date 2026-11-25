@@ -11,21 +11,24 @@ workflow in `SKILL.md` is enough; don't introduce a project for it.
 
 ## Where the tools are
 
-| Piece | Location | In the skill install? |
+| Piece | Location | Where it is available |
 |---|---|---|
-| Format and write rules | `studio/docs/contract.md` (repository root, next to `skills/`) | no |
-| CLI `bot-ui` | `py -3 studio/bot-ui.py <command>` (stdlib Python) | no |
-| Studio (local web editor) | `bot-ui studio`, client in `studio/web` (needs `npm ci && npm run build`) | no |
-| SDK adapters | `studio/adapters/aiogram_adapter.py`, `studio/adapters/raw_adapter.py` | no |
-| Telegram rules, validators, widget kit | this skill (`scripts/`, `examples/`) | yes |
+| CLI `bot-ui` (map, import, patch, simulate, snapshot) | `tgui.py map <command>`; core in `scripts/bot_ui/` (stdlib Python) | every install with scripts |
+| Format and write rules | `studio/docs/contract.md` (repository root, next to `skills/`) | clone or Claude Code plugin |
+| Studio (local web editor) | `tgui.py map studio`, client in `studio/web` (needs `npm ci && npm run build`) | clone or plugin, after the build |
+| SDK adapters | `studio/adapters/aiogram_adapter.py`, `studio/adapters/raw_adapter.py` | clone or plugin |
+| Telegram rules, validators, widget kit | this skill (`scripts/`, `examples/`) | every install with scripts |
 
-`studio/` is optional and lives only in a clone of the repository; installing the skill (any
-host, any scope) does not copy it, and the **directory edition** has neither `studio/` nor
-`scripts/`. Before naming a command, check that the file exists. If it does not, say so and use
-the headless path at the end of this page; never claim a Studio or CLI run that did not happen.
+The map core ships with the skill, so `map` and Studio-request routes work wherever `scripts/`
+exists. The web Studio lives in `studio/` next to `skills/`: a clone has it, and so does a Claude
+Code plugin install (the plugin is the whole repository, `<skill>/../../studio/`); `gh skill`
+and `install.py` copies do not. Without the web client, `tgui.py map export-snapshot` gives an
+offline HTML preview. The **directory edition** has neither `studio/` nor `scripts/`: use the
+headless path at the end of this page. Never claim a Studio or CLI run that did not happen.
 
-Commands below write `bot-ui` for `py -3 <clone>/studio/bot-ui.py` (on Windows Git Bash set
-`MSYS_NO_PATHCONV=1` first so `/message/text/ru` is not rewritten as a path). Every command takes
+Commands below write `bot-ui` for `tgui.py map` (`py -3 <clone>/studio/bot-ui.py` is the same
+CLI; on Windows Git Bash set `MSYS_NO_PATHCONV=1` first so `/message/text/ru` is not rewritten
+as a path). Every command takes
 `--project <folder with project.json>` and `--json` (stable output for an agent). Exit codes:
 0 ok, 1 validation or lookup failure, 2 usage, 3 `REVISION_CONFLICT`, 4 refused (target not
 empty, client not built).
@@ -217,9 +220,26 @@ simulator does not prove that part (`references/ephemeral-and-personal.md`). Ser
   by that id or send a new message, route by `callback_data` (`references/bot-settings.md`).
 - Always `answerCallbackQuery`; the engine's `answer` effect is that call.
 
+## Saved review: `bot-ui/context/`
+
+What the skill remembers between sessions lives next to the map, outside its revision (the
+revision covers only `project.json`, `screens/`, `scenarios/` and `widgets/`), so writing it never
+causes a `REVISION_CONFLICT`. It is created only by an audit, a redesign or an explicit request;
+commit it with the bot.
+
+| File | Schema | Written by | Holds |
+|---|---|---|---|
+| `context.json` | `bot-ui-context/v1` | `tgui.py context --refresh` | facts: SDK, locales, code roots, touchpoints, and `basedOn` (commit, date, skill and Bot API version, map revision) |
+| `profile.json` | style profile v1 | the person, with `tgui.py profile scaffold\|check` | taste decisions with sources (`references/bot-style-profile.md`); older projects keep it in `docs/telegram-ui/profile.json`, `tgui.py doctor --fix` copies it here |
+| `findings.json` | `bot-ui-findings/v1` | `tgui.py findings add\|close` | audit findings: id (hash of screen, rule and place, so branches don't collide), severity, screen, `file:line`, rule, summary, the command that fixes it, status `open\|fixed\|wontfix\|orphaned` |
+| `requests/<id>.json` | `bot-ui-request/v1` | the Studio or `tgui.py requests add` | a request on a screen, its base revision, status `queued\|taken\|done\|rejected` and result |
+
+`tgui.py context` reads all of it in one call and reports `CONTEXT_STALE` when Telegram files
+changed after `basedOn.commit`; `tgui.py next` turns the signals into the next steps.
+
 ## Without the Studio or the CLI
 
-Directory edition, or a clone without `studio/`: edit the files directly by the format above
+Directory edition (no `scripts/`): edit the files directly by the format above
 (one screen per `screens/<id>.json`, IDs never change, unknown fields kept), keep the same
 rules for `callback_data`, placeholders and locales, and show the change as a Git diff. Check
 what you can: payloads with `scripts/validate_keyboard.py` / `validate_payload.py` when the

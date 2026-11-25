@@ -10,8 +10,13 @@ Checks:
   * `name` present, kebab-case, <= 64 chars, matches the directory name.
   * `description` present, non-empty, <= 1024 chars, not trivially short.
   * `metadata.version`, when present, equals the plugin.json version.
-  * Required operational sections exist in the body.
-  * Body is reasonably compact (progressive disclosure).
+  * Required router sections exist in the body.
+  * Budgets (progressive disclosure): SKILL.md <= 9.5 KiB, description <= 1024 (warning
+    above 900), each command playbook <= 4 KiB, references/floor.md <= 5.5 KiB, the
+    invariants inside the first 15 000 characters (what survives compaction).
+  * Commands (commands/index.json): every playbook exists and has Done and Without scripts
+    sections, every reference path a command or playbook names exists, every reference file
+    is reachable from at least one command, signals and roles name existing commands.
   * No bot token / obvious secret is embedded.
   * Packaging (formats verified in docs/hosts.md):
     - generated adapters are in sync with SKILL.md + adapters/routing.json;
@@ -41,19 +46,25 @@ NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 TOKEN_RE = re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{30,}\b")
 
 REQUIRED_SECTIONS = [
-    "Purpose",
-    "When to use",
-    "When NOT to use",
-    "Terminology",
-    "Source-of-truth policy",
-    "Core workflow",
-    "Definition of done",
+    "Start: every activation",
+    "Commands",
+    "Scope",
+    "Invariants",
+    "Terms that are easy to confuse",
+    "How much process",
+    "Next step",
+    "Tools",
 ]
 
 MAX_NAME_LEN = 64
 MAX_DESCRIPTION_LEN = 1024
 MIN_DESCRIPTION_LEN = 40
 BODY_WARN_CHARS = 20000  # ~5k tokens; progressive-disclosure guideline
+SKILL_MAX_BYTES = 9728  # 9.5 KiB router
+DESCRIPTION_WARN_LEN = 900
+PLAYBOOK_MAX_BYTES = 4096
+FLOOR_MAX_BYTES = 5632
+INVARIANTS_WITHIN = 15000  # characters; Claude Code re-attaches ~5000 tokens after compaction
 
 
 SKILL_REL = "skills/telegram-bot-ui"
@@ -328,6 +339,71 @@ def check_packaging(root: str, skill_name: str, errors: list[str], warnings: lis
     check_portable_manifests(root, skill_name, errors)
 
 
+def _reference_files(root: str) -> list[str]:
+    out = []
+    for dirpath, _dirs, files in os.walk(os.path.join(root, "references")):
+        for name in files:
+            if name.endswith(".md"):
+                out.append(os.path.relpath(os.path.join(dirpath, name), root).replace(os.sep, "/"))
+    return sorted(out)
+
+
+def check_commands(root: str, repo: str, errors: list[str]) -> None:
+    index = _load_json(root, "commands/index.json", errors)
+    if not isinstance(index, dict) or not isinstance(index.get("commands"), list):
+        errors.append("commands/index.json: expected an object with a `commands` list.")
+        return
+    verbs, routed = set(), set()
+    for c in index["commands"]:
+        verb = c.get("verb")
+        if not verb or verb in verbs:
+            errors.append(f"commands/index.json: missing or repeated verb {verb!r}.")
+            continue
+        verbs.add(verb)
+        for key in ("short", "does", "playbook", "sounds_like"):
+            if not c.get(key):
+                errors.append(f"command {verb}: missing `{key}`.")
+        if not c.get("sounds_like", {}).get("en"):
+            errors.append(f"command {verb}: `sounds_like.en` is empty.")
+        book = c.get("playbook", "")
+        path = os.path.join(root, *book.split("/"))
+        if not os.path.isfile(path):
+            errors.append(f"command {verb}: playbook {book} not found.")
+            continue
+        with open(path, encoding="utf-8") as fh:
+            body = fh.read()
+        if len(body.encode("utf-8")) > PLAYBOOK_MAX_BYTES:
+            errors.append(f"{book} is {len(body.encode('utf-8'))} bytes (> {PLAYBOOK_MAX_BYTES}).")
+        for section in ("## Done", "## Without scripts"):
+            if section not in body:
+                errors.append(f"{book}: missing '{section}'.")
+        for ref in c.get("refs", []):
+            routed.add(ref)
+            if not os.path.isfile(os.path.join(root, *ref.split("/"))):
+                errors.append(f"command {verb}: reference {ref} not found.")
+        for ref in re.findall(r"`(references/[^`\s]+\.md)", body):
+            routed.add(ref)
+            if not os.path.isfile(os.path.join(root, *ref.split("/"))):
+                errors.append(f"{book}: names {ref}, which does not exist.")
+    for ref in _reference_files(root):
+        if ref in ("references/INDEX.md", "references/floor.md") or ref in routed:
+            continue
+        errors.append(f"{ref} is not reachable from any command (add it to a command's refs in commands/index.json).")
+    for sig in index.get("signals", []):
+        if sig.get("verb") not in verbs and not str(sig.get("verb", "")).startswith("{"):
+            errors.append(f"signal {sig.get('id')}: unknown command {sig.get('verb')!r}.")
+    floor = os.path.join(root, "references", "floor.md")
+    if not os.path.isfile(floor):
+        errors.append("references/floor.md not found.")
+    elif os.path.getsize(floor) > FLOOR_MAX_BYTES:
+        errors.append(f"references/floor.md is {os.path.getsize(floor)} bytes (> {FLOOR_MAX_BYTES}).")
+    routing = _load_json(repo, "adapters/routing.json", errors)
+    for role in (routing or {}).get("roles", []):
+        for verb in role.get("verbs", []):
+            if verb not in verbs:
+                errors.append(f"role {role.get('name')}: unknown command {verb!r}.")
+
+
 def main() -> int:
     repo, root = repo_dir(), skill_dir()
     path = os.path.join(root, "SKILL.md")
@@ -382,6 +458,16 @@ def main() -> int:
         if not re.search(rf"(?im)^#{{1,6}}\s+.*{re.escape(section)}", body) and \
            section.lower() not in body.lower():
             errors.append(f"missing required section: '{section}'.")
+
+    # budgets
+    if len(text.encode("utf-8")) > SKILL_MAX_BYTES:
+        errors.append(f"SKILL.md is {len(text.encode('utf-8'))} bytes (> {SKILL_MAX_BYTES}); move detail to a playbook.")
+    if desc and len(desc) > DESCRIPTION_WARN_LEN:
+        warnings.append(f"`description` is {len(desc)} chars; keep it under {DESCRIPTION_WARN_LEN} to leave room.")
+    pos = text.find("## Invariants")
+    if pos < 0 or pos > INVARIANTS_WITHIN:
+        errors.append(f"'## Invariants' must start within the first {INVARIANTS_WITHIN} characters.")
+    check_commands(root, repo, errors)
 
     # body size (progressive disclosure)
     if len(body) > BODY_WARN_CHARS:

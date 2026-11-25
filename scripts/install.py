@@ -40,7 +40,7 @@ NAME = "telegram-bot-ui"
 MARKER = ".telegram-bot-ui-install.json"
 HOSTS = ("claude", "codex", "cursor", "gemini", "copilot")
 # Entries of the skill folder (skills/telegram-bot-ui/) that make up the installed skill.
-SKILL_CONTENT = ("SKILL.md", "LICENSE", "agents/openai.yaml",
+SKILL_CONTENT = ("SKILL.md", "LICENSE", "agents/openai.yaml", "commands",
                  "references", "recipes", "examples", "scripts", "data")
 IGNORE = shutil.ignore_patterns("__pycache__", "*.pyc", "node_modules", ".DS_Store")
 

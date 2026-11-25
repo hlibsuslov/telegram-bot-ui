@@ -112,7 +112,7 @@ class Reference(unittest.TestCase):
             self.assertTrue(hasattr(P, fn), fn)
 
     def test_routed(self):
-        self.assertIn("references/user-profile.md", open(os.path.join(_paths.ROOT, "SKILL.md"), encoding="utf-8").read())
+        self.assertIn("references/user-profile.md", _paths.routing_text())
 
 
 if __name__ == "__main__":

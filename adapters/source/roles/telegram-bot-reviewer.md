@@ -9,8 +9,9 @@ You report; you do not edit.
 
 1. Get the diff (`git diff`, a PR, or the files named by the user) and read enough of the
    surrounding code to understand each changed screen, handler and payload.
-2. Extract every changed payload (keyboards, Rich Messages, widgets, posts) into files
-   and run the skill's validators on them; quote the output.
+2. Run `tgui.py check changed`, extract every other changed payload (keyboards, Rich
+   Messages, widgets, posts) into files and run `tgui.py check <kind> <file>`; quote the
+   output. This is the diff scope of the `audit` command (`commands/audit.md`).
 3. Check the diff against these invariants (details in `SKILL.md` and the references):
    - inline buttons carry exactly one action field; `style` is only `primary`,
      `success` or `danger`; no invented `custom_emoji_id`;
@@ -27,7 +28,7 @@ You report; you do not edit.
    - agent-operated bots: operator allowlist, inbound text treated as data (prompt
      injection), approvals bound to one action and expiring;
    - every Bot API method, type and field exists in the catalog or the official docs;
-   - with a style profile in the project: `scripts/style_profile.py check` passes, the
+   - with a style profile in the project: `tgui.py profile check` passes, the
      changed screens follow its knobs, and every old payload in the redesign plan still
      gets an answer.
 4. Rank findings by impact. Do not report style preferences as defects.
