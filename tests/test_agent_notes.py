@@ -236,6 +236,21 @@ class SyncMarksReview(unittest.TestCase):
         self.assertNotIn("review", saved["sendRichMessageDraft"])
         self.assertEqual(sync_bot_api.mark_notes_for_review(tmp, diff), [])  # already marked
 
+    def test_a_domain_file_that_is_not_an_object_breaks_only_itself(self):
+        tmp = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, tmp)
+        for name, body in (("broken.json", ["sendRichMessage"]), ("lists.json", {"domain": "lists", "notes": []}),
+                           ("rich.json", {"domain": "rich", "notes": {"sendRichMessage": GOOD}})):
+            with open(os.path.join(tmp, name), "w", encoding="utf-8") as fh:
+                json.dump(body, fh)
+        notes = api_notes.load_notes(tmp)                      # lookups still see the good file
+        self.assertEqual(list(notes), ["sendRichMessage"])
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.assertEqual(api_notes.main(["check", "--notes", tmp]), 1)
+        self.assertIn("broken.json: not a JSON object", out.getvalue())
+        self.assertIn("lists.json: \"notes\" must be an object", out.getvalue())
+
     def test_no_notes_folder_is_fine(self):
         self.assertEqual(sync_bot_api.mark_notes_for_review(os.path.join(tempfile.gettempdir(), "no-such-notes"),
                                                             {"changed": {"methods": {"x": {}}}}), [])

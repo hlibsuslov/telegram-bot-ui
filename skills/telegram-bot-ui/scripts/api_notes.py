@@ -57,12 +57,19 @@ def load_files(notes_dir: str = NOTES_DIR) -> list[tuple[str, dict]]:
 
 
 def index(files: list[tuple[str, dict]]) -> dict[str, dict]:
-    """Symbol -> note across every domain file (the first file wins; `validate` reports duplicates)."""
+    """Symbol -> note across every domain file (the first file wins; `validate` reports duplicates).
+    A file without a "notes" object is skipped, so one broken file never breaks unrelated lookups;
+    their cards fall back to the catalog and `check` reports the file."""
     notes: dict[str, dict] = {}
     for _, data in files:
-        for symbol, note in (data.get("notes") or {}).items():
+        for symbol, note in _notes_of(data).items():
             notes.setdefault(symbol, note)
     return notes
+
+
+def _notes_of(data) -> dict:
+    notes = data.get("notes") if isinstance(data, dict) else None
+    return notes if isinstance(notes, dict) else {}
 
 
 def load_notes(notes_dir: str = NOTES_DIR) -> dict[str, dict]:
@@ -319,7 +326,7 @@ def main(argv: list[str] | None = None) -> int:
     problems = validate(files, catalog, versions=versions)
     for p in problems:
         print(p)
-    count = sum(len(d.get("notes") or {}) for _, d in files)
+    count = sum(len(_notes_of(d)) for _, d in files)
     print(f"agent notes: {'FAILED' if problems else 'OK'} ({count} notes in {len(files)} files, "
           f"{len(problems)} problems)")
     return 1 if problems else 0
