@@ -67,6 +67,7 @@
     {"text": "Whether the owner must have started the bot first is not stated.", "source": "Unverified"}
    ],
    "related": ["uploadStickerFile", "addStickerToSet", "getStickerSet", "setCustomEmojiStickerSetThumbnail", "deleteStickerSet", "InputSticker", "StickerSet"],
+   "refs": ["recipes/76-own-emoji-pack.md"],
    "example": "examples/payloads/api-stickers.json"
   },
   "addStickerToSet": {
@@ -79,6 +80,7 @@
     {"text": "sticker is one InputSticker object, not a list.", "source": "API", "cite": "sticker: A JSON-serialized object with information about the added sticker."}
    ],
    "related": ["createNewStickerSet", "uploadStickerFile", "replaceStickerInSet", "setStickerPositionInSet", "InputSticker"],
+   "refs": ["recipes/76-own-emoji-pack.md"],
    "example": "examples/payloads/api-stickers.json"
   },
   "setStickerPositionInSet": {
@@ -187,6 +189,7 @@
    ],
    "related": ["setStickerSetThumbnail", "getStickerSet", "createNewStickerSet", "Sticker"],
    "since": "6.6",
+   "refs": ["recipes/76-own-emoji-pack.md"],
    "example": "examples/payloads/api-stickers.json"
   },
   "deleteStickerSet": {

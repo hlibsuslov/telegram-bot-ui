@@ -565,7 +565,7 @@
         "references/emoji-in-posts.md",
         "references/visual-language.md"
       ],
-      "recipes": "70-75",
+      "recipes": "70-76",
       "tools": [
         "emoji library pick|search",
         "emoji resolve|suggest|verify|capture|apply|strip",

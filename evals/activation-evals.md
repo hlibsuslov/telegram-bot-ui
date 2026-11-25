@@ -253,6 +253,7 @@ description is updated.
 | CM2 | uk | "Перевір команди нашого бота: які зареєстровані, а які обробники є в коді, і чому адміни не бачать /stats." | no | `references/bot-commands.md` |
 | RX1 | en | "Instead of replying 'Saved ✅' to every expense the user logs, have the bot just mark the message somehow." | no | `references/polls-checklists-and-reactions.md` |
 | EL1 | en | "Find one premium emoji pack that has icons for home, back, settings, search and delete for our bot's buttons, with real ids." | no | `references/emoji-packs.md` |
+| EL2 | en | "Our designer sent three 100x100 PNG icons. Make them an emoji pack of our own that the bot owns, and show me the ids to use in messages." | no | `recipes/76-own-emoji-pack.md` |
 
 ## Negative — near misses (should NOT activate)
 

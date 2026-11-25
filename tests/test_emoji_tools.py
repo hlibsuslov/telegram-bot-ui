@@ -1,4 +1,4 @@
-"""Emoji data files, audit_icons v2, the emoji_packs CLI, recipes 70-75 and their payloads."""
+"""Emoji data files, audit_icons v2, the emoji_packs CLI, recipes 70-76 and their payloads."""
 import json
 import os
 import re
@@ -152,7 +152,7 @@ class Cli(unittest.TestCase):
 class Recipes(unittest.TestCase):
     def test_recipe_docs_follow_the_ten_point_format(self):
         docs = sorted(f for f in os.listdir(os.path.join(_paths.ROOT, "recipes")) if re.match(r"7\d-.*\.md$", f))
-        self.assertEqual(len(docs), 6)
+        self.assertEqual(len(docs), 7)
         for f in docs:
             body = _paths.read("recipes", f)
             for n in range(1, 11):

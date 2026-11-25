@@ -1971,6 +1971,18 @@
         "references/emoji-packs.md"
       ],
       "why": "emoji library pick"
+    },
+    {
+      "id": "EL2",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Our designer sent three 100x100 PNG icons. Make them an emoji pack of our own that the bot owns, and show me the ids to use in messages.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "recipes/76-own-emoji-pack.md"
+      ],
+      "why": "bot creates its own custom emoji set (createNewStickerSet) and reads the ids back (getStickerSet)"
     }
   ],
   "behavioral": [
