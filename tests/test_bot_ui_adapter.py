@@ -110,7 +110,6 @@ class Raw(ProjectCase):
         self.assertIn("курьер в пути", res["requests"][0][1]["text"])
 
 
-@unittest.skipUnless(HAVE_AIOGRAM, "aiogram==3.31.0 not installed (pip install -r skills/telegram-bot-ui/examples/python/sdk_aiogram/requirements.txt)")
 class Placement(ProjectCase):
     """L15: the Runtime serves only the Studio adapters, so it ships with them, not in the skill,
     and the documented demo command runs from a checkout without extra import paths."""
@@ -128,6 +127,7 @@ class Placement(ProjectCase):
         self.assertEqual([c["method"] for c in json.loads(r.stdout)], EXPECTED_METHODS)
 
 
+@unittest.skipUnless(HAVE_AIOGRAM, "aiogram==3.31.0 not installed (pip install -r skills/telegram-bot-ui/examples/python/sdk_aiogram/requirements.txt)")
 class Aiogram(ProjectCase):
     def test_aiogram_serialises_the_same_payloads_as_the_raw_adapter(self):
         from demo_bot import check, replay_aiogram
@@ -138,6 +138,22 @@ class Aiogram(ProjectCase):
         self.assertEqual(json.dumps(calls, sort_keys=True, ensure_ascii=False),
                          json.dumps(raw, sort_keys=True, ensure_ascii=False))
         self.assertEqual(aiogram.__version__, "3.31.0")
+
+
+class AiogramSkip(unittest.TestCase):
+    """Without aiogram only the aiogram replay is skipped; Placement needs the standard library only."""
+
+    def test_only_the_aiogram_case_skips_without_aiogram(self):
+        code = ("import sys, unittest; sys.modules['aiogram'] = None; "
+                "suite = unittest.defaultTestLoader.loadTestsFromNames("
+                "['test_bot_ui_adapter.Placement', 'test_bot_ui_adapter.Aiogram']); "
+                "r = unittest.TextTestRunner(stream=open(__import__('os').devnull, 'w')).run(suite); "
+                "print(sorted(t.id().split('.')[1] for t, _ in r.skipped), r.testsRun, "
+                "len(r.failures) + len(r.errors))")
+        r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, encoding="utf-8",
+                           cwd=os.path.dirname(os.path.abspath(__file__)), timeout=300)
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        self.assertEqual(r.stdout.strip(), "['Aiogram'] 3 0")
 
 
 if __name__ == "__main__":
