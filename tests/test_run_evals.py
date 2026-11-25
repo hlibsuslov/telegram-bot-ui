@@ -418,6 +418,15 @@ class FixtureTest(unittest.TestCase):
             self.assertFalse(os.path.exists(os.path.join(project, "__pycache__")))
 
 
+class CaseSetTest(unittest.TestCase):
+    def test_webhook_boundary(self):
+        cases = {a["id"]: a for a in ev.load()["activation"]}
+        self.assertEqual((cases["N1"]["expect"], cases["N1"]["routes_to"]),
+                         ("activate", ["references/updates-and-delivery.md"]))
+        for cid in ("NM8", "UIN1"):
+            self.assertEqual(cases[cid]["expect"], "skip", cid)
+
+
 class CommandAndIsolationTest(unittest.TestCase):
     def test_claude_drops_user_sources_and_keeps_write_tools_denied(self):
         cmd = ev.host_command("claude", "hi", "/tmp/p", None)

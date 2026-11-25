@@ -95,7 +95,6 @@ description is updated.
 
 | # | Request | Why it's out of scope |
 |---|---|---|
-| N1 | "Set up a Telegram webhook." | infrastructure |
 | N3 | "Fix the bot's user database schema." | data layer |
 | N4 | "Write a marketing strategy for our Telegram channel." | content strategy |
 | N5 | "Open an RTF file." | Microsoft `.rtf`, unrelated |
@@ -246,6 +245,7 @@ description is updated.
 | UK3 | uk | "Зроби інтерактивну картку замовлення." | no | `references/widgets.md` |
 | UK4 | uk | "Хочу, щоб агент писав мені в Telegram, коли збірка готова." | no | `references/agent-operated-bots.md` |
 | DR1 | en | "Is the telegram-bot-ui skill up to date?" | no | `SKILL.md` (doctor, catalog age) |
+| N1 | en | "Set up a Telegram webhook." | no | `references/updates-and-delivery.md` (the Telegram side: `setWebhook`, `secret_token`, `allowed_updates`) |
 | WH1 | en | "After moving to webhooks the bot stopped getting button presses." | no | `references/updates-and-delivery.md` |
 | RB1 | en | "Put a Pay button right under the totals table inside our bot's receipt message, not in the keyboard at the bottom." | yes | `references/buttons-and-styles.md` (buttons inside a rich message) |
 | RB2 | ru | "Сделай в длинном ответе бота кнопку «Подробнее» прямо рядом с абзацем, а не внизу сообщения." | no | `references/buttons-and-styles.md` |
@@ -284,13 +284,16 @@ A neighbouring platform, product or layer that shares words with the skill's sco
   that opens the Mini App, `BottomButton` progress, `WebApp.ready()`.
 - NM11 flips **positive** if the task is about how the moderation *bot's* screens, warnings or ban
   notices read and look (chat administration itself is in scope).
-- WH1 is **positive** because lost button presses after a webhook move are an update-delivery
-  defect (`allowed_updates` without `callback_query`); the plain "set up a webhook" (N1) stays negative.
-- N1/N3/N8/N9/N10/N11/N12 stay negative even when the project is a Telegram bot.
+- **Webhooks (owner decision 2, 2026-11-25):** the Telegram side of webhooks (`setWebhook`,
+  `secret_token`, `allowed_updates`, `getWebhookInfo`, retries and update order) is in; server setup
+  (nginx, TLS, hosting) is out. So N1 "Set up a Telegram webhook" and WH1 (lost button presses after a
+  webhook move: `allowed_updates` without `callback_query`) are **positive** and route to
+  `updates-and-delivery.md`; NM8 (nginx for the webhook) and UIN1 (nginx with a certificate) stay
+  negative.
+- N3/N8/N9/N10/N11/N12 stay negative even when the project is a Telegram bot.
 - Server-side work flips **positive** when it is about a 10.3/10.4 Telegram feature:
   subscribing to and routing `widget_query` / `stopped_message_generation`, callback or widget
-  state checks, retries of sends, SDK adapters (P26, P29). A generic "set up a webhook" (N1)
-  stays negative.
+  state checks, retries of sends, SDK adapters (P26, P29).
 - Behaviour (not just activation) is graded in `behavioral-evals.md`.
 - "RTF" only means Microsoft `.rtf` here — never Telegram Rich Messages (N5 is a
   hard negative and a terminology trap).

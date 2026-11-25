@@ -550,13 +550,15 @@
     },
     {
       "id": "N1",
-      "area": "out-of-scope",
+      "area": "ui",
       "lang": "en",
       "prompt": "Set up a Telegram webhook.",
-      "expect": "skip",
+      "expect": "activate",
       "names_method": false,
-      "routes_to": [],
-      "why": "infrastructure"
+      "routes_to": [
+        "references/updates-and-delivery.md"
+      ],
+      "why": "the Telegram side of a webhook (setWebhook, secret_token, allowed_updates, getWebhookInfo) is in scope; server setup (nginx, TLS, hosting) is not (NM8, UIN1)"
     },
     {
       "id": "N2",

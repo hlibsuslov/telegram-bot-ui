@@ -71,7 +71,7 @@ the transitions between states. Only HTML widgets and Mini Apps have a layout of
 
 1. **Load the project context once per session:**
    `py -3 <skill>/scripts/tgui.py context --root <project>` (`python3` outside Windows;
-   `<skill>` is the folder that holds this file, `<project>` the user's bot repository). It
+   `<skill>` is this file's folder, `<project>` the user's bot repository). It
    prints the bot's facts, saved findings, queued Studio requests and signals such as
    `NO_CONTEXT` or `CONTEXT_STALE`. Don't rerun it or re-audit what the findings hold. Without Python, read
    `bot-ui/context/*.json` if present, else say "no saved context yet" and go on.
@@ -103,8 +103,7 @@ the transitions between states. Only HTML widgets and Mini Apps have a layout of
 | `lookup` | "does the Bot API have"; "what are sendPoll's parameters"; "есть ли в Bot API"; "чи є в Bot API кнопки іншого кольору" | Bot API and Telegram.WebApp answers from the offline catalogs; skill health |
 <!-- commands:end -->
 
-Pick the row from the user's words and say in plain language what
-you are doing ("I'll review the menu first, without changing code").
+Say in plain language what you are doing ("I'll review the menu first, without changing code").
 
 ## Scope
 
