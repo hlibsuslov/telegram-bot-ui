@@ -96,12 +96,10 @@ description is updated.
 | # | Request | Why it's out of scope |
 |---|---|---|
 | N1 | "Set up a Telegram webhook." | infrastructure |
-| N2 | "Implement Telegram Stars payment processing." | payment logic |
 | N3 | "Fix the bot's user database schema." | data layer |
 | N4 | "Write a marketing strategy for our Telegram channel." | content strategy |
 | N5 | "Open an RTF file." | Microsoft `.rtf`, unrelated |
 | N6 | "Build the React components inside our Mini App." | web front-end internals |
-| N7 | "Configure admin rights and anti-spam in a supergroup." | group administration |
 | N8 | "Set up the bot's CI pipeline." | devops |
 | N11 | "Move the bot's Docker container to another server." | devops |
 | N12 | "Add an index to the orders table." | database |
@@ -226,13 +224,61 @@ description is updated.
 | MAN3 | ru | "Сверстай адаптивный сайт книжного магазина на Next.js." | website outside Telegram |
 | MAN4 | uk | "Зроби нативний iOS-застосунок на SwiftUI зі списком тренувань." | native app, not Telegram |
 
+## Positive — product flows and Studio, novice and Ukrainian phrasing (should activate)
+
+| # | Lang | Request | Names a method? | Routes to |
+|---|---|---|---|---|
+| N2 | en | "Implement Telegram Stars payment processing." | no | `references/payments-pipeline.md` |
+| NV1 | ru | "Сделай бота красивее." | no | `references/visual-language.md` |
+| NV2 | ru | "Бот какой-то дешёвый на вид, можно получше?" | no | `references/visual-language.md` |
+| NV3 | en | "My Telegram bot looks boring." | no | `references/visual-language.md` |
+| NV4 | uk | "Зроби меню бота зручнішим." | no | `references/navigation-and-flows.md`, `references/inline-keyboards.md` |
+| NV5 | ru | "Не знаю, с чего начать, у меня бот на aiogram." | no | `SKILL.md` workflow |
+| NV7 | en | a pasted 6-line aiogram `/start` handler with an `InlineKeyboardMarkup`, no request text (full text in `evals.json`) | yes | `references/inline-keyboards.md`, `references/buttons-and-styles.md` |
+| NV8 | uk | "Користувачі не розуміють, що натискати." | no | `references/microcopy-and-labels.md`, `references/buttons-and-styles.md` |
+| ST1 | ru | "Задача из bot-ui Studio: экран checkout.payment.confirm — сократить текст подтверждения" | no | `references/bot-ui-projects.md` |
+| ST2 | en | "Shorten checkout.payment.confirm" | no | `references/bot-ui-projects.md` |
+| ST3 | ru | "Открой карту экранов нашего бота в Студии." | no | `references/bot-ui-projects.md` |
+| ST4 | en | "Import my bot into bot-ui." | no | `references/bot-ui-projects.md` |
+| CX1 | ru | "Продолжи с того места, где остановились по боту." | no | `SKILL.md` (saved project context) |
+| UK1 | uk | "Опублікуй анонс у канал, але спочатку покажи прев'ю." | no | `references/channel-post-design.md`, `references/publishing-pipeline.md` |
+| UK2 | uk | "Чи є в Bot API кнопки іншого кольору?" | no | `references/buttons-and-styles.md`, `scripts/tg_api_lookup.py`, `data/bot-api/` |
+| UK3 | uk | "Зроби інтерактивну картку замовлення." | no | `references/widgets.md` |
+| UK4 | uk | "Хочу, щоб агент писав мені в Telegram, коли збірка готова." | no | `references/agent-operated-bots.md` |
+| DR1 | en | "Is the telegram-bot-ui skill up to date?" | no | `SKILL.md` (doctor, catalog age) |
+| WH1 | en | "After moving to webhooks the bot stopped getting button presses." | no | `references/updates-and-delivery.md` |
+
+## Negative — near misses (should NOT activate)
+
+A neighbouring platform, product or layer that shares words with the skill's scope.
+
+| # | Lang | Request | Why it's out of scope |
+|---|---|---|---|
+| NM1 | en | "Improve the buttons in our Slack bot." | another platform |
+| NM2 | ru | "Сделай меню WhatsApp-бота понятнее." | another platform |
+| NM3 | en | "Write a Telethon userbot that forwards my chats." | user-account client, not the Bot API |
+| NM4 | ru | "Сделай лендинг нашего бота красивее." | marketing site |
+| NM5 | en | "Make a dark theme for Telegram Desktop." | a client theme, not a bot's interface |
+| NM6 | ru | "Напиши системный промпт для нашего чат-бота поддержки." | LLM prompt writing, not Telegram UI |
+| NM7 | en | "Fix state management in our Mini App's React store." | generic React store logic, no Telegram surface (see the note below) |
+| NM8 | uk | "Налаштуй nginx для вебхука бота." | hosting and certificates |
+| NM9 | ru | "Переведи этот текст на украинский." | generic translation, no bot involved |
+| NM10 | en | "Reconcile Stars payouts in our accounting ledger." | accounting ledger outside Telegram's payment updates |
+| NM11 | en | "Tune the supergroup anti-spam thresholds in our moderation service." | moderation service tuning, no screen or message design |
+
 ## Boundary notes
 
-- N2 flips **positive** for the *checkout screen's* wording, button labels, or
-  `pay`-button placement — the interface, not the payment flow.
+- N2 is **positive**: Stars payment processing is the skill's payments pipeline. NM10 (an
+  accounting ledger fed by payouts) is the unambiguous negative beside it.
+- NM7 is **negative**: `SKILL.md` scopes Mini Apps to their Telegram-facing design, `Telegram.WebApp`,
+  `initData`, payments and layout, not framework internals. It flips **positive** when the store is
+  about `CloudStorage` drafts, `initData` sessions or theme handling.
 - N6 flips **positive** for the Telegram-side surface: the button or menu button
   that opens the Mini App, `BottomButton` progress, `WebApp.ready()`.
-- N7 flips **positive** if the task is about how the admin *bot's* screens look.
+- NM11 flips **positive** if the task is about how the moderation *bot's* screens, warnings or ban
+  notices read and look (chat administration itself is in scope).
+- WH1 is **positive** because lost button presses after a webhook move are an update-delivery
+  defect (`allowed_updates` without `callback_query`); the plain "set up a webhook" (N1) stays negative.
 - N1/N3/N8/N9/N10/N11/N12 stay negative even when the project is a Telegram bot.
 - Server-side work flips **positive** when it is about a 10.3/10.4 Telegram feature:
   subscribing to and routing `widget_query` / `stopped_message_generation`, callback or widget
@@ -252,12 +298,40 @@ folder only):
 ```bash
 python scripts/run_evals.py --execute --host claude --limit 10
 python scripts/run_evals.py --execute --host codex --ids PUB4,AG2,W1,L3,UN1
+python scripts/run_evals.py --execute --host claude --split validation --runs 3
+python scripts/run_evals.py --execute --host claude --ids P1 --dry-run   # print the command only
 ```
 
 The runner disables write tools, detects a `Skill` call or a read of the skill's
-`SKILL.md` in the transcript, and writes `evals/results/<date>-<host>.json`. Hosts other
+`SKILL.md` in the transcript, and writes
+`evals/results/<date>T<HHMMSS>-<host>-<runid>.json` (nothing is overwritten). Hosts other
 than Claude Code and Codex have no supported non-interactive runner here; use the manual
 procedure.
+
+- `--runs N` runs each case N times; a case passes when at least ceil(N/2) runs are correct.
+  Per-run outcomes are in the file.
+- `--split train|validation|all` selects a deterministic 60/40 split by a hash of the case
+  id. Tune the description on `train`; judge it on `validation`.
+- Every file records the CLI version, requested and reported model, `--runs`, split, and the
+  git commit of the skill (`skill_dirty` is true when `skills/telegram-bot-ui` had
+  uncommitted changes).
+- **Which copy loaded.** The skill is installed only into a throwaway project, and the child
+  is isolated from user-level copies (Claude: `--setting-sources project,local` and a project
+  outside the home folder; Codex: an empty `HOME`/`USERPROFILE` with `CODEX_HOME` kept so the
+  login works). The path of the `SKILL.md` that really loaded is read from the transcript and
+  classified `project`, `other` or `none` (`unknown`: the skill was called but no path shows). Any
+  `other` or `unknown`, or a run that errored or timed out, sets `"valid": false` in the summary and exit code 3: do not compare such results. Codex still
+  reads `$CODEX_HOME/skills` (and, on Windows, `~/.agents/skills` from the OS profile), so a copy of
+  the skill found there is switched off for the run with a `-c skills.config` override; the file
+  itself is never touched. Without user settings the Claude child may pick a different default model
+  than your interactive sessions: pass `--model` to pin it, and compare only runs with the same
+  reported model.
+- **Route accuracy and tokens.** For activated positives the file records the first skill file read
+  after `SKILL.md` and whether it is one of the case's `routes_to` (or a `commands/<verb>.md` playbook
+  whose `refs` in `skills/telegram-bot-ui/commands/index.json` name one; without that file only
+  `routes_to` counts). A case routed to `SKILL.md` itself is routed correctly by loading it. Input
+  tokens include cache reads and writes. The summary gives route accuracy over activated positives
+  and mean tokens.
 
 Manual:
 
