@@ -11,6 +11,8 @@ the library does not cover. Small wording fixes do not need this workflow.
    `python scripts/example_library.py --query "event waitlist" --json`.
    Search supports EN/RU intent words and `--context private|group|channel|inline|business|mini-app`.
    It is a deterministic substring search, not semantic search; try synonyms on a miss.
+   A family's `guides` (printed as "Read first") name the reference and runtime module that
+   supersede its older recipes, for example `tgkit/payments.py` for paid products.
 3. Read the returned recipe's state map, failure paths and evidence, then the relevant
    functions/tests. `recipes/manifest.json` names executable files; `use-cases.json`
    groups products; `registry.json` tracks API changelog coverage. They are different indexes.
