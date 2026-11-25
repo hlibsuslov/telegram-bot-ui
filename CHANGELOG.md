@@ -5,7 +5,50 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
-## Unreleased
+## 3.2.0 - Unreleased
+
+**A router instead of one long entry, one CLI, and the bot remembered between sessions.**
+
+- **SKILL.md is a 9.5 KB router** (was 25.4 KB, description 846 characters, was 1024 of 1024): Start steps,
+  a table of twelve commands generated from `commands/index.json`, scope, invariants and the next-step rule.
+  The safety rules now sit in the first third, inside what Claude Code keeps after compaction (the first
+  5000 tokens of a skill); before, `Non-negotiable rules` and `Definition of done` were cut.
+- **Twelve commands with playbooks** (`commands/<verb>.md`, each under 4 KB): `start`, `audit`, `improve`,
+  `fix`, `build`, `post`, `widget`, `mini-app`, `emoji`, `agent-bot`, `map`, `lookup`. A playbook names the
+  reference sections to read, the steps, the checks, a path without scripts (directory edition) and its done
+  criterion. The user never has to know a verb; with no request, `start` suggests the next steps.
+  `references/floor.md` holds what every edit obeys; `references/INDEX.md` lists every reference with its
+  summary and commands (generated).
+- **`scripts/tgui.py`**, one entry point: every tool as a subcommand, plus `context` (saved facts, findings,
+  Studio requests and signals in under 2 KB), `next`, `doctor` (other installed copies with another version,
+  version mismatch, catalog age, context and map health), `findings`, `requests`, `check changed` (the right
+  validator for every changed Telegram file) and `hook` (an opt-in Claude Code post-edit check that never
+  blocks).
+- **Project memory in `bot-ui/context/`**, outside the map revision: `context.json`, `findings.json` (ids from
+  a hash, so branches don't collide), `requests/<id>.json`, the style profile. `map init` keeps an existing
+  `context/`.
+- **The bot-ui core ships with the skill** (`scripts/bot_ui/`, was `studio/bot_ui/`): `map` and Studio-request
+  routes work from `gh skill` and installer copies, not only from a clone. The Studio can save requests into
+  the project (a switch on the Changes page, off by default).
+- **Payments are routed:** the example library's paid-product families name `payments-pipeline.md` and
+  `tgkit/payments.py` first ("Read first"), and `build` carries them.
+- **Subagents carry out commands** (generated from the index); `python` vs `py -3` fixed in their bodies
+  (`py -3` on Windows, `python3` elsewhere); the designer's read-only contract is now consistent.
+- **Every reference** has front matter (summary, verified date, Bot API) and, above 10 KB, a contents list;
+  `validate_references.py` checks both and every Contents link.
+- **Checks:** `validate_skill.py` enforces the budgets and that every reference is reachable from a command;
+  `tests/test_paths.py` installs the skill into a temporary project and runs every command's smoke steps from
+  that copy (it found `install.py` not copying `commands/` and `map init` refusing a folder with `context/`);
+  `tests/test_tgui.py`.
+- **Evals you can trust:** `run_evals.py` isolates runs from other installed copies (Claude:
+  `--setting-sources project,local`, project outside HOME; Codex: empty HOME, user copies switched off),
+  rejects runs that loaded another copy, records CLI version, model and commit, supports `--runs` and a
+  deterministic `--split`, and measures route accuracy and tokens. 159 activation cases (10 Ukrainian, novice,
+  Studio and near-miss cases) and 80 behavioural ones; N2 (Stars processing) is now a positive.
+- **Agent page sources:** `scripts/build_agent_docs.py` generates `docs/agents/` (`agents.md`, `llms.txt`,
+  `llms-full.txt`, `agents.json`) for the website.
+- Fixed: `widget_design.py --help` exits 0; a folder rename that Windows briefly denies is retried, so
+  `import` and `init` no longer fail at random.
 
 - `references/user-profile.md` and `tgkit/profile.py`: the baseline user record every bot keeps from the first
   contact (identity without history, lifecycle and block state from `my_chat_member`, first-touch acquisition

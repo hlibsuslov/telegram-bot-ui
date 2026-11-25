@@ -13,7 +13,9 @@ failure invariant justifies a new recipe; a new industry name or button color do
    failure path (cancellation race, foreign user, stale revision, capacity, replay).
 4. Add the manifest row (`registry: []` unless it covers a real changelog item), a row in
    `skills/telegram-bot-ui/recipes/use-cases.json`, a link in `skills/telegram-bot-ui/recipes/README.md` and a case in `evals/evals.json`.
-   Route new capabilities through `adapters/routing.json`; never hand-edit generated adapters.
+   Route new capabilities through `skills/telegram-bot-ui/commands/index.json` (a command's `refs` and
+   playbook) and roles through `adapters/routing.json`; never hand-edit generated adapters, the command
+   table in SKILL.md, `references/INDEX.md` or `docs/agents/`.
 5. Run:
 
    ```bash

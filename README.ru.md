@@ -188,6 +188,12 @@ python skills/telegram-bot-ui/scripts/preview_miniapp.py path/to/app --serve 879
 Скилл можно вызвать и по имени: `/telegram-bot-ui` (Claude Code), `$telegram-bot-ui` (Codex),
 меню `/` (Cursor, Antigravity).
 
+По вашим словам скилл выбирает одну из двенадцати команд: `start`, `audit`, `improve`, `fix`, `build`,
+`post`, `widget`, `mini-app`, `emoji`, `agent-bot`, `map`, `lookup`. Команду можно назвать
+(`/telegram-bot-ui audit`), но это не обязательно. Без задачи скилл смотрит на проект и предлагает два-три
+следующих шага. Он помнит бота между сессиями в `bot-ui/context/` (факты, находки, запросы из Студии),
+поэтому вторая сессия продолжает работу, а не проводит аудит заново.
+
 ## 📦 Установка
 
 Скилл — это одна папка, точка входа — [`SKILL.md`](skills/telegram-bot-ui/SKILL.md). Все пути ниже сверены с
@@ -288,13 +294,13 @@ python scripts/install.py --host all --scope user --dry-run
 
 ## 👥 Сабагенты
 
-Пять ролей, которые опираются на скилл, а не копируют его. Claude Code: [`agents/claude/`](agents/claude/)
+Пять ролей, которые выполняют команды скилла, а не копируют его. Claude Code: [`agents/claude/`](agents/claude/)
 (ставятся плагином или установщиком). Codex: [`agents/codex/`](agents/codex/) как свои агенты
 (*«Have telegram_bot_reviewer review this diff»*).
 
 | Роль | Что делает | Правит код? |
 |---|---|:---:|
-| `telegram-bot-designer` | карта экранов и состояний, реальные проблемы UX, точные тексты и клавиатуры | — |
+| `telegram-bot-designer` | карта экранов и состояний, реальные проблемы UX, точные тексты и клавиатуры; сохраняет находки | — |
 | `telegram-bot-builder` | реализует по рецептам, проверяет payload, добавляет тесты | ✓ |
 | `telegram-publisher` | готовит, проверяет, показывает превью и публикует посты в канал — только после вашего явного «да» | ✓ |
 | `telegram-widget-builder` | проектирует и собирает HTML-виджеты, проверяет размер и запасной вариант | ✓ |
@@ -359,6 +365,7 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 
 | Проверить перед релизом | |
 |---|---|
+| `py -3 skills/telegram-bot-ui/scripts/tgui.py <group>` | одна точка входа для всех инструментов ниже, плюс `context`, `next`, `doctor` и `check changed` (`python3` вне Windows) |
 | `python skills/telegram-bot-ui/scripts/validate_keyboard.py keyboard.json` | правила для кнопок и payload клавиатуры |
 | `python skills/telegram-bot-ui/scripts/validate_rich.py message.json` | лимиты и правила Rich Messages |
 | `python skills/telegram-bot-ui/scripts/validate_widget.py widget.html` | размер виджета (по алгоритму сервера) и пробелы песочницы |
@@ -437,20 +444,22 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 
 ```
 skills/telegram-bot-ui/   скилл; установщики копируют только эту папку
-  SKILL.md          точка входа, которую агент читает первой (маршруты, правила, инварианты)
+  SKILL.md          точка входа, которую агент читает первой (шаги старта, команды, инварианты)
+  commands/         по одному сценарию на команду и index.json, источник таблицы команд
   references/       тематические руководства; подгружаются, только когда нужны задаче
   recipes/          сквозные рецепты, registry.json, manifest.json
   examples/         запускаемый код на Python/TS, виджеты, фикстуры, payload'ы, адаптеры SDK
-  scripts/          валидаторы и инструменты скилла (офлайн)
+  scripts/          tgui.py, валидаторы и инструменты скилла, ядро bot-ui (офлайн)
   data/             офлайн-каталог Bot API, реестр эмодзи-паков
   agents/           метаданные Codex (openai.yaml)
 scripts/            установщик, генератор адаптеров, запуск эвалов и проверок (офлайн)
-studio/             необязательные CLI bot-ui и локальная Studio (только в клоне; со скиллом не ставятся)
+studio/             веб-клиент локальной Studio и его документация (клон или плагин; ядро bot-ui ставится со скиллом)
 agents/             сабагенты Claude, свои агенты Codex
 adapters/           таблица маршрутов и сгенерированные файлы для других сред
 .claude-plugin/     манифесты плагина и маркетплейса Claude Code
 llms.txt            указатель всех документов для агентов, читающих файлы по запросу
 docs/hosts.md       как каждая среда находит скиллы, с источниками
+docs/agents/        сгенерированная страница для агентов, llms.txt и llms-full.txt для сайта
 tests/, evals/      офлайн-тесты; эвалы активации и поведения
 ```
 

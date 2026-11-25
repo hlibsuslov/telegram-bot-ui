@@ -187,6 +187,12 @@ python skills/telegram-bot-ui/scripts/preview_miniapp.py path/to/app --serve 879
 Скіл можна викликати й за назвою: `/telegram-bot-ui` (Claude Code), `$telegram-bot-ui` (Codex),
 меню `/` (Cursor, Antigravity).
 
+За вашими словами скіл обирає одну з дванадцяти команд: `start`, `audit`, `improve`, `fix`, `build`,
+`post`, `widget`, `mini-app`, `emoji`, `agent-bot`, `map`, `lookup`. Команду можна назвати
+(`/telegram-bot-ui audit`), але це не обов'язково. Без завдання скіл дивиться на проєкт і пропонує два-три
+наступні кроки. Він пам'ятає бота між сесіями в `bot-ui/context/` (факти, знахідки, запити зі Студії),
+тож друга сесія продовжує роботу, а не робить аудит наново.
+
 ## 📦 Встановлення
 
 Скіл — це одна тека, точка входу якої — [`SKILL.md`](skills/telegram-bot-ui/SKILL.md). Кожен шлях нижче звірено з
@@ -287,13 +293,13 @@ python scripts/install.py --host all --scope user --dry-run
 
 ## 👥 Субагенти
 
-Пʼять ролей, які спираються на скіл, а не копіюють його. Claude Code: [`agents/claude/`](agents/claude/)
+Пʼять ролей, які виконують команди скіла, а не копіюють його. Claude Code: [`agents/claude/`](agents/claude/)
 (установлюються плагіном або інсталятором). Codex: [`agents/codex/`](agents/codex/) як власні
 агенти (*«Have telegram_bot_reviewer review this diff»*).
 
 | Роль | Що робить | Змінює код? |
 |---|---|:---:|
-| `telegram-bot-designer` | карта екранів і станів, справжні вади UX, точні тексти й клавіатури | — |
+| `telegram-bot-designer` | карта екранів і станів, справжні вади UX, точні тексти й клавіатури; зберігає знахідки | — |
 | `telegram-bot-builder` | реалізує за рецептами, перевіряє payload, додає тести | ✓ |
 | `telegram-publisher` | складає, перевіряє, показує превʼю й публікує пости в каналі — лише після вашого явного «так» | ✓ |
 | `telegram-widget-builder` | проєктує й збирає HTML-віджети, перевіряє розмір і запасний варіант | ✓ |
@@ -358,6 +364,7 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 
 | Перевірки перед релізом | |
 |---|---|
+| `py -3 skills/telegram-bot-ui/scripts/tgui.py <group>` | одна точка входу для всіх інструментів нижче, плюс `context`, `next`, `doctor` і `check changed` (`python3` поза Windows) |
 | `python skills/telegram-bot-ui/scripts/validate_keyboard.py keyboard.json` | правила для кнопок і payload клавіатур |
 | `python skills/telegram-bot-ui/scripts/validate_rich.py message.json` | ліміти й правила Rich Messages |
 | `python skills/telegram-bot-ui/scripts/validate_widget.py widget.html` | розмір віджета (за алгоритмом сервера) і прогалини пісочниці |
@@ -437,20 +444,22 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 
 ```
 skills/telegram-bot-ui/   скіл; інсталятори копіюють лише цю теку
-  SKILL.md          точка входу, яку агент читає першою (маршрутизація, правила, інваріанти)
+  SKILL.md          точка входу, яку агент читає першою (кроки старту, команди, інваріанти)
+  commands/         по одному сценарію на команду та index.json, джерело таблиці команд
   references/       тематичні посібники, завантажуються лише коли задача їх потребує
   recipes/          наскрізні рецепти, registry.json, manifest.json
   examples/         код на Python/TS, який можна запустити, віджети, фікстури, payload-и, адаптери SDK
-  scripts/          валідатори й інструменти скіла (офлайн)
+  scripts/          tgui.py, валідатори й інструменти скіла, ядро bot-ui (офлайн)
   data/             офлайн-каталог Bot API, реєстр емодзі-паків
   agents/           метадані Codex (openai.yaml)
 scripts/            інсталятор, генератор адаптерів, запуск оцінювань і перевірок (офлайн)
-studio/             необов'язкові CLI bot-ui і локальна Studio (лише в клоні; зі скілом не встановлюються)
+studio/             веб-клієнт локальної Studio і його документація (клон або плагін; ядро bot-ui встановлюється зі скілом)
 agents/             субагенти Claude, власні агенти Codex
 adapters/           таблиця маршрутизації й згенеровані файли входу для інших середовищ
 .claude-plugin/     маніфести плагіна й маркетплейсу Claude Code
 llms.txt            покажчик усіх документів для агентів, що читають файли на вимогу
 docs/hosts.md       як кожне середовище знаходить скіли, з джерелами
+docs/agents/        згенерована сторінка для агентів, llms.txt і llms-full.txt для сайту
 tests/, evals/      офлайн-тести; оцінювання активації й поведінки
 ```
 

@@ -185,6 +185,12 @@ No API names needed. In your bot's repository:
 You can also call it by name: `/telegram-bot-ui` (Claude Code), `$telegram-bot-ui` (Codex), the
 `/` menu (Cursor, Antigravity).
 
+Behind your words the skill picks one of twelve commands: `start`, `audit`, `improve`, `fix`, `build`,
+`post`, `widget`, `mini-app`, `emoji`, `agent-bot`, `map`, `lookup`. You can name one
+(`/telegram-bot-ui audit`), but you never have to. Called with no request, it looks at the project and
+suggests the next two or three steps. It remembers the bot between sessions in `bot-ui/context/`
+(facts, findings, Studio requests), so a second session continues instead of auditing again.
+
 ## 📦 Install
 
 The skill is one folder whose entry point is [`SKILL.md`](skills/telegram-bot-ui/SKILL.md). Every path below is checked
@@ -285,13 +291,13 @@ Update: `git pull` in the clone and run the same install command again.
 
 ## 👥 Subagents
 
-Five roles that route into the skill instead of copying it. Claude Code: [`agents/claude/`](agents/claude/)
+Five roles that carry out the skill's commands instead of copying it. Claude Code: [`agents/claude/`](agents/claude/)
 (installed by the plugin or the installer). Codex: [`agents/codex/`](agents/codex/) as custom
 agents (*"Have telegram_bot_reviewer review this diff"*).
 
 | Role | Does | Edits code? |
 |---|---|:---:|
-| `telegram-bot-designer` | screen and state map, real UX defects, exact texts and keyboards | — |
+| `telegram-bot-designer` | screen and state map, real UX defects, exact texts and keyboards; saves the findings | — |
 | `telegram-bot-builder` | implements from recipes, validates payloads, adds tests | ✓ |
 | `telegram-publisher` | composes, validates, previews and publishes channel posts — only after your explicit yes | ✓ |
 | `telegram-widget-builder` | designs and builds HTML widgets, checks size and fallback | ✓ |
@@ -356,6 +362,7 @@ All offline, standard library, and none of them needs a bot token.
 
 | Check before you ship | |
 |---|---|
+| `py -3 skills/telegram-bot-ui/scripts/tgui.py <group>` | one entry point for every tool below, plus `context`, `next`, `doctor` and `check changed` (`python3` outside Windows) |
 | `python skills/telegram-bot-ui/scripts/validate_keyboard.py keyboard.json` | button and keyboard payload rules |
 | `python skills/telegram-bot-ui/scripts/validate_rich.py message.json` | Rich Message limits and rules |
 | `python skills/telegram-bot-ui/scripts/validate_widget.py widget.html` | widget size (server algorithm) and sandbox gaps |
@@ -434,20 +441,22 @@ Python and TypeScript plus adapters for aiogram and grammY.
 
 ```
 skills/telegram-bot-ui/   the skill; installers copy only this folder
-  SKILL.md          entry point the agent reads first (routing, rules, invariants)
+  SKILL.md          entry point the agent reads first (Start steps, commands, invariants)
+  commands/         one playbook per command, and index.json, the source of the command table
   references/       focused guides, loaded only when a task needs them
   recipes/          end-to-end recipes, registry.json, manifest.json
   examples/         runnable Python/TS code, widgets, fixtures, payloads, SDK adapters
-  scripts/          validators and tools the skill runs (offline)
+  scripts/          tgui.py, validators and tools the skill runs, the bot-ui core (offline)
   data/             offline Bot API catalog, emoji pack registry
   agents/           Codex metadata (openai.yaml)
 scripts/            installer, adapter generator, eval runner, check runner (offline)
-studio/             optional bot-ui CLI and local Studio (clone only; not installed with the skill)
+studio/             local Studio web client and its docs (clone or plugin; the bot-ui core ships with the skill)
 agents/             Claude subagents, Codex custom agents
 adapters/           routing table and generated entry files for other hosts
 .claude-plugin/     Claude Code plugin and marketplace manifests
 llms.txt            index of every document for agents that read files on demand
 docs/hosts.md       how each agent host discovers skills, with sources
+docs/agents/         generated agent page, llms.txt and llms-full.txt for the website
 tests/, evals/      offline tests; activation and behavioural evals
 ```
 
