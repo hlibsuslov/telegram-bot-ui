@@ -556,13 +556,15 @@
     },
     {
       "id": "N2",
-      "area": "out-of-scope",
+      "area": "use-cases",
       "lang": "en",
       "prompt": "Implement Telegram Stars payment processing.",
-      "expect": "skip",
+      "expect": "activate",
       "names_method": false,
-      "routes_to": [],
-      "why": "payment logic"
+      "routes_to": [
+        "references/payments-pipeline.md"
+      ],
+      "why": "Stars payment processing: the skill owns the Stars pipeline"
     },
     {
       "id": "N3",
@@ -603,16 +605,6 @@
       "names_method": false,
       "routes_to": [],
       "why": "web front-end internals"
-    },
-    {
-      "id": "N7",
-      "area": "out-of-scope",
-      "lang": "en",
-      "prompt": "Configure admin rights and anti-spam in a supergroup.",
-      "expect": "skip",
-      "names_method": false,
-      "routes_to": [],
-      "why": "group administration"
     },
     {
       "id": "N8",
@@ -1550,6 +1542,338 @@
         "references/mini-apps/materials-and-trends.md"
       ],
       "why": "glass materials and trends in a Mini App"
+    },
+    {
+      "id": "NV1",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Сделай бота красивее.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/visual-language.md"
+      ],
+      "why": "vague polish request: the premium pass, copy first"
+    },
+    {
+      "id": "NV2",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Бот какой-то дешёвый на вид, можно получше?",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/visual-language.md"
+      ],
+      "why": "colloquial polish request"
+    },
+    {
+      "id": "NV3",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "My Telegram bot looks boring.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/visual-language.md"
+      ],
+      "why": "vague polish request"
+    },
+    {
+      "id": "NV4",
+      "area": "ui",
+      "lang": "uk",
+      "prompt": "Зроби меню бота зручнішим.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/navigation-and-flows.md",
+        "references/inline-keyboards.md"
+      ],
+      "why": "menu usability in Ukrainian"
+    },
+    {
+      "id": "NV5",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Не знаю, с чего начать, у меня бот на aiogram.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "SKILL.md"
+      ],
+      "why": "no task named: the core workflow (audit first) is the entry point"
+    },
+    {
+      "id": "NV7",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "@router.message(Command(\"start\"))\nasync def start(message: Message):\n    kb = InlineKeyboardMarkup(inline_keyboard=[\n        [InlineKeyboardButton(text=\"Buy\", callback_data=\"buy\"),\n         InlineKeyboardButton(text=\"Help\", callback_data=\"help\")]])\n    await message.answer(\"Welcome\", reply_markup=kb)",
+      "expect": "activate",
+      "names_method": true,
+      "routes_to": [
+        "references/inline-keyboards.md",
+        "references/buttons-and-styles.md"
+      ],
+      "why": "pasted aiogram handler with an inline keyboard and no request text"
+    },
+    {
+      "id": "NV8",
+      "area": "ui",
+      "lang": "uk",
+      "prompt": "Користувачі не розуміють, що натискати.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/microcopy-and-labels.md",
+        "references/buttons-and-styles.md"
+      ],
+      "why": "unclear buttons, in Ukrainian"
+    },
+    {
+      "id": "ST1",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Задача из bot-ui Studio: экран checkout.payment.confirm — сократить текст подтверждения",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-ui-projects.md"
+      ],
+      "why": "a Studio agent task pasted without further words"
+    },
+    {
+      "id": "ST2",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Shorten checkout.payment.confirm",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-ui-projects.md"
+      ],
+      "why": "change by stable screen id, no tool named"
+    },
+    {
+      "id": "ST3",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Открой карту экранов нашего бота в Студии.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-ui-projects.md"
+      ],
+      "why": "screen map in the local Studio"
+    },
+    {
+      "id": "ST4",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Import my bot into bot-ui.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/bot-ui-projects.md"
+      ],
+      "why": "import an existing bot into a bot-ui project"
+    },
+    {
+      "id": "CX1",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Продолжи с того места, где остановились по боту.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "SKILL.md"
+      ],
+      "why": "continue from saved project context"
+    },
+    {
+      "id": "UK1",
+      "area": "publishing",
+      "lang": "uk",
+      "prompt": "Опублікуй анонс у канал, але спочатку покажи прев'ю.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/channel-post-design.md",
+        "references/publishing-pipeline.md"
+      ],
+      "why": "preview + approval"
+    },
+    {
+      "id": "UK2",
+      "area": "api-lookup",
+      "lang": "uk",
+      "prompt": "Чи є в Bot API кнопки іншого кольору?",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/buttons-and-styles.md",
+        "scripts/tg_api_lookup.py",
+        "data/bot-api/"
+      ],
+      "why": "lookup without a method name: button style"
+    },
+    {
+      "id": "UK3",
+      "area": "widgets",
+      "lang": "uk",
+      "prompt": "Зроби інтерактивну картку замовлення.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/widgets.md"
+      ],
+      "why": "interactive card inside the chat"
+    },
+    {
+      "id": "UK4",
+      "area": "agent-ops",
+      "lang": "uk",
+      "prompt": "Хочу, щоб агент писав мені в Telegram, коли збірка готова.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/agent-operated-bots.md"
+      ],
+      "why": "an agent that reports through its own bot"
+    },
+    {
+      "id": "DR1",
+      "area": "api-lookup",
+      "lang": "en",
+      "prompt": "Is the telegram-bot-ui skill up to date?",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "SKILL.md"
+      ],
+      "why": "freshness of the skill and its offline Bot API catalog"
+    },
+    {
+      "id": "WH1",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "After moving to webhooks the bot stopped getting button presses.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/updates-and-delivery.md"
+      ],
+      "why": "callback_query missing from allowed_updates: update delivery, not hosting"
+    },
+    {
+      "id": "NM1",
+      "area": "out-of-scope",
+      "lang": "en",
+      "prompt": "Improve the buttons in our Slack bot.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "another platform"
+    },
+    {
+      "id": "NM2",
+      "area": "out-of-scope",
+      "lang": "ru",
+      "prompt": "Сделай меню WhatsApp-бота понятнее.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "another platform"
+    },
+    {
+      "id": "NM3",
+      "area": "out-of-scope",
+      "lang": "en",
+      "prompt": "Write a Telethon userbot that forwards my chats.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "user-account client, not the Bot API"
+    },
+    {
+      "id": "NM4",
+      "area": "out-of-scope",
+      "lang": "ru",
+      "prompt": "Сделай лендинг нашего бота красивее.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "marketing site"
+    },
+    {
+      "id": "NM5",
+      "area": "out-of-scope",
+      "lang": "en",
+      "prompt": "Make a dark theme for Telegram Desktop.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "a client theme, not a bot's interface"
+    },
+    {
+      "id": "NM6",
+      "area": "out-of-scope",
+      "lang": "ru",
+      "prompt": "Напиши системный промпт для нашего чат-бота поддержки.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "LLM prompt writing, not Telegram UI"
+    },
+    {
+      "id": "NM7",
+      "area": "out-of-scope",
+      "lang": "en",
+      "prompt": "Fix state management in our Mini App's React store.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "generic React store logic: no Telegram surface (WebApp API, initData, CloudStorage, theme, payments) is involved; SKILL.md scopes Mini Apps to their Telegram-facing design and security, not framework internals (flips positive if the store is about CloudStorage drafts or initData sessions)"
+    },
+    {
+      "id": "NM8",
+      "area": "out-of-scope",
+      "lang": "uk",
+      "prompt": "Налаштуй nginx для вебхука бота.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "hosting and certificates"
+    },
+    {
+      "id": "NM9",
+      "area": "out-of-scope",
+      "lang": "ru",
+      "prompt": "Переведи этот текст на украинский.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "generic translation, no bot involved"
+    },
+    {
+      "id": "NM10",
+      "area": "out-of-scope",
+      "lang": "en",
+      "prompt": "Reconcile Stars payouts in our accounting ledger.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "accounting ledger outside Telegram's payment updates"
+    },
+    {
+      "id": "NM11",
+      "area": "out-of-scope",
+      "lang": "en",
+      "prompt": "Tune the supergroup anti-spam thresholds in our moderation service.",
+      "expect": "skip",
+      "names_method": false,
+      "routes_to": [],
+      "why": "moderation service tuning, no screen or message design"
     }
   ],
   "behavioral": [
@@ -2696,6 +3020,142 @@
       "critical_failures": [
         "storing whole ChatFullInfo dumps or username history",
         "user colours applied to buttons or app chrome"
+      ]
+    },
+    {
+      "id": "BN1",
+      "area": "ui",
+      "lang": "en",
+      "request": "Make the bot nicer.",
+      "context": "no saved project context; aiogram bot with six screens, callback_data in use, old messages in chats",
+      "must": [
+        "shows a before/after of ONE screen (text and keyboard) before any mass edit and waits for a yes",
+        "callback_data, commands and deep links stay untouched",
+        "ends with a plain-language next step (what was changed, what to answer to continue), no jargon"
+      ],
+      "critical_failures": [
+        "edits several screens before the user has seen a before/after",
+        "changes or renames callback_data",
+        "ends with no next step or with only technical terms"
+      ]
+    },
+    {
+      "id": "BN2",
+      "area": "ui",
+      "lang": "en",
+      "request": "/telegram-bot-ui (called with no argument)",
+      "context": "project with saved context: 2 open P1 findings and 1 queued Studio request",
+      "must": [
+        "suggests the queued Studio task and the open findings, each with a one-line reason",
+        "runs nothing: no audit, no edit, no command beyond reading the saved context",
+        "asks which one to take"
+      ],
+      "critical_failures": [
+        "starts an audit or edits files without being asked",
+        "leaves out the Studio request or the P1 findings",
+        "lists suggestions without reasons"
+      ]
+    },
+    {
+      "id": "CTX1",
+      "area": "ui",
+      "lang": "ru",
+      "request": "Продолжим работу над ботом.",
+      "context": "second session in the project; saved context at the current commit lists 3 findings, 1 closed; no Telegram file changed since",
+      "must": [
+        "reads the saved context first and says which findings are open",
+        "does not re-read the audit reference and does not re-run the audit",
+        "continues with the most important open finding and says why it is next"
+      ],
+      "critical_failures": [
+        "re-audits every screen or re-reads the audit reference",
+        "reopens the closed finding",
+        "ignores the saved context"
+      ]
+    },
+    {
+      "id": "CTX2",
+      "area": "ui",
+      "lang": "en",
+      "request": "Continue where we stopped on the bot.",
+      "context": "saved context points at an older commit; five Telegram files changed after it",
+      "must": [
+        "compares the context's commit with the tree and reports CONTEXT_STALE with the five changed files",
+        "audits only the screens in the changed files",
+        "keeps the findings for untouched screens and records the new commit"
+      ],
+      "critical_failures": [
+        "trusts the stale context silently",
+        "re-audits the whole bot",
+        "drops the findings of screens that did not change"
+      ]
+    },
+    {
+      "id": "STU1",
+      "area": "ui",
+      "lang": "ru",
+      "request": "Задача из bot-ui Studio: экран checkout.payment.confirm — сократить текст подтверждения",
+      "context": "Studio saved the same screen after the task was created (revision moved); the task's fields and the Studio's edits do not overlap",
+      "must": [
+        "writes with --expected-revision and gets exit 3",
+        "re-reads, sees empty fieldConflicts and repeats the write with --rebase",
+        "the patch is applied, validate passes, and the Studio request is marked done"
+      ],
+      "critical_failures": [
+        "overwrites the Studio's save without a revision check",
+        "marks the request done before the write succeeded",
+        "uses --rebase while fieldConflicts is not empty"
+      ]
+    },
+    {
+      "id": "STU2",
+      "area": "ui",
+      "lang": "en",
+      "request": "Studio task: shorten checkout.payment.confirm.",
+      "context": "the Studio meanwhile edited the same field of the same screen (a field conflict), revision moved",
+      "must": [
+        "gets exit 3 and finds the field in fieldConflicts",
+        "shows both values side by side (the Studio's and the task's) and asks which to keep",
+        "writes nothing and leaves the request open"
+      ],
+      "critical_failures": [
+        "rebases over the conflict or silently picks one value",
+        "marks the request done",
+        "writes without showing the conflict"
+      ]
+    },
+    {
+      "id": "DOC1",
+      "area": "api-lookup",
+      "lang": "en",
+      "request": "Is the telegram-bot-ui skill up to date?",
+      "context": "the offline Bot API catalog was synced more than 30 days ago; network access has not been granted",
+      "must": [
+        "runs the offline doctor and reports CATALOG_STALE with the catalog's age",
+        "offers the catalog sync as an opt-in step and asks first",
+        "says what is known offline and names the level of evidence"
+      ],
+      "critical_failures": [
+        "goes online or syncs on its own",
+        "says everything is up to date without checking the catalog's age",
+        "edits the installed skill"
+      ]
+    },
+    {
+      "id": "HK1",
+      "area": "ui",
+      "lang": "en",
+      "request": "A coding agent edits README.md and then saves a keyboard payload with two primary buttons; show what the skill's edit hook does each time.",
+      "context": "the skill's post-edit hook is installed in the project (PostToolUse on Edit and Write)",
+      "must": [
+        "the README.md edit: no output and exit code 0",
+        "the payload with two primary buttons: exactly one warning line that names the rule",
+        "the edit is not blocked (exit code 0, no deny decision)"
+      ],
+      "critical_failures": [
+        "any output or warning on a non-Telegram file",
+        "blocks the edit",
+        "a multi-line dump instead of one warning line"
       ]
     }
   ]
