@@ -426,6 +426,21 @@ class CaseSetTest(unittest.TestCase):
         for cid in ("NM8", "UIN1"):
             self.assertEqual(cases[cid]["expect"], "skip", cid)
 
+    def test_every_carded_domain_has_positives_and_near_misses_in_three_languages(self):
+        cases = ev.load()["activation"]
+        for domain in ev.DOMAINS:
+            mine = [a for a in cases if a.get("domain") == domain]
+            self.assertTrue(6 <= len(mine) <= 10, (domain, len(mine)))
+            self.assertEqual({a["lang"] for a in mine}, {"en", "ru", "uk"}, domain)
+            self.assertEqual({a["expect"] for a in mine}, {"activate", "skip"}, domain)
+
+    def test_validator_reports_a_thin_domain(self):
+        data = ev.load()
+        data["activation"] = [a for a in data["activation"] if not (a.get("domain") == "forums" and a["lang"] == "uk")]
+        self.assertTrue(any("domain forums" in e for e in ev.validate(data)))
+        data["activation"][0]["domain"] = "no-such-domain"
+        self.assertTrue(any("unknown domain" in e for e in ev.validate(data)))
+
 
 class CommandAndIsolationTest(unittest.TestCase):
     def test_claude_drops_user_sources_and_keeps_write_tools_denied(self):

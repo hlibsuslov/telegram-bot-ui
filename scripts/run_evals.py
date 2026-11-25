@@ -8,7 +8,8 @@
   python scripts/run_evals.py --execute --host codex --dry-run   # print the commands only
 
 Validation checks structure, unique ids, coverage (every capability area has English,
-Russian and no-method-named positives; negatives exist in both languages; the required
+Russian and no-method-named positives; negatives exist in both languages; every Bot API domain
+in DOMAINS has 6-10 cases in en, ru and uk with positives and near misses; the required
 behavioural topics and transfer tasks are present), that every `routes_to` path exists in
 the skill folder, that a `fixture` names a folder in evals/fixtures, and that every id also
 appears in the human-readable tables in evals/*.md.
@@ -80,6 +81,11 @@ ALLOWED_LANGS = LANGS + ("uk",)    # extra languages a case may use
 REQUIRED_BEHAVIORAL = ("B20", "B21", "B22", "B30", "B31", "B32", "B40", "B41", "B42",
                        "B50", "B51", "B52", "B60")
 TRANSFER_AREAS = ("publishing", "agent-ops", "widgets", "use-cases", "api-lookup")
+# Bot API domains with agent cards (data/bot-api/agent-notes/<domain>.json), plus payments and Mini App
+# events: each needs 6-10 cases in every allowed language, positives and near misses.
+DOMAINS = ("messages", "editing", "bot-settings", "chat-admin", "chat-info", "forums", "business", "stickers",
+           "platform", "inline-widgets", "payments", "rich", "mini-app-events")
+DOMAIN_CASES = (6, 10)
 SPLITS = ("train", "validation", "all")
 TRAIN_PERCENT = 60
 
@@ -157,6 +163,20 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
     for lang in LANGS:
         if not any(a.get("lang") == lang for a in neg):
             errors.append(f"coverage: no {lang} negative activation case")
+    for a in data["activation"]:
+        if "domain" in a and a["domain"] not in DOMAINS:
+            errors.append(f"{a.get('id')}: unknown domain {a['domain']!r}")
+    low, high = DOMAIN_CASES
+    for domain in DOMAINS:
+        mine = [a for a in data["activation"] if a.get("domain") == domain]
+        if not low <= len(mine) <= high:
+            errors.append(f"coverage: domain {domain} has {len(mine)} case(s), needs {low}-{high}")
+        missing = [lang for lang in ALLOWED_LANGS if not any(a.get("lang") == lang for a in mine)]
+        if missing:
+            errors.append(f"coverage: domain {domain} has no case in {', '.join(missing)}")
+        for expect, what in (("activate", "positive"), ("skip", "near miss")):
+            if not any(a.get("expect") == expect for a in mine):
+                errors.append(f"coverage: domain {domain} has no {what}")
 
     behavioral_ids: dict[str, dict] = {}
     for b in data["behavioral"]:
