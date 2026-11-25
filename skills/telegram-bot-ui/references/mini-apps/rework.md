@@ -156,7 +156,7 @@ Keep the stack and swap the tokens:
 - **Tailwind classes.** Replace palette classes with the bridge names: `bg-white` → `bg-tg-surface`,
   `text-gray-500` → `text-tg-hint`, `bg-indigo-600` on a button → the MainButton, or `bg-tg-accent` inside
   content. Same for radius (`rounded-tg-group`) and the font (`font-sans` is the system font).
-- **React.** Use the React example's `kit.tsx` hooks or `@tma.js/sdk-react` for the MainButton, BackButton
+- **React.** Use the React example's `kit.tsx` hooks or `@tma.js/sdk-react` **[Third-party]** for the MainButton, BackButton
   and theme; keep components, replace their markup with the kit classes or the bridged tokens.
 - **Native first.** A component library's dialog, toast, drawer or date picker is still a web pattern: replace
   it per §3 even when it is themed.
