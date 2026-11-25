@@ -100,8 +100,11 @@ Rich HTML buttons), `check_rich_html`, `knowledge_search` (which reference secti
 `map_snapshot` (a single-file Studio page to screenshot; it refuses to replace a file unless
 `overwrite: true`), `commands_audit`, `commands_plan`, and three that use the network:
 `emoji_library_search`, `emoji_pick_family` (slot coverage, then the brief's tags) and
-`emoji_rank_by_tags` (packs by style, colour, mood, topic, bot category; only search words, tag
-values and pack names are sent; `BOT_UI_EMOJI_RESOLVER=off` turns them off). Arguments are
+`emoji_rank_by_tags` (packs by style, colour, mood, topic, bot category, or a style `profile`
+whose accent is compared with pack colours; `library_file` reads the offline export instead;
+only search words, tag values and pack names are sent; `BOT_UI_EMOJI_RESOLVER=off` turns them
+off). Both pick tools return each pack's description and a one-line `why`; every library
+answer is checked against the vendored contract (`references/emoji-packs.md`). Arguments are
 checked against each tool's input schema.
 Nothing sends to Telegram, no tool reads a token. Tested in `tests/test_bot_ui_mcp.py`.
 
