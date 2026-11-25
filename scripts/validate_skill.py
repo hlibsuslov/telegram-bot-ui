@@ -292,6 +292,13 @@ def check_portable_manifests(root: str, skill_name: str, errors: list[str]) -> N
             errors.append("plugin.json: author takes only name, email and url.")
         if not all(isinstance(k, str) for k in ap.get("keywords", [])):
             errors.append("plugin.json: keywords must be strings.")
+    gem = _load_json(root, "gemini-extension.json", errors)
+    if gem:
+        if gem.get("name") != skill_name:
+            errors.append("gemini-extension.json: name must be the skill name.")
+        for key in ("version", "description"):
+            if not str(gem.get(key, "")).strip():
+                errors.append(f"gemini-extension.json: '{key}' is required.")
     codex = _load_json(root, ".codex-plugin/plugin.json", errors)
     if codex:
         if codex.get("name") != skill_name or codex.get("skills") != "./skills/":
