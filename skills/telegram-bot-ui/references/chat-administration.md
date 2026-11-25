@@ -77,7 +77,8 @@ also lists other bot admins), `getChatMemberCount`.
 ## Rights the bot needs
 
 - **[API]** Every moderation method needs the bot to be an **administrator** with the
-  matching right: bans/restrictions → `can_restrict_members`; promotion →
+  matching right (most method texts say only "appropriate administrator rights"; the right is
+  named in the `ChatAdministratorRights` field descriptions): bans/restrictions → `can_restrict_members`; promotion →
   `can_promote_members` (and only a subset of its own rights can be granted);
   invite links and join requests → `can_invite_users`; pins → `can_pin_messages`
   (channels: `can_edit_messages`); deleting others' messages → `can_delete_messages`;
@@ -135,8 +136,8 @@ dry-run by default, log who/why, and confirm with a human admin for bans.
 ```
 
 - **[API]** Pass `false` for all rights to demote. `setChatAdministratorCustomTitle`
-  sets a title (0-16 chars, no emoji). Rights flagged "for channels only" / "for supergroups
-  only" are ignored elsewhere.
+  sets a title (0-16 chars, no emoji). Rights marked "for channels only" / "for supergroups
+  only" apply there; what Telegram does with them elsewhere is not documented **[Unverified]**.
 
 ## Invite links and join requests
 

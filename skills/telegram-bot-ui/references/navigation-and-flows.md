@@ -83,8 +83,10 @@ Then look for the classic defects:
 - `BotCommand.is_ephemeral` (Bot API 10.2) marks commands whose reply is visible
   only to the sender — see *Ephemeral messages* below.
 
-**Menu button (`setChatMenuButton`)** — `MenuButtonCommands` (default, opens the
-command list), `MenuButtonWebApp` (opens a Mini App), or `MenuButtonDefault`.
+**Menu button (`setChatMenuButton`)** — `MenuButtonCommands` (opens the command
+list), `MenuButtonWebApp` (opens a Mini App), or `MenuButtonDefault` (no specific value; the
+parameter defaults to it **[API]**, and by default the button opens the command menu
+**[Official, Bot Features]**).
 Set it per chat or globally. If the bot's centre of gravity is a Mini App, point
 the menu button at it and say what opens; otherwise leave the commands menu.
 

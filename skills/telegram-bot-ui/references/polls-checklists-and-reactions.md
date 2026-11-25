@@ -142,8 +142,8 @@ tasks; new ids for new tasks. **[Heuristic]** (the method replaces the checklist
 
 - **[API]** Bots can set **one reaction per message** (non-Premium rules); a custom-emoji
   reaction only if already present on the message or allowed by admins; **paid
-  reactions can't be used by bots**. `reaction: []` (or omitted) removes the bot's
-  reaction. The `emoji` value must be one of the fixed list in `ReactionTypeEmoji`
+  reactions can't be used by bots**. Clearing the bot's reaction with `reaction: []`
+  (or by omitting it) is not stated in the method text **[Unverified]**. The `emoji` value must be one of the fixed list in `ReactionTypeEmoji`
   (`tg_api_lookup.py show ReactionTypeEmoji`).
 - **[Heuristic]** A reaction is a cheap acknowledgement ("👀 seen", "👍 done") that adds
   no message to the chat — use it instead of "OK, received" replies in groups.

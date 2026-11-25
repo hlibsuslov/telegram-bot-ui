@@ -168,7 +168,7 @@ code keeps the same records in its database, keyed uniquely.
 | Need | Call | Facts |
 |---|---|---|
 | Fix text | `editMessageText` (`text`/`entities` or `rich_message`) | rich edits since 10.1 **[API]**; edits keep views, reactions and comments **[Heuristic]** |
-| Fix caption | `editMessageCaption` | album: edit the first item's caption **[API]** |
+| Fix caption | `editMessageCaption` | album: edit the first item's caption **[Heuristic]** |
 | Swap media | `editMessageMedia` | albums: same family only (audio→audio, document→document, photo/live photo/video otherwise) **[API]** |
 | Buttons only | `editMessageReplyMarkup` | **[API]** |
 | Close a poll | `stopPoll` | a sent poll can't be edited otherwise **[API]** |

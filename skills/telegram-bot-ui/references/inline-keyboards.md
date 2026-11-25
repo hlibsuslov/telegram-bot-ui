@@ -68,9 +68,10 @@ data that is visible on screen, edit the message so the screen reflects it.
 - **Send a new message** when the event is genuinely new (a notification, a
   receipt, a result the user should keep in history).
 - Editing a message with identical content raises `message is not modified` —
-  compare before editing (`errors-and-fallbacks.md`).
-- Removing a keyboard from a finished screen (`reply_markup` omitted / empty)
-  prevents double submissions on stale messages. Pair it with server-side
+  compare before editing (`errors-and-fallbacks.md`). The error text is not in the method
+  docs **[Unverified]**.
+- Removing a keyboard from a finished screen (`reply_markup` omitted / empty; the method
+  docs do not state this **[Unverified]**) prevents double submissions on stale messages. Pair it with server-side
   idempotency; never trust the UI alone.
 
 ## Layout
