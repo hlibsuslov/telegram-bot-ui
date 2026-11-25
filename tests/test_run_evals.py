@@ -378,6 +378,20 @@ class TimeoutTest(unittest.TestCase):
         self.assertTrue(summary["valid"], summary["invalid_reasons"])
         self.assertEqual(summary["route_accuracy"], {"correct": 1, "of": 1})
 
+    def test_an_external_copy_loaded_by_a_timed_out_attempt_keeps_the_run_invalid(self):
+        foreign = {**self.info(finished=False), "copy": "other"}
+        attempt = self.attempts(self.POSITIVE, (foreign, "timeout"), (self.info(), 0))
+        case = ev.run_case(self.POSITIVE, 1, attempt, retry_timeouts=1, log=lambda *_: None)
+        self.assertEqual((case["ok"], case["runs"][0]["copy"]), (True, "project"))    # scored from the final attempt
+        summary = ev.summarize([case])
+        self.assertFalse(summary["valid"])
+        self.assertTrue(any("outside the temp project" in r for r in summary["invalid_reasons"]),
+                        summary["invalid_reasons"])
+        unknown = {**self.info(finished=False), "copy": "unknown"}
+        case = ev.run_case(self.POSITIVE, 1, self.attempts(self.POSITIVE, (unknown, "timeout"), (self.info(), 0)),
+                           retry_timeouts=1, log=lambda *_: None)
+        self.assertFalse(ev.summarize([case])["valid"])
+
     def test_retries_stop_at_the_limit(self):
         attempt = self.attempts(self.NEGATIVE, *[(self.info(False, False), "timeout")] * 3)
         case = ev.run_case(self.NEGATIVE, 1, attempt, retry_timeouts=2, log=lambda *_: None)

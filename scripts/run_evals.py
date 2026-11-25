@@ -715,7 +715,8 @@ def describe_run(case: dict, run: dict, label: str) -> str:
 
 def run_case(case: dict, runs: int, attempt, retry_timeouts: int = 0, log=print) -> dict:
     """Run a case `runs` times; a run whose attempt timed out is retried up to `retry_timeouts` times and
-    the last attempt counts. The case passes on a majority of its scored (not timed-out) runs; with no
+    the last attempt is scored. Every attempt's loaded copy is kept (`attempt_copies`): a skill copy
+    outside the temp project taints validity even when a later retry loaded the right one. The case passes on a majority of its scored (not timed-out) runs; with no
     scored run it has no verdict (`ok` None)."""
     case_runs = []
     for n in range(1, runs + 1):
@@ -725,7 +726,8 @@ def run_case(case: dict, runs: int, attempt, retry_timeouts: int = 0, log=print)
             retry = f" retry {len(attempts) - 1}/{retry_timeouts}" if len(attempts) > 1 else ""
             log(describe_run(case, attempts[-1], f"run {n}/{runs}{retry}"))
         case_runs.append({**attempts[-1], "attempts": len(attempts),
-                          "timeouts": sum(a["timed_out"] for a in attempts)})
+                          "timeouts": sum(a["timed_out"] for a in attempts),
+                          "attempt_copies": [a["copy"] for a in attempts]})
     scored = [r for r in case_runs if r["ok"] is not None]
     correct = sum(r["ok"] for r in scored)
     return {"id": case["id"], "expect": case["expect"], "ok": passes(correct, len(scored)) if scored else None,
@@ -741,6 +743,9 @@ def summarize(results: list[dict]) -> dict:
     Cases without a verdict (every run timed out) are `unscored`, never a false positive or negative."""
     flat = [r for case in results for r in case["runs"]]
     copies = {k: sum(r["copy"] == k for r in flat) for k in ("project", "other", "none", "unknown")}
+    # A retry replaces the scored attempt, never the copy an earlier attempt loaded.
+    earlier = [c for r in flat for c in r.get("attempt_copies", [r["copy"]])[:-1]]
+    tainted = {k: copies[k] + earlier.count(k) for k in ("other", "unknown")}
     errors = sum(bool(r["error"]) for r in flat)
     unresolved = sum(bool(r.get("timed_out")) for r in flat)
     timeouts = {"unresolved": unresolved,
@@ -750,10 +755,10 @@ def summarize(results: list[dict]) -> dict:
               if r["activated"] and r["route_ok"] is not None]
     with_tokens = [r["tokens"] for r in flat if r["tokens"] and "input" in r["tokens"]]
     reasons = []
-    if copies["other"]:
-        reasons.append(f"{copies['other']} run(s) loaded a copy of the skill outside the temp project")
-    if copies["unknown"]:
-        reasons.append(f"{copies['unknown']} run(s) activated but the loaded copy could not be identified")
+    if tainted["other"]:
+        reasons.append(f"{tainted['other']} attempt(s) loaded a copy of the skill outside the temp project")
+    if tainted["unknown"]:
+        reasons.append(f"{tainted['unknown']} attempt(s) activated but the loaded copy could not be identified")
     if errors:
         reasons.append(f"{errors} run(s) errored")
     if unresolved:
