@@ -15,8 +15,8 @@ import sys
 from typing import Any
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(HERE))
-from bot_ui.runtime import Runtime  # noqa: E402
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), "skills", "telegram-bot-ui", "scripts"))
+from runtime import Runtime  # noqa: E402
 from bot_ui.skill import load  # noqa: E402
 
 

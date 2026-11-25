@@ -84,7 +84,7 @@ set `MSYS_NO_PATHCONV=1` so `/message/text/ru` is not turned into a Windows path
 ## Adapters
 
 `adapters/aiogram_adapter.py` (aiogram 3.31.0) and `adapters/raw_adapter.py` (tgkit, no SDK)
-share `skills/telegram-bot-ui/scripts/bot_ui/runtime.py`: update -> engine event -> effects -> Bot API requests through an
+share `adapters/runtime.py`: update -> engine event -> effects -> Bot API requests through an
 injected transport. The project is re-read when its revision changes, so a Studio save
 reaches the next update without a restart. Replay without network:
 

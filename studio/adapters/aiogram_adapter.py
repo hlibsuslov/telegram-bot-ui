@@ -29,8 +29,8 @@ from aiogram.methods import (AnswerCallbackQuery, EditMessageMedia, EditMessageT
 from aiogram.types import CallbackQuery, Message
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-sys.path.insert(0, os.path.dirname(HERE))
-from bot_ui.runtime import Runtime  # noqa: E402
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(HERE)), "skills", "telegram-bot-ui", "scripts"))
+from runtime import Runtime  # noqa: E402
 from bot_ui.skill import load  # noqa: E402
 
 SendWidget = load("sdk_aiogram.adapter").SendWidget

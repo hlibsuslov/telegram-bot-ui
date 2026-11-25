@@ -5,9 +5,11 @@ import asyncio
 import copy
 import json
 import os
+import subprocess
+import sys
 import unittest
 
-from _bot_ui import FIXTURES, ProjectCase
+from _bot_ui import CORE, FIXTURES, STUDIO, ProjectCase
 from bot_ui.project import open_snapshot
 from bot_ui.store import write_patch
 
@@ -109,6 +111,23 @@ class Raw(ProjectCase):
 
 
 @unittest.skipUnless(HAVE_AIOGRAM, "aiogram==3.31.0 not installed (pip install -r skills/telegram-bot-ui/examples/python/sdk_aiogram/requirements.txt)")
+class Placement(ProjectCase):
+    """L15: the Runtime serves only the Studio adapters, so it ships with them, not in the skill,
+    and the documented demo command runs from a checkout without extra import paths."""
+
+    def test_runtime_lives_beside_the_adapters(self):
+        self.assertFalse(os.path.exists(os.path.join(CORE, "bot_ui", "runtime.py")))
+        self.assertTrue(os.path.isfile(os.path.join(STUDIO, "adapters", "runtime.py")))
+
+    def test_demo_bot_replays_without_extra_paths(self):
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+        r = subprocess.run([sys.executable, os.path.join(STUDIO, "adapters", "demo_bot.py"), "--project", self.root,
+                            "--replay", os.path.join(FIXTURES, "updates", "checkout.json"), "--raw", "--json"],
+                           capture_output=True, text=True, encoding="utf-8", env=env, cwd=self._tmp, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        self.assertEqual([c["method"] for c in json.loads(r.stdout)], EXPECTED_METHODS)
+
+
 class Aiogram(ProjectCase):
     def test_aiogram_serialises_the_same_payloads_as_the_raw_adapter(self):
         from demo_bot import check, replay_aiogram
