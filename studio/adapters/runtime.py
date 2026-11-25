@@ -1,5 +1,8 @@
 """Bot runtime shared by every SDK adapter: Telegram update in, Bot API requests out.
 
+It lives with the Studio adapters, not in the skill: only they run a bot-ui project as a bot.
+The importer puts the skill's scripts/ (the bot_ui core) on sys.path first.
+
     runtime = Runtime(project_root, handlers={"checkout.confirm": charge}, context=trusted_ctx, data=order_data)
     result = await runtime.handle(update_dict, execute)   # execute(method, params) -> API result
 
@@ -19,9 +22,9 @@ from __future__ import annotations
 import inspect
 from typing import Any, Awaitable, Callable
 
-from . import render, widgets
-from .engine import Engine, new_session
-from .project import Snapshot, open_snapshot
+from bot_ui import render, widgets
+from bot_ui.engine import Engine, new_session
+from bot_ui.project import Snapshot, open_snapshot
 
 Execute = Callable[[str, dict], Any]
 CHAT_TYPES = {"private": "private", "group": "group", "supergroup": "group", "channel": "channel"}

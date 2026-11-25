@@ -3,7 +3,8 @@
 Product recipe (combines mechanisms; no registry row of its own). Uses `createInvoiceLink` with
 `subscription_period`, `editUserStarSubscription`, `successful_payment` recurring fields, regular-HTML
 `<tg-time>`, 9.4 button `style`, `10.3` disabled buttons. Verified 2026-11-15 against Bot API 10.4
-(newest release on that date, 2026-11-09). Payments depth: `references/payments-and-stars.md`
+(newest release on that date, 2026-11-09); re-checked against Bot API 10.5 on 2026-11-25 (10.5 changed nothing
+in payments; every type and method named here is in the 10.5 catalog). Payments depth: `references/payments-and-stars.md`
 (payments stream); one-off purchases: [recipe 20](20-shop.md); index of all product recipes:
 `references/use-case-playbooks.md`. Tags: **[API]** = API requirement, **[official]** = official
 recommendation, **[heuristic]** = design heuristic of this skill.

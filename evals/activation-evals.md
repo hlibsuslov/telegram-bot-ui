@@ -43,7 +43,7 @@ description is updated.
 | P5 | "Can I make a red Delete button?" | `danger` semantics | `buttons-and-styles.md` |
 | P6 | "Put our custom emoji on the buttons." | `icon_custom_emoji_id` | `custom-emoji.md` |
 | P7 | "Rewrite these bot messages, they're confusing." | microcopy | `microcopy-and-labels.md` |
-| P8 | "The buttons say different things for the same action." | consistency | `consistency-and-review.md` |
+| P8 | "The buttons say different things for the same action." | consistency (runs in the `bot-project` fixture) | `consistency-and-review.md` |
 | P9 | "Users get stuck with no way back." | navigation | `navigation-and-flows.md` |
 | P10 | "Turn this reply keyboard into inline buttons." | keyboard choice | `reply-keyboards.md` |
 | P11 | "Add pagination to this list of 60 items." | list UX | `inline-keyboards.md` |
@@ -62,7 +62,7 @@ description is updated.
 | P19 | "Send this price list as a Telegram table." | data → table | `tables.md` |
 | P20 | "Migrate the bot's messages from MarkdownV2 to HTML." | format migration | `format-selection.md` |
 | P21 | "Add Rich Messages for AI answers." | Rich Messages | `telegram-capabilities.md` |
-| P22 | "Fix long-message splitting." | limits | `limits-and-splitting.md` |
+| P22 | "Fix long-message splitting." | limits (runs in the `bot-project` fixture) | `limits-and-splitting.md` |
 | P23 | "Our localized templates break MarkdownV2." | i18n + escaping | `localization-and-rtl.md` |
 | P24 | "Update the bot to the latest Bot API UI features." | capability migration | `ui-changelog.md` |
 
@@ -76,9 +76,9 @@ description is updated.
 | P28 | "Send an interactive widget to the user." | `sendWidget` | `widgets.md` |
 | P29 | "Widget taps time out on our webhook." | `widget_query` routing | `widgets.md`, `sdk-compatibility.md` |
 | P30 | "Let users pay with the Telegram wallet from the card." | widget wallet | `wallet-and-ton.md` |
-| P31 | "Grey out the Submit button until the form is complete." | `DisabledButton` | `buttons-and-styles.md` |
+| P31 | "Grey out the Submit button until the form is complete." | `DisabledButton` (runs in the `bot-project` fixture) | `buttons-and-styles.md` |
 | P32 | "Delete regular gifts from our business account." | `deleteBusinessAccountGift` | `specialized-updates.md` |
-| P33 | "Read the theme of the user's share screen." | share themes | `specialized-updates.md` |
+| P33 | "Read the theme of the user's share screen." | share themes (runs in the `bot-project` fixture) | `specialized-updates.md` |
 | P35 | "Pick matching premium icons for all our buttons." | custom emoji family | `visual-language.md` |
 | P36 | "What should a price-alert bot look like on the new API?" | archetype | `bot-archetypes.md` |
 | P34 | "Link to the other topic of the chat with the bot." | topic links | `topics-and-contexts.md` |
@@ -95,7 +95,6 @@ description is updated.
 
 | # | Request | Why it's out of scope |
 |---|---|---|
-| N1 | "Set up a Telegram webhook." | infrastructure |
 | N3 | "Fix the bot's user database schema." | data layer |
 | N4 | "Write a marketing strategy for our Telegram channel." | content strategy |
 | N5 | "Open an RTF file." | Microsoft `.rtf`, unrelated |
@@ -163,11 +162,11 @@ description is updated.
 
 | # | Lang | Request | Names a method? | Routes to |
 |---|---|---|---|---|
-| L1 | en | "Does editMessageReplyMarkup keep the style field on buttons?" | yes | `data/bot-api/`, `scripts/tg_api_lookup.py` |
-| L2 | en | "Which update tells my bot that the user stopped the answer?" | no | `data/bot-api/`, `scripts/tg_api_lookup.py`, `references/streaming-and-editing.md` |
-| L3 | en | "Is there a way for a bot to delete a message for just one user?" | no | `data/bot-api/`, `scripts/tg_api_lookup.py` |
-| L4 | ru | "Какие параметры есть у sendPoll в последней версии Bot API?" | yes | `data/bot-api/`, `scripts/tg_api_lookup.py` |
-| L5 | ru | "Может ли бот узнать, кто переслал сообщение из канала?" | no | `data/bot-api/`, `scripts/tg_api_lookup.py` |
+| L1 | en | "Does editMessageReplyMarkup keep the style field on buttons?" | yes | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py` |
+| L2 | en | "Which update tells my bot that the user stopped the answer?" | no | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py`, `references/streaming-and-editing.md` |
+| L3 | en | "Is there a way for a bot to delete a message for just one user?" | no | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py` |
+| L4 | ru | "Какие параметры есть у sendPoll в последней версии Bot API?" | yes | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py` |
+| L5 | ru | "Может ли бот узнать, кто переслал сообщение из канала?" | no | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py` |
 
 ## Negative — new capability boundaries (should NOT activate)
 
@@ -242,10 +241,11 @@ description is updated.
 | ST4 | en | "Import my bot into bot-ui." | no | `references/bot-ui-projects.md` |
 | CX1 | ru | "Продолжи с того места, где остановились по боту." | no | `SKILL.md` (saved project context) |
 | UK1 | uk | "Опублікуй анонс у канал, але спочатку покажи прев'ю." | no | `references/channel-post-design.md`, `references/publishing-pipeline.md` |
-| UK2 | uk | "Чи є в Bot API кнопки іншого кольору?" | no | `references/buttons-and-styles.md`, `scripts/tg_api_lookup.py`, `data/bot-api/` |
+| UK2 | uk | "Чи є в Bot API кнопки іншого кольору?" | no | `commands/lookup.md`, `references/buttons-and-styles.md`, `scripts/tg_api_lookup.py`, `data/bot-api/` |
 | UK3 | uk | "Зроби інтерактивну картку замовлення." | no | `references/widgets.md` |
 | UK4 | uk | "Хочу, щоб агент писав мені в Telegram, коли збірка готова." | no | `references/agent-operated-bots.md` |
 | DR1 | en | "Is the telegram-bot-ui skill up to date?" | no | `SKILL.md` (doctor, catalog age) |
+| N1 | en | "Set up a Telegram webhook." | no | `references/updates-and-delivery.md` (the Telegram side: `setWebhook`, `secret_token`, `allowed_updates`) |
 | WH1 | en | "After moving to webhooks the bot stopped getting button presses." | no | `references/updates-and-delivery.md` |
 | RB1 | en | "Put a Pay button right under the totals table inside our bot's receipt message, not in the keyboard at the bottom." | yes | `references/buttons-and-styles.md` (buttons inside a rich message) |
 | RB2 | ru | "Сделай в длинном ответе бота кнопку «Подробнее» прямо рядом с абзацем, а не внизу сообщения." | no | `references/buttons-and-styles.md` |
@@ -253,6 +253,7 @@ description is updated.
 | CM2 | uk | "Перевір команди нашого бота: які зареєстровані, а які обробники є в коді, і чому адміни не бачать /stats." | no | `references/bot-commands.md` |
 | RX1 | en | "Instead of replying 'Saved ✅' to every expense the user logs, have the bot just mark the message somehow." | no | `references/polls-checklists-and-reactions.md` |
 | EL1 | en | "Find one premium emoji pack that has icons for home, back, settings, search and delete for our bot's buttons, with real ids." | no | `references/emoji-packs.md` |
+| EL2 | en | "Our designer sent three 100x100 PNG icons. Make them an emoji pack of our own that the bot owns, and show me the ids to use in messages." | no | `recipes/76-own-emoji-pack.md` |
 
 ## Negative — near misses (should NOT activate)
 
@@ -272,6 +273,97 @@ A neighbouring platform, product or layer that shares words with the skill's sco
 | NM10 | en | "Reconcile Stars payouts in our accounting ledger." | accounting ledger outside Telegram's payment updates |
 | NM11 | en | "Tune the supergroup anti-spam thresholds in our moderation service." | moderation service tuning, no screen or message design |
 
+## Bot API domains with agent cards (positives and near misses)
+
+Six cases per domain that has agent cards in `data/bot-api/agent-notes/` (messages, editing,
+bot-settings, chat-admin, chat-info, forums, business, stickers, platform, inline-widgets, Rich
+blocks), plus payments and Mini App events: four positives and two near misses each, in English,
+Russian and Ukrainian (`domain` in `evals.json`; `run_evals.py` checks 6-10 cases, all three
+languages, positives and near misses per domain). Every positive names Telegram, a bot or a Bot API
+symbol, so it means the same in an empty project. `commands/lookup.md` and `data/bot-api/` are the
+route where the knowledge is a catalog card (`tgui.py lookup show <Symbol>`) rather than a reference.
+
+| # | Domain | Lang | Request | Expected | Routes to |
+|---|---|---|---|---|---|
+| MSG1 | messages | en | "Have the bot send the four product photos as one album with a single caption." | activate | `media-and-files.md` |
+| MSG2 | messages | ru | "Бот каждый раз заново загружает один и тот же PDF-отчёт на 20 МБ — можно отправлять его в Telegram быстрее?" | activate | `media-and-files.md` |
+| MSG3 | messages | uk | "Як надіслати вікторину з правильною відповіддю і поясненням через sendPoll?" | activate | `polls-checklists-and-reactions.md`, `commands/lookup.md` |
+| MSG4 | messages | en | "While our Telegram bot builds the report the chat looks dead; should it call sendChatAction, and how often?" | activate | `dynamic-feedback-and-streaming.md`, `media-and-files.md` |
+| MSGN1 | messages | en | "Text our customers an SMS through Twilio when their order ships." | skip | — |
+| MSGN2 | messages | uk | "Надсилай повідомлення в наш канал Slack, коли збірка падає." | skip | — |
+| ED1 | editing | en | "Have the bot update one progress message in place instead of posting a new message at every 10%." | activate | `streaming-and-editing.md`, `dynamic-feedback-and-streaming.md` |
+| ED2 | editing | ru | "editMessageText падает с ошибкой «message is not modified», когда пользователь дважды жмёт кнопку «Обновить»." | activate | `errors-and-fallbacks.md`, `streaming-and-editing.md` |
+| ED3 | editing | uk | "Хай наш Telegram-бот замість відповіді «Збережено» просто ставить реакцію на повідомлення користувача." | activate | `polls-checklists-and-reactions.md` |
+| ED4 | editing | ru | "Когда пользователь нажал «Отмена», убери кнопки из старого сообщения нашего Telegram-бота, чтобы их нельзя было нажать ещё раз." | activate | `inline-keyboards.md`, `navigation-and-flows.md` |
+| EDN1 | editing | en | "Edit the captions in our YouTube video." | skip | — |
+| EDN2 | editing | ru | "Отредактируй шаблоны писем в Mailchimp, чтобы они были короче." | skip | — |
+| BS1 | bot-settings | en | "Set the bot's description and its short about text in English and Russian from code, not in BotFather." | activate | `onboarding-and-first-run.md`, `bot-style-profile.md`, `commands/lookup.md` |
+| BS2 | bot-settings | ru | "Сделай так, чтобы слева от поля ввода у нашего Telegram-бота была кнопка, которая открывает мини-апп." | activate | `navigation-and-flows.md`, `mini-apps-bridge.md`, `mini-apps/launch-and-lifecycle.md` |
+| BS3 | bot-settings | uk | "Як через setMyCommands показувати адмінам групи інші команди, ніж звичайним учасникам?" | activate | `bot-commands.md`, `navigation-and-flows.md` |
+| BS4 | bot-settings | en | "Change the bot's own profile photo from code with setMyProfilePhoto when we rebrand." | activate | `commands/lookup.md`, `data/bot-api/`, `bot-style-profile.md`, `redesign-orchestration.md` |
+| BSN1 | bot-settings | en | "Change the photo and bio of my personal Telegram account from a script." | skip | — |
+| BSN2 | bot-settings | uk | "Налаштуй змінні середовища для бота на Heroku." | skip | — |
+| CA1 | chat-admin | en | "Have our Telegram bot mute anyone who posts a link during their first hour in the group." | activate | `chat-administration.md`, `user-trust.md` |
+| CA2 | chat-admin | ru | "Сделай платную ссылку-приглашение в закрытый Telegram-канал: 100 звёзд в месяц." | activate | `chat-administration.md`, `payments-and-stars.md` |
+| CA3 | chat-admin | uk | "Хочу, щоб бот схвалював заявки на вступ до нашої Telegram-групи лише після відповіді на контрольне питання." | activate | `chat-administration.md`, `user-trust.md`, `mini-apps-bridge.md` |
+| CA4 | chat-admin | en | "promoteChatMember fails with 'not enough rights' — which admin right is the bot missing?" | activate | `chat-administration.md`, `errors-and-fallbacks.md` |
+| CAN1 | chat-admin | en | "Ban users from our Discord server automatically when they spam." | skip | — |
+| CAN2 | chat-admin | ru | "Настрой правила модерации в нашем сообществе ВКонтакте." | skip | — |
+| CI1 | chat-info | en | "Have the bot pin today's summary in our Telegram group and unpin yesterday's one." | activate | `chat-administration.md`, `channel-post-design.md` |
+| CI2 | chat-info | ru | "Как через getChatMember проверить, подписан ли пользователь на наш канал, прежде чем выдать бонус?" | activate | `chat-administration.md`, `channels-and-broadcasting.md`, `commands/lookup.md` |
+| CI3 | chat-info | uk | "Хай бот показує в профілі користувача його аватарку з Telegram." | activate | `user-data.md` |
+| CI4 | chat-info | en | "We are a verification organization: mark trusted users as verified with verifyUser and remove it on abuse." | activate | `specialized-updates.md` |
+| CIN1 | chat-info | en | "Export our WhatsApp group's member list to a spreadsheet." | skip | — |
+| CIN2 | chat-info | uk | "Зроби дашборд зі статистикою відвідувань нашого сайту." | skip | — |
+| FT1 | forums | en | "Have our bot open a separate topic in the Telegram support group for every new ticket and close it when the ticket is solved." | activate | `topics-and-contexts.md`, `navigation-and-flows.md` |
+| FT2 | forums | ru | "Бот отвечает в общий чат вместо той темы форума в Telegram-группе, где ему написали." | activate | `topics-and-contexts.md` |
+| FT3 | forums | uk | "Як змінити іконку теми форуму через editForumTopic і де взяти дозволені емодзі?" | activate | `commands/lookup.md`, `data/bot-api/`, `topics-and-contexts.md` |
+| FT4 | forums | ru | "Как в личке с Telegram-ботом завести отдельные темы под каждый проект пользователя?" | activate | `topics-and-contexts.md`, `bot-settings.md`, `recipes/08-multi-topic-bot.md` |
+| FTN1 | forums | en | "Create a category and channels for each project on our Discord server." | skip | — |
+| FTN2 | forums | uk | "Налаштуй теми й підфоруми на нашому форумі phpBB." | skip | — |
+| BZ1 | business | en | "Let our bot answer customers in my personal Telegram chats while I'm offline, through the business connection." | activate | `business-accounts.md` |
+| BZ2 | business | ru | "Как перевести звёзды с бизнес-аккаунта на баланс бота через transferBusinessAccountStars?" | activate | `business-accounts.md` |
+| BZ3 | business | uk | "Хочу, щоб бот публікував сторіз від імені мого бізнес-акаунта в Telegram." | activate | `gifts-and-stories.md`, `business-accounts.md` |
+| BZ4 | business | en | "Send a Telegram gift from the bot's Stars balance to our top customer of the month." | activate | `gifts-and-stories.md` |
+| BZN1 | business | en | "Set up a WhatsApp Business account with auto-replies." | skip | — |
+| BZN2 | business | ru | "Зарегистрируй ИП и выбери систему налогообложения." | skip | — |
+| SK1 | stickers | en | "Turn our mascot PNGs into a Telegram sticker pack that the bot creates and owns." | activate | `recipes/76-own-emoji-pack.md`, `commands/emoji.md`, `commands/lookup.md`, `data/bot-api/` |
+| SK2 | stickers | ru | "Добавь стикер в наш набор через addStickerToSet — какой формат и размер файла нужен?" | activate | `commands/lookup.md`, `data/bot-api/`, `recipes/76-own-emoji-pack.md` |
+| SK3 | stickers | uk | "getCustomEmojiStickers повертає порожньо для наших id — як отримати справжній custom_emoji_id?" | activate | `custom-emoji.md`, `emoji-packs.md` |
+| SK4 | stickers | ru | "Поменяй обложку набора эмодзи, который создал наш Telegram-бот, на новую иконку." | activate | `recipes/76-own-emoji-pack.md`, `commands/emoji.md`, `commands/lookup.md`, `data/bot-api/` |
+| SKN1 | stickers | en | "Design a sheet of vinyl stickers with our logo for printing." | skip | — |
+| SKN2 | stickers | uk | "Намалюй набір стікерів для WhatsApp." | skip | — |
+| PL1 | platform | en | "Make our Telegram bot reject webhook requests that don't carry our secret token." | activate | `updates-and-delivery.md` |
+| PL2 | platform | ru | "После перезапуска Telegram-бот обрабатывает одни и те же обновления дважды." | activate | `updates-and-delivery.md` |
+| PL3 | platform | uk | "getWebhookInfo показує pending_update_count 500 і last_error_message — що робити?" | activate | `updates-and-delivery.md` |
+| PL4 | platform | en | "Add a small HTML5 game to the bot with sendGame and a high-score table." | activate | `commands/lookup.md`, `data/bot-api/` |
+| PLN1 | platform | en | "Put the bot's webhook endpoint behind Cloudflare and renew its TLS certificate." | skip | — |
+| PLN2 | platform | ru | "Подними Kubernetes-кластер для нашего бота." | skip | — |
+| IW1 | inline-widgets | en | "Let people type @ourbot in any Telegram chat to search our catalog and share a product card." | activate | `inline-mode.md` |
+| IW2 | inline-widgets | ru | "answerInlineQuery: как кешировать результаты отдельно для каждого пользователя?" | activate | `inline-mode.md`, `commands/lookup.md` |
+| IW3 | inline-widgets | uk | "Хочу, щоб віджет у Telegram з рахунком гри оновлювався одночасно в усіх чатах, куди його поширили." | activate | `widgets.md`, `widget-patterns.md` |
+| IW4 | inline-widgets | en | "Our Mini App calls answerWebAppQuery but nothing appears in the chat." | activate | `mini-apps-bridge.md`, `inline-mode.md` |
+| IWN1 | inline-widgets | en | "Add an inline search box to our website's header." | skip | — |
+| IWN2 | inline-widgets | ru | "Сделай виджет погоды для главного экрана Android." | skip | — |
+| PY1 | payments | en | "Refund the user's Stars automatically when the bot's image generation fails." | activate | `payments-and-stars.md`, `payments-pipeline.md` |
+| PY2 | payments | ru | "Сделай ежемесячную подписку на бота за звёзды и отменяй её, если пользователь попросит." | activate | `payments-and-stars.md`, `payments-pipeline.md` |
+| PY3 | payments | uk | "pre_checkout_query приходить, але оплата зависає — що бот має відповісти і як швидко?" | activate | `payments-and-stars.md`, `payments-pipeline.md`, `updates-and-delivery.md` |
+| PY4 | payments | en | "Sell access to a photo set with sendPaidMedia for 50 Stars." | activate | `payments-and-stars.md`, `payments-pipeline.md`, `media-and-files.md` |
+| PYN1 | payments | en | "Integrate PayPal checkout into our web store." | skip | — |
+| PYN2 | payments | uk | "Порахуй податки з продажів за квартал у нашій бухгалтерії." | skip | — |
+| RC1 | rich | en | "Have the Telegram bot send the AI answer as a Rich Message with a heading, a list and a code block." | activate | `telegram-capabilities.md`, `format-selection.md` |
+| RC2 | rich | ru | "Как вставить таблицу в sendRichMessage, чтобы на телефоне она не разъезжалась?" | activate | `tables.md`, `telegram-capabilities.md` |
+| RC3 | rich | uk | "Додай фото товару всередину Rich-повідомлення бота в Telegram, між абзацами тексту." | activate | `rich-media.md`, `telegram-capabilities.md` |
+| RC4 | rich | en | "Stream a rich answer with sendRichMessageDraft and let the user stop it." | activate | `streaming-and-editing.md`, `dynamic-feedback-and-streaming.md` |
+| RCN1 | rich | en | "Convert this RTF document to PDF." | skip | — |
+| RCN2 | rich | uk | "Зроби редактор форматованого тексту для нашого сайту на React." | skip | — |
+| ME1 | mini-app-events | en | "Pause the video in our Telegram Mini App when the user minimises it and resume when they come back." | activate | `mini-apps/launch-and-lifecycle.md`, `mini-apps/webapp-api.md` |
+| ME2 | mini-app-events | ru | "viewportChanged срабатывает постоянно, пока пользователь тянет мини-апп, и вёрстка дёргается." | activate | `mini-apps/webapp-api.md`, `mini-apps/launch-and-lifecycle.md` |
+| ME3 | mini-app-events | uk | "Коли користувач вмикає темну тему, графік у нашому Telegram міні-застосунку лишається світлим." | activate | `mini-apps/webapp-api.md`, `mini-apps/launch-and-lifecycle.md`, `mini-apps/design-system.md` |
+| ME4 | mini-app-events | ru | "Хочу, чтобы мини-апп в Telegram открывал сканер QR-кода и сразу показывал заказ по считанному коду." | activate | `mini-apps/haptics-and-device.md`, `mini-apps/webapp-api.md` |
+| MEN1 | mini-app-events | en | "Add a window resize listener to our React web dashboard." | skip | — |
+| MEN2 | mini-app-events | ru | "Отслеживай сворачивание приложения во Flutter-приложении для iOS." | skip | — |
+
 ## Boundary notes
 
 - N2 is **positive**: Stars payment processing is the skill's payments pipeline. NM10 (an
@@ -283,13 +375,16 @@ A neighbouring platform, product or layer that shares words with the skill's sco
   that opens the Mini App, `BottomButton` progress, `WebApp.ready()`.
 - NM11 flips **positive** if the task is about how the moderation *bot's* screens, warnings or ban
   notices read and look (chat administration itself is in scope).
-- WH1 is **positive** because lost button presses after a webhook move are an update-delivery
-  defect (`allowed_updates` without `callback_query`); the plain "set up a webhook" (N1) stays negative.
-- N1/N3/N8/N9/N10/N11/N12 stay negative even when the project is a Telegram bot.
+- **Webhooks (owner decision 2, 2026-11-25):** the Telegram side of webhooks (`setWebhook`,
+  `secret_token`, `allowed_updates`, `getWebhookInfo`, retries and update order) is in; server setup
+  (nginx, TLS, hosting) is out. So N1 "Set up a Telegram webhook" and WH1 (lost button presses after a
+  webhook move: `allowed_updates` without `callback_query`) are **positive** and route to
+  `updates-and-delivery.md`; NM8 (nginx for the webhook) and UIN1 (nginx with a certificate) stay
+  negative.
+- N3/N8/N9/N10/N11/N12 stay negative even when the project is a Telegram bot.
 - Server-side work flips **positive** when it is about a 10.3/10.4 Telegram feature:
   subscribing to and routing `widget_query` / `stopped_message_generation`, callback or widget
-  state checks, retries of sends, SDK adapters (P26, P29). A generic "set up a webhook" (N1)
-  stays negative.
+  state checks, retries of sends, SDK adapters (P26, P29).
 - Behaviour (not just activation) is graded in `behavioral-evals.md`.
 - "RTF" only means Microsoft `.rtf` here — never Telegram Rich Messages (N5 is a
   hard negative and a terminology trap).
@@ -304,7 +399,7 @@ folder only):
 ```bash
 python scripts/run_evals.py --execute --host claude --limit 10
 python scripts/run_evals.py --execute --host codex --ids PUB4,AG2,W1,L3,UN1
-python scripts/run_evals.py --execute --host claude --split validation --runs 3
+python scripts/run_evals.py --execute --host claude --split validation --runs 3 --retry-timeouts
 python scripts/run_evals.py --execute --host claude --ids P1 --dry-run   # print the command only
 ```
 
@@ -326,18 +421,30 @@ procedure.
   outside the home folder; Codex: an empty `HOME`/`USERPROFILE` with `CODEX_HOME` kept so the
   login works). The path of the `SKILL.md` that really loaded is read from the transcript and
   classified `project`, `other` or `none` (`unknown`: the skill was called but no path shows). Any
-  `other` or `unknown`, or a run that errored or timed out, sets `"valid": false` in the summary and exit code 3: do not compare such results. Codex still
+  `other` or `unknown`, or a run that errored, sets `"valid": false` in the summary and exit code 3: do not compare such results. Codex still
   reads `$CODEX_HOME/skills` (and, on Windows, `~/.agents/skills` from the OS profile), so a copy of
   the skill found there is switched off for the run with a `-c skills.config` override; the file
   itself is never touched. Without user settings the Claude child may pick a different default model
   than your interactive sessions: pass `--model` to pin it, and compare only runs with the same
   reported model.
+- **Timeouts are not misses.** A run that hits `--timeout` is not scored (`ok: null`) and is
+  counted under `timeouts` in the summary, never as a false positive or negative; a case whose runs
+  all timed out is `unscored`. Unresolved timeouts still make the results invalid. With
+  `--retry-timeouts [N]` (bare: once) a timed-out run is started again up to N times and the last
+  attempt counts (`attempts`, `timeouts` per run), so the results are valid once a retry finishes.
+- **Project context.** A case with `"fixture": "<name>"` runs in a project that holds a copy of
+  `evals/fixtures/<name>`. P8, P22, P31 and P33 name no platform and only make sense inside a bot
+  repository, so they run in `bot-project` (an aiogram coffee-order bot with mismatched Back labels, an
+  always-active Submit, naive 4096-character splitting of HTML and a profile screen); every other
+  case runs in an empty project.
 - **Route accuracy and tokens.** For activated positives the file records the first skill file read
-  after `SKILL.md` and whether it is one of the case's `routes_to` (or a `commands/<verb>.md` playbook
-  whose `refs` in `skills/telegram-bot-ui/commands/index.json` name one; without that file only
-  `routes_to` counts). A case routed to `SKILL.md` itself is routed correctly by loading it. Input
-  tokens include cache reads and writes. The summary gives route accuracy over activated positives
-  and mean tokens.
+  after `SKILL.md`, the first `commands/<verb>.md` playbook read, and whether the case is routed: the
+  first read is one of the case's `routes_to`, or the first playbook is one or its `refs` in
+  `skills/telegram-bot-ui/commands/index.json` name one (closes audit finding M5). The router's choice
+  is the first playbook, so a wrong playbook is a miss even when the right reference is read later;
+  reading `commands/index.json` or `references/floor.md` first does not count against the route. A
+  case routed to `SKILL.md` itself is routed correctly by loading it. Input tokens include cache reads
+  and writes. The summary gives route accuracy over scored activated positives and mean tokens.
 
 Manual:
 

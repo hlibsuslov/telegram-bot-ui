@@ -1,6 +1,6 @@
 # telegram-bot-ui
 
-> Designs, audits, builds and operates everything a Telegram bot shows, sends and reacts to, with offline catalogs of the whole Bot API and Telegram.WebApp. Use when a request concerns a Telegram bot's or channel's messages, wording, buttons, keyboards, menus, navigation, forms, streaming AI replies, HTML widgets, Mini Apps, Rich Messages, premium emoji, formatting errors, Stars payments, channel posts or mailings, a bot an agent uses to notify or ask for approval, a whole bot product, the bot-ui/ screen map or a Studio task, or whether the Bot API supports something, including the server side of these. Use it even for vague asks like 'make my bot nicer' or a pasted handler or payload. Do not use for other messengers, userbots, Telegram Ads, or hosting, CI, databases and auth that no Telegram feature depends on, or Microsoft .rtf files.
+> Designs, audits, builds and operates everything a Telegram bot shows, sends and reacts to, with offline catalogs of the whole Bot API and Telegram.WebApp. Use when a request concerns a Telegram bot's or channel's messages, wording, buttons, keyboards, menus, navigation, forms, streaming AI replies, HTML widgets, Mini Apps, Rich Messages, premium emoji, formatting errors, Stars payments, webhooks, channel posts or mailings, a bot an agent uses to notify or ask for approval, a whole bot product, the bot-ui/ screen map or a Studio task, or whether the Bot API supports something, including the server side of these. Use it even for vague asks like 'make my bot nicer' or a pasted handler or payload. Do not use for other messengers, userbots, Telegram Ads, server setup (nginx, TLS, hosting), or CI, databases and auth that no Telegram feature depends on, or Microsoft .rtf files.
 
 An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open other files only when the task needs them. Paths are relative to the repository root. Commands:
 
@@ -193,6 +193,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [73 — Mixed eligibility: icons in private chats, Unicode in the channel](skills/telegram-bot-ui/recipes/73-mixed-eligibility.md): Registry rows: none of its own — 9.4 owner-Premium route. Verified 2026-11-15, Bot API 10.4. Background:...
 - [74 — Recover after the owner's Premium lapses](skills/telegram-bot-ui/recipes/74-premium-lapse.md): Registry rows: none of its own. Verified 2026-11-15, Bot API 10.4. Background:...
 - [75 — Migrate from one pack to another without touching handlers](skills/telegram-bot-ui/recipes/75-migrate-pack.md): Registry rows: none of its own. Verified 2026-11-15, Bot API 10.4. Background: `references/emoji-packs.md#migrating-to-another-pack`.
+- [76 — The bot builds its own custom emoji pack and uses it](skills/telegram-bot-ui/recipes/76-own-emoji-pack.md): Registry rows: none of its own. Verified 2026-11-25 against the Bot API 10.5 catalog (snapshot 2026-11-22). Labels: **API** = catalog...
 - [80 — Lead intake with review and contact consent](skills/telegram-bot-ui/recipes/80-lead-intake.md): 1. **Request and visible result.** Collect a quote request and pass it to sales only after the user reviews it.
 - [81 — Event registration, waitlist and staff check-in](skills/telegram-bot-ui/recipes/81-event-waitlist.md): 1. **Request and visible result.** Register attendees up to capacity, then promote people from the waitlist when a place opens.
 - [82 — Personal reminders with rescheduling and cancellation](skills/telegram-bot-ui/recipes/82-personal-reminders.md): 1. **Request and visible result.** Let users save, move and cancel a reminder without an old queued job firing later.
@@ -219,12 +220,14 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 
 ## Tools
 
+- [api_notes.py](skills/telegram-bot-ui/scripts/api_notes.py): Agent notes: the curated layer over the Bot API catalog, and the short card built from both.
 - [audit_copy.py](skills/telegram-bot-ui/scripts/audit_copy.py): Audit a localized message catalog for interface consistency. Offline.
 - [audit_icons.py](skills/telegram-bot-ui/scripts/audit_icons.py): Audit a bot's icon system: one consistent custom-emoji family per bot.
 - [bot_commands.py](skills/telegram-bot-ui/scripts/bot_commands.py): Audit and plan a bot's command menu (Bot API setMyCommands lifecycle). Offline, standard library only.
 - [bot_ui_mcp.py](skills/telegram-bot-ui/scripts/bot_ui_mcp.py): bot-ui MCP server: the skill's offline tools for any MCP host (stdio, standard library only).
 - [build_widget.py](skills/telegram-bot-ui/scripts/build_widget.py): Build a Telegram HTML widget (Bot API 10.4) from a source file and the widget kit.
 - [data_view.py](skills/telegram-bot-ui/scripts/data_view.py): Render a data view as ready Telegram messages, split by the limits (references/data-views.md).
+- [emoji_contract.py](skills/telegram-bot-ui/scripts/emoji_contract.py): The telegram-bot-ui emoji library contract, skill side: the vendored schemas and a validator.
 - [emoji_packs.py](skills/telegram-bot-ui/scripts/emoji_packs.py): Premium (custom) emoji packs for a bot: resolve, suggest, verify, capture, apply, strip.
 - [example_library.py](skills/telegram-bot-ui/scripts/example_library.py): Find examples by user intent and validate the use-case catalog offline.
 - [fetch_telegram_star.py](skills/telegram-bot-ui/scripts/fetch_telegram_star.py): Download Telegram's original Stars glyph into YOUR app (not into this skill).
@@ -252,5 +255,6 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 
 - [Activation eval scenarios](evals/activation-evals.md): Definitions only; these additions have not been run against an agent.
 - [Behavioral evals (reproducible, NOT yet run as agent evals)](evals/behavioral-evals.md): Full inputs and criteria are in `evals.json`. No agent run is recorded for these cases.
+- [judge.md](evals/judge.md): You are grading one run of a coding agent against a fixed rubric. You have no tools and you need none: everything you may use is in the...
 - [Agent hosts: how each one finds and loads this skill](docs/hosts.md): This note drives the adapters in `adapters/`, the subagents in `agents/`, the plugin manifests in `.claude-plugin/` and...
 - [telegram-bot-ui: portable system prompt](adapters/portable/telegram-bot-ui.prompt.md): This is a single-file version of the telegram-bot-ui Agent Skill for agents that get only a system prompt and cannot open the skill's...

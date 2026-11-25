@@ -14,18 +14,10 @@ from bot_ui import render, rich
 from bot_ui.engine import parity_view, run_scenario
 from bot_ui.project import open_snapshot
 from bot_ui.validate import validate
+from test_bot_ui_engine import require_node
 
 FIXTURE = os.path.join(ROOT, "tests", "fixtures", "rich_project")
 CORE = os.path.join(STUDIO, "web", "src", "core")
-
-
-def node_ok() -> str | None:
-    node = shutil.which("node")
-    if not node:
-        return None
-    out = subprocess.run([node, "--version"], capture_output=True, text=True).stdout.strip().lstrip("v")
-    major, minor = (int(x) for x in out.split(".")[:2])
-    return node if (major, minor) >= (22, 18) else None
 
 
 def codes(diags) -> list[str]:
@@ -147,10 +139,9 @@ class Engine(unittest.TestCase):
         self.assertTrue(result["ok"], json.dumps(result, ensure_ascii=False)[:2000])
 
 
-@unittest.skipUnless(node_ok(), "needs Node >= 22.18 for .ts type stripping")
 class Parity(unittest.TestCase):
     def test_typescript_matches_python_on_the_rich_fixture(self):
-        out = subprocess.run([node_ok(), os.path.join(CORE, "parity-cli.ts"), FIXTURE], capture_output=True,
+        out = subprocess.run([require_node(self), os.path.join(CORE, "parity-cli.ts"), FIXTURE], capture_output=True,
                              text=True, encoding="utf-8", check=True).stdout
         ts = json.loads(out)
         snap = open_snapshot(FIXTURE)
@@ -172,7 +163,6 @@ EDGE_CASES = [
 ACTIONS = {"pay": {"type": "navigate", "label": "Pay {t}", "style": "success"}, "why": {"type": "answer", "label": "Why", "style": "link"}}
 
 
-@unittest.skipUnless(node_ok(), "needs Node >= 22.18 for .ts type stripping")
 class EdgeParity(unittest.TestCase):
     """The review's parser cases: quoted '>', single quotes, entities, case, rows; Python == TypeScript."""
 
@@ -182,7 +172,7 @@ class EdgeParity(unittest.TestCase):
                   "const out = cases.map((t) => { const [h, b, d] = compileRichButtons(t, acts, (a, id) => a.label.replace('{t}', '$1'), (id) => 's:' + id);"
                   "return {h, b, d: d.map((x) => x.code), v: richVisibleText(h)}; });"
                   "out.push({esc: richEscape(\"Bob's <b> & \\\"q\\\"\")}); process.stdout.write(JSON.stringify(out));")
-        ts = json.loads(subprocess.run([node_ok(), "--input-type=module", "-e", script, json.dumps(EDGE_CASES), json.dumps(ACTIONS)],
+        ts = json.loads(subprocess.run([require_node(self), "--input-type=module", "-e", script, json.dumps(EDGE_CASES), json.dumps(ACTIONS)],
                                        capture_output=True, text=True, encoding="utf-8", check=True).stdout)
         py = []
         for t in EDGE_CASES:
@@ -223,7 +213,6 @@ class EngineEdges(unittest.TestCase):
         self.assertTrue(any(t.get("action", {}) and t["action"].get("type") == "stale" for t in r["trace"]))
 
 
-@unittest.skipUnless(node_ok(), "needs Node >= 22.18 for .ts type stripping")
 class EngineEdgeParity(unittest.TestCase):
     """The review's engine cases through both engines: a rich screen with keyboard 'none', and a Pay that
     exists only in the other language's document. The TypeScript engine must answer like the Python one."""
@@ -256,7 +245,7 @@ class EngineEdgeParity(unittest.TestCase):
             json.dump(sc, fh)
 
     def _both(self):
-        ts = json.loads(subprocess.run([node_ok(), os.path.join(CORE, "parity-cli.ts"), self.root], capture_output=True,
+        ts = json.loads(subprocess.run([require_node(self), os.path.join(CORE, "parity-cli.ts"), self.root], capture_output=True,
                                        text=True, encoding="utf-8", check=True).stdout)
         snap = open_snapshot(self.root)
         py = {name: run_scenario(snap, sc) for name, sc in snap.scenarios.items()}
@@ -280,7 +269,6 @@ class EngineEdgeParity(unittest.TestCase):
 
 
 
-@unittest.skipUnless(node_ok(), "needs Node >= 22.18 for .ts type stripping")
 class CheckParity(unittest.TestCase):
     """The Studio lints Rich HTML with the same codes as the Python validator (offline artifact edits)."""
 
@@ -296,7 +284,7 @@ class CheckParity(unittest.TestCase):
     def test_same_codes(self):
         script = ("import {richCheck} from " + json.dumps("file:///" + os.path.join(CORE, "rich.ts").replace("\\", "/")) + ";"
                   "const c = JSON.parse(process.argv[1]); process.stdout.write(JSON.stringify(c.map((t) => richCheck(t).map((x) => x[0]))));")
-        ts = json.loads(subprocess.run([node_ok(), "--input-type=module", "-e", script, json.dumps(self.CASES)],
+        ts = json.loads(subprocess.run([require_node(self), "--input-type=module", "-e", script, json.dumps(self.CASES)],
                                        capture_output=True, text=True, encoding="utf-8", check=True).stdout)
         py = [[c for c, _, _ in rich.check(t)] for t in self.CASES]
         self.assertEqual(ts, py)

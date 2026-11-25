@@ -255,10 +255,40 @@ class RouteTest(unittest.TestCase):
             for shape in ({"audit": {"refs": ["references/a.md"]}},
                           {"commands": {"audit": {"refs": ["references/a.md"]}}},
                           [{"verb": "audit", "refs": ["references/a.md"]}],
-                          [{"name": "x", "file": "commands/audit.md", "refs": ["references/a.md"]}]):
+                          [{"name": "x", "file": "commands/audit.md", "refs": ["references/a.md"]}],
+                          {"commands": [{"verb": "x", "playbook": "commands/audit.md", "refs": ["references/a.md"]}]}):
                 with open(path, "w", encoding="utf-8") as fh:
                     json.dump(shape, fh)
                 self.assertEqual(ev.playbook_refs(path), {"commands/audit.md": ["references/a.md"]}, shape)
+
+    def test_the_real_index_maps_every_playbook_to_its_refs(self):
+        with open(ev.PLAYBOOK_INDEX, encoding="utf-8") as fh:
+            index = json.load(fh)
+        books = ev.playbook_refs()
+        self.assertEqual(set(books), {c["playbook"] for c in index["commands"]})
+        self.assertIn("references/updates-and-delivery.md", books["commands/fix.md"])
+
+    def test_the_first_playbook_read_decides_even_after_other_skill_files(self):
+        books = ev.playbook_refs()
+        for reads in (["commands/index.json", "commands/fix.md"],
+                      ["references/floor.md", "commands/fix.md", "references/streaming-and-editing.md"]):
+            self.assertEqual(ev.route_check(reads, ["references/updates-and-delivery.md"], books),
+                             (reads[0], True), reads)
+        self.assertEqual(ev.first_playbook(["commands/index.json", "references/floor.md", "commands/fix.md",
+                                            "commands/audit.md"]), "commands/fix.md")
+        self.assertIsNone(ev.first_playbook(["commands/index.json", "references/floor.md"]))
+
+    def test_a_route_may_name_the_playbook_itself(self):
+        self.assertTrue(ev.route_check(["commands/index.json", "commands/lookup.md"],
+                                       ["commands/lookup.md", "data/bot-api/"], {})[1])
+
+    def test_a_wrong_playbook_is_a_miss_even_when_the_reference_is_read_later(self):
+        books = {"commands/audit.md": ["references/auditing-existing-bots.md"]}
+        self.assertFalse(ev.route_check(["commands/audit.md", "references/tables.md"], ["references/tables.md"],
+                                        books)[1])
+        # Read straight away, without a playbook, the reference itself is the route.
+        self.assertTrue(ev.route_check(["references/tables.md", "commands/audit.md"], ["references/tables.md"],
+                                       books)[1])
 
 
 class SummaryTest(unittest.TestCase):
@@ -294,9 +324,136 @@ class SummaryTest(unittest.TestCase):
         self.assertEqual(summary["copies"]["unknown"], 1)
 
     def test_errored_runs_make_the_run_invalid(self):
-        summary = ev.summarize([self.case("skip", False, self.run_of(copy="none", error="timeout", activated=False))])
+        summary = ev.summarize([self.case("skip", False, self.run_of(copy="none", error="exit 1", activated=False))])
         self.assertFalse(summary["valid"])
         self.assertEqual(summary["errors"], 1)
+
+
+class TimeoutTest(unittest.TestCase):
+    """A timeout is not a miss: it is counted apart, and a finished retry makes the run valid."""
+
+    POSITIVE = {"id": "X1", "expect": "activate", "routes_to": ["references/tables.md"]}
+    NEGATIVE = {"id": "X2", "expect": "skip", "routes_to": []}
+
+    @staticmethod
+    def info(activated=True, finished=True, error=None, reads=("references/tables.md",)):
+        return {"activated": activated, "copy": "project" if activated else "none", "loaded": [], "reads": list(reads),
+                "tokens": None, "model": None, "finished": finished, "error": error}
+
+    def attempts(self, case, *outcomes):
+        """An attempt function that replays (info, status) pairs, one per call."""
+        queue = list(outcomes)
+        return lambda: ev.score_run(case, *queue.pop(0), {})
+
+    def test_a_timed_out_attempt_is_not_scored(self):
+        run = ev.score_run(self.NEGATIVE, self.info(activated=False, finished=False), "timeout", {})
+        self.assertEqual((run["ok"], run["timed_out"], run["error"]), (None, True, None))
+        positive = ev.score_run(self.POSITIVE, self.info(finished=False), "timeout", {})
+        self.assertIsNone(positive["route_ok"])
+
+    def test_an_error_in_the_transcript_wins_over_the_timeout(self):
+        run = ev.score_run(self.POSITIVE, self.info(finished=False, error="usage limit reached"), "timeout", {})
+        self.assertEqual((run["ok"], run["timed_out"], run["error"]), (False, False, "usage limit reached"))
+
+    def test_without_retries_a_timeout_leaves_the_case_unscored_and_the_run_invalid(self):
+        case = ev.run_case(self.NEGATIVE, 1, self.attempts(self.NEGATIVE, (self.info(False, False), "timeout")),
+                           retry_timeouts=0, log=lambda *_: None)
+        self.assertIsNone(case["ok"])
+        self.assertEqual((case["runs"][0]["timeouts"], case["runs"][0]["attempts"]), (1, 1))
+        summary = ev.summarize([case])
+        self.assertEqual((summary["false_negative"], summary["false_positive"], summary["unscored"]), (0, 0, 1))
+        self.assertEqual(summary["timeouts"], {"unresolved": 1, "retried": 0, "attempts": 1})
+        self.assertEqual(summary["errors"], 0)
+        self.assertFalse(summary["valid"])
+
+    def test_a_retry_that_finishes_replaces_the_timeout_and_the_run_is_valid(self):
+        attempt = self.attempts(self.POSITIVE, (self.info(finished=False), "timeout"), (self.info(), 0))
+        case = ev.run_case(self.POSITIVE, 1, attempt, retry_timeouts=1, log=lambda *_: None)
+        run = case["runs"][0]
+        self.assertEqual((run["ok"], run["timed_out"], run["timeouts"], run["attempts"], run["route_ok"]),
+                         (True, False, 1, 2, True))
+        self.assertTrue(case["ok"])
+        summary = ev.summarize([case])
+        self.assertEqual(summary["timeouts"], {"unresolved": 0, "retried": 1, "attempts": 1})
+        self.assertTrue(summary["valid"], summary["invalid_reasons"])
+        self.assertEqual(summary["route_accuracy"], {"correct": 1, "of": 1})
+
+    def test_an_external_copy_loaded_by_a_timed_out_attempt_keeps_the_run_invalid(self):
+        foreign = {**self.info(finished=False), "copy": "other"}
+        attempt = self.attempts(self.POSITIVE, (foreign, "timeout"), (self.info(), 0))
+        case = ev.run_case(self.POSITIVE, 1, attempt, retry_timeouts=1, log=lambda *_: None)
+        self.assertEqual((case["ok"], case["runs"][0]["copy"]), (True, "project"))    # scored from the final attempt
+        summary = ev.summarize([case])
+        self.assertFalse(summary["valid"])
+        self.assertTrue(any("outside the temp project" in r for r in summary["invalid_reasons"]),
+                        summary["invalid_reasons"])
+        unknown = {**self.info(finished=False), "copy": "unknown"}
+        case = ev.run_case(self.POSITIVE, 1, self.attempts(self.POSITIVE, (unknown, "timeout"), (self.info(), 0)),
+                           retry_timeouts=1, log=lambda *_: None)
+        self.assertFalse(ev.summarize([case])["valid"])
+
+    def test_retries_stop_at_the_limit(self):
+        attempt = self.attempts(self.NEGATIVE, *[(self.info(False, False), "timeout")] * 3)
+        case = ev.run_case(self.NEGATIVE, 1, attempt, retry_timeouts=2, log=lambda *_: None)
+        self.assertEqual((case["runs"][0]["attempts"], case["runs"][0]["timeouts"], case["ok"]), (3, 3, None))
+        self.assertEqual(ev.summarize([case])["timeouts"], {"unresolved": 1, "retried": 0, "attempts": 3})
+
+    def test_the_majority_counts_only_scored_runs(self):
+        outcomes = [(self.info(False, False), "timeout"), (self.info(False), 0), (self.info(True), 0)]
+        case = ev.run_case(self.NEGATIVE, 3, self.attempts(self.NEGATIVE, *outcomes), retry_timeouts=0,
+                           log=lambda *_: None)
+        self.assertEqual((case["correct_runs"], case["scored_runs"], case["ok"]), (1, 2, True))   # ceil(2/2) = 1
+
+    def test_the_retry_flag_defaults_to_off_and_bare_means_one(self):
+        parser = ev.build_parser()
+        self.assertEqual(parser.parse_args([]).retry_timeouts, 0)
+        self.assertEqual(parser.parse_args(["--retry-timeouts"]).retry_timeouts, 1)
+        self.assertEqual(parser.parse_args(["--retry-timeouts", "2"]).retry_timeouts, 2)
+
+
+class FixtureTest(unittest.TestCase):
+    """Cases that only make sense inside a bot project run in a copy of evals/fixtures/<name>."""
+
+    def test_the_four_context_cases_use_the_bot_fixture(self):
+        cases = {a["id"]: a for a in ev.load()["activation"]}
+        for cid in ("P8", "P22", "P31", "P33"):
+            self.assertEqual(cases[cid].get("fixture"), "bot-project", cid)
+
+    def test_validator_rejects_an_unknown_or_escaping_fixture(self):
+        for bad in ("no-such-fixture", "../evals", ""):
+            data = ev.load()
+            data["activation"][0]["fixture"] = bad
+            self.assertTrue(any("fixture" in e for e in ev.validate(data)), bad)
+
+    def test_copy_fixture_puts_the_bot_into_the_project(self):
+        with tempfile.TemporaryDirectory() as project:
+            ev.copy_fixture("bot-project", project)
+            self.assertTrue(os.path.isfile(os.path.join(project, "bot.py")))
+            self.assertFalse(os.path.exists(os.path.join(project, "__pycache__")))
+
+
+class CaseSetTest(unittest.TestCase):
+    def test_webhook_boundary(self):
+        cases = {a["id"]: a for a in ev.load()["activation"]}
+        self.assertEqual((cases["N1"]["expect"], cases["N1"]["routes_to"]),
+                         ("activate", ["references/updates-and-delivery.md"]))
+        for cid in ("NM8", "UIN1"):
+            self.assertEqual(cases[cid]["expect"], "skip", cid)
+
+    def test_every_carded_domain_has_positives_and_near_misses_in_three_languages(self):
+        cases = ev.load()["activation"]
+        for domain in ev.DOMAINS:
+            mine = [a for a in cases if a.get("domain") == domain]
+            self.assertTrue(6 <= len(mine) <= 10, (domain, len(mine)))
+            self.assertEqual({a["lang"] for a in mine}, {"en", "ru", "uk"}, domain)
+            self.assertEqual({a["expect"] for a in mine}, {"activate", "skip"}, domain)
+
+    def test_validator_reports_a_thin_domain(self):
+        data = ev.load()
+        data["activation"] = [a for a in data["activation"] if not (a.get("domain") == "forums" and a["lang"] == "uk")]
+        self.assertTrue(any("domain forums" in e for e in ev.validate(data)))
+        data["activation"][0]["domain"] = "no-such-domain"
+        self.assertTrue(any("unknown domain" in e for e in ev.validate(data)))
 
 
 class CommandAndIsolationTest(unittest.TestCase):

@@ -52,6 +52,19 @@ class Tools(unittest.TestCase):
         self.assertIn("sendRichMessage", r[1]["result"]["structuredContent"]["did_you_mean"])
         self.assertTrue(r[2]["result"]["structuredContent"]["found"])
 
+    def test_lookup_returns_the_agent_card(self):
+        import api_notes
+        import tg_api_lookup
+        cat, notes = tg_api_lookup.Api().cat, api_notes.load_notes()
+        bare = next(n for kind in ("types", "methods") for n in sorted(cat[kind]) if n not in notes)
+        r, _ = session(("telegram_api_lookup", {"symbol": "sendRichMessage"}),
+                       ("telegram_api_lookup", {"symbol": bare}))
+        noted, bare = r[1]["result"]["structuredContent"], r[2]["result"]["structuredContent"]
+        self.assertEqual(noted["note"]["since"], "10.1")
+        self.assertIn("Purpose: " + noted["note"]["purpose"], noted["card"])
+        self.assertIsNone(bare["note"])
+        self.assertIn("Note: none yet", bare["card"])
+
     def test_validate_request_applies_keyboard_reaction_and_rich_rules(self):
         r, _ = session(
             ("validate_request", {"method": "sendMessage", "params": {"chat_id": 1, "text": "x", "reply_markup": {
@@ -226,6 +239,46 @@ class AuditFixes(unittest.TestCase):
         self.assertIn("must be array", r[2]["result"]["content"][0]["text"])
         self.assertIn("switched off", r[3]["result"]["content"][0]["text"])
         self.assertIn("overwrite must be boolean", r[4]["result"]["content"][0]["text"])
+
+    def test_tag_ranking_reads_the_offline_export_and_explains_each_pack(self):
+        tmp = tempfile.mkdtemp(prefix="bot-ui-mcp-emoji-")
+        try:
+            profile = os.path.join(tmp, "profile.json")
+            with open(profile, "w", encoding="utf-8") as fh:
+                json.dump({"bot": {"archetype": "monitoring"}, "brand": {"accent": "#2F6FEB", "icon_style": "outline"}}, fh)
+            export = os.path.join(_paths.REPO, "tests", "fixtures", "emoji_library", "emoji-library.ndjson.gz")
+            r, _ = session(("emoji_rank_by_tags", {"profile": profile, "library_file": export, "top": 3}))
+        finally:
+            shutil.rmtree(tmp, ignore_errors=True)
+        out = r[1]["result"]["structuredContent"]
+        self.assertEqual(out["accents"], ["#2F6FEB"])
+        top = out["packs"][0]
+        self.assertEqual(top["name"], "CenterOfEmoji98095669")
+        self.assertEqual(set(top["description"]), {"what", "for", "not_for"})
+        self.assertIn("colour blue", top["why"])
+
+    def test_family_pick_returns_each_packs_description_and_why(self):
+        sys.path.insert(0, os.path.join(_paths.ROOT, "scripts"))
+        import bot_ui_mcp
+        import emoji_packs
+        with open(os.path.join(_paths.REPO, "tests", "fixtures", "emoji_library", "pack.json"), encoding="utf-8") as fh:
+            pack = json.load(fh)
+        with open(os.path.join(_paths.REPO, "tests", "fixtures", "emoji_library", "search.json"), encoding="utf-8") as fh:
+            search = json.load(fh)
+
+        def fetch(path):
+            doc = search if path.startswith("/api/emoji-search") else pack
+            return 200, json.dumps(doc, ensure_ascii=False).encode("utf-8")
+        real = emoji_packs.LibraryClient
+        emoji_packs.LibraryClient = lambda *a, **kw: real(fetch=fetch)
+        try:
+            out = bot_ui_mcp.call_tool("emoji_pick_family", {"needs": ["done"]})
+        finally:
+            emoji_packs.LibraryClient = real
+        self.assertEqual(out["map"]["family"], "checkified")
+        row = out["ranking"][0]
+        self.assertEqual(row["description"], pack["description"]["en"])
+        self.assertTrue(row["why"].startswith("checkified: covers 1/1 slots"))
 
     def test_read_tools_never_roll_back_a_journal(self):
         tmp = tempfile.mkdtemp(prefix="bot-ui-mcp-journal-")

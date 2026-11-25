@@ -6,8 +6,10 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
+from unittest import mock
 
 from _bot_ui import FIXTURES, STUDIO, TEMPLATE, ProjectCase
 from bot_ui.engine import Engine, new_session, parity_view, run_scenario
@@ -16,13 +18,26 @@ from bot_ui.project import open_snapshot
 CORE = os.path.join(STUDIO, "web", "src", "core")
 
 
-def node_ok() -> str | None:
-    node = shutil.which("node")
-    if not node:
-        return None
+NODE = shutil.which("node")
+MIN_NODE = (22, 18)  # built-in .ts type stripping
+
+
+def node_version(node: str) -> tuple[int, ...]:
     out = subprocess.run([node, "--version"], capture_output=True, text=True).stdout
-    ver = tuple(int(x) for x in re.findall(r"\d+", out)[:2])
-    return node if ver >= (22, 18) else None
+    return tuple(int(x) for x in re.findall(r"\d+", out)[:2])
+
+
+def require_node(case: unittest.TestCase) -> str:
+    """The Node for the TypeScript parity tests. Only a missing Node skips them; an installed
+    Node older than 22.18 fails them, so an old toolchain never passes as a silent skip.
+    (run_checks.py skips its own .ts groups on old Node by design.)"""
+    if not NODE:
+        case.skipTest("node not found")
+    ver = node_version(NODE)
+    if ver < MIN_NODE:
+        case.fail(f"Node {'.'.join(map(str, ver))} is installed but the parity tests need >= 22.18 "
+                  "for .ts type stripping: upgrade Node or remove it from PATH")
+    return NODE
 
 
 class Scenarios(unittest.TestCase):
@@ -86,10 +101,12 @@ class Scenarios(unittest.TestCase):
         self.assertEqual(ok["transition"]["to"], "checkout.payment.confirm")
 
 
-@unittest.skipUnless(node_ok(), "needs Node >= 22.18 for .ts type stripping")
 class Parity(unittest.TestCase):
+    def setUp(self):
+        self.node = require_node(self)
+
     def test_typescript_engine_matches_python_on_every_scenario(self):
-        out = subprocess.run([node_ok(), os.path.join(CORE, "parity-cli.ts"), TEMPLATE], capture_output=True,
+        out = subprocess.run([self.node, os.path.join(CORE, "parity-cli.ts"), TEMPLATE], capture_output=True,
                              text=True, encoding="utf-8", check=True).stdout
         ts = json.loads(out)
         snap = open_snapshot(TEMPLATE)
@@ -100,7 +117,7 @@ class Parity(unittest.TestCase):
 
     def test_typescript_lint_reports_the_failure_fixtures_like_python(self):
         cases = os.path.join(FIXTURES, "failures", "cases.json")
-        out = subprocess.run([node_ok(), os.path.join(CORE, "lint-cli.ts"), TEMPLATE, cases], capture_output=True,
+        out = subprocess.run([self.node, os.path.join(CORE, "lint-cli.ts"), TEMPLATE, cases], capture_output=True,
                              text=True, encoding="utf-8", check=True).stdout
         ts = json.loads(out)
         with open(cases, encoding="utf-8") as fh:
@@ -113,11 +130,32 @@ class Parity(unittest.TestCase):
         with open(cases, "w", encoding="utf-8") as fh:
             json.dump({"cases": [{"name": "none", "screenId": "entry.start", "ops": []}]}, fh)
         try:
-            out = subprocess.run([node_ok(), os.path.join(CORE, "lint-cli.ts"), TEMPLATE, cases], capture_output=True,
+            out = subprocess.run([self.node, os.path.join(CORE, "lint-cli.ts"), TEMPLATE, cases], capture_output=True,
                                  text=True, encoding="utf-8", check=True).stdout
         finally:
             os.remove(cases)
         self.assertEqual(json.loads(out)["none"], [])
+
+
+class ParityGate(unittest.TestCase):
+    """Only a missing Node skips the parity tests; an installed Node older than 22.18 fails them,
+    so an old toolchain cannot turn the Python/TypeScript parity into a silent skip."""
+
+    def run_parity(self, **patches):
+        here = sys.modules[__name__]
+        with mock.patch.multiple(here, **patches):
+            result = unittest.TestResult()
+            unittest.defaultTestLoader.loadTestsFromName("test_typescript_lint_is_clean_on_the_template", here.Parity).run(result)
+        return result
+
+    def test_old_node_fails(self):
+        result = self.run_parity(NODE="node", node_version=lambda node: (22, 17))
+        self.assertEqual((len(result.failures), len(result.skipped)), (1, 0))
+        self.assertIn("22.18", result.failures[0][1])
+
+    def test_missing_node_skips(self):
+        result = self.run_parity(NODE=None)
+        self.assertEqual((len(result.failures), len(result.errors), len(result.skipped)), (0, 0, 1))
 
 
 class Edited(ProjectCase):

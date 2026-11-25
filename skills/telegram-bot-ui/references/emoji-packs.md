@@ -18,6 +18,7 @@ bot_api: "10.4"
 - [The agent's decision path (follow it unprompted)](#the-agents-decision-path-follow-it-unprompted)
 - [Choosing a pack](#choosing-a-pack)
 - [The catalog](#the-catalog)
+- [The library contract, offline export and profile picking](#the-library-contract-offline-export-and-profile-picking)
 - [Adding your own or a purchased pack](#adding-your-own-or-a-purchased-pack)
 - [Capture path (no token, or the owner picks emoji by hand)](#capture-path-no-token-or-the-owner-picks-emoji-by-hand)
 - [Migrating to another pack](#migrating-to-another-pack)
@@ -65,7 +66,9 @@ Use it whenever you build or restyle a bot, or compose a post, and icons/emoji a
    `emoji_packs.py library facets --use support --style outline --theme both` ranks packs by
    tags; `library pick --needs … --profile <style profile>` (or `--style/--color/--mood/--topic/
    --use`) adds the brief to coverage; `--require motion:static` is a hard filter, while `--motion
-   static` and `--theme` are preferences. MCP: `emoji_rank_by_tags`, `emoji_pick_family`. Measured
+   static` and `--theme` are preferences; `library pick --profile <style profile>` without `--needs`
+   ranks whole packs for the bot and explains each in one line (next section). MCP:
+   `emoji_rank_by_tags`, `emoji_pick_family`. Measured
    accuracy (blind gold set, held-out half, 2026-11-25): topic 0.95, theme fit 0.80, interface role
    0.89, colour 0.86 hit rate; **style is the weakest tag (about 0.35 recall)**, so show the user
    the pack before relying on a style tag. Library search takes the same filters:
@@ -110,6 +113,30 @@ not mix; an uncovered slot is label-only, never a look-alike from another family
 ids, and `animation` / `adaptive` stay `null` until a resolve reads the stickers; style words
 come from the set titles. Re-check before relying on a set — authors can rename or remove
 sets, which `emoji_packs.py verify` detects.
+
+## The library contract, offline export and profile picking
+
+- **Contract.** `data/emoji/library-contract.json` is a dated copy of the component schemas of
+  the library's OpenAPI 3.1 document (`/api/emoji-openapi.json`), the tag taxonomy version the
+  skill understands and the pack threshold. `LibraryClient` (`emoji_packs.py`) checks every
+  answer (search, pack, facets) and every export line against it before reading a field: a
+  changed shape fails with `CONTRACT_MISMATCH` naming the field, a taxonomy the skill does not
+  know with `TAXONOMY_UNSUPPORTED` (facet values may be renamed between versions). An error
+  answer keeps its own `error.code` (`PACK_NOT_FOUND`, `RATE_LIMITED`, ...). `library contract`
+  shows the copy; `library contract --openapi saved.json --facets-file facets.json` refreshes it.
+- **Offline.** `--library-file emoji-library.ndjson.gz` (the site's `/emoji-library.ndjson.gz`,
+  one line per pack: tags, look, description in en/ru/uk, compatible packs, emoji ids with tag
+  codes) replaces the network for `library facets` and `library pick --profile`, with the same
+  result as online. The export has no fallback emoji and no search, so `pick --needs` (an icon
+  map with real coverage) and `library search` stay online.
+- **Profile picking.** `library pick --profile <style-profile.json> [--library-file …]` reads
+  `brand.icon_style`, `traits` and `bot.archetype` as tags and compares `brand.accent` with each
+  pack's measured colours and palette (same family, a neighbour on the colour wheel, a neutral
+  colour; an adaptive pack takes the text colour and suits any accent). It prints one line per
+  pack: coverage (emoji, meanings, interface roles), style, topic, colour and what the pack is
+  for; the JSON adds the description (what, for, not_for) in the profile's primary locale
+  (`--lang` overrides). An explicit `--color`/`--palette` replaces the accent comparison. Then
+  run `pick --needs …` online with the chosen style to get the icon map.
 
 ## Adding your own or a purchased pack
 

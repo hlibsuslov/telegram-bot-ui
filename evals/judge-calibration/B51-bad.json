@@ -1,0 +1,14 @@
+{
+  "scenario": "B51",
+  "label": "bad",
+  "note": "Only removes the keyboard; no idempotency, no answerCallbackQuery, the server does not decide.",
+  "answer": "Easy fix: remove the keyboard as soon as 'Place order' is tapped, so there is nothing left to tap twice:\n\n```python\n@dp.callback_query(F.data == \"place_order\")\nasync def place_order(call: CallbackQuery):\n    await call.message.edit_reply_markup(reply_markup=None)\n    create_order(call.from_user.id)\n```\n\nOnce the button is gone, a second tap is impossible, so no server-side changes are needed.",
+  "diff": "",
+  "tools": [
+    {"tool": "Skill", "target": "telegram-bot-ui"}
+  ],
+  "expected": {
+    "must": ["not_met", "not_met", "not_met"],
+    "critical_failures": ["present", "absent"]
+  }
+}

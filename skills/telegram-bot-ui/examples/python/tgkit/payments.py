@@ -26,6 +26,9 @@ What Telegram guarantees, and what this module adds on top:
   (`amount * 10**9 + nanostar_amount`). An outgoing transaction that carries a
   known charge id the bot never refunded is treated as a chargeback (heuristic:
   the Bot API documents the balance debit, not the transaction shape).
+* `audit_ledger` is the read-only check of the ledger against the same statement:
+  a refund Telegram made that the ledger never posted, and one charge id posted as
+  income twice. It writes and sends nothing; an admin decides what to post.
 
 Money is integers only: whole Stars plus nanostars, never floats. Standard
 library only; storage is the PaymentStore interface with a SQLite implementation.
@@ -383,6 +386,7 @@ class PaymentStore(Protocol):
     def update_subscription(self, sub_id: str, **changes: Any) -> None: ...
     def post(self, at: int, debit: str, credit: str, amount_nano: int, ref: str) -> None: ...
     def balance(self, account: str) -> int: ...
+    def ledger_rows(self, account: str) -> list[tuple[str, int, int]]: ...
     def save_run(self, report: "ReconReport", at: int) -> None: ...
 
 
@@ -600,6 +604,11 @@ class SqliteStore:
     def balance(self, account):
         return self._one("SELECT COALESCE(SUM(debit - credit), 0) FROM ledger WHERE account = ?", account)[0]
 
+    def ledger_rows(self, account):
+        """(ref, debit, credit) of every posting on `account`, oldest first."""
+        return [tuple(r) for r in self.db.execute(
+            "SELECT ref, debit, credit FROM ledger WHERE account = ? ORDER BY id", (account,))]
+
     def save_run(self, r, at):
         self.db.execute(
             "INSERT INTO reconciliation_runs (at, rail, period_from, period_to, matched, missing_here,"
@@ -636,6 +645,19 @@ class ReconReport:
                 "refunds_settled": self.refunds_settled, "next_offset": self.next_offset}
 
 
+@dataclass
+class LedgerAudit:
+    """What `audit_ledger` found. Nothing was written or sent to produce it."""
+    missing_refunds: list[str] = field(default_factory=list)   # refunded in Telegram, no refund/chargeback posted
+    double_credits: list[str] = field(default_factory=list)    # one charge id posted as income more than once
+    pages: int = 0
+    next_offset: int = 0
+
+    @property
+    def clean(self) -> bool:
+        return not (self.missing_refunds or self.double_credits)
+
+
 # ------------------------------------------------------------------ runtime
 
 @dataclass(frozen=True)
@@ -649,6 +671,11 @@ class RefundPolicy:
 
 
 Deliver = Callable[[Order, Product, Payment], None]
+
+
+# Ledger ref prefixes of the postings that reverse a charge (finalize_refund, _chargeback); any other
+# credit on bot:stars, a fee for example, never counts as a refund even when it names the same charge.
+REVERSAL_REFS = ("refund", "chargeback")
 
 
 class StarsPayments:
@@ -1201,6 +1228,38 @@ class StarsPayments:
             if order is not None and self.catalog[order.product_id].kind != "subscription":
                 self.store.move_order(order.id, S.CHARGEBACK, now)
 
+    def audit_ledger(self, *, offset: int = 0, page_size: int = 100) -> LedgerAudit:
+        """Read-only: page getStarTransactions from `offset` until a short page and compare it
+        with the ledger. An outgoing `invoice_payment` to a user carries the refunded charge id
+        (StarTransaction.id) and must have a `refund:` or `chargeback:` posting; a charge id is one
+        incoming transaction, so income posted twice under it is a double credit. Pass the
+        previous run's `next_offset` to read only the new part of the statement."""
+        if not 1 <= page_size <= 100:
+            raise ValueError("getStarTransactions takes a limit of 1-100")
+        income: dict[str, int] = {}
+        reversed_ids: set[str] = set()
+        for ref, debit, credit in self.store.ledger_rows("bot:stars"):
+            if debit:                                          # income: ref is the charge id
+                income[ref] = income.get(ref, 0) + 1
+            elif credit:                                       # only finalize_refund and _chargeback reverse a charge
+                kind, sep, charge = ref.partition(":")
+                if sep and kind in REVERSAL_REFS:
+                    reversed_ids.add(charge)
+        audit = LedgerAudit(double_credits=sorted(c for c, n in income.items() if n > 1))
+        while True:
+            page = self.tx.call("getStarTransactions", {"offset": offset, "limit": page_size})["transactions"]
+            audit.pages += 1
+            offset += len(page)
+            for tx in page:
+                partner = tx.get("receiver") or {}
+                if (partner.get("type") == "user" and partner.get("transaction_type") == "invoice_payment"
+                        and tx["id"] not in reversed_ids and tx["id"] not in audit.missing_refunds):
+                    audit.missing_refunds.append(tx["id"])
+            if len(page) < page_size:
+                break
+        audit.next_offset = offset
+        return audit
+
     # ---------------------------------------------------------------- helpers
 
     def _send(self, chat_id: int, text: str, markup: dict[str, Any] | None = None) -> None:
@@ -1217,6 +1276,6 @@ class StarsPayments:
             self._send(self.admin_chat_id, text)
 
 
-__all__ = ["ALLOWED_UPDATES", "webhook_secret_ok", "NANO", "XTR", "Offer", "Order", "OrderStatus", "Payment", "PaymentStore",
-           "Product", "RailVerdict", "ReconReport", "Refund", "RefundPolicy", "SqliteStore", "StarsPayments",
+__all__ = ["ALLOWED_UPDATES", "webhook_secret_ok", "NANO", "XTR", "LedgerAudit", "Offer", "Order", "OrderStatus", "Payment",
+           "PaymentStore", "Product", "RailVerdict", "ReconReport", "Refund", "RefundPolicy", "SqliteStore", "StarsPayments",
            "Subscription", "TEXTS", "TRANSITIONS", "check_rail", "parse_payload", "sign_payload"]

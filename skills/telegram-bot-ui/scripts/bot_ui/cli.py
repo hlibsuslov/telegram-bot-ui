@@ -327,22 +327,26 @@ def cmd_build(args) -> int:
 
 def cmd_studio(args) -> int:
     from .server import serve
-    return serve(_root(args), host="127.0.0.1", port=args.port, open_screen=args.screen, open_browser=args.open)
+    return serve(_root(args), host="127.0.0.1", port=args.port, open_screen=args.screen, open_browser=args.open,
+                 emoji_library_file=args.emoji_library_file)
 
 
 def cmd_export_snapshot(args) -> int:
     from .artifact import build_artifact, snapshot_document
+    from .emoji import EmojiError
     snap = open_snapshot(_root(args))
-    if args.format == "json":
-        doc = snapshot_document(snap, screens=args.screen, emoji_previews=args.emoji_previews,
-                                emoji_budget=args.emoji_budget)
-        with open(args.output, "w", encoding="utf-8", newline="\n") as fh:
-            json.dump(doc, fh, ensure_ascii=False, indent=2)
-    else:
-        try:
-            build_artifact(snap, args.output, screens=args.screen)
-        except RuntimeError as err:
-            return _fail(args, "ARTIFACT_BUILD", str(err), 4)
+    try:
+        if args.format == "json":
+            doc = snapshot_document(snap, screens=args.screen, emoji_previews=args.emoji_previews,
+                                    emoji_budget=args.emoji_budget, emoji_library_file=args.emoji_library_file)
+            with open(args.output, "w", encoding="utf-8", newline="\n") as fh:
+                json.dump(doc, fh, ensure_ascii=False, indent=2)
+        else:
+            build_artifact(snap, args.output, screens=args.screen, emoji_library_file=args.emoji_library_file)
+    except RuntimeError as err:
+        return _fail(args, "ARTIFACT_BUILD", str(err), 4)
+    except EmojiError as err:
+        return _fail(args, err.code, err.message, 4)
     _emit(args, {"ok": True, "output": os.path.abspath(args.output), "baseRevision": snap.revision},
           f"wrote {os.path.abspath(args.output)} (baseRevision {snap.revision})")
     return 0
@@ -502,6 +506,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--port", type=int, default=0, help="0 = a free port")
     p.add_argument("--screen", help="open this screen ID")
     p.add_argument("--open", action="store_true", help="open the browser")
+    p.add_argument("--emoji-library-file", help="the emoji library's offline export (emoji-library.ndjson.gz): the Emoji "
+                                                "page filters and picks packs from it instead of the network")
     p = add("export-snapshot", cmd_export_snapshot, "interactive artifact (HTML) or snapshot JSON for a host without a port")
     p.add_argument("--output", required=True)
     p.add_argument("--format", choices=("html", "json"), default="html")
@@ -509,6 +515,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--emoji-previews", choices=("used", "all"), default="used",
                    help="json: inline pictures of the used emoji only (default) or of every imported pack")
     p.add_argument("--emoji-budget", type=int, default=1_500_000, help="json: bytes of inlined emoji pictures")
+    p.add_argument("--emoji-library-file", help="embed the emoji library's catalog from this offline export "
+                                                "(default: the one the Studio last loaded, if any)")
     p = add("emoji", cmd_emoji, "premium emoji library: import a pack by link, map icons to meanings, the agent's brief")
     p.add_argument("action", choices=("import", "import-used", "list", "icon", "remove", "brief"),
                    help="import-used: import every pack the bot's screens and code already use")

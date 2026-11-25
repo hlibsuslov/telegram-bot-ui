@@ -879,8 +879,10 @@ def brief_markdown(b: dict) -> str:
     return "\n".join(out) + "\n"
 
 
-def client_document(root: str, snap: Snapshot) -> dict:
-    """What the Studio client needs: the library, cached previews, usage and the slot vocabulary."""
+def client_document(root: str, snap: Snapshot, library_file: str | None = None) -> dict:
+    """What the Studio client needs: the library, cached previews, usage, the slot vocabulary, and the emoji
+    library's catalog and pick for the screens when they were loaded (emoji_catalog)."""
+    from . import emoji_catalog
     try:
         lib = load_library(root)
         error = None
@@ -894,20 +896,30 @@ def client_document(root: str, snap: Snapshot) -> dict:
     return {"library": lib, "previews": previews(root), "usage": usage(snap), "vocabulary": vocabulary(),
             "suggestions": suggest_icons(snap, lib) if not error else [], "tokenEnv": env if token else None,
             "missing": missing_ids(snap, lib) if not error else [],
-            "resolver": _Resolver(base).host if base else None, "error": error}
+            "resolver": _Resolver(base).host if base else None, "error": error,
+            "libraryFile": bool(library_file), **emoji_catalog.client_fields(root, snap, lib)}
 
 
-def snapshot_block(snap: Snapshot, budget: int = 1_500_000, previews_of: str = "used") -> dict | None:
+def snapshot_block(snap: Snapshot, budget: int = 1_500_000, previews_of: str = "used",
+                   library_file: str | None = None) -> dict | None:
     """The library for the offline artifact: ids, icons, usage, and pictures inlined as data: URLs
     (images only, within `budget` bytes). previews_of="used": the bot's icons and the emoji its
-    screens use; "all": every emoji of every imported pack (for a public demo of the packs)."""
+    screens use; "all": every emoji of every imported pack (for a public demo of the packs).
+    With the emoji library's catalog (cached by the Studio, or `library_file`, the offline export) the
+    block also carries it and a pick for the screens, so the page filters and picks without network."""
     import base64
-    if not snap.root or not has_library(snap.root):
+    from . import emoji_catalog
+    if not snap.root:
         return None
     try:
-        lib = load_library(snap.root)
+        lib = load_library(snap.root) if has_library(snap.root) else None
     except EmojiError:
         return None
+    extra = emoji_catalog.snapshot_fields(snap, lib or empty_library(), library_file)
+    if lib is None:
+        if not extra:
+            return None
+        lib = empty_library()
     used = usage(snap)
     files = previews(snap.root)
     wanted = list(dict.fromkeys([i.get("id") for i in (lib.get("icons") or {}).values()] + [u["id"] for u in used]))
@@ -927,4 +939,5 @@ def snapshot_block(snap: Snapshot, budget: int = 1_500_000, previews_of: str = "
             break
         budget -= len(data)
         inlined[cid] = f"data:{mime[ext]};base64,{data}"
-    return {"library": lib, "previews": inlined, "usage": used, "vocabulary": [], "suggestions": [], "tokenEnv": None}
+    return {"library": lib, "previews": inlined, "usage": used, "vocabulary": [], "suggestions": [], "tokenEnv": None,
+            **extra}

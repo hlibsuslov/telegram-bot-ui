@@ -26,6 +26,15 @@ Several new tasks depend on tools other workstreams add (`scripts/tg_post.py`, t
 catalog, the agent bridge); grade them only against a build that contains those tools.
 <!-- CONFIRM: tool names and the first real run before publishing results -->
 
+Status 2026-11-25: `python scripts/run_behavioral.py --execute --host claude|codex` runs the tasks
+(each in a fresh temp copy of `evals/fixtures/<fixture>`, default `bot-project`) and grades them
+with an LLM judge: the fixed prompt `evals/judge.md` (versioned; version and hash go into every
+result), called through the same CLI without tools. Every task in `evals.json` names its `role`
+(designer, builder, reviewer, publisher, widget-builder); results aggregate per role and per task.
+Release gate: 0 critical failures and >= 85 % of the scored `must` items met; malformed judge
+output is a judge error, never a pass. `--calibrate` checks the judge against the hand-labelled
+answers in `evals/judge-calibration/` (target agreement >= 0.8). No graded agent run is recorded yet.
+
 Prompt an agent with the role, not the method: for hosts with subagents use
 `telegram-publisher`, `telegram-bot-builder`, `telegram-widget-builder` or
 `telegram-bot-reviewer` (Claude Code `agents/claude/`, Codex `agents/codex/`); elsewhere

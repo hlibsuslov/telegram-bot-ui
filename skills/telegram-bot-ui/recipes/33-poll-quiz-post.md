@@ -7,7 +7,8 @@ Registry rows: none (channel publishing combines existing methods; see `referenc
 3. **Requirements.** Bot API ≥ 10.0 for the channel-only fields. Production. Channel (polls can't be sent to channel DM chats). Question 1–300, 1–12 options of 1–100 chars, explanation 0–200 with ≤ 2 line feeds, description 0–1024, `open_period` 5–2628000 s xor `close_date`.
 4. **Payload.** `examples/payloads/r33-poll-quiz-post.json`. Key part:
    ```json
-   {"chat_id": -1001500000001, "question": "Which district fixed potholes fastest in Q3?", "options": [{"text": "Old Town"}, {"text": "Riverside"}],
+   {"chat_id": -1001500000001, "question": "Which district fixed potholes fastest in Q3?",
+    "options": [{"text": "Old Town"}, {"text": "Riverside"}, {"text": "Harbour"}, {"text": "Northgate"}],
     "type": "quiz", "correct_option_ids": [1], "explanation": "Riverside: median 3.1 days…",
     "members_only": true, "country_codes": ["UA", "PL", "FT"], "open_period": 86400}
    ```

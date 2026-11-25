@@ -60,6 +60,17 @@ jobs:
       - name: All offline checks
         run: python scripts/run_checks.py
 
+      # The API coverage floor (skills/telegram-bot-ui/data/bot-api/coverage-floor.json) may only rise:
+      # a pull request cannot lower it for symbols that already existed on the base branch.
+      - name: API coverage floor not lowered against the base branch
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags --depth 1 origin "refs/heads/$BASE_REF"
+          python scripts/api_coverage.py --check --against FETCH_HEAD
+
       - name: Installer dry run against a temporary folder
         shell: bash
         run: |

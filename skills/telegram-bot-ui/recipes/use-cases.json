@@ -956,11 +956,13 @@
       "id": "stickers",
       "title": "Sticker, emoji and media creation tools",
       "intent": [
-        "sticker emoji media creation стикер эмодзи пак медиа"
+        "sticker emoji media creation стикер эмодзи пак медиа",
+        "own custom emoji pack create sticker set createNewStickerSet свой пак эмодзи создать набор"
       ],
       "recipes": [
         "R71",
         "R75",
+        "R76",
         "R83"
       ],
       "contexts": [
@@ -970,7 +972,7 @@
       "coverage": "composition",
       "priority": "P2",
       "priority_reason": "Pack styling differs from creating user media.",
-      "gap": "Media pipeline, ownership, pack management and moderation.",
+      "gap": "Media pipeline for user uploads, ownership across users and moderation; a bot's own custom emoji pack is R76.",
       "sources": [
         "features",
         "api"

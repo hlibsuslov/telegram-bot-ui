@@ -87,8 +87,9 @@ class WireShape(unittest.TestCase):
         b.pay.offer(GROUP, "credits50")
         b.pay.request_refund("stx1", by=ADMIN, reason="duplicate purchase")
         b.tap(ADMIN, "rf:ok:1")
-        b.t.script("getStarTransactions", {"transactions": []})
+        b.t.script("getStarTransactions", {"transactions": []}, {"transactions": []})
         b.pay.reconcile(since=T0 - 10, until=T0 + 10)
+        b.pay.audit_ledger()
         for method, params in b.t.calls:
             with self.subTest(method=method):
                 rep = V.check_request(method, params)
@@ -487,6 +488,92 @@ class Reconciliation(unittest.TestCase):
         self.assertEqual(b.texts(ADMIN), [])
 
 
+class LedgerAudits(unittest.TestCase):
+    """audit_ledger is read-only: it pages the statement, compares it with the ledger, writes nothing."""
+
+    @staticmethod
+    def snapshot(b):
+        db = b.store.db
+        return (db.execute("SELECT * FROM ledger ORDER BY id").fetchall(),
+                db.execute("SELECT * FROM refunds ORDER BY id").fetchall(),
+                db.execute("SELECT id, status FROM orders ORDER BY id").fetchall(),
+                db.execute("SELECT COUNT(*) FROM reconciliation_runs").fetchone()[0])
+
+    def test_refund_the_ledger_lacks_is_found_and_nothing_is_written(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxR")
+        calls, before = len(b.t.calls), self.snapshot(b)
+        b.t.script("getStarTransactions", {"transactions": [tx("stxR", 250, T0, **user_in()),
+                                                            tx("stxR", 250, T0 + 5, **user_out())]})
+        a = b.pay.audit_ledger()
+        self.assertEqual((a.missing_refunds, a.double_credits), (["stxR"], []))
+        self.assertFalse(a.clean)
+        self.assertEqual([m for m, _ in b.t.calls[calls:]], ["getStarTransactions"])
+        self.assertEqual(self.snapshot(b), before)
+        self.assertTrue(b.pay.has_access(OLENA, "credits50"))
+
+    def test_posted_refunds_and_chargebacks_are_not_missing(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxA")
+        b.buy(PETRO, charge="stxB")
+        refund = b.pay.request_refund("stxA", by=ADMIN, reason="asked")
+        b.tap(ADMIN, f"rf:ok:{refund.id}")                         # posts refund:stxA
+        statement = {"transactions": [tx("stxA", 250, T0, **user_in()), tx("stxB", 250, T0, **user_in(PETRO)),
+                                      tx("stxA", 250, T0 + 1, **user_out()), tx("stxB", 250, T0 + 2, **user_out(PETRO))]}
+        b.t.script("getStarTransactions", statement, statement)
+        b.pay.reconcile(since=T0, until=T0 + 10)                   # posts chargeback:stxB
+        a = b.pay.audit_ledger()
+        self.assertTrue(a.clean, (a.missing_refunds, a.double_credits))
+
+    def test_one_charge_credited_twice(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxD")
+        b.buy(PETRO, charge="stxE")
+        b.store.post(T0 + 9, "bot:stars", f"user:{OLENA}", 250 * NANO, "stxD")   # a second writer posted it again
+        b.t.script("getStarTransactions", {"transactions": [tx("stxD", 250, T0, **user_in()),
+                                                            tx("stxE", 250, T0, **user_in(PETRO))]})
+        a = b.pay.audit_ledger()
+        self.assertEqual((a.double_credits, a.missing_refunds), (["stxD"], []))
+        self.assertFalse(a.clean)
+
+    def test_pages_until_a_short_page_and_finds_a_refund_on_the_last_one(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxP1")
+        b.buy(PETRO, charge="stxP2")
+        statement = [
+            tx("stxP1", 250, T0, **user_in()),
+            tx("stxP2", 250, T0 + 1, **user_in(PETRO)),
+            tx("wd1", 1000, T0 + 2, receiver={"type": "fragment", "withdrawal_state": {"type": "pending"}}),
+            tx("gift1", 15, T0 + 3, receiver={"type": "user", "transaction_type": "gift_purchase",
+                                              "user": {"id": PETRO, "is_bot": False, "first_name": "P"}}),
+            tx("stxP2", 250, T0 + 4, **user_out(PETRO)),            # refunded in Telegram, not posted here
+        ]
+        b.t.script("getStarTransactions", *[{"transactions": statement[i:i + 2]} for i in range(0, 5, 2)])
+        a = b.pay.audit_ledger(page_size=2)
+        pages = b.t.params_of("getStarTransactions")
+        self.assertEqual([(p["offset"], p["limit"]) for p in pages], [(0, 2), (2, 2), (4, 2)])
+        self.assertEqual((a.pages, a.next_offset), (3, 5))
+        self.assertEqual(a.missing_refunds, ["stxP2"])             # withdrawals and gifts are not refunds
+        b.t.script("getStarTransactions", {"transactions": []})
+        again = b.pay.audit_ledger(offset=a.next_offset)           # the next run starts where this one stopped
+        self.assertEqual(b.t.params_of("getStarTransactions")[-1], {"offset": 5, "limit": 100})
+        self.assertEqual((again.pages, again.next_offset, again.missing_refunds), (1, 5, []))
+
+    def test_a_fee_credit_on_the_same_charge_does_not_hide_a_missing_refund(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxF")
+        b.store.post(T0 + 2, "fees", "bot:stars", 10 * NANO, "fee:stxF")      # not a reversal of stxF
+        b.t.script("getStarTransactions", {"transactions": [tx("stxF", 250, T0, **user_in()),
+                                                            tx("stxF", 250, T0 + 5, **user_out())]})
+        a = b.pay.audit_ledger()
+        self.assertEqual(a.missing_refunds, ["stxF"])
+        self.assertFalse(a.clean)
+
+    def test_page_size_is_the_api_range(self):
+        with self.assertRaises(ValueError):
+            Bot().pay.audit_ledger(page_size=101)
+
+
 class ReviewRegressions(unittest.TestCase):
     """Cases from the security reviews of the first version."""
 
@@ -644,6 +731,58 @@ class ReviewRegressions(unittest.TestCase):
         self.assertFalse(webhook_secret_ok({"X-Telegram-Bot-Api-Secret-Token": "guess"}, "s3cret"))
         self.assertFalse(webhook_secret_ok({}, "s3cret"))
         self.assertFalse(webhook_secret_ok({"X-Telegram-Bot-Api-Secret-Token": ""}, ""))
+
+
+class RecipePreCheckout(unittest.TestCase):
+    """examples/python/recipes/api_payments.py: the pre-checkout answer checks the server-side order,
+    not only the total, so a matching amount with a foreign payload, payer, currency or shipping option is declined."""
+
+    def setUp(self):
+        import api_payments
+        self.r = api_payments
+        self.options = self.r.SHIPPING["UA"]
+        self.order = self.r.book_order(self.options)
+
+    def answer(self, query):
+        t = FakeTransport()
+        ok = self.r.answer_pre_checkout_query(t, {"update_id": 1, "pre_checkout_query": query}, self.order)
+        return ok, t.params_of("answerPreCheckoutQuery")[0]
+
+    def test_matching_order_is_approved(self):
+        ok, sent = self.answer(self.r.book_pre_checkout(self.options)["pre_checkout_query"])
+        self.assertTrue(ok)
+        self.assertTrue(sent["ok"])
+
+    def test_same_total_with_a_mismatched_field_is_declined(self):
+        good = self.r.book_pre_checkout(self.options)["pre_checkout_query"]
+        cases = {
+            "invoice_payload": {**good, "invoice_payload": "ord:000000000000.0000000000000000"},
+            "payer": {**good, "from": {**good["from"], "id": PETRO}},
+            "currency": {**good, "currency": "USD"},
+            "unknown shipping option": {**good, "shipping_option_id": "free"},
+            "missing shipping option": {k: v for k, v in good.items() if k != "shipping_option_id"},
+        }
+        for name, query in cases.items():
+            with self.subTest(name):
+                self.assertEqual(query["total_amount"], good["total_amount"])
+                ok, sent = self.answer(query)
+                self.assertFalse(ok)
+                self.assertFalse(sent["ok"])
+                self.assertTrue(sent["error_message"])
+
+    def test_total_follows_the_chosen_shipping_option(self):
+        good = self.r.book_pre_checkout(self.options)["pre_checkout_query"]
+        courier = {**good, "shipping_option_id": "courier"}                   # nova's total, courier's option
+        self.assertFalse(self.answer(courier)[0])
+        courier["total_amount"] = self.r._total(self.r.BOOK_PRICES) + 900
+        self.assertTrue(self.answer(courier)[0])
+
+    def test_stars_order_without_shipping(self):
+        t = FakeTransport()
+        self.assertTrue(self.r.answer_pre_checkout_query(t, self.r.PRO_PRE_CHECKOUT, self.r.PRO_ORDER))
+        shipped = {"update_id": 2, "pre_checkout_query": {**self.r.PRO_PRE_CHECKOUT["pre_checkout_query"],
+                                                          "shipping_option_id": "nova"}}
+        self.assertFalse(self.r.answer_pre_checkout_query(t, shipped, self.r.PRO_ORDER))
 
 
 if __name__ == "__main__":

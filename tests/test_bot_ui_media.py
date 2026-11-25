@@ -15,7 +15,7 @@ from bot_ui.engine import Engine, _edit_ok, new_session, parity_view, run_scenar
 from bot_ui.importer import import_bot
 from bot_ui.project import open_snapshot
 from bot_ui.skill import load
-from test_bot_ui_engine import node_ok
+from test_bot_ui_engine import require_node
 
 try:
     import aiogram  # noqa: F401
@@ -157,9 +157,8 @@ class ImportedShop(unittest.TestCase):
         self.assertEqual([m for m, _ in calls], ["sendVideoNote", "sendAudio"])
         self.assertEqual([c for c in check(calls) if not c["ok"]], [])
 
-    @unittest.skipUnless(node_ok(), "needs Node >= 22.18")
     def test_typescript_parity_on_the_imported_bot(self):
-        out = subprocess.run([node_ok(), os.path.join(STUDIO, "web", "src", "core", "parity-cli.ts"), self.root],
+        out = subprocess.run([require_node(self), os.path.join(STUDIO, "web", "src", "core", "parity-cli.ts"), self.root],
                              capture_output=True, text=True, encoding="utf-8", check=True).stdout
         ts = json.loads(out)
         for name, sc in self.snap.scenarios.items():

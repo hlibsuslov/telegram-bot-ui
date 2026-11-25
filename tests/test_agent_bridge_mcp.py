@@ -54,6 +54,60 @@ class StdioServer(unittest.TestCase):
         self.assertEqual(by_id[7]["error"]["code"], -32601, "2026-07-28 probe -> fall back to initialize")
         self.assertNotIn(TOKEN, raw)
 
+    def test_arguments_outside_the_schema_are_refused(self):
+        """L5: the declared inputSchema is enforced before a tool runs, so a model cannot block
+        telegram_ask past its maximum, pass oversized text or smuggle extra keys."""
+        bad = [
+            ("telegram_ask", {"question": "Branch?", "timeout_seconds": 10 ** 9}, "timeout_seconds"),
+            ("telegram_ask", {"question": "Branch?", "timeout_seconds": 5}, "timeout_seconds"),
+            ("telegram_ask", {"question": "Branch?", "timeout_seconds": float("nan")}, "timeout_seconds"),
+            ("telegram_ask", {"question": "x" * 3001}, "question"),
+            ("telegram_ask", {"question": "Pick", "choices": [str(n) for n in range(9)]}, "choices"),
+            ("telegram_ask", {"question": "Pick", "choices": ["x" * 65]}, "choices"),
+            ("telegram_ask", {}, "question"),
+            ("telegram_notify", {"text": ""}, "text"),
+            ("telegram_notify", {"text": 123}, "text"),
+            ("telegram_notify", {"text": "hi", "silent": "false"}, "silent"),
+            ("telegram_notify", {"text": "hi", "chat_id": 222222222}, "chat_id"),
+            ("telegram_progress", {"key": "../etc"}, "key"),
+            ("telegram_progress", {"key": "job", "state": "exploded"}, "state"),
+            ("telegram_request_approval", {"summary": "Deploy", "ttl_seconds": 10 ** 6}, "ttl_seconds"),
+            ("telegram_inbox", {"max_events": True}, "max_events"),
+            ("telegram_inbox", {"max_events": 51}, "max_events"),
+        ]
+        calls = [req(i, "tools/call", {"name": name, "arguments": args}) for i, (name, args, _) in enumerate(bad, 1)]
+        out, _ = session(*calls, req(99, "tools/call", {"name": "telegram_notify", "arguments": "hi"}))
+        by_id = {m["id"]: m for m in out}
+        for i, (name, args, key) in enumerate(bad, 1):
+            result = by_id[i]["result"]
+            self.assertTrue(result["isError"], (name, args))
+            self.assertIn(key, result["content"][0]["text"], (name, args))
+        self.assertTrue(by_id[99]["result"]["isError"], "arguments must be an object")
+
+    def test_null_optional_arguments_count_as_absent(self):
+        """server_sdk.py passes None for every optional argument the model left out."""
+        sys.path.insert(0, os.path.dirname(SERVER))
+        import tools
+        tools.check_arguments("telegram_progress", {"key": "job", "title": None, "stages": None,
+                                                    "stage": None, "note": None, "state": "running"})
+        with self.assertRaises(ValueError):
+            tools.check_arguments("telegram_progress", {"key": None})
+
+    def test_null_optional_arguments_reach_the_tool_as_defaults(self):
+        """An explicit null passes the schema check as absent, so the tool must get the default,
+        never float(None) or int(None) and an internal error."""
+        calls = [("telegram_ask", {"question": "Branch?", "default": "main", "timeout_seconds": None}),
+                 ("telegram_request_approval", {"summary": "Deploy", "ttl_seconds": None, "destructive": None}),
+                 ("telegram_inbox", {"max_events": None}),
+                 ("telegram_progress", {"key": "job", "state": None, "stage": None})]
+        out, raw = session(*[req(i, "tools/call", {"name": n, "arguments": a}) for i, (n, a) in enumerate(calls, 1)])
+        by_id = {m["id"]: m for m in out}
+        for i, (name, _) in enumerate(calls, 1):
+            self.assertIn("result", by_id[i], (name, by_id[i], raw[-1500:]))
+            self.assertFalse(by_id[i]["result"]["isError"], (name, by_id[i]["result"]))
+        ask = by_id[1]["result"]["structuredContent"]
+        self.assertEqual((ask["status"], ask["answer"]), ("timeout", "main"))
+
     def test_unknown_protocol_version_gets_ours(self):
         out, _ = session(req(1, "initialize", {"protocolVersion": "1999-01-01", "capabilities": {}}))
         self.assertEqual(out[0]["result"]["protocolVersion"], "2025-11-25")

@@ -30,6 +30,8 @@ full changelog. Three stdlib tools work on it offline. Snapshot: **Bot API 10.5
 | `data/bot-api/catalog.json` | `meta` (version, release date, fetch date, page hashes, counts) + `methods` + `types`. Each parameter/field: `name`, `type` (as printed), `types` (parsed alternatives with array depth), `required`, `description` (official text), `const` for union discriminators, `conditional` when the text says "required if/unless". Methods: `returns` (extracted from prose — a hint), `section`, `url` (anchor) |
 | `data/bot-api/changelog.json` | every release: `version`, `date`, `url`, `groups` of items, each item with the `symbols` it links to |
 | `data/bot-api/diff.json` | what the last sync changed: added / removed methods and types, per-symbol added/removed/modified fields (type, required, description) |
+| `data/bot-api/agent-notes/<domain>.json` | curated agent notes (not generated): purpose, when to use and not, pitfalls with a source label, related symbols, rights, chat types, `since`, reference sections, a checked example. Shape and rules: `scripts/api_notes.py`; a sync sets `"review": true` on notes whose symbol changed |
+| `data/bot-api/coverage-floor.json` | which methods, types and WebApp members are not yet explained, shown or carded (maintainers' check, not for answers) |
 
 Descriptions are Telegram's own text; treat `returns` as a convenience and the
 description as authoritative.
@@ -37,6 +39,7 @@ description as authoritative.
 ## Look something up — `scripts/tg_api_lookup.py`
 
 ```bash
+py -3 scripts/tg_api_lookup.py card sendRichMessage       # agent card (<= 1.5 KB): note + example
 py -3 scripts/tg_api_lookup.py show sendPaidMedia          # full card: params, types, returns, URL
 py -3 scripts/tg_api_lookup.py search refund                # names, fields and descriptions
 py -3 scripts/tg_api_lookup.py accepts reply_markup         # every method taking a parameter
@@ -47,6 +50,13 @@ py -3 scripts/tg_api_lookup.py version 10.4                 # what a release cha
 py -3 scripts/tg_api_lookup.py since allowed_updates        # changelog history of a symbol or field
 py -3 scripts/tg_api_lookup.py versions | diff | meta
 ```
+
+`card` is the short answer at the moment of a call: purpose, required and conditional
+parameters, when to use it and when not, pitfalls labelled API / Official / Observed /
+Heuristic / Unverified / Third-party, related symbols, rights, chat types, the reference
+section and a checked example. A symbol without a note gets a catalog-only card that says so;
+then read `show`. A card marked REVIEW was written before the catalog entry last changed:
+the catalog wins.
 
 `--json` on any command gives machine-readable output. Typical questions:
 "does `sendMediaGroup` take `reply_markup`?" (`show`), "which methods accept
@@ -82,15 +92,19 @@ messages), `scripts/validate_widget.py` (widgets) — the tool prints which appl
 `py -3 scripts/tgui.py mcp` (or the script itself) is a stdio MCP server, standard library
 only: `claude mcp add --transport stdio telegram-bot-ui -- py -3 <skill>/scripts/bot_ui_mcp.py`
 (Codex: an `[mcp_servers.telegram-bot-ui]` entry with the same command). Tools:
-`telegram_api_lookup` (with "did you mean" for a near miss, never an invented name),
+`telegram_api_lookup` (with "did you mean" for a near miss, never an invented name, and the
+agent card when there is a note),
 `telegram_api_search`, `webapp_lookup`, `validate_request` (catalog + keyboard rules +
 Rich HTML buttons), `check_rich_html`, `knowledge_search` (which reference sections to read),
 `map_validate`, `map_render`, `map_simulate` (read-only: they never roll back a pending write),
 `map_snapshot` (a single-file Studio page to screenshot; it refuses to replace a file unless
 `overwrite: true`), `commands_audit`, `commands_plan`, and three that use the network:
 `emoji_library_search`, `emoji_pick_family` (slot coverage, then the brief's tags) and
-`emoji_rank_by_tags` (packs by style, colour, mood, topic, bot category; only search words, tag
-values and pack names are sent; `BOT_UI_EMOJI_RESOLVER=off` turns them off). Arguments are
+`emoji_rank_by_tags` (packs by style, colour, mood, topic, bot category, or a style `profile`
+whose accent is compared with pack colours; `library_file` reads the offline export instead;
+only search words, tag values and pack names are sent; `BOT_UI_EMOJI_RESOLVER=off` turns them
+off). Both pick tools return each pack's description and a one-line `why`; every library
+answer is checked against the vendored contract (`references/emoji-packs.md`). Arguments are
 checked against each tool's input schema.
 Nothing sends to Telegram, no tool reads a token. Tested in `tests/test_bot_ui_mcp.py`.
 

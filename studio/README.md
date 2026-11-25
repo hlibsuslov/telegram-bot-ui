@@ -84,7 +84,7 @@ set `MSYS_NO_PATHCONV=1` so `/message/text/ru` is not turned into a Windows path
 ## Adapters
 
 `adapters/aiogram_adapter.py` (aiogram 3.31.0) and `adapters/raw_adapter.py` (tgkit, no SDK)
-share `skills/telegram-bot-ui/scripts/bot_ui/runtime.py`: update -> engine event -> effects -> Bot API requests through an
+share `adapters/runtime.py`: update -> engine event -> effects -> Bot API requests through an
 injected transport. The project is re-read when its revision changes, so a Studio save
 reaches the next update without a restart. Replay without network:
 
@@ -109,6 +109,7 @@ keyboard whose action was removed is answered as stale.
 | Regular HTML / plain | edit, render | edit, safe preview | edit, safe preview | sendMessage / editMessageText |
 | MarkdownV2 | render | read-only | read-only | render |
 | Rich Messages, entities, media | kept, read-only | read-only with reason | read-only | not rendered (fallback text) |
+| Rich Messages as JSON blocks (`InputRichMessage.blocks`) | not supported: no screen format; send blocks from code (`tgkit.rich`) | not supported | not supported | - |
 | Streaming answer with Stop | not in v1 | not in v1 | not in v1 | not in v1 |
 | Premium emoji packs and icon map | emoji | Emoji page: import by link, pickers in text and buttons, real pictures in previews and the simulator | read-only, pictures inlined | - |
 | Import an existing bot | inventory (aiogram, read-only) | - | - | - |

@@ -23,4 +23,32 @@ failure invariant justifies a new recipe; a new industry name or button color do
    python scripts/run_checks.py
    ```
 
+   `run_checks.py` includes `scripts/api_coverage.py --check`: coverage of Bot API methods, types and
+   `Telegram.WebApp` members may only grow. When your change covers something new, the check asks you to
+   run `python scripts/api_coverage.py --update-floor` and commit the floor; `--report` lists what is missing.
+
+## Agent notes and per-method examples
+
+The card `tgui.py lookup card <Symbol>` merges the catalog with a curated note. Notes live in
+`skills/telegram-bot-ui/data/bot-api/agent-notes/<domain>.json`, one file per domain; the shape and every
+rule are in `skills/telegram-bot-ui/scripts/api_notes.py`.
+
+- **Facts come from the catalog or Telegram.** Check each one with `tgui.py lookup show <Symbol>` (the
+  official text) or core.telegram.org. Never write a parameter, limit or behaviour neither confirms.
+- **Every pitfall has a source label:** `API` (catalog text; `cite` quotes the symbol or field),
+  `Official` (another core.telegram.org page; `cite` is the URL), `Observed` (client and date),
+  `Heuristic` (the skill's own design advice), `Unverified`, `Third-party` (name the library).
+- **Short:** `purpose` is one line; two or three `use_when` / `avoid_when` items; the pitfalls an agent
+  actually hits. A card over 1.5 KB fails the check.
+- **Types are named, not described:** list the types an agent meets with a method in its `related`. A
+  union in `related` also covers its members. Give a type its own note only when it needs a pitfall.
+- **`refs`** point at an existing heading (`references/<file>.md#anchor`); **`example`** only at a file
+  that really makes the call.
+- **Examples are code.** Per-method requests go in `examples/python/recipes/api_<domain>.py` (one
+  function per method, synthetic ids, `STEP_CONTEXT` for calls limited by chat type or rights; destructive
+  calls are recorded requests, never sent), written to `examples/payloads/api-<domain>.json` by
+  `python skills/telegram-bot-ui/examples/python/export_payloads.py --only api-<domain>`.
+- Then: `python skills/telegram-bot-ui/scripts/api_notes.py check`, `python scripts/api_coverage.py --update-floor`,
+  `python scripts/run_checks.py`.
+
 For R80–R87 transcripts: `python skills/telegram-bot-ui/examples/python/recipes/r80_87_product_journeys.py --write-payload`.

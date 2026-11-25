@@ -4,21 +4,23 @@
 
   python scripts/run_evals.py                      # validate evals/evals.json (offline)
   python scripts/run_evals.py --execute --host claude [--ids P1,PUB4] [--limit 10] [--model M]
-  python scripts/run_evals.py --execute --host codex --runs 3 --split validation
+  python scripts/run_evals.py --execute --host codex --runs 3 --split validation --retry-timeouts
   python scripts/run_evals.py --execute --host codex --dry-run   # print the commands only
 
 Validation checks structure, unique ids, coverage (every capability area has English,
-Russian and no-method-named positives; negatives exist in both languages; the required
+Russian and no-method-named positives; negatives exist in both languages; every Bot API domain
+in DOMAINS has 6-10 cases in en, ru and uk with positives and near misses; the required
 behavioural topics and transfer tasks are present), that every `routes_to` path exists in
-the skill folder, and that every id also appears in the human-readable tables in evals/*.md.
+the skill folder, that a `fixture` names a folder in evals/fixtures, and that every id also
+appears in the human-readable tables in evals/*.md.
 
 Execution installs the skill into a throwaway project folder (never the user profile),
 runs each activation prompt through the host's non-interactive mode with write tools
 disabled, and records whether the agent loaded the skill and WHICH copy it loaded. It
 spends the account's usage and needs the CLI to be logged in. Results go to
 evals/results/<date>T<HHMMSS>-<host>-<runid>.json and are never merged into evals.json
-automatically. Behavioural tasks are graded by a person (see evals/behavioral-evals.md);
-this script does not grade them.
+automatically. Behavioural tasks run and are graded by scripts/run_behavioral.py (an LLM judge
+with the fixed prompt evals/judge.md); this script only validates them (role, fixture, rubric).
 
 Isolation, so a user-level copy of the skill cannot answer for the project copy:
   claude  --setting-sources project,local drops the user settings, user skills and user
@@ -32,15 +34,23 @@ Isolation, so a user-level copy of the skill cannot answer for the project copy:
           never touched).
 Whatever the isolation misses is caught by the loaded-copy check: the path of the
 SKILL.md that was really loaded is classified `project`, `other` or `none` (`unknown` when
-the skill was called but no path shows); any `other` or `unknown`, or a run that errored or
-timed out, makes the summary `"valid": false` and the exit code 3.
+the skill was called but no path shows); any `other` or `unknown`, or a run that errored,
+makes the summary `"valid": false` and the exit code 3.
 
-Per activated positive the runner also records the first skill file read after SKILL.md
-and whether it is one of the case's `routes_to` (or a commands/<verb>.md playbook whose
-`refs` in skills/telegram-bot-ui/commands/index.json name one), plus token counts.
+A timeout is not a miss: the run is not scored (`ok` null) and is counted under `timeouts`.
+Unresolved timeouts also make the summary invalid; `--retry-timeouts [N]` re-runs a timed-out
+run up to N times and the last attempt counts, so the results are valid once a retry finishes.
+
+A case with `"fixture": "<name>"` runs in a project that holds a copy of evals/fixtures/<name>
+(a small bot), for requests that only make sense inside a bot repository.
+
+Per activated positive the runner also records the first skill file read after SKILL.md, the
+first commands/<verb>.md playbook read, and whether the case is routed: its first read is one
+of the case's `routes_to`, or its first playbook is one or names one in its `refs` in
+skills/telegram-bot-ui/commands/index.json. Plus token counts.
 
 Exit codes: 0 all cases correct and valid; 1 some case missed; 2 host CLI not found;
-3 results not trustworthy (another copy loaded, or a run errored).
+3 results not trustworthy (another copy loaded, a run errored or timed out without a retry).
 """
 from __future__ import annotations
 
@@ -63,12 +73,21 @@ EVALS = os.path.join(ROOT, "evals", "evals.json")
 SKILL_NAME = "telegram-bot-ui"
 SKILL_DIR = os.path.join(ROOT, "skills", SKILL_NAME)
 PLAYBOOK_INDEX = os.path.join(SKILL_DIR, "commands", "index.json")
+FIXTURES = os.path.join(ROOT, "evals", "fixtures")
+FIXTURE_NAME = re.compile(r"[a-z0-9][a-z0-9-]*")
 CAPABILITY_AREAS = ("ui", "use-cases", "publishing", "agent-ops", "widgets", "api-lookup", "mini-apps")
 LANGS = ("en", "ru")              # every area needs positives in these
 ALLOWED_LANGS = LANGS + ("uk",)    # extra languages a case may use
 REQUIRED_BEHAVIORAL = ("B20", "B21", "B22", "B30", "B31", "B32", "B40", "B41", "B42",
                        "B50", "B51", "B52", "B60")
+# The agent role a behavioural task exercises (agents/claude/telegram-<role>.md); results aggregate per role.
+ROLES = ("designer", "builder", "reviewer", "publisher", "widget-builder")
 TRANSFER_AREAS = ("publishing", "agent-ops", "widgets", "use-cases", "api-lookup")
+# Bot API domains with agent cards (data/bot-api/agent-notes/<domain>.json), plus payments and Mini App
+# events: each needs 6-10 cases in every allowed language, positives and near misses.
+DOMAINS = ("messages", "editing", "bot-settings", "chat-admin", "chat-info", "forums", "business", "stickers",
+           "platform", "inline-widgets", "payments", "rich", "mini-app-events")
+DOMAIN_CASES = (6, 10)
 SPLITS = ("train", "validation", "all")
 TRAIN_PERCENT = 60
 
@@ -106,6 +125,13 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
         seen.add(cid)
         return cid
 
+    def check_fixture(item, cid):
+        if "fixture" in item:
+            fixture = item["fixture"]
+            if not (isinstance(fixture, str) and FIXTURE_NAME.fullmatch(fixture)
+                    and os.path.isdir(os.path.join(FIXTURES, fixture))):
+                errors.append(f"{cid}: fixture must name a folder in evals/fixtures: {fixture!r}")
+
     for a in data["activation"]:
         cid = check_id(a, "activation")
         if a.get("area") not in areas:
@@ -124,6 +150,7 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
             for route in a["routes_to"]:
                 if not os.path.exists(os.path.join(SKILL_DIR, *route.split("/"))):
                     errors.append(f"{cid}: routes_to path does not exist in the skill: {route}")
+        check_fixture(a, cid)
         if a.get("expect") == "skip" and (a.get("area") != "out-of-scope" or a.get("routes_to")):
             errors.append(f"{cid}: negative cases use area out-of-scope and no routes")
         if a.get("expect") == "activate" and (a.get("area") == "out-of-scope" or not a.get("routes_to")):
@@ -141,6 +168,20 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
     for lang in LANGS:
         if not any(a.get("lang") == lang for a in neg):
             errors.append(f"coverage: no {lang} negative activation case")
+    for a in data["activation"]:
+        if "domain" in a and a["domain"] not in DOMAINS:
+            errors.append(f"{a.get('id')}: unknown domain {a['domain']!r}")
+    low, high = DOMAIN_CASES
+    for domain in DOMAINS:
+        mine = [a for a in data["activation"] if a.get("domain") == domain]
+        if not low <= len(mine) <= high:
+            errors.append(f"coverage: domain {domain} has {len(mine)} case(s), needs {low}-{high}")
+        missing = [lang for lang in ALLOWED_LANGS if not any(a.get("lang") == lang for a in mine)]
+        if missing:
+            errors.append(f"coverage: domain {domain} has no case in {', '.join(missing)}")
+        for expect, what in (("activate", "positive"), ("skip", "near miss")):
+            if not any(a.get("expect") == expect for a in mine):
+                errors.append(f"coverage: domain {domain} has no {what}")
 
     behavioral_ids: dict[str, dict] = {}
     for b in data["behavioral"]:
@@ -148,6 +189,9 @@ def validate(data: dict, md_text: str | None = None) -> list[str]:
         behavioral_ids[cid] = b
         if b.get("area") not in areas or b.get("area") == "out-of-scope":
             errors.append(f"{cid}: behavioural area must be a capability area")
+        if b.get("role") not in ROLES:
+            errors.append(f"{cid}: role must be one of {ROLES}")
+        check_fixture(b, cid)
         if b.get("lang") not in ALLOWED_LANGS:
             errors.append(f"{cid}: lang must be one of {ALLOWED_LANGS}")
         for key in ("request", "context"):
@@ -420,8 +464,9 @@ def skill_loaded(host: str, output: str) -> bool:
 def playbook_refs(index_path: str = PLAYBOOK_INDEX) -> dict[str, list[str]]:
     """commands/<verb>.md -> reference paths it names, from commands/index.json when it exists.
 
-    The index is not finalised; accepted shapes: {verb: {refs}}, {"commands": {verb: {refs}}} or a list
-    of {"verb"|"name"|"id", "file"|"path", "refs"} (file defaults to commands/<verb>.md)."""
+    The skill's index is {"commands": [{"verb", "playbook", "refs"}]}; also accepted: {verb: {refs}},
+    {"commands": {verb: {refs}}} or a list of {"verb"|"name"|"id", "playbook"|"file"|"path", "refs"}
+    (the playbook defaults to commands/<verb>.md)."""
     try:
         with open(index_path, encoding="utf-8") as fh:
             data = json.load(fh)
@@ -435,7 +480,8 @@ def playbook_refs(index_path: str = PLAYBOOK_INDEX) -> dict[str, list[str]]:
         if not isinstance(entry, dict) or not isinstance(entry.get("refs"), list):
             continue
         verb = entry.get("verb") or entry.get("name") or entry.get("id")
-        file = entry.get("file") or entry.get("path") or (f"commands/{verb}.md" if verb else None)
+        file = (entry.get("playbook") or entry.get("file") or entry.get("path")
+                or (f"commands/{verb}.md" if verb else None))
         if file:
             out[_slashes(str(file))] = [_slashes(str(r)) for r in entry["refs"]]
     return out
@@ -445,9 +491,17 @@ def _route_match(rel: str, route: str) -> bool:
     return rel.startswith(route) if route.endswith("/") else rel == route
 
 
+def first_playbook(reads: list[str]) -> str | None:
+    """The first commands/<verb>.md read: the command the agent picked (commands/index.json is the table)."""
+    return next((r for r in reads if r.startswith("commands/") and r.endswith(".md")), None)
+
+
 def route_check(reads: list[str], routes_to: list[str], playbooks: dict[str, list[str]]) -> tuple[str | None, bool]:
     """(first skill file read after SKILL.md, whether the case is routed correctly).
-    A case whose route is SKILL.md itself is routed correctly by loading the skill."""
+
+    Routed: the case's route is SKILL.md itself (loading the skill is enough); or the first file read is a
+    route; or the first playbook read is a route or names one in its index `refs`. The router's choice is
+    the first playbook, so a wrong playbook stays a miss even if the right reference is read later."""
     first = reads[0] if reads else None
     if "SKILL.md" in routes_to:
         return first, True
@@ -455,8 +509,11 @@ def route_check(reads: list[str], routes_to: list[str], playbooks: dict[str, lis
         return None, False
     if any(_route_match(first, r) for r in routes_to):
         return first, True
-    refs = playbooks.get(first, [])
-    return first, any(_route_match(ref, r) for ref in refs for r in routes_to)
+    book = first_playbook(reads)
+    if book is None:
+        return first, False
+    named = [book, *playbooks.get(book, [])]
+    return first, any(_route_match(ref, r) for ref in named for r in routes_to)
 
 
 # ---------------------------------------------------------------- running a host
@@ -540,8 +597,15 @@ def make_root() -> str:
     return tempfile.mkdtemp(prefix="tgui-evals-")
 
 
-def prepare_workspace(host: str) -> tuple[str, str, str]:
-    """(root, project, home): the skill installed in the project; home stays empty."""
+def copy_fixture(name: str, project: str) -> None:
+    """Copy evals/fixtures/<name> (a small bot project) into the run's project folder."""
+    shutil.copytree(os.path.join(FIXTURES, name), project, dirs_exist_ok=True,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+
+
+def prepare_workspace(host: str, fixture: str | None = None) -> tuple[str, str, str]:
+    """(root, project, home): the skill installed in the project (a copy of the fixture, if any);
+    home stays empty."""
     sys.path.insert(0, os.path.join(ROOT, "scripts"))
     import install  # noqa: PLC0415
 
@@ -549,6 +613,8 @@ def prepare_workspace(host: str) -> tuple[str, str, str]:
     project, home = os.path.join(root, "project"), os.path.join(root, "home")
     os.makedirs(project)
     os.makedirs(home)
+    if fixture:
+        copy_fixture(fixture, project)
     inst = install.Installer(home=home, project=project, dry_run=False, link=False)
     inst.install(host, "project", agents=False, instructions=False)
     if shutil.which("git"):
@@ -625,30 +691,85 @@ def skill_git_state() -> tuple[str, bool]:
     return git("rev-parse", "--short", "HEAD") or "unknown", bool(git("status", "--porcelain", "--", SKILL_DIR))
 
 
+def score_run(case: dict, info: dict, status: int | str, playbooks: dict[str, list[str]]) -> dict:
+    """One attempt's record. A timeout is not a miss: `ok` and `route_ok` stay None (not scored); an error
+    the transcript shows (usage limit, crash) still wins over the timeout and is an error."""
+    timed_out = status == "timeout" and not info["error"]
+    error = None if timed_out else run_error(info, status)
+    first_read, route_ok = info["reads"][0] if info["reads"] else None, None
+    if info["activated"] and case["expect"] == "activate" and not timed_out:
+        first_read, route_ok = route_check(info["reads"], case["routes_to"], playbooks)
+    ok = None if timed_out else (not error and info["activated"] == (case["expect"] == "activate"))
+    return {"activated": info["activated"], "ok": ok, "copy": info["copy"], "loaded": info["loaded"],
+            "first_read": first_read, "playbook": first_playbook(info["reads"]), "route_ok": route_ok,
+            "tokens": info["tokens"], "error": error, "timed_out": timed_out, "exit": status}
+
+
+def describe_run(case: dict, run: dict, label: str) -> str:
+    route = "-" if run["route_ok"] is None else (
+        "ok" if run["route_ok"] else f"MISS first={run['first_read']} playbook={run['playbook']}")
+    verdict = "TIMEOUT" if run["timed_out"] else ("ok" if run["ok"] else "MISS")
+    return (f"{case['id']:<6} {label} expect={case['expect']:<8} activated={run['activated']!s:<5} "
+            f"copy={run['copy']:<7} route={route} {verdict}" + (f" ERROR {run['error']}" if run["error"] else ""))
+
+
+def run_case(case: dict, runs: int, attempt, retry_timeouts: int = 0, log=print) -> dict:
+    """Run a case `runs` times; a run whose attempt timed out is retried up to `retry_timeouts` times and
+    the last attempt is scored. Every attempt's loaded copy is kept (`attempt_copies`): a skill copy
+    outside the temp project taints validity even when a later retry loaded the right one. The case passes on a majority of its scored (not timed-out) runs; with no
+    scored run it has no verdict (`ok` None)."""
+    case_runs = []
+    for n in range(1, runs + 1):
+        attempts: list[dict] = []
+        while not attempts or (attempts[-1]["timed_out"] and len(attempts) <= retry_timeouts):
+            attempts.append(attempt())
+            retry = f" retry {len(attempts) - 1}/{retry_timeouts}" if len(attempts) > 1 else ""
+            log(describe_run(case, attempts[-1], f"run {n}/{runs}{retry}"))
+        case_runs.append({**attempts[-1], "attempts": len(attempts),
+                          "timeouts": sum(a["timed_out"] for a in attempts),
+                          "attempt_copies": [a["copy"] for a in attempts]})
+    scored = [r for r in case_runs if r["ok"] is not None]
+    correct = sum(r["ok"] for r in scored)
+    return {"id": case["id"], "expect": case["expect"], "ok": passes(correct, len(scored)) if scored else None,
+            "correct_runs": correct, "scored_runs": len(scored), "runs": case_runs}
+
+
 def _mean(values: list[float]) -> float | None:
     return round(sum(values) / len(values), 1) if values else None
 
 
 def summarize(results: list[dict]) -> dict:
-    """Case-level counts, route accuracy, mean tokens, copies and validity from per-case results."""
+    """Case-level counts, route accuracy, mean tokens, copies, timeouts and validity from per-case results.
+    Cases without a verdict (every run timed out) are `unscored`, never a false positive or negative."""
     flat = [r for case in results for r in case["runs"]]
     copies = {k: sum(r["copy"] == k for r in flat) for k in ("project", "other", "none", "unknown")}
+    # A retry replaces the scored attempt, never the copy an earlier attempt loaded.
+    earlier = [c for r in flat for c in r.get("attempt_copies", [r["copy"]])[:-1]]
+    tainted = {k: copies[k] + earlier.count(k) for k in ("other", "unknown")}
     errors = sum(bool(r["error"]) for r in flat)
-    routed = [r for case in results if case["expect"] == "activate" for r in case["runs"] if r["activated"]]
+    unresolved = sum(bool(r.get("timed_out")) for r in flat)
+    timeouts = {"unresolved": unresolved,
+                "retried": sum(bool(r.get("timeouts")) and not r.get("timed_out") for r in flat),
+                "attempts": sum(r.get("timeouts", int(bool(r.get("timed_out")))) for r in flat)}
+    routed = [r for case in results if case["expect"] == "activate" for r in case["runs"]
+              if r["activated"] and r["route_ok"] is not None]
     with_tokens = [r["tokens"] for r in flat if r["tokens"] and "input" in r["tokens"]]
     reasons = []
-    if copies["other"]:
-        reasons.append(f"{copies['other']} run(s) loaded a copy of the skill outside the temp project")
-    if copies["unknown"]:
-        reasons.append(f"{copies['unknown']} run(s) activated but the loaded copy could not be identified")
+    if tainted["other"]:
+        reasons.append(f"{tainted['other']} attempt(s) loaded a copy of the skill outside the temp project")
+    if tainted["unknown"]:
+        reasons.append(f"{tainted['unknown']} attempt(s) activated but the loaded copy could not be identified")
     if errors:
-        reasons.append(f"{errors} run(s) errored or timed out")
+        reasons.append(f"{errors} run(s) errored")
+    if unresolved:
+        reasons.append(f"{unresolved} run(s) timed out without a finished retry (not counted as misses)")
     return {
-        "cases": len(results), "correct": sum(c["ok"] for c in results),
-        "true_positive": sum(c["expect"] == "activate" and c["ok"] for c in results),
-        "false_positive": sum(c["expect"] == "skip" and not c["ok"] for c in results),
-        "false_negative": sum(c["expect"] == "activate" and not c["ok"] for c in results),
-        "copies": copies, "errors": errors,
+        "cases": len(results), "correct": sum(c["ok"] is True for c in results),
+        "true_positive": sum(c["expect"] == "activate" and c["ok"] is True for c in results),
+        "false_positive": sum(c["expect"] == "skip" and c["ok"] is False for c in results),
+        "false_negative": sum(c["expect"] == "activate" and c["ok"] is False for c in results),
+        "unscored": sum(c["ok"] is None for c in results),
+        "copies": copies, "errors": errors, "timeouts": timeouts,
         "route_accuracy": {"correct": sum(bool(r["route_ok"]) for r in routed), "of": len(routed)},
         "mean_tokens": ({"input": _mean([t["input"] for t in with_tokens]),
                          "output": _mean([t["output"] for t in with_tokens]), "runs": len(with_tokens)}
@@ -662,7 +783,7 @@ def print_command(cmd: list[str], prompt: str) -> None:
 
 
 def execute(cases: list[dict], host: str, model: str | None, timeout: int, dry_run: bool,
-            runs: int = 1, split: str = "all") -> int:
+            runs: int = 1, split: str = "all", retry_timeouts: int = 0) -> int:
     if not dry_run and not shutil.which(host):
         print(f"{host} CLI not found on PATH; nothing executed.")
         return 2
@@ -671,39 +792,34 @@ def execute(cases: list[dict], host: str, model: str | None, timeout: int, dry_r
         for case in cases:
             print_command(host_command(host, case["prompt"], "<temp-project>", model, True, hidden),
                           case["prompt"])
+            if case.get("fixture"):
+                print(f"  fixture: evals/fixtures/{case['fixture']} copied into the temp project")
         return 0
     for path in hidden:
         print(f"note: switching off the user-level copy {path} for these runs (file untouched).")
     playbooks = playbook_refs()
-    root, project, home = prepare_workspace(host)
-    env = child_env(host, home)
+    workspaces: dict[str | None, tuple[str, str, str]] = {}   # fixture -> (root, project, home)
     results, models = [], []
     try:
         for case in cases:
-            case_runs = []
-            for n in range(1, runs + 1):
-                cmd = host_command(host, case["prompt"], project, model, True, hidden)
+            fixture = case.get("fixture")
+            if fixture not in workspaces:
+                workspaces[fixture] = prepare_workspace(host, fixture)
+            _, project, home = workspaces[fixture]
+            env = child_env(host, home)
+
+            def attempt(case=case, project=project, env=env) -> dict:
                 start = time.time()
-                output, status = run_child(cmd, case["prompt"], project, env, timeout)
+                output, status = run_child(host_command(host, case["prompt"], project, model, True, hidden),
+                                           case["prompt"], project, env, timeout)
                 info = analyze_output(host, output, project)
                 models.append(info["model"])
-                error = run_error(info, status)
-                first_read, route_ok = (route_check(info["reads"], case["routes_to"], playbooks)
-                                        if info["activated"] and case["expect"] == "activate" else (None, None))
-                ok = not error and info["activated"] == (case["expect"] == "activate")
-                case_runs.append({"activated": info["activated"], "ok": ok, "copy": info["copy"],
-                                  "loaded": info["loaded"], "first_read": first_read, "route_ok": route_ok,
-                                  "tokens": info["tokens"], "error": error, "exit": status,
-                                  "seconds": round(time.time() - start, 1)})
-                route = "-" if route_ok is None else ("ok" if route_ok else f"MISS first={first_read}")
-                print(f"{case['id']:<6} run {n}/{runs} expect={case['expect']:<8} activated={info['activated']!s:<5} "
-                      f"copy={info['copy']:<7} route={route} {'ok' if ok else 'MISS'}"
-                      + (f" ERROR {error}" if error else ""), flush=True)
-            correct = sum(r["ok"] for r in case_runs)
-            results.append({"id": case["id"], "expect": case["expect"], "ok": passes(correct, runs),
-                            "correct_runs": correct, "runs": case_runs})
+                return {**score_run(case, info, status, playbooks), "seconds": round(time.time() - start, 1)}
+
+            results.append(run_case(case, runs, attempt, retry_timeouts, log=lambda text: print(text, flush=True)))
     finally:
-        remove_tree(root)
+        for root, _, _ in workspaces.values():
+            remove_tree(root)
 
     commit, dirty = skill_git_state()
     run_id = uuid.uuid4().hex[:6]
@@ -712,27 +828,29 @@ def execute(cases: list[dict], host: str, model: str | None, timeout: int, dry_r
                "started": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime(now)), "host": host,
                "cli_version": tool_version(host), "model": model or "default",
                "model_reported": next((m for m in models if m), None), "runs_per_case": runs,
-               "split": split, "skill_commit": commit, "skill_dirty": dirty,
-               **summarize(results), "results": results}
+               "split": split, "timeout_seconds": timeout, "retry_timeouts": retry_timeouts,
+               "skill_commit": commit, "skill_dirty": dirty, **summarize(results), "results": results}
     out_dir = os.path.join(ROOT, "evals", "results")
     os.makedirs(out_dir, exist_ok=True)
     out = os.path.join(out_dir, result_filename(host, run_id, now))
     with open(out, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(summary, fh, indent=2, ensure_ascii=False)
         fh.write("\n")
-    route, tokens = summary["route_accuracy"], summary["mean_tokens"]
+    route, tokens, waits = summary["route_accuracy"], summary["mean_tokens"], summary["timeouts"]
     print(f"\n{summary['correct']}/{len(results)} correct (TP {summary['true_positive']}, "
-          f"FP {summary['false_positive']}, FN {summary['false_negative']}); "
+          f"FP {summary['false_positive']}, FN {summary['false_negative']}, unscored {summary['unscored']}); "
           f"route {route['correct']}/{route['of']}; "
+          f"timeouts {waits['attempts']} (retried {waits['retried']}, unresolved {waits['unresolved']}); "
           + (f"mean tokens in {tokens['input']} out {tokens['output']}; " if tokens else "tokens n/a; ")
           + f"copies {summary['copies']}; wrote {out}")
     if not summary["valid"]:
-        print("INVALID RESULTS, do not compare: " + "; ".join(summary["invalid_reasons"]))
+        print("INVALID RESULTS, do not compare: " + "; ".join(summary["invalid_reasons"])
+              + ("" if retry_timeouts or not waits["unresolved"] else "; rerun with --retry-timeouts"))
         return 3
     return 0 if summary["correct"] == len(results) else 1
 
 
-def main(argv: list[str] | None = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--execute", action="store_true", help="run activation cases against a host CLI")
     ap.add_argument("--host", choices=("claude", "codex"), default="claude")
@@ -743,10 +861,19 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--limit", type=int, help="run at most N cases")
     ap.add_argument("--model", help="model passed to the host CLI")
     ap.add_argument("--timeout", type=int, default=240, help="seconds per run")
+    ap.add_argument("--retry-timeouts", type=int, nargs="?", const=1, default=0, metavar="N",
+                    help="re-run a timed-out run up to N times (bare flag: once); the run is valid if a retry finishes")
     ap.add_argument("--dry-run", action="store_true", help="with --execute: print commands only")
+    return ap
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = build_parser()
     args = ap.parse_args(argv)
     if args.runs < 1:
         ap.error("--runs must be at least 1")
+    if args.retry_timeouts < 0:
+        ap.error("--retry-timeouts must be 0 or more")
 
     data = load()
     errors = validate(data, md_tables())
@@ -760,7 +887,8 @@ def main(argv: list[str] | None = None) -> int:
     if not args.execute:
         return 0
     cases = select_cases(data["activation"], args.ids, args.split, args.limit)
-    return execute(cases, args.host, args.model, args.timeout, args.dry_run, args.runs, args.split)
+    return execute(cases, args.host, args.model, args.timeout, args.dry_run, args.runs, args.split,
+                   args.retry_timeouts)
 
 
 if __name__ == "__main__":

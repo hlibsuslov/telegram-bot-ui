@@ -1,0 +1,15 @@
+{
+  "scenario": "B09",
+  "label": "good",
+  "note": "Unknown outcome, reconcile by operation id, bounded retries, 429 handled with retry_after.",
+  "answer": "Don't resend yet: a timeout means the outcome is unknown. Telegram may have delivered the confirmation and only the response was lost, so a blind resend can confirm the order twice.\n\nWhat to do instead:\n1. Every confirmation carries an operation id (order_id + 'confirm'). Before sending, store it with status 'sending'; after a success store the returned message_id and status 'sent'.\n2. On a timeout, reconcile by that operation id: if the record already has a message_id, stop. If not, the outcome is unknown; mark it 'unknown' and only then retry the same operation id.\n3. Retries are bounded: at most 3 attempts with exponential backoff (1 s, 4 s, 15 s), then hand the order to an operator instead of trying forever.\n4. A 429 response is not a timeout: wait exactly parameters.retry_after seconds before the next attempt, and that wait counts towards the 3-attempt limit. Never retry in a tight loop.",
+  "diff": "",
+  "tools": [
+    {"tool": "Skill", "target": "telegram-bot-ui"},
+    {"tool": "Read", "target": ".claude/skills/telegram-bot-ui/references/updates-and-delivery.md"}
+  ],
+  "expected": {
+    "must": ["met", "met", "met", "met"],
+    "critical_failures": ["absent", "absent"]
+  }
+}

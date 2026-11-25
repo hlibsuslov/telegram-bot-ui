@@ -14,13 +14,17 @@ Ids are never invented: a slot without a matching sticker stays unset.
   py -3 scripts/emoji_packs.py capture [--update saved-update.json]
   py -3 scripts/emoji_packs.py apply --map icon-map.json --in payload.json --context private --owner-premium
   py -3 scripts/emoji_packs.py strip --map icon-map.json --in payload.json
+  py -3 scripts/emoji_packs.py library pick --needs home,back,settings --profile style-profile.json
+  py -3 scripts/emoji_packs.py library pick --profile style-profile.json --library-file emoji-library.ndjson.gz
 
 Data: data/emoji/slots.json (slot vocabulary), data/emoji/packs.json (verified public sets,
-metadata only). Reference: references/emoji-packs.md.
+metadata only), data/emoji/library-contract.json (the emoji library's schemas and taxonomy,
+checked on every answer by emoji_contract.py). Reference: references/emoji-packs.md.
 """
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import sys
@@ -312,48 +316,148 @@ def cmd_apply(a, strip: bool = False) -> int:
 
 # ---- library (the telegram-bot-ui emoji library: search and pick one family) -------------
 
-class LibraryClient:
-    """Live: the library's search and pack endpoints through the bot-ui resolver (only search words
-    and pack names are sent). Offline: a saved {"search": {query: answer}, "packs": {name: answer}}."""
+EXPORT_MAX = 64 * 1024 * 1024     # the unpacked export; the real one is a few MB
+FACETS_MAX = 16 * 1024 * 1024     # /api/emoji-facets carries every pack (about 1 MB today)
 
-    def __init__(self, saved: dict | None = None):
-        self.saved = saved
-        self.calls = 0
-        self._resolver = None
-        if saved is None:
+
+class LibraryClient:
+    """The telegram-bot-ui emoji library through its contract (data/emoji/library-contract.json).
+
+    Online (default): GET /api/emoji-search, /api/emoji-pack/{name} and /api/emoji-facets through the bot-ui
+    resolver's origin (only search words and pack names are sent). Every answer is checked against the
+    vendored schema and its `taxonomy` version before any field is read; an error answer raises its own code.
+    `fetch(path) -> (status, body bytes)` replaces the network (tests).
+    Offline export (`export=`): the catalog file /emoji-library.ndjson.gz, every line checked as a CatalogLine.
+    It has the tags, look and descriptions of every pack but no fallback emoji and no search.
+    Saved (`saved=`): canned {"search": {query: answer}, "packs": {name: answer}, "facets": answer}, unchecked."""
+
+    def __init__(self, saved: dict | None = None, *, fetch=None, export: str | None = None):
+        self.saved, self.calls, self._fetch, self._export = saved, 0, fetch, None
+        self._pack_path = "/api/emoji-pack"
+        if export:
+            self._export = read_export(export)
+        elif saved is None and fetch is None:
             from bot_ui.emoji import _Resolver, resolver_url
             base = resolver_url()
             if base is None:
-                raise SystemExit("the emoji library is switched off (BOT_UI_EMOJI_RESOLVER=off); pass --library-json")
-            self._resolver = _Resolver(base)
+                raise SystemExit("the emoji library is switched off (BOT_UI_EMOJI_RESOLVER=off); "
+                                 "pass --library-file emoji-library.ndjson.gz")
+            resolver = _Resolver(base)
+            self._pack_path = base[len(resolver.origin):] or self._pack_path
+            self._fetch = lambda path: resolver._get(resolver.origin + path, FACETS_MAX)[::2]
+
+    @property
+    def offline(self) -> bool:
+        return self._export is not None
+
+    def _answer(self, path: str, schema: str, limit: int = 2 * 1024 * 1024, missing_ok: bool = False) -> dict | None:
+        from bot_ui.emoji import EmojiError
+        from emoji_contract import check_answer
+        self.calls += 1
+        status, body = self._fetch(path)
+        what = f"GET {path.split('?')[0]}"
+        if len(body) > limit:
+            raise EmojiError("RESOLVER_ERROR", f"{what}: the answer is larger than {limit} bytes")
+        try:
+            doc = json.loads(body.decode("utf-8"))
+        except (UnicodeDecodeError, ValueError):
+            if missing_ok and status == 404:
+                return None
+            raise EmojiError("RESOLVER_ERROR", f"{what} answered HTTP {status} without JSON") from None
+        if status != 200 or not isinstance(doc, dict) or doc.get("ok") is not True:
+            err = (doc.get("error") if isinstance(doc, dict) else None) or {}
+            if missing_ok and status == 404 and not err:
+                return None
+            raise EmojiError(str(err.get("code") or "RESOLVER_ERROR"), f"{what}: {err.get('message') or f'HTTP {status}'}")
+        return check_answer(doc, schema, what)
 
     def search(self, query: str, pack: str | None = None) -> dict:
-        self.calls += 1
         if self.saved is not None:
+            self.calls += 1
             key = f"{query}|{pack}" if pack else query
             return (self.saved.get("search") or {}).get(key) or {"emoji": [], "packs": []}
-        return self._resolver.search(query, pack)
+        if self.offline:
+            from bot_ui.emoji import EmojiError
+            raise EmojiError("OFFLINE_NO_SEARCH", "the offline export has no search index and no fallback emoji: search "
+                                                  "online, or rank packs by tags (library facets / pick --profile)")
+        params = {"q": query[:160], **({"pack": pack} if pack else {})}
+        if pack:
+            _pack_name(pack)
+        from urllib.parse import urlencode
+        return self._answer(f"/api/emoji-search?{urlencode(params)}", "SearchResponse")
 
     def pack(self, name: str) -> dict:
-        self.calls += 1
         if self.saved is not None:
+            self.calls += 1
             return (self.saved.get("packs") or {}).get(name) or {"emoji": []}
-        return self._resolver.pack(name)
+        _pack_name(name)
+        if self.offline:
+            line = self._export["lines"].get(name)
+            return dict(line, emoji=[{"id": e["id"]} for e in line["emoji"]]) if line else {"emoji": []}
+        return self._answer(f"{self._pack_path}/{name}", "PackResponse")
 
     def facets(self) -> dict | None:
-        """The library's tag taxonomy and every pack's faceted tags (GET /api/emoji-facets), or None when the
-        library has no tags yet (an older deployment): picking then works from coverage alone."""
+        """The tag taxonomy and every pack's tags, look and description (GET /api/emoji-facets, or the same built
+        from the offline export), or None when the library has no tags yet (an older deployment answers 404):
+        picking then works from coverage alone."""
         if self.saved is not None:
             doc = self.saved.get("facets")
             return doc if isinstance(doc, dict) and isinstance(doc.get("packs"), list) else None
-        from bot_ui.emoji import EmojiError
-        self.calls += 1
+        if self.offline:
+            return self._export["catalog"]
+        return self._answer("/api/emoji-facets", "FacetsResponse", limit=FACETS_MAX, missing_ok=True)
+
+
+def _pack_name(name: str) -> str:
+    from bot_ui.emoji import PACK_NAME, EmojiError
+    if not isinstance(name, str) or not PACK_NAME.match(name):
+        raise EmojiError("PACK_NAME", f"not a pack name: {name!r}")
+    return name
+
+
+def read_export(path: str) -> dict:
+    """The offline catalog export (gzip or plain NDJSON, one CatalogLine per pack), checked line by line, as
+    {"lines": {name: line}, "catalog": the /api/emoji-facets answer it stands for}. The taxonomy labels and
+    the pack threshold come from the vendored contract when the export uses its taxonomy version."""
+    import gzip
+    from bot_ui.emoji import EmojiError
+    from emoji_contract import check_answer, check_taxonomy, load_contract
+    try:
+        with open(path, "rb") as fh:
+            raw = fh.read(EXPORT_MAX + 1)
+        if raw[:2] == b"\x1f\x8b":
+            with gzip.GzipFile(fileobj=io.BytesIO(raw)) as gz:
+                raw = gz.read(EXPORT_MAX + 1)
+        text = raw.decode("utf-8")
+    except (OSError, EOFError, UnicodeDecodeError) as err:
+        raise EmojiError("EXPORT_INVALID", f"{path}: not a readable UTF-8 NDJSON or .gz file ({err})") from None
+    if len(raw) > EXPORT_MAX:
+        raise EmojiError("EXPORT_INVALID", f"{path}: larger than {EXPORT_MAX} bytes unpacked")
+    lines: dict[str, dict] = {}
+    versions = set()
+    for n, row in enumerate(text.splitlines(), 1):
+        if not row.strip():
+            continue
         try:
-            return self._resolver.facets()
-        except EmojiError as err:
-            if err.code == "RESOLVER_UNREACHABLE":
-                raise
-            return None
+            line = json.loads(row)
+        except ValueError as err:
+            raise EmojiError("EXPORT_INVALID", f"{path} line {n}: not JSON ({err})") from None
+        check_answer(line, "CatalogLine", f"{os.path.basename(path)} line {n}")
+        versions.add((line["taxonomy"], line["generated"]))
+        lines[line["name"]] = line
+    if not lines:
+        raise EmojiError("EXPORT_INVALID", f"{path}: no packs")
+    if len(versions) > 1:
+        raise EmojiError("EXPORT_INVALID", f"{path}: lines from different catalog builds {sorted(versions)}")
+    (version, generated), = versions
+    check_taxonomy(version, path)
+    contract = load_contract()
+    tax = contract["taxonomy"]
+    facets = tax["facets"] if tax["version"] == version else {}
+    keys = ("name", "category", "count", "meanings", "facets", "compatible", "look", "description")
+    packs = [{k: line[k] for k in keys if k in line} for line in lines.values()]
+    return {"lines": lines, "catalog": {"ok": True, "generated": generated, "taxonomy": {"version": version, "facets": facets},
+                                        "thresholds": contract["thresholds"], "packs": packs, "source": "export"}}
 
 
 # ------------------------------------------------------------------ facets: context -> pack
@@ -365,6 +469,8 @@ ARCHETYPE_USE = {"shop": "shop", "monitoring": "utility", "ai": "utility", "team
 TRAIT_MOOD = {"calm": "calm", "plain": "calm", "quiet": "calm", "precise": "serious", "serious": "serious",
               "formal": "serious", "playful": "playful", "fun": "playful", "friendly": "joyful", "joyful": "joyful",
               "warm": "loving", "caring": "loving"}
+# The profile's brand.icon_style in the library's style vocabulary ("mixed" asks for nothing).
+ICON_STYLE = {"outline": "outline", "solid": "glyph", "flat": "flat", "duotone": "flat"}
 HUE_FAMILIES = ((15, "red"), (40, "orange"), (52, "gold"), (70, "yellow"), (160, "green"), (195, "teal"), (255, "blue"),
                 (290, "purple"), (345, "pink"), (361, "red"))
 
@@ -390,8 +496,9 @@ def brief_from_profile(profile: dict) -> dict[str, list[str]]:
     brand traits, the interface role of its icons and the bot category. Only what the profile states."""
     brand, bot = profile.get("brand") or {}, profile.get("bot") or {}
     brief: dict[str, list[str]] = {"topic": ["interface"]}
-    if isinstance(brand.get("icon_style"), str) and brand["icon_style"]:
-        brief["style"] = [brand["icon_style"].lower()]
+    style = brand.get("icon_style")
+    if isinstance(style, str) and style and style.lower() != "mixed":
+        brief["style"] = [ICON_STYLE.get(style.lower(), style.lower())]
     if isinstance(brand.get("accent"), str) and accent_family(brand["accent"]):
         brief["color"] = [accent_family(brand["accent"])]
     moods = [TRAIT_MOOD[t.lower()] for t in brand.get("traits") or [] if isinstance(t, str) and t.lower() in TRAIT_MOOD]
@@ -399,6 +506,23 @@ def brief_from_profile(profile: dict) -> dict[str, list[str]]:
         brief["mood"] = list(dict.fromkeys(moods))
     if ARCHETYPE_USE.get(bot.get("archetype")):
         brief["use"] = [ARCHETYPE_USE[bot["archetype"]]]
+    return brief
+
+
+# The slot vocabulary's groups (data/emoji/slots.json) as the library's interface roles.
+GROUP_ROLE = {"navigation": "navigation", "actions": "action", "status": "status", "warnings": "status",
+              "time": "status", "commerce": "commerce", "finance": "commerce", "communication": "communication",
+              "people": "communication", "ai": "communication", "settings": "settings", "files": "settings",
+              "analytics": "settings", "media": "content", "post": "content"}
+
+
+def slots_brief(slots: list[str], vocab: dict) -> dict[str, list[str]]:
+    """The facets a set of icon slots asks of a pack when only the catalog is at hand (it has no fallback emoji to
+    match): interface icons, in the roles of the slots' groups, the most frequent role first."""
+    roles = Counter(GROUP_ROLE[g] for s in slots if (g := (vocab.get(s) or {}).get("group")) in GROUP_ROLE)
+    brief: dict[str, list[str]] = {"topic": ["interface"]}
+    if roles:
+        brief["role"] = [r for r, _ in sorted(roles.items(), key=lambda kv: (-kv[1], kv[0]))]
     return brief
 
 
@@ -450,7 +574,7 @@ def facet_match(tags: dict, brief: dict[str, list[str]], threshold: float) -> tu
 
 
 def rank_by_facets(doc: dict, brief: dict, *, require: list[str] | None = None, motion: str | None = None,
-                   theme: str | None = None, top: int = 10) -> dict:
+                   theme: str | None = None, top: int = 10, lang: str = "en") -> dict:
     """Packs of the library ordered by how well their tags fit a brief (no slot coverage involved).
     `require` are hard filters ("facet:value": the pack must carry the tag at or above the library's pack
     threshold). Each row also names the pack's tag-compatible companions."""
@@ -481,13 +605,163 @@ def rank_by_facets(doc: dict, brief: dict, *, require: list[str] | None = None, 
             score += 0.1 * max(fit.get("adaptive", 0), fit.get("both", 0))
         elif theme in ("light", "dark"):
             score += 0.1 * max(fit.get("adaptive", 0), fit.get("both", 0), fit.get(theme, 0))
-        rows.append({"name": pk["name"], "category": pk.get("category"), "score": round(score, 3), "matched": hits,
-                     "compatible": [c[0] for c in (pk.get("compatible") or [])[:4]]})
+        row = {"name": pk["name"], "category": pk.get("category"), "score": round(score, 3), "matched": hits,
+               "compatible": [c[0] for c in (pk.get("compatible") or [])[:4]]}
+        desc = pack_description(pk, lang)
+        if desc:
+            row["description"] = desc
+        row["why"] = explain_pack(pk, th, wanted, hits, catalog_coverage(pk, th), lang=lang)
+        rows.append(row)
     rows.sort(key=lambda r: (-r["score"], r["name"]))
     tax = doc.get("taxonomy")
     return {"brief": wanted, "require": [f"{f}:{v}" for f, v in must], "problems": problems,
             "taxonomy": tax.get("version") if isinstance(tax, dict) else tax, "total": len(rows), "packs": rows[:top]}
 
+
+# ------------------------------------------------------------------ explaining a choice
+NEUTRAL = {"white", "gray", "black"}
+HUE_RING = ("red", "orange", "gold", "yellow", "green", "teal", "blue", "purple", "pink")
+WARM = {"red", "orange", "gold"}           # brown sits next to these
+LANGS = ("en", "ru", "uk")
+
+
+def pack_description(pk: dict, lang: str = "en") -> dict | None:
+    """The pack's {what, for, not_for} in `lang` (English when that language is missing), or None."""
+    desc = pk.get("description")
+    if not isinstance(desc, dict):
+        return None
+    text = desc.get(lang) or desc.get("en")
+    return text if isinstance(text, dict) else None
+
+
+def _tags(pk: dict, facet: str, th: float) -> list[list]:
+    return [[v, c] for v, c in (pk.get("facets") or {}).get(facet) or [] if c >= th]
+
+
+def catalog_coverage(pk: dict, th: float) -> str:
+    """What a pack covers, from the catalog alone (it has no fallback emoji): size, meanings, interface roles."""
+    roles = [v for v, _ in _tags(pk, "role", th)[:3]]
+    text = f"{pk.get('count', '?')} emoji, {pk.get('meanings', '?')} meanings"
+    return text + (f", roles {'/'.join(roles)}" if roles else "")
+
+
+def _facet_text(pk: dict, facet: str, th: float, wanted: dict, matched: list) -> str:
+    label = "colour" if facet == "color" else facet
+    hit = next((m for m in matched if m[0] == facet), None)
+    if hit:
+        return f"{label} {hit[1]} {hit[2]:.2f} as asked"
+    tags = _tags(pk, facet, th)
+    have = f"{tags[0][0]} {tags[0][1]:.2f}" if tags else "untagged"
+    return f"{label} {have}" + (f" (asked {'/'.join(wanted[facet])})" if wanted.get(facet) else "")
+
+
+def explain_pack(pk: dict, th: float, wanted: dict, matched: list, coverage: str, colour: dict | None = None,
+                 lang: str = "en") -> str:
+    """One line on why a pack ranks where it does: coverage, style, topic, colour, and what it is for."""
+    parts = [coverage, _facet_text(pk, "style", th, wanted, matched), _facet_text(pk, "topic", th, wanted, matched),
+             f"colour {colour['why']}" if colour else _facet_text(pk, "color", th, wanted, matched)]
+    desc = pack_description(pk, lang)
+    line = f"{pk['name']}: " + "; ".join(parts)
+    return line + (f". For: {desc['for']}" if desc and desc.get("for") else "")
+
+
+def accent_palette(hex_colour: str) -> str | None:
+    """monochrome, muted or vivid: the library palette a brand accent belongs to."""
+    import colorsys
+    h = hex_colour.strip().lstrip("#")
+    if len(h) != 6 or any(c not in "0123456789abcdefABCDEF" for c in h):
+        return None
+    _, sat, val = colorsys.rgb_to_hsv(*(int(h[i:i + 2], 16) / 255 for i in (0, 2, 4)))
+    if sat < 0.12:
+        return "monochrome"
+    return "vivid" if sat >= 0.5 and val >= 0.55 else "muted"
+
+
+def _closeness(accent: str, colour: str) -> float:
+    """1 the same family, 0.5 a neighbour on the colour wheel, 0.3 a neutral pack colour (it goes with any accent)."""
+    if accent == colour:
+        return 1.0
+    if colour in NEUTRAL:
+        return 0.3
+    if accent in NEUTRAL:
+        return 0.2
+    if "brown" in (accent, colour):
+        return 0.5 if {accent, colour} - {"brown"} <= WARM else 0.0
+    if accent not in HUE_RING or colour not in HUE_RING:
+        return 0.0
+    i, j = HUE_RING.index(accent), HUE_RING.index(colour)
+    return 0.5 if min(abs(i - j), len(HUE_RING) - abs(i - j)) == 1 else 0.0
+
+
+def colour_fit(pk: dict, accent: str, th: float) -> dict:
+    """How a pack's measured colours and palette sit with a brand accent: score 0..1 and the reason.
+    An adaptive pack is drawn in the text colour, so it never clashes with the accent (score at least 0.6)."""
+    family, palette = accent_family(accent), accent_palette(accent)
+    colours = _tags(pk, "color", th)
+    best = max(colours, key=lambda vc: (vc[1] * _closeness(family, vc[0]), vc[1]), default=None)
+    hue = best[1] * _closeness(family, best[0]) if best else 0.0
+    pal = dict((v, c) for v, c in _tags(pk, "palette", th)).get(palette, 0.0)
+    adaptive = any(v == "adaptive" for v, _ in _tags(pk, "fit", th))
+    score = 0.75 * hue + 0.25 * pal
+    if best:
+        near = "~" if best[0] == family else "near" if hue and best[0] not in NEUTRAL else "neutral with" if hue else "far from"
+        why = f"{best[0]} {best[1]:.2f} {near} accent {accent} ({family})"
+    else:
+        why = f"untagged, accent {accent} ({family})"
+    if pal:
+        why += f", palette {palette} {pal:.2f}"
+    if adaptive:
+        score = max(score, 0.6)
+        why += "; adaptive: drawn in the text colour, so it sits with any accent"
+    return {"accent": accent, "family": family, "palette": palette, "best": best, "adaptive": adaptive,
+            "score": round(score, 3), "why": why}
+
+
+def profile_lang(profile: dict) -> str:
+    """The language of the pack descriptions for a bot: its primary locale when the library has it."""
+    lang = str(((profile or {}).get("bot") or {}).get("primary_locale") or "en").split("-")[0].lower()
+    return lang if lang in LANGS else "en"
+
+
+def profile_request(profile: dict | None, flags: dict | None = None) -> tuple[dict[str, list[str]], list[str]]:
+    """(brief, brand accents) from a style profile, overridden flag by flag. The accent is compared with each
+    pack's colours and palette (colour_fit) instead of being matched as a colour tag; an explicit colour or
+    palette flag replaces that comparison."""
+    brief = brief_from_profile(profile) if profile else {}
+    brief.pop("color", None)
+    brief.update({k: v for k, v in (flags or {}).items() if v})
+    accent = ((profile or {}).get("brand") or {}).get("accent")
+    if "color" in brief or "palette" in brief or not isinstance(accent, str) or not accent_family(accent):
+        return brief, []
+    return brief, ["#" + accent.strip().lstrip("#").upper()]
+
+
+def pick_by_profile(doc: dict, brief: dict, accents: list[str], *, require: list[str] | None = None,
+                    motion: str = "static", theme: str = "both", top: int = 10, lang: str = "en") -> dict:
+    """Packs ranked for a bot from the catalog alone (the /api/emoji-facets answer or the offline export: both
+    give the same result): the brief's tags (style, topic, mood, bot category, theme fit), the brand accent
+    against each pack's measured colours and palette, and a little for breadth (meanings). Each row says why."""
+    th = (doc.get("thresholds") or {}).get("pack", 0.3)
+    ask = dict(brief)
+    ask.setdefault("fit", [theme])
+    ranked = rank_by_facets(doc, ask, require=require, motion="static" if motion == "static" else None,
+                            top=len(doc.get("packs") or []), lang=lang)
+    by_name = {p["name"]: p for p in doc.get("packs") or []}
+    rows = []
+    for r in ranked["packs"]:
+        pk = by_name[r["name"]]
+        colour = colour_fit(pk, accents[0], th) if accents else None
+        breadth = min(1.0, (pk.get("meanings") or 0) / 60)
+        score = r["score"] + (0.15 * colour["score"] if colour else 0.0) + 0.05 * breadth
+        row = {**r, "score": round(score, 3), "coverage": {"emoji": pk.get("count"), "meanings": pk.get("meanings"),
+                                                          "roles": [v for v, _ in _tags(pk, "role", th)]}}
+        if colour:
+            row["colour"] = colour
+        row["why"] = explain_pack(pk, th, ranked["brief"], r["matched"], catalog_coverage(pk, th), colour, lang)
+        rows.append(row)
+    rows.sort(key=lambda r: (-r["score"], r["name"]))
+    return {"brief": ranked["brief"], "accents": accents, "require": ranked["require"], "problems": ranked["problems"],
+            "taxonomy": ranked["taxonomy"], "generated": doc.get("generated"), "total": len(rows), "packs": rows[:top]}
 
 def _slot_keys(vocab: dict, slot: str) -> set[str]:
     return {emoji_key(u) for u in (vocab.get(slot) or {}).get("unicode") or []}
@@ -495,7 +769,7 @@ def _slot_keys(vocab: dict, slot: str) -> set[str]:
 
 def pick_family(needed: list[str], vocab: dict, client: LibraryClient, *, candidates: int = 6,
                 motion: str = "static", theme: str = "both", brief: dict | None = None,
-                require: list[str] | None = None, facets: dict | None = None) -> dict:
+                require: list[str] | None = None, facets: dict | None = None, lang: str = "en") -> dict:
     """Rank whole packs for the slots a bot needs and build the icon map from the best one.
 
     1. Discovery: search the library for each slot's first unicode emoji; a hit whose fallback is
@@ -506,7 +780,8 @@ def pick_family(needed: list[str], vocab: dict, client: LibraryClient, *, candid
     2. Coverage: fetch each top candidate pack and match every slot by fallback emoji.
     3. Score = coverage, then fit to the brief, then theme safety (adaptive share when both themes
        matter), then motion (static preferred on buttons), then one format across the pack.
-    A library without tags ignores the brief; the answer's `notes` say so.
+    A library without tags ignores the brief; the answer's `notes` say so. Every ranked pack carries its
+    description (what it is, what it suits and does not) and `why`, one line on coverage, style, topic, colour.
     """
     unknown = [x for x in needed if x not in vocab]
     slots = [x for x in needed if x in vocab]
@@ -522,8 +797,13 @@ def pick_family(needed: list[str], vocab: dict, client: LibraryClient, *, candid
     fit: dict[str, tuple[float, list]] = {}
     wanted: dict[str, list[str]] = {}
     notes: list[str] = []
+    catalog: dict[str, dict] = {}
+    th = 0.3
     if brief or require:
         doc = facets if facets is not None else client.facets()
+        if doc is not None:
+            catalog = {p["name"]: p for p in doc.get("packs") or [] if isinstance(p, dict) and "name" in p}
+            th = (doc.get("thresholds") or {}).get("pack", th)
         if doc is None:
             notes.append("the library has no tags yet: ranked by coverage only")
         else:
@@ -580,6 +860,12 @@ def pick_family(needed: list[str], vocab: dict, client: LibraryClient, *, candid
                "score": round(score, 3), "icons": icons}
         if wanted:
             row.update(brief_match=round(match, 2), matched=hits)
+        pk = catalog.get(name) or {"name": name, "facets": doc.get("facets") or {}, "description": doc.get("description")}
+        desc = pack_description(pk, lang)
+        if desc:
+            row["description"] = desc
+        covers = f"covers {len(icons)}/{len(slots)} slots" + (f" (missing {', '.join(missing)})" if missing else "")
+        row["why"] = explain_pack({**pk, "name": name}, th, wanted, hits, covers, lang=lang)
         ranking.append(row)
     ranking.sort(key=lambda r: (-r["score"], -r["votes"], r["name"]))
     best = ranking[0] if ranking else None
@@ -597,21 +883,73 @@ def pick_family(needed: list[str], vocab: dict, client: LibraryClient, *, candid
 FACET_FLAGS = ("style", "color", "mood", "topic", "use", "palette")
 
 
+def _flags(a) -> dict[str, list[str]]:
+    return {f: [v.strip() for v in getattr(a, f).split(",") if v.strip()] for f in FACET_FLAGS if getattr(a, f, None)}
+
+
 def _brief_from_args(a) -> dict[str, list[str]]:
     """The profile's brief (--profile), overridden facet by facet by explicit flags (--style outline ...)."""
     brief: dict[str, list[str]] = {}
     if a.profile:
         brief.update(brief_from_profile(_load(a.profile)))
-    for facet in FACET_FLAGS:
-        given = getattr(a, facet, None)
-        if given:
-            brief[facet] = [v.strip() for v in given.split(",") if v.strip()]
+    brief.update(_flags(a))
     return brief
 
 
+def _needed(a, vocab) -> list[str] | None:
+    if a.needs:
+        return [x.strip() for x in a.needs.split(",") if x.strip()]
+    if a.source:
+        with open(a.source, encoding="utf-8") as fh:
+            raw = fh.read()
+        try:
+            return needed_slots(json.loads(raw), vocab)
+        except ValueError:
+            return needed_slots(raw, vocab)
+    return None
+
+
+def cmd_contract(a) -> int:
+    from emoji_contract import CONTRACT, load_contract, vendor
+    if a.openapi or a.facets_file:
+        if not (a.openapi and a.facets_file):
+            print("pass both --openapi (saved /api/emoji-openapi.json) and --facets-file (saved /api/emoji-facets)",
+                  file=sys.stderr)
+            return 2
+        import datetime
+        doc = vendor(_load(a.openapi), _load(a.facets_file), datetime.date.today().isoformat())
+        with open(a.out or CONTRACT, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(json.dumps(doc, ensure_ascii=False, indent=1) + "\n")
+        load_contract(a.out or CONTRACT)          # refuses schema keywords the validator does not check
+        print(f"vendored {len(doc['schemas'])} schemas, taxonomy {doc['taxonomy']['version']} -> {a.out or CONTRACT}",
+              file=sys.stderr)
+        return 0
+    doc = load_contract()
+    _emit({"source": doc["source"], "sourceCode": doc["sourceCode"], "vendored": doc["vendored"],
+           "apiVersion": doc["apiVersion"], "catalog": doc["catalog"], "taxonomy": doc["taxonomy"]["understood"],
+           "thresholds": doc["thresholds"], "schemas": sorted(doc["schemas"])}, a.out)
+    return 0
+
+
 def cmd_library(a) -> int:
+    from bot_ui.emoji import EmojiError
+    try:
+        return _library(a)
+    except EmojiError as err:
+        print(f"error {err.code}: {err.message}", file=sys.stderr)
+        return 1
+
+
+def _library(a) -> int:
+    if a.action == "contract":
+        return cmd_contract(a)
     vocab = load_vocabulary(a.vocabulary)
-    client = LibraryClient(_load(a.library_json) if a.library_json else None)
+    if a.library_json and a.library_file:
+        print("pass --library-json or --library-file, not both", file=sys.stderr)
+        return 2
+    client = LibraryClient(_load(a.library_json) if a.library_json else None, export=a.library_file)
+    profile = _load(a.profile) if a.profile else {}
+    lang = a.lang or profile_lang(profile)
     brief = _brief_from_args(a)
     if a.action == "facets":
         doc = client.facets()
@@ -626,7 +964,7 @@ def cmd_library(a) -> int:
                                   "values": list((d.get("values") or {}))} for f, d in tax.items()}}, a.out)
             return 0
         res = rank_by_facets(doc, brief, require=a.require, motion="static" if a.motion == "static" else None,
-                             theme=a.theme, top=a.top)
+                             theme=a.theme, top=a.top, lang=lang)
         _emit(res, a.out)
         for note in res["problems"]:
             print(note, file=sys.stderr)
@@ -641,26 +979,38 @@ def cmd_library(a) -> int:
                  "adaptive": e.get("adaptive")} for e in (ans.get("emoji") or [])[: a.top * 4]]
         _emit({"query": query, "packs": (ans.get("packs") or [])[: a.top], "emoji": rows}, a.out)
         return 0
-    if a.needs:
-        needed = [x.strip() for x in a.needs.split(",") if x.strip()]
-    elif a.source:
-        with open(a.source, encoding="utf-8") as fh:
-            raw = fh.read()
-        try:
-            needed = needed_slots(json.loads(raw), vocab)
-        except ValueError:
-            needed = needed_slots(raw, vocab)
-    else:
-        print("pass --needs slot,slot or --from FILE", file=sys.stderr)
+    needed = _needed(a, vocab)
+    if needed is None:
+        if not (a.profile or _flags(a) or a.require):
+            print("pass --needs slot,slot or --from FILE (an icon map for those slots), or --profile / facet flags "
+                  "(packs ranked for the bot)", file=sys.stderr)
+            return 2
+        doc = client.facets()
+        if doc is None:
+            print("the library has no tags yet (no /api/emoji-facets): pass --needs to pick by coverage", file=sys.stderr)
+            return 1
+        brief, accents = profile_request(profile, _flags(a))
+        res = pick_by_profile(doc, brief, accents, require=a.require, motion=a.motion, theme=a.theme, top=a.top, lang=lang)
+        _emit(res, a.out)
+        for row in res["packs"]:
+            print(row["why"], file=sys.stderr)
+        for note in res["problems"]:
+            print(note, file=sys.stderr)
+        return 0 if res["packs"] else 1
+    if client.offline:
+        print("--needs/--from match each pack's fallback emoji, which the offline export does not carry: run online "
+              "for the icon map, or drop --needs to rank packs by the profile (pick --profile)", file=sys.stderr)
         return 2
     result = pick_family(needed, vocab, client, candidates=a.candidates, motion=a.motion, theme=a.theme,
-                         brief=brief, require=a.require)
+                         brief=brief, require=a.require, lang=lang)
     result["ranking"] = result["ranking"][: a.top]
     _emit(result, a.out)
     best = result["map"]
     if not best:
         print("\nno pack in the library matched these slots", file=sys.stderr)
         return 1
+    for row in result["ranking"]:
+        print(row["why"], file=sys.stderr)
     print(f"\nbest family: {best['family']} covers {len(best['icons'])}/{len(result['needed_slots'])} slots; "
           f"missing: {', '.join(best['missing']) or 'none'}. Keep missing slots label-only or Unicode; "
           f"never mix in another pack's drawing style. {result['requests']} library request(s).", file=sys.stderr)
@@ -712,7 +1062,7 @@ def main(argv=None) -> int:
         p.add_argument("--fragment", action="store_true", help="bot has Fragment usernames")
         p.add_argument("--owner-premium", action="store_true", help="bot owner has Telegram Premium")
     lib = common(sub.add_parser("library", help="search the emoji library; pick ONE pack that covers the bot's slots"))
-    lib.add_argument("action", choices=["search", "pick", "facets"])
+    lib.add_argument("action", choices=["search", "pick", "facets", "contract"])
     lib.add_argument("query", nargs="*", help="search: words or an emoji")
     lib.add_argument("--pack", help="search inside one pack")
     lib.add_argument("--needs", help="pick: comma-separated slots")
@@ -720,14 +1070,20 @@ def main(argv=None) -> int:
     lib.add_argument("--motion", choices=["static", "any"], default="static", help="static icons are preferred on buttons")
     lib.add_argument("--theme", choices=["both", "light", "dark"], default="both", help="both: prefer adaptive emoji")
     lib.add_argument("--candidates", type=int, default=6, help="packs fetched in full for real coverage")
-    lib.add_argument("--profile", help="pick/facets: the bot's style profile JSON; icon style, accent colour, traits and "
-                                       "archetype become the brief")
+    lib.add_argument("--profile", help="pick/facets: the bot's style profile JSON; icon style, traits and archetype become "
+                                       "the brief, the brand accent is compared with each pack's colours and palette")
     for facet in FACET_FLAGS:
         lib.add_argument(f"--{facet}", help=f"pick/facets: wanted {facet} (taxonomy id or label; comma-separated)")
     lib.add_argument("--require", action="append", metavar="FACET:VALUE",
                      help="pick/facets: hard filter, the pack must carry this tag (repeatable)")
     lib.add_argument("--top", type=int, default=5)
-    lib.add_argument("--library-json", help="saved answers instead of the network (tests, offline)")
+    lib.add_argument("--library-json", help="saved answers instead of the network (tests)")
+    lib.add_argument("--library-file", help="the offline catalog export (emoji-library.ndjson.gz) instead of the network: "
+                                            "facets and pick --profile give the same result as online")
+    lib.add_argument("--lang", choices=list(LANGS), help="language of the pack descriptions (default: the profile's "
+                                                         "primary locale, else en)")
+    lib.add_argument("--openapi", help="contract: a saved emoji-openapi.json to vendor into data/emoji/library-contract.json")
+    lib.add_argument("--facets-file", help="contract: a saved /api/emoji-facets answer (taxonomy and thresholds)")
     a = ap.parse_args(argv)
     return {"library": cmd_library, "resolve": cmd_resolve, "suggest": cmd_suggest, "verify": cmd_verify, "capture": cmd_capture,
             "apply": cmd_apply, "strip": lambda x: cmd_apply(x, strip=True)}[a.cmd](a)

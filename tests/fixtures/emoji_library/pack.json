@@ -1,0 +1,171 @@
+{
+ "ok": true,
+ "taxonomy": 2,
+ "generated": "2026-11-25",
+ "name": "checkified",
+ "title": "checkified, @svg5926tgsbot",
+ "emoji": [
+  {
+   "id": "5325536405093384220",
+   "fallback": "✅",
+   "format": "animated",
+   "adaptive": true,
+   "preview": "/api/emoji-pack/checkified/5325536405093384220",
+   "animation": "/api/emoji-pack/checkified/5325536405093384220/anim",
+   "still": null,
+   "facets": {
+    "palette": [
+     [
+      "monochrome",
+      0.8
+     ]
+    ],
+    "style": [
+     [
+      "glyph",
+      0.6
+     ]
+    ],
+    "topic": [
+     [
+      "status",
+      0.8
+     ]
+    ],
+    "mood": [
+     [
+      "serious",
+      0.6
+     ]
+    ],
+    "role": [
+     [
+      "status",
+      0.8
+     ]
+    ]
+   }
+  }
+ ],
+ "facets": {
+  "color": [
+   [
+    "white",
+    0.8
+   ]
+  ],
+  "fit": [
+   [
+    "adaptive",
+    1
+   ]
+  ],
+  "mood": [
+   [
+    "serious",
+    0.9
+   ]
+  ],
+  "motion": [
+   [
+    "animated",
+    1
+   ]
+  ],
+  "palette": [
+   [
+    "monochrome",
+    0.8
+   ]
+  ],
+  "role": [
+   [
+    "content",
+    0.9
+   ]
+  ],
+  "style": [
+   [
+    "glyph",
+    1
+   ]
+  ],
+  "topic": [
+   [
+    "interface",
+    1
+   ],
+   [
+    "brands",
+    0.9
+   ],
+   [
+    "status",
+    0.9
+   ]
+  ],
+  "use": [
+   [
+    "utility",
+    0.94
+   ],
+   [
+    "content",
+    0.81
+   ]
+  ]
+ },
+ "compatible": [
+  [
+   "Halloween2023emoji",
+   1
+  ],
+  [
+   "AdaptiveAnimals",
+   1
+  ],
+  [
+   "typical_adaptive_emoji",
+   0.97
+  ],
+  [
+   "cryptoner",
+   0.97
+  ],
+  [
+   "NatureEmojis",
+   0.93
+  ],
+  [
+   "HalloweenIcons",
+   0.93
+  ]
+ ],
+ "look": {
+  "characters": "none",
+  "drawn": "white scalloped verified badges with brand and tool logos cut out as negative space, one colour",
+  "fill": "flat",
+  "line_weight": "none",
+  "perspective": "front",
+  "shadows": "none"
+ },
+ "description": {
+  "en": {
+   "for": "Marks next to names, service lists, shop and support bots",
+   "not_for": "Colourful decoration, emotional reactions, holiday posts",
+   "what": "Animated one-colour scalloped verified badges that take the text colour, with brand and tool logos cut out in the middle."
+  },
+  "ru": {
+   "for": "Отметки у имён, списки сервисов, боты магазинов и поддержки",
+   "not_for": "Цветное оформление, эмоциональные реакции, праздничные посты",
+   "what": "Анимированные одноцветные фигурные значки верификации в цвет текста, с вырезанными внутри логотипами брендов и сервисов."
+  },
+  "uk": {
+   "for": "Позначки біля імен, списки сервісів, боти магазинів і підтримки",
+   "not_for": "Кольорове оздоблення, емоційні реакції, святкові дописи",
+   "what": "Анімовані одноколірні фігурні значки верифікації в колір тексту, з вирізаними всередині логотипами брендів і сервісів."
+  }
+ },
+ "pageUrl": "/emoji/checkified",
+ "telegramUrl": "https://t.me/addemoji/checkified"
+}

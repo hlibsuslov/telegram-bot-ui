@@ -1,0 +1,16 @@
+{
+  "scenario": "B01",
+  "label": "good",
+  "note": "Plain inline menu, one-word labels, no style, no rich message or widget.",
+  "answer": "Added the main menu as a plain inline keyboard in bot.py: three buttons on separate rows labelled Orders, Settings and Help, under the short prompt \"What would you like to do?\". No button is styled primary; this is a 3-button menu, so it stays an ordinary text message with an inline keyboard, not a rich message or a widget. /start and the Back buttons now show this menu. Existing callback_data values (order, profile) are kept; the new ones are orders, settings, help.",
+  "diff": "--- a/bot.py\n+++ b/bot.py\n@@\n-MAIN_MENU = kb([(\"Order coffee\", \"order\")], [(\"Ask the barista AI\", \"ask\")], [(\"My profile\", \"profile\")])\n+MAIN_MENU = kb([(\"Orders\", \"orders\")], [(\"Settings\", \"settings\")], [(\"Help\", \"help\")])\n+MENU_PROMPT = \"What would you like to do?\"\n@@\n async def start(message: Message) -> None:\n-    await message.answer(\"Welcome to Bean There! What would you like?\", reply_markup=MAIN_MENU)\n+    await message.answer(MENU_PROMPT, reply_markup=MAIN_MENU)\n",
+  "tools": [
+    {"tool": "Skill", "target": "telegram-bot-ui"},
+    {"tool": "Read", "target": "bot.py"},
+    {"tool": "Edit", "target": "bot.py"}
+  ],
+  "expected": {
+    "must": ["met", "met"],
+    "critical_failures": ["absent"]
+  }
+}

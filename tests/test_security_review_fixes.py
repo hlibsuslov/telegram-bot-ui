@@ -1,4 +1,6 @@
 """Regressions for the pre-PR security review of the agent bridge and the installer."""
+import contextlib
+import io
 import json
 import os
 import sys
@@ -123,6 +125,102 @@ class InstallerRefusesLinks(unittest.TestCase):
             inst.write_text(link, "overwritten\n")
         with open(self.outside, encoding="utf-8") as fh:
             self.assertEqual(fh.read(), "keep me\n")
+
+
+def link_dir(target, link):
+    """A directory symlink, or a junction where Windows refuses symlinks without a privilege."""
+    try:
+        os.symlink(target, link, target_is_directory=True)
+    except (OSError, NotImplementedError):
+        if os.name != "nt":
+            raise unittest.SkipTest("directory links not permitted here")
+        import _winapi
+        _winapi.CreateJunction(target, link)
+
+
+def unlink_dir(link):
+    if os.path.isdir(link) and not os.path.islink(link):
+        os.rmdir(link)  # a junction: removes the link, never the target's contents
+    else:
+        os.unlink(link)
+
+
+class InstallerRefusesLinkedFolders(unittest.TestCase):
+    """L1: a project's `.claude/skills` (or `.claude/agents`) linked outside the project must
+    stop the installer before it copies, backs up or deletes anything behind the link."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.home = os.path.join(self.tmp.name, "home")
+        self.project = os.path.join(self.tmp.name, "project")
+        self.outside = os.path.join(self.tmp.name, "outside")
+        for path in (self.home, os.path.join(self.project, ".claude"), self.outside):
+            os.makedirs(path)
+        self.links = []
+
+    def tearDown(self):
+        for link in self.links:
+            unlink_dir(link)
+        self.tmp.cleanup()
+
+    def link(self, target, *parts):
+        path = os.path.join(self.project, *parts)
+        link_dir(target, path)
+        self.links.append(path)
+        return path
+
+    def run_install(self, *args):
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            code = install.main(["--home", self.home, "--project", self.project, *args])
+        return code, out.getvalue()
+
+    def outside_tree(self):
+        return sorted(os.path.relpath(os.path.join(d, n), self.outside)
+                      for d, dirs, files in os.walk(self.outside) for n in dirs + files)
+
+    def test_linked_skills_folder_is_refused_before_the_copy(self):
+        self.link(self.outside, ".claude", "skills")
+        with self.assertRaises(SystemExit):
+            self.run_install("--host", "claude", "--scope", "project", "--no-agents")
+        self.assertEqual(self.outside_tree(), [])
+
+    def test_foreign_skill_behind_the_link_is_not_moved(self):
+        foreign = os.path.join(self.outside, "telegram-bot-ui")
+        os.makedirs(foreign)
+        with open(os.path.join(foreign, "SKILL.md"), "w", encoding="utf-8") as fh:
+            fh.write("mine")
+        self.link(self.outside, ".claude", "skills")
+        with self.assertRaises(SystemExit):
+            self.run_install("--host", "claude", "--scope", "project", "--no-agents")
+        self.assertEqual(self.outside_tree(), ["telegram-bot-ui", os.path.join("telegram-bot-ui", "SKILL.md")])
+        self.assertFalse(os.path.exists(os.path.join(self.project, ".claude", "skill-backups")))
+
+    def test_owned_skill_behind_the_link_is_not_deleted(self):
+        owned = os.path.join(self.outside, "telegram-bot-ui")
+        os.makedirs(owned)
+        with open(os.path.join(owned, install.MARKER), "w", encoding="utf-8") as fh:
+            fh.write("{}")
+        self.link(self.outside, ".claude", "skills")
+        for extra in ((), ("--uninstall",)):
+            with self.assertRaises(SystemExit, msg=extra):
+                self.run_install("--host", "claude", "--scope", "project", "--no-agents", *extra)
+            self.assertTrue(os.path.isfile(os.path.join(owned, install.MARKER)), extra)
+
+    def test_linked_agents_folder_gets_no_backup_behind_the_link(self):
+        with open(os.path.join(self.outside, "telegram-bot-builder.md"), "w", encoding="utf-8") as fh:
+            fh.write("mine")
+        self.link(self.outside, ".claude", "agents")
+        with self.assertRaises(SystemExit):
+            self.run_install("--host", "claude", "--scope", "project")
+        self.assertEqual(self.outside_tree(), ["telegram-bot-builder.md"])
+
+    def test_skills_folder_linked_to_this_checkout_is_skipped(self):
+        """The developer setup: a project's `.claude/skills` points at this repository's skills/."""
+        self.link(os.path.dirname(_paths.ROOT), ".claude", "skills")
+        code, out = self.run_install("--host", "claude", "--scope", "project", "--no-agents")
+        self.assertEqual(code, 0)
+        self.assertIn("this repository's skill folder itself", out)
+        self.assertFalse(os.path.exists(os.path.join(_paths.ROOT, install.MARKER)))
 
 
 if __name__ == "__main__":

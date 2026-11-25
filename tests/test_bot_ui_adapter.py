@@ -5,9 +5,11 @@ import asyncio
 import copy
 import json
 import os
+import subprocess
+import sys
 import unittest
 
-from _bot_ui import FIXTURES, ProjectCase
+from _bot_ui import CORE, FIXTURES, STUDIO, ProjectCase
 from bot_ui.project import open_snapshot
 from bot_ui.store import write_patch
 
@@ -108,6 +110,48 @@ class Raw(ProjectCase):
         self.assertIn("курьер в пути", res["requests"][0][1]["text"])
 
 
+class Placement(ProjectCase):
+    """L15: the Runtime serves only the Studio adapters, so it ships with them, not in the skill,
+    and the documented demo command runs from a checkout without extra import paths."""
+
+    def test_runtime_lives_beside_the_adapters(self):
+        self.assertFalse(os.path.exists(os.path.join(CORE, "bot_ui", "runtime.py")))
+        self.assertTrue(os.path.isfile(os.path.join(STUDIO, "adapters", "runtime.py")))
+
+    def test_demo_bot_replays_without_extra_paths(self):
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+        r = subprocess.run([sys.executable, os.path.join(STUDIO, "adapters", "demo_bot.py"), "--project", self.root,
+                            "--replay", os.path.join(FIXTURES, "updates", "checkout.json"), "--raw", "--json"],
+                           capture_output=True, text=True, encoding="utf-8", env=env, cwd=self._tmp, timeout=120)
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        self.assertEqual([c["method"] for c in json.loads(r.stdout)], EXPECTED_METHODS)
+
+
+class AdapterImports(unittest.TestCase):
+    """The adapters import both as the studio.adapters package (from the repository root) and as
+    standalone modules from studio/adapters (demo_bot.py and replays), after runtime.py moved there."""
+
+    def imports(self, cwd, code):
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+        return subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, encoding="utf-8",
+                              env=env, cwd=cwd, timeout=120)
+
+    def modules(self):
+        return ["raw_adapter"] + (["aiogram_adapter"] if HAVE_AIOGRAM else [])
+
+    def test_package_mode(self):
+        for name in self.modules():
+            with self.subTest(name):
+                r = self.imports(os.path.dirname(STUDIO), f"import studio.adapters.{name} as m; print(m.Runtime.__name__)")
+                self.assertEqual((r.returncode, r.stdout.strip()), (0, "Runtime"), r.stderr[-1500:])
+
+    def test_standalone_mode(self):
+        for name in self.modules():
+            with self.subTest(name):
+                r = self.imports(os.path.join(STUDIO, "adapters"), f"import {name} as m; print(m.Runtime.__name__)")
+                self.assertEqual((r.returncode, r.stdout.strip()), (0, "Runtime"), r.stderr[-1500:])
+
+
 @unittest.skipUnless(HAVE_AIOGRAM, "aiogram==3.31.0 not installed (pip install -r skills/telegram-bot-ui/examples/python/sdk_aiogram/requirements.txt)")
 class Aiogram(ProjectCase):
     def test_aiogram_serialises_the_same_payloads_as_the_raw_adapter(self):
@@ -119,6 +163,22 @@ class Aiogram(ProjectCase):
         self.assertEqual(json.dumps(calls, sort_keys=True, ensure_ascii=False),
                          json.dumps(raw, sort_keys=True, ensure_ascii=False))
         self.assertEqual(aiogram.__version__, "3.31.0")
+
+
+class AiogramSkip(unittest.TestCase):
+    """Without aiogram only the aiogram replay is skipped; Placement needs the standard library only."""
+
+    def test_only_the_aiogram_case_skips_without_aiogram(self):
+        code = ("import sys, unittest; sys.modules['aiogram'] = None; "
+                "suite = unittest.defaultTestLoader.loadTestsFromNames("
+                "['test_bot_ui_adapter.Placement', 'test_bot_ui_adapter.Aiogram']); "
+                "r = unittest.TextTestRunner(stream=open(__import__('os').devnull, 'w')).run(suite); "
+                "print(sorted(t.id().split('.')[1] for t, _ in r.skipped), r.testsRun, "
+                "len(r.failures) + len(r.errors))")
+        r = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, encoding="utf-8",
+                           cwd=os.path.dirname(os.path.abspath(__file__)), timeout=300)
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        self.assertEqual(r.stdout.strip(), "['Aiogram'] 3 0")
 
 
 if __name__ == "__main__":

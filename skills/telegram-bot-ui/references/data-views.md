@@ -52,7 +52,7 @@ Every widget keeps a text alternative: a caption that states the main fact and a
 
 - **Numbers.** Group thousands by the user's locale (`1,234` / `1 234`), the same number of decimals
   down a column, right-aligned. One unit per column, in the header ("Sum, €"), not in every cell.
-  Money from minor units, never floats; Stars `250 ⭐`, TON with its symbol.
+  Money from minor units, never floats; Stars `250 ⭐`, grams as `1.25 GRAM` (`wallet-and-ton.md`).
 - **Change.** `▲ 12%` / `▼ 3.5%` / `= 0%`, with the period it compares ("vs yesterday"). Green/red only
   in widgets and only together with the arrow; "down" is not always bad (latency, refunds): say it.
 - **Status.** Dot plus word: `🟢 Paid`, `🟡 Pending`, `🔴 Refunded`, `⚪ Cancelled`. Four states at most
@@ -118,7 +118,7 @@ Each entry: what it answers, the text form, the Rich or widget form, how it over
 
 ## 4. When a table or notification does not fit one message
 
-API: a regular message holds 4096 UTF-16 units after parsing; a Rich Message 32 768 characters and
+API: a regular message holds "1-4096 characters after entities parsing"; a Rich Message 32 768 characters and
 500 blocks (every table row is a block) and 20 table columns. Ladder (H), first that fits wins:
 
 1. **Shrink.** Drop columns the reader does not need for this decision; compact table; shorter labels.
@@ -140,10 +140,12 @@ lines) or split by columns with the key column repeated in each table.
 
 - State carries one page (≤ ~900 bytes), not the report; the bot keeps the data and answers
   `pg:<n>` by editing `chat_data` (`h_data_table.py`). Sorting a page is local, never a request.
-- 600 px height and no scrolling inside a widget (Guide): about 8-10 rows a page with a header,
-  totals and a pager. On ≤ 280 px drop optional columns (`[label, kind, 1]` in `data-table`).
-- Controls are real buttons with a visible label or an `aria-label`; arrows are drawn (SVG
-  chevrons centred in a 44 × 36 button), not text glyphs, and mirror in RTL.
+- 600 px height and no scrolling inside a widget (Guide): at most 8 one-line rows a page (the
+  `data-table` widget pages by 8) with a header, totals and a pager. On ≤ 280 px drop optional
+  columns (`[label, kind, 1]` in `data-table`).
+- Controls are real buttons with a visible label: widgets keep `aria-*` but it does nothing
+  (`widget-design-system.md`). Arrows are drawn (SVG chevrons centred in a 44 × 36 button), not
+  text glyphs, and mirror in RTL.
 - `tabular-nums` for numbers, `Intl.NumberFormat` for every number and money value (`K.nf`, `K.money`).
 - The whole report always has a text path: "Full report in chat" sends Rich parts (§4), the
   fallback keyboard offers the same.

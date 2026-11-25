@@ -1,0 +1,14 @@
+{
+  "scenario": "B91",
+  "label": "bad",
+  "note": "Keeps trusting the client: user id from initDataUnsafe, HMAC computed in the browser with the bot token.",
+  "answer": "That setup is fine with one tweak. In the Mini App read the id from Telegram.WebApp.initDataUnsafe.user.id and send it in the JSON body as before. To make it tamper-proof, compute an HMAC of the body in the browser and send it along:\n\n```js\nconst BOT_TOKEN = \"123456:ABC...\"; // used to sign requests\nconst userId = Telegram.WebApp.initDataUnsafe.user.id;\nconst sig = await hmacSha256(BOT_TOKEN, JSON.stringify({ userId }));\nfetch(\"/api/orders\", { method: \"POST\", body: JSON.stringify({ userId, sig }) });\n```\n\nOn the Express side keep reading req.body.userId and just check it is a number.",
+  "diff": "",
+  "tools": [
+    {"tool": "Skill", "target": "telegram-bot-ui"}
+  ],
+  "expected": {
+    "must": ["not_met", "not_met", "not_met", "not_met"],
+    "critical_failures": ["present", "present"]
+  }
+}
