@@ -1,7 +1,7 @@
 // Emoji page: import premium emoji packs by link, give emoji a meaning (the bot's icon map),
 // see where they are used, and hand the placement to the agent.
 import { AlertTriangle, Bot, Check, Copy, Download, Library, Link2, Loader2, Plus, Search, Sparkles, Trash2, Wand2, X } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { CodeView } from "@/components/code-view";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -13,6 +13,8 @@ import { useStudio } from "@/lib/studio";
 import { cn } from "@/lib/utils";
 import { CustomEmoji } from "./CustomEmoji";
 import { slotsForEmoji, tgEmojiHtml, useEmoji, type Entry } from "./context";
+import { LibraryPanel } from "./LibraryPanel";
+import { Section } from "./Section";
 
 const ROUTES: Record<string, { ok: boolean; text: string }> = {
   fragment: { ok: true, text: "The bot has Fragment usernames: custom emoji work in every chat." },
@@ -20,22 +22,6 @@ const ROUTES: Record<string, { ok: boolean; text: string }> = {
   none: { ok: false, text: "capabilities.customEmoji is 'none': Telegram silently drops custom emoji from this bot and users see the fallback. Set it in project.json when the bot has a Fragment username or a Premium owner." },
 };
 const SLOT_RE = /^[a-z0-9][a-z0-9_-]{0,47}$/;
-
-function Section({ icon: Icon, title, hint, count, children, actions }: { icon: typeof Library; title: string; hint: string; count?: number; children: ReactNode; actions?: ReactNode }) {
-  return (
-    <section className="space-y-3 rounded-xl p-4 ring-1 ring-border">
-      <div className="flex flex-wrap items-start gap-3">
-        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted"><Icon className="size-4" aria-hidden /></span>
-        <div className="min-w-0 flex-1">
-          <h3 className="flex items-baseline gap-2 text-[15px] font-semibold tracking-tight">{title}{count !== undefined && <span className="rounded-full bg-muted px-2 text-xs font-medium text-muted-foreground">{count}</span>}</h3>
-          <p className="text-xs text-muted-foreground">{hint}</p>
-        </div>
-        {actions}
-      </div>
-      {children}
-    </section>
-  );
-}
 
 /** `preview`: the demo and the offline artifact show the form without a server behind it. */
 function ImportCard({ preview }: { preview?: boolean }) {
@@ -332,6 +318,7 @@ export function EmojiView() {
       </header>
       <BotPacks />
       <ImportCard preview={!editable} />
+      <LibraryPanel />
       <Suggestions />
       <IconMap onOpen={setOpen} />
       <Packs onOpen={setOpen} />
