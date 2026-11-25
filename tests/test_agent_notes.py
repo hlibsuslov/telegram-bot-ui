@@ -32,6 +32,12 @@ GOOD = {
 }
 
 
+def bare_symbol():
+    """A catalog symbol no domain has noted yet (types last get notes, so start there)."""
+    notes = api_notes.load_notes()
+    return next(n for kind in ("types", "methods") for n in sorted(CAT[kind]) if n not in notes)
+
+
 def problems(notes, domain="rich", extra_files=()):
     files = [(f"{domain}.json", {"domain": domain, "notes": notes}), *extra_files]
     return api_notes.validate(files, CAT, versions=VERSIONS)
@@ -117,7 +123,7 @@ class Card(unittest.TestCase):
         self.assertIn("Example: examples/payloads/", out.getvalue())
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
-            self.assertEqual(tg_api_lookup.main(["--json", "card", "sendMessage"]), 0)
+            self.assertEqual(tg_api_lookup.main(["--json", "card", bare_symbol()]), 0)
         data = json.loads(out.getvalue())
         self.assertIsNone(data["note"])
         self.assertIn("Note: none yet", data["card"])

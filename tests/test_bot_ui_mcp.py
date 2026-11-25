@@ -53,8 +53,12 @@ class Tools(unittest.TestCase):
         self.assertTrue(r[2]["result"]["structuredContent"]["found"])
 
     def test_lookup_returns_the_agent_card(self):
+        import api_notes
+        import tg_api_lookup
+        cat, notes = tg_api_lookup.Api().cat, api_notes.load_notes()
+        bare = next(n for kind in ("types", "methods") for n in sorted(cat[kind]) if n not in notes)
         r, _ = session(("telegram_api_lookup", {"symbol": "sendRichMessage"}),
-                       ("telegram_api_lookup", {"symbol": "sendMessage"}))
+                       ("telegram_api_lookup", {"symbol": bare}))
         noted, bare = r[1]["result"]["structuredContent"], r[2]["result"]["structuredContent"]
         self.assertEqual(noted["note"]["since"], "10.1")
         self.assertIn("Purpose: " + noted["note"]["purpose"], noted["card"])
