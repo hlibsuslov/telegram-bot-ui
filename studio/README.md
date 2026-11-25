@@ -109,6 +109,7 @@ keyboard whose action was removed is answered as stale.
 | Regular HTML / plain | edit, render | edit, safe preview | edit, safe preview | sendMessage / editMessageText |
 | MarkdownV2 | render | read-only | read-only | render |
 | Rich Messages, entities, media | kept, read-only | read-only with reason | read-only | not rendered (fallback text) |
+| Rich Messages as JSON blocks (`InputRichMessage.blocks`) | not supported: no screen format; send blocks from code (`tgkit.rich`) | not supported | not supported | - |
 | Streaming answer with Stop | not in v1 | not in v1 | not in v1 | not in v1 |
 | Premium emoji packs and icon map | emoji | Emoji page: import by link, pickers in text and buttons, real pictures in previews and the simulator | read-only, pictures inlined | - |
 | Import an existing bot | inventory (aiogram, read-only) | - | - | - |
