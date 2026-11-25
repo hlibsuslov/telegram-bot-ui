@@ -151,6 +151,20 @@ revision. With a library, `validate` adds `CUSTOM_EMOJI_UNKNOWN` (id not in it, 
 `CUSTOM_EMOJI_DOUBLE_ICON` (button icon plus an emoji at the start of the label, warning).
 `bot-ui emoji brief [--json]` is what an agent reads before placing custom emoji.
 
+Finding a pack by tags (Emoji page, "Find a pack by tags"): the telegram-bot-ui emoji library's
+catalog (`GET <resolver origin>/api/emoji-facets`, or the offline export with
+`bot-ui studio --emoji-library-file emoji-library.ndjson.gz`, both checked against the skill's
+`data/emoji/library-contract.json`) filters every pack by style, colour, theme fit and motion
+(values of one facet add up, facets narrow down; a tag counts from the library's pack threshold).
+"Pick a pack" takes the slots the screens use (their ordinary emoji and placed icons) through the
+skill's pick logic: online, `pick_family` matches every slot by fallback emoji (coverage first); from
+the export, `pick_by_profile` ranks the catalog by the slots' interface roles. Each ranked pack has
+its one-line reason and description. The network is used only on "Load the library" and "Pick a
+pack"; both results stay in `.bot-ui/emoji/catalog.json` and `pick.json` (never committed), and
+`export-snapshot` (and MCP `map_snapshot`) embeds them, or the export given with
+`--emoji-library-file`, so the single-file page filters and shows the pick without network (a pick
+made for other screens is redone there from the catalog).
+
 ## Transition rule
 
 One declarative condition per navigate action: `when.field` (a declared `context` or
