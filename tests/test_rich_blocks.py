@@ -164,6 +164,14 @@ class BuildersMirrorTheCatalog(unittest.TestCase):
                          {"type": "expandable_blockquote", "blocks": [{"type": "paragraph", "text": "Long"}],
                           "credit": "Ann"})
 
+    def test_document_block_keeps_the_file_ref_keyword(self):
+        """Before the catalog-mirrored builders, document_block took file_ref=; callers keep working."""
+        self.assertEqual(rich.document_block(file_ref="BQACdemo", caption="Spec"),
+                         rich.document_block("BQACdemo", caption="Spec"))
+        with self.assertRaises(TypeError):
+            rich.document_block("BQACdemo", file_ref="BQACother")
+        self.assertNotIn("file_ref", builder_fields(rich.document_block))   # the catalog field stays the name
+
 
 # ---- parity: one document as Rich HTML and as blocks ---------------------------------------------
 #

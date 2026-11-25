@@ -15,7 +15,8 @@ building quote_rich_texts for a reply.
 """
 from __future__ import annotations
 
-from typing import Any
+import functools
+from typing import Any, Callable
 
 RichText = Any  # str | list | dict - the Bot API RichText union
 Block = dict[str, Any]
@@ -27,6 +28,22 @@ QUOTE_MAX_TEXTS = 32
 QUOTE_MAX_CHARS = 1024
 BUTTON_ACTIONS = ("url", "callback_data", "web_app", "login_url", "switch_inline_query",
                   "switch_inline_query_current_chat", "switch_inline_query_chosen_chat", "copy_text", "disabled")
+
+
+def _renamed(**aliases: str) -> Callable[[Callable[..., Block]], Callable[..., Block]]:
+    """Accept an old keyword (old=new) for a builder whose parameters now mirror the catalog. The
+    signature stays the catalog's (inspect follows __wrapped__); passing both names is a TypeError."""
+    def wrap(fn: Callable[..., Block]) -> Callable[..., Block]:
+        @functools.wraps(fn)
+        def builder(*args: Any, **kwargs: Any) -> Block:
+            for old, new in aliases.items():
+                if old in kwargs:
+                    if new in kwargs or args:
+                        raise TypeError(f"{fn.__name__}() got both {old!r} (old name) and {new!r}")
+                    kwargs[new] = kwargs.pop(old)
+            return fn(*args, **kwargs)
+        return builder
+    return wrap
 
 
 def _obj(type_: str | None, **fields: Any) -> dict[str, Any]:
@@ -137,6 +154,7 @@ def audio_block(audio: str | dict[str, Any], caption: RichText | dict[str, Any] 
     return _obj("audio", audio=_media("audio", audio), caption=_caption(caption))
 
 
+@_renamed(file_ref="document")  # the pre-catalog name, kept for existing callers
 def document_block(document: str | dict[str, Any], caption: RichText | dict[str, Any] | None = None) -> Block:
     """document: a file_id (preferred), an HTTP URL, or attach://<name>.
     Not allowed in sendRichMessageDraft for new uploads or explicit URLs."""
