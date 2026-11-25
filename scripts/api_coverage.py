@@ -4,25 +4,30 @@
   py -3 scripts/api_coverage.py --report                 # tables by section and the gaps by name
   py -3 scripts/api_coverage.py --check                  # fail when coverage fell below the floor
   py -3 scripts/api_coverage.py --update-floor           # record the current state as the floor
+  py -3 scripts/api_coverage.py --check --against origin/main   # ...and the floor was not lowered vs a ref
   py -3 scripts/api_coverage.py --json out.json          # every symbol with its levels
 
 Levels. A symbol has a level when its exact name is a whole identifier in that text:
   Bot API methods and types (data/bot-api/catalog.json)
     K  knowledge   references/**/*.md, except the generated registry bot-api-coverage.md and INDEX.md
-    R  recipe      recipes/*.md
+    R  recipe      recipes/*.md (top level only)
     P  practice    examples/payloads/*.json or example code (examples/**/*.py|ts|tsx|js|mjs|html);
                    a method also counts in snake_case (bot.send_message)
-    V  validator   scripts/validate_*.py (a special case or a `_rules_<method>` rule)
+    V  validator   scripts/validate_*.py (a special case or a `_rules_<method>` rule); report only, coarse
   Telegram.WebApp members (data/mini-apps/webapp-catalog.json), matched by the member name
     A  api list    references/mini-apps/webapp-api.md
-    G  guidance    any other references/mini-apps/*.md or references/mini-apps-bridge.md
+    G  guidance    any other references/mini-apps/*.md (top level) or references/mini-apps-bridge.md
     C  code        examples/mini-apps/**/*.ts|tsx|js|mjs|html
-Name matching is coarse: a one-word name (close, Story, show) can match unrelated prose.
+Name matching is coarse: a one-word name (close, Story, show) can match unrelated prose, and WebApp members
+are matched without their owner (BackButton.isVisible and SettingsButton.isVisible share one mention).
+In a git checkout only tracked files count (`git add` a new file first), so a local run measures what CI sees.
 
 The floor (data/bot-api/coverage-floor.json in the skill) lists, for each measure, the symbols that do not
 meet it yet. `--check` fails when any other symbol misses a measure (coverage was lost) and when a listed
 symbol now meets it (the floor is stale: run --update-floor so the ratchet moves up). `--update-floor`
 refuses to add a symbol to a gap list unless `--allow-new-gaps` is given (for symbols a catalog sync added).
+`--against REF` also reads the floor and catalogs at a git ref (the PR base in CI) and fails when the floor
+lists a gap for a symbol that existed at REF and was not a gap there: the floor cannot be lowered in a change.
 """
 # run-checks: --check
 from __future__ import annotations
@@ -31,6 +36,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 from collections import defaultdict
 
@@ -52,14 +58,40 @@ MEASURES = {
 }
 
 
-def _files(base: str, exts: tuple[str, ...], skip: set[str] = frozenset()) -> list[str]:
+def _files(base: str, exts: tuple[str, ...], skip: set[str] = frozenset(), recursive: bool = True,
+           tracked: set[str] | None = None) -> list[str]:
+    """Files under `base` with these extensions; with `tracked`, only the ones git tracks."""
     if not os.path.isdir(base):
         return []
     out = []
     for dirpath, dirnames, filenames in os.walk(base):
-        dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS and not d.startswith("dist"))
+        dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS and not d.startswith("dist")) if recursive else []
         out += [os.path.join(dirpath, n) for n in sorted(filenames) if n.endswith(exts) and n not in skip]
+    if tracked is not None:
+        out = [p for p in out if os.path.normcase(os.path.normpath(p)) in tracked]
     return out
+
+
+def _tracked(folder: str) -> set[str] | None:
+    """Normalized paths of the files git tracks under `folder`, or None outside a git checkout."""
+    try:
+        res = subprocess.run(["git", "-C", folder, "ls-files", "-z"], capture_output=True)
+    except OSError:
+        return None
+    if res.returncode != 0:
+        return None
+    return {os.path.normcase(os.path.normpath(os.path.join(folder, p)))
+            for p in res.stdout.decode("utf-8").split("\0") if p}
+
+
+def git_json(ref: str, path: str):
+    """A JSON file as it is at a git ref, or None when the ref or the file is not there."""
+    folder, name = os.path.split(os.path.abspath(path))
+    try:
+        res = subprocess.run(["git", "-C", folder, "show", f"{ref}:./{name}"], capture_output=True)
+    except OSError:
+        return None
+    return json.loads(res.stdout.decode("utf-8")) if res.returncode == 0 else None
 
 
 def _tokens(paths: list[str]) -> set[str]:
@@ -83,10 +115,12 @@ def measure(skill: str = SKILL) -> dict:
     catalog, webapp = load("data", "bot-api", "catalog.json"), load("data", "mini-apps", "webapp-catalog.json")
     refs = os.path.join(skill, "references")
     examples = os.path.join(skill, "examples")
-    know = _tokens(_files(refs, (".md",), REF_SKIP))
-    recipe = _tokens(_files(os.path.join(skill, "recipes"), (".md",)))
-    practice = _tokens(_files(os.path.join(examples, "payloads"), (".json",)) + _files(examples, CODE_EXT))
-    validators = _tokens([p for p in _files(os.path.join(skill, "scripts"), (".py",))
+    tracked = _tracked(skill)
+    know = _tokens(_files(refs, (".md",), REF_SKIP, tracked=tracked))
+    recipe = _tokens(_files(os.path.join(skill, "recipes"), (".md",), recursive=False, tracked=tracked))
+    practice = _tokens(_files(os.path.join(examples, "payloads"), (".json",), recursive=False, tracked=tracked)
+                       + _files(examples, CODE_EXT, tracked=tracked))
+    validators = _tokens([p for p in _files(os.path.join(skill, "scripts"), (".py",), recursive=False, tracked=tracked)
                           if os.path.basename(p).startswith("validate_")])
 
     rows = []
@@ -101,11 +135,12 @@ def measure(skill: str = SKILL) -> dict:
             })
 
     mini = os.path.join(refs, "mini-apps")
-    api_list = _tokens([os.path.join(mini, "webapp-api.md")] if os.path.isfile(os.path.join(mini, "webapp-api.md")) else [])
-    guide_paths = [p for p in _files(mini, (".md",)) if os.path.basename(p) != "webapp-api.md"]
-    bridge = os.path.join(refs, "mini-apps-bridge.md")
-    guide = _tokens(guide_paths + ([bridge] if os.path.isfile(bridge) else []))
-    web_code = _tokens(_files(os.path.join(examples, "mini-apps"), WEB_CODE_EXT))
+    mini_refs = _files(mini, (".md",), recursive=False, tracked=tracked)
+    api_list = _tokens([p for p in mini_refs if os.path.basename(p) == "webapp-api.md"])
+    guide = _tokens([p for p in mini_refs if os.path.basename(p) != "webapp-api.md"]
+                    + [p for p in _files(refs, (".md",), recursive=False, tracked=tracked)
+                       if os.path.basename(p) == "mini-apps-bridge.md"])
+    web_code = _tokens(_files(os.path.join(examples, "mini-apps"), WEB_CODE_EXT, tracked=tracked))
     for key, member in sorted(webapp["members"].items()):
         short = member.get("name") or key.split(".")[-1]
         rows.append({"kind": "webapp", "name": key, "section": member.get("kind") or "",
@@ -132,6 +167,29 @@ def compare(floor: dict, current: dict[str, list[str]]) -> tuple[dict, dict]:
         if stale_here:
             stale[name] = stale_here
     return lost, stale
+
+
+def lowered(base_floor: dict, floor: dict, base_symbols: set[str]) -> dict[str, list[str]]:
+    """Gaps the floor records that the base floor did not, for symbols that already existed at the base.
+    A measure the base floor does not have yet is new and cannot be lowered."""
+    out = {}
+    before_all = base_floor.get("gaps", {})
+    for name, names in floor.get("gaps", {}).items():
+        if name not in before_all:
+            continue
+        before = set(before_all[name])
+        extra = sorted(n for n in names if n not in before and n in base_symbols)
+        if extra:
+            out[name] = extra
+    return out
+
+
+def symbols_at(ref: str, skill: str) -> set[str] | None:
+    catalog = git_json(ref, os.path.join(skill, "data", "bot-api", "catalog.json"))
+    webapp = git_json(ref, os.path.join(skill, "data", "mini-apps", "webapp-catalog.json"))
+    if catalog is None:
+        return None
+    return {*catalog.get("methods", {}), *catalog.get("types", {}), *((webapp or {}).get("members") or {})}
 
 
 def _count(rows, kind, ok):
@@ -217,7 +275,7 @@ def write_floor(path: str, bot_api: str, current: dict[str, list[str]]) -> None:
         "bot_api": bot_api,
         "gaps": current,
     }
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(data, fh, ensure_ascii=False, indent=1)
         fh.write("\n")
@@ -235,6 +293,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--update-floor", action="store_true", help="record the current state as the floor")
     ap.add_argument("--allow-new-gaps", action="store_true",
                     help="with --update-floor: accept symbols that are not covered and not in the floor yet")
+    ap.add_argument("--against", metavar="REF", help="with --check: also fail if the floor is lower than at this git ref")
     ap.add_argument("--json", metavar="PATH", help="write every symbol with its levels")
     ap.add_argument("--skill", default=SKILL, help=argparse.SUPPRESS)
     ap.add_argument("--floor", help=argparse.SUPPRESS)
@@ -258,24 +317,48 @@ def main(argv: list[str] | None = None) -> int:
             print("Restore their coverage, or pass --allow-new-gaps if a catalog sync added them.")
             return 1
         write_floor(floor_path, result["bot_api"], current)
-        print(f"api coverage: floor written to {os.path.relpath(floor_path, ROOT)} ({summary_line(rows)})")
+        print(f"api coverage: floor written to {floor_path} ({summary_line(rows)})")
     if args.check:
         floor = load_floor(floor_path)
         if not floor:
             print(f"api coverage: no floor at {floor_path}; run --update-floor")
             return 1
         lost, stale = compare(floor, current)
+        known = {r["name"] for r in rows}
+        covered = {m: [n for n in names if n in known] for m, names in stale.items()}
+        gone = {m: [n for n in names if n not in known] for m, names in stale.items()}
         if lost:
             print("api coverage: FAILED, coverage fell below the floor (or the catalog gained symbols):")
             _print_names("missing", lost)
         if stale:
             print("api coverage: FAILED, the floor is stale; run `py -3 scripts/api_coverage.py --update-floor`:")
-            _print_names("now covered", stale)
+            _print_names("now covered", {m: n for m, n in covered.items() if n})
+            _print_names("no longer in the catalog", {m: n for m, n in gone.items() if n})
         if lost or stale:
             status = 1
         else:
             print(f"api coverage: OK ({summary_line(rows)})")
+        if args.against:
+            status = max(status, _check_against(args.against, floor_path, floor, args.skill))
     return status
+
+
+def _check_against(ref: str, floor_path: str, floor: dict, skill: str) -> int:
+    base_floor = git_json(ref, floor_path)
+    if base_floor is None:
+        print(f"api coverage: no floor at {ref}; nothing to compare")
+        return 0
+    base_symbols = symbols_at(ref, skill)
+    if base_symbols is None:
+        print(f"api coverage: FAILED, no catalog at {ref}")
+        return 1
+    drop = lowered(base_floor, floor, base_symbols)
+    if drop:
+        print(f"api coverage: FAILED, the floor is lower than at {ref} for symbols that existed there:")
+        _print_names("lowered", drop)
+        return 1
+    print(f"api coverage: floor not lowered against {ref}")
+    return 0
 
 
 if __name__ == "__main__":
