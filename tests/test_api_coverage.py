@@ -64,6 +64,8 @@ class FakeSkill(unittest.TestCase):
             # dependencies are not the skill's own code
             "examples/mini-apps/app/node_modules/x/index.js": "popupClosed getItems makeSet",
             "scripts/validate_payload.py": "def _rules_sendThingDraft(self): pass\n",
+            "data/bot-api/agent-notes/things.json": {"domain": "things", "notes": {
+                "sendThingDraft": {"purpose": "x", "related": ["WidgetPart", "getStuff"]}}},
         }
         for rel, text in files.items():
             _write(self.skill, rel, text)
@@ -87,6 +89,8 @@ class Levels(FakeSkill):
         self.assertTrue(rows["Widget"]["K"])
         self.assertFalse(rows["WidgetPart"]["K"] or rows["WidgetPart"]["R"] or rows["WidgetPart"]["P"])
         self.assertTrue(rows["RichBlockNote"]["R"])
+        self.assertEqual([n for n in CATALOG["methods"] if rows[n]["N"]], ["sendThingDraft"])
+        self.assertEqual([n for n in CATALOG["types"] if rows[n]["C"]], ["WidgetPart"])
 
     def test_webapp_levels(self):
         rows = self.rows()
@@ -100,13 +104,15 @@ class Levels(FakeSkill):
             "method.K": ["getStuff", "makeSet", "sendThing"],
             "method.P": ["makeSet", "sendThing"],
             "type.named": ["WidgetPart"],
+            "method.note": ["getStuff", "makeSet", "sendThing"],
+            "type.card": ["RichBlockNote", "Widget"],
             "webapp.guided": ["CloudStorage.getItems", "events.popupClosed"],
         })
         text = api_coverage.report(result)
-        self.assertIn("| Available methods | 3 | 1 | 1 | 2 | 1 | 1 | 0 |", text)
-        self.assertIn("| **Total** | **4** | **1** | **1** | **2** | **1** | **2** | **0** |", text)
+        self.assertIn("| Available methods | 3 | 1 | 1 | 2 | 1 | 1 | 1 | 0 |", text)
+        self.assertIn("| **Total** | **4** | **1** | **1** | **2** | **1** | **1** | **2** | **0** |", text)
         self.assertIn("Methods named nowhere (2): makeSet, sendThing", text)
-        self.assertIn("| **Total** | **3** | **2** | **1** | **0** | **1** |", text)
+        self.assertIn("| **Total** | **3** | **2** | **1** | **0** | **1** | **1** |", text)
         self.assertIn("| **Total** | **4** | **3** | **1** | **1** | **2** |", text)
 
 
@@ -147,6 +153,20 @@ class Floor(FakeSkill):
         self.assertEqual(code, 1)
         self.assertIn("new gap type.named (1): RichBlockNote", out)
         self.assertEqual(self.run_cli("--update-floor", "--allow-new-gaps")[0], 0)
+        self.assertEqual(self.run_cli("--check")[0], 0)
+
+    def test_a_new_measure_enters_the_floor_without_override(self):
+        self.run_cli("--update-floor")
+        with open(self.floor, encoding="utf-8") as fh:
+            older = json.load(fh)
+        del older["gaps"]["type.card"]  # a floor written before this measure existed
+        with open(self.floor, "w", encoding="utf-8") as fh:
+            json.dump(older, fh)
+        code, out = self.run_cli("--check")
+        self.assertEqual(code, 1)
+        self.assertIn("the floor has no type.card yet", out)
+        self.assertNotIn("missing", out)
+        self.assertEqual(self.run_cli("--update-floor")[0], 0)
         self.assertEqual(self.run_cli("--check")[0], 0)
 
     def test_symbol_removed_from_the_catalog_is_reported_as_gone(self):

@@ -14,6 +14,8 @@ Levels. A symbol has a level when its exact name is a whole identifier in that t
     P  practice    examples/payloads/*.json or example code (examples/**/*.py|ts|tsx|js|mjs|html);
                    a method also counts in snake_case (bot.send_message)
     V  validator   scripts/validate_*.py (a special case or a `_rules_<method>` rule); report only, coarse
+    N  note        has its own agent note in data/bot-api/agent-notes/*.json (scripts/api_notes.py)
+    C  card        has its own note or is listed in a note's "related" (the agent meets it in a card)
   Telegram.WebApp members (data/mini-apps/webapp-catalog.json), matched by the member name
     A  api list    references/mini-apps/webapp-api.md
     G  guidance    any other references/mini-apps/*.md (top level) or references/mini-apps-bridge.md
@@ -54,6 +56,8 @@ MEASURES = {
     "method.K": ("method", lambda r: r["K"]),
     "method.P": ("method", lambda r: r["P"]),
     "type.named": ("type", lambda r: r["K"] or r["R"] or r["P"]),
+    "method.note": ("method", lambda r: r["N"]),
+    "type.card": ("type", lambda r: r["C"]),
     "webapp.guided": ("webapp", lambda r: r["G"] or r["C"]),
 }
 
@@ -123,6 +127,15 @@ def measure(skill: str = SKILL) -> dict:
     validators = _tokens([p for p in _files(os.path.join(skill, "scripts"), (".py",), recursive=False, tracked=tracked)
                           if os.path.basename(p).startswith("validate_")])
 
+    noted, related = set(), set()
+    for path in _files(os.path.join(skill, "data", "bot-api", "agent-notes"), (".json",), recursive=False,
+                       tracked=tracked):
+        with open(path, encoding="utf-8") as fh:
+            notes = json.load(fh).get("notes") or {}
+        noted.update(notes)
+        related.update(r for note in notes.values() if isinstance(note, dict)
+                       for r in note.get("related", []) if isinstance(r, str))
+
     rows = []
     for kind in ("methods", "types"):
         for name, sym in sorted(catalog[kind].items()):
@@ -132,6 +145,7 @@ def measure(skill: str = SKILL) -> dict:
                 "K": name in know, "R": name in recipe,
                 "P": name in practice or (is_method and snake(name) in practice),
                 "V": name in validators or (is_method and f"_rules_{name}" in validators),
+                "N": name in noted, "C": name in noted or name in related,
             })
 
     mini = os.path.join(refs, "mini-apps")
@@ -155,18 +169,22 @@ def gaps(rows: list[dict]) -> dict[str, list[str]]:
     return out
 
 
-def compare(floor: dict, current: dict[str, list[str]]) -> tuple[dict, dict]:
-    """(lost: symbols missing a measure outside the floor, stale: floor entries that now meet it)."""
-    lost, stale = {}, {}
+def compare(floor: dict, current: dict[str, list[str]]) -> tuple[dict, dict, list[str]]:
+    """(lost: symbols missing a measure outside the floor, stale: floor entries that now meet it,
+    measures the floor does not record yet)."""
+    lost, stale, new = {}, {}, []
     recorded = floor.get("gaps", {})
     for name, now in current.items():
-        before = set(recorded.get(name, []))
+        if name not in recorded:
+            new.append(name)
+            continue
+        before = set(recorded[name])
         lost_here, stale_here = sorted(set(now) - before), sorted(before - set(now))
         if lost_here:
             lost[name] = lost_here
         if stale_here:
             stale[name] = stale_here
-    return lost, stale
+    return lost, stale, new
 
 
 def lowered(base_floor: dict, floor: dict, base_symbols: set[str]) -> dict[str, list[str]]:
@@ -226,20 +244,22 @@ def report(result: dict) -> str:
 
     def method_cells(rs):
         return [len(rs), sum(r["K"] for r in rs), sum(r["R"] for r in rs), sum(r["P"] for r in rs),
-                sum(r["V"] for r in rs), sum(not (r["K"] or r["R"] or r["P"]) for r in rs),
+                sum(r["V"] for r in rs), sum(r["N"] for r in rs), sum(not (r["K"] or r["R"] or r["P"]) for r in rs),
                 sum(r["K"] and not r["P"] for r in rs)]
 
     body, total = section_rows("method", method_cells)
     out.append(f"## Bot API {result['bot_api']}: methods\n")
-    out.append(_table(["Section", "Methods", "K", "R", "P", "V", "Nowhere", "Text only"], body, ["Total", *total]))
+    out.append(_table(["Section", "Methods", "K", "R", "P", "V", "Note", "Nowhere", "Text only"], body,
+                      ["Total", *total]))
 
     def type_cells(rs):
         named = sum(1 for r in rs if r["K"] or r["R"] or r["P"])
-        return [len(rs), named, sum(r["K"] for r in rs), sum(r["P"] for r in rs), len(rs) - named]
+        return [len(rs), named, sum(r["K"] for r in rs), sum(r["P"] for r in rs), sum(r["C"] for r in rs),
+                len(rs) - named]
 
     body, total = section_rows("type", type_cells)
     out.append(f"\n## Bot API {result['bot_api']}: types\n")
-    out.append(_table(["Section", "Types", "Named", "K", "P", "Not named"], body, ["Total", *total]))
+    out.append(_table(["Section", "Types", "Named", "K", "P", "In a card", "Not named"], body, ["Total", *total]))
 
     def web_cells(rs):
         return [len(rs), sum(r["A"] for r in rs), sum(r["G"] for r in rs), sum(r["C"] for r in rs),
@@ -310,7 +330,7 @@ def main(argv: list[str] | None = None) -> int:
 
     status = 0
     if args.update_floor:
-        lost, _ = compare(load_floor(floor_path), current)
+        lost, _, _ = compare(load_floor(floor_path), current)
         if lost and not args.allow_new_gaps and os.path.isfile(floor_path):
             print("api coverage: refusing to lower the floor; these symbols would become new gaps:")
             _print_names("new gap", lost)
@@ -323,7 +343,7 @@ def main(argv: list[str] | None = None) -> int:
         if not floor:
             print(f"api coverage: no floor at {floor_path}; run --update-floor")
             return 1
-        lost, stale = compare(floor, current)
+        lost, stale, new = compare(floor, current)
         known = {r["name"] for r in rows}
         covered = {m: [n for n in names if n in known] for m, names in stale.items()}
         gone = {m: [n for n in names if n not in known] for m, names in stale.items()}
@@ -334,7 +354,9 @@ def main(argv: list[str] | None = None) -> int:
             print("api coverage: FAILED, the floor is stale; run `py -3 scripts/api_coverage.py --update-floor`:")
             _print_names("now covered", {m: n for m, n in covered.items() if n})
             _print_names("no longer in the catalog", {m: n for m, n in gone.items() if n})
-        if lost or stale:
+        for name in new:
+            print(f"api coverage: FAILED, the floor has no {name} yet; run `py -3 scripts/api_coverage.py --update-floor`")
+        if lost or stale or new:
             status = 1
         else:
             print(f"api coverage: OK ({summary_line(rows)})")
