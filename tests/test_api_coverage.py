@@ -278,6 +278,12 @@ class InGitCheckout(FakeSkill):
         self.assertEqual(code, 0, out)
         self.assertIn("no floor at HEAD", out)
 
+    def test_a_ref_that_does_not_resolve_fails(self):
+        self.commit_base()
+        code, out = self.run_cli("--check", "--against", "no-such-branch")
+        self.assertEqual(code, 1, out)
+        self.assertIn("does not resolve to a commit", out)
+
 
 if __name__ == "__main__":
     unittest.main()

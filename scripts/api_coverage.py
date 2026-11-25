@@ -100,6 +100,19 @@ def git_json(ref: str, path: str):
     return json.loads(res.stdout.decode("utf-8")) if res.returncode == 0 else None
 
 
+def git_commit_exists(ref: str, path: str) -> bool:
+    """Whether `ref` names a commit in the repository that holds `path`."""
+    folder = os.path.dirname(os.path.abspath(path))
+    while not os.path.isdir(folder):
+        folder = os.path.dirname(folder)
+    try:
+        res = subprocess.run(["git", "-C", folder, "rev-parse", "--verify", "--quiet", f"{ref}^{{commit}}"],
+                             capture_output=True)
+    except OSError:
+        return False
+    return res.returncode == 0
+
+
 def _tokens(paths: list[str]) -> set[str]:
     words: set[str] = set()
     for path in paths:
@@ -377,8 +390,11 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _check_against(ref: str, floor_path: str, floor: dict, skill: str) -> int:
+    if not git_commit_exists(ref, floor_path):  # a typo or an unfetched base must not pass as "no floor"
+        print(f"api coverage: FAILED, --against {ref} does not resolve to a commit")
+        return 1
     base_floor = git_json(ref, floor_path)
-    if base_floor is None:
+    if base_floor is None:  # a real commit from before the floor existed
         print(f"api coverage: no floor at {ref}; nothing to compare")
         return 0
     base_symbols = symbols_at(ref, skill)
