@@ -15,7 +15,7 @@ import uuid
 
 from . import PATCH_FORMAT, SCHEMA_VERSION, TOOL_VERSION
 from .engine import parity_view, run_scenario
-from .project import Snapshot, find_root, open_snapshot
+from .project import Snapshot, find_root, open_snapshot, replace_dir
 from .render import bot_request, render_screen
 from .store import StoreError, load_patch, write_patch
 from .validate import summary, targets, validate
@@ -87,7 +87,7 @@ def cmd_init(args) -> int:
         for name in existing:
             os.replace(os.path.join(target, name), os.path.join(stage, name))
         os.rmdir(target)
-    os.replace(stage, target)
+    replace_dir(stage, target)
     _emit(args, {"ok": True, "project": target, "projectId": snap.project["projectId"], "revision": snap.revision,
                  "files": sorted(snap.files)},
           f"created {target} ({len(snap.files)} files), revision {snap.revision}")
