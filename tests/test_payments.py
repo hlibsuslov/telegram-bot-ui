@@ -87,8 +87,9 @@ class WireShape(unittest.TestCase):
         b.pay.offer(GROUP, "credits50")
         b.pay.request_refund("stx1", by=ADMIN, reason="duplicate purchase")
         b.tap(ADMIN, "rf:ok:1")
-        b.t.script("getStarTransactions", {"transactions": []})
+        b.t.script("getStarTransactions", {"transactions": []}, {"transactions": []})
         b.pay.reconcile(since=T0 - 10, until=T0 + 10)
+        b.pay.audit_ledger()
         for method, params in b.t.calls:
             with self.subTest(method=method):
                 rep = V.check_request(method, params)
@@ -485,6 +486,82 @@ class Reconciliation(unittest.TestCase):
         self.assertIsInstance(r, ReconReport)
         self.assertTrue(r.clean)
         self.assertEqual(b.texts(ADMIN), [])
+
+
+class LedgerAudits(unittest.TestCase):
+    """audit_ledger is read-only: it pages the statement, compares it with the ledger, writes nothing."""
+
+    @staticmethod
+    def snapshot(b):
+        db = b.store.db
+        return (db.execute("SELECT * FROM ledger ORDER BY id").fetchall(),
+                db.execute("SELECT * FROM refunds ORDER BY id").fetchall(),
+                db.execute("SELECT id, status FROM orders ORDER BY id").fetchall(),
+                db.execute("SELECT COUNT(*) FROM reconciliation_runs").fetchone()[0])
+
+    def test_refund_the_ledger_lacks_is_found_and_nothing_is_written(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxR")
+        calls, before = len(b.t.calls), self.snapshot(b)
+        b.t.script("getStarTransactions", {"transactions": [tx("stxR", 250, T0, **user_in()),
+                                                            tx("stxR", 250, T0 + 5, **user_out())]})
+        a = b.pay.audit_ledger()
+        self.assertEqual((a.missing_refunds, a.double_credits), (["stxR"], []))
+        self.assertFalse(a.clean)
+        self.assertEqual([m for m, _ in b.t.calls[calls:]], ["getStarTransactions"])
+        self.assertEqual(self.snapshot(b), before)
+        self.assertTrue(b.pay.has_access(OLENA, "credits50"))
+
+    def test_posted_refunds_and_chargebacks_are_not_missing(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxA")
+        b.buy(PETRO, charge="stxB")
+        refund = b.pay.request_refund("stxA", by=ADMIN, reason="asked")
+        b.tap(ADMIN, f"rf:ok:{refund.id}")                         # posts refund:stxA
+        statement = {"transactions": [tx("stxA", 250, T0, **user_in()), tx("stxB", 250, T0, **user_in(PETRO)),
+                                      tx("stxA", 250, T0 + 1, **user_out()), tx("stxB", 250, T0 + 2, **user_out(PETRO))]}
+        b.t.script("getStarTransactions", statement, statement)
+        b.pay.reconcile(since=T0, until=T0 + 10)                   # posts chargeback:stxB
+        a = b.pay.audit_ledger()
+        self.assertTrue(a.clean, (a.missing_refunds, a.double_credits))
+
+    def test_one_charge_credited_twice(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxD")
+        b.buy(PETRO, charge="stxE")
+        b.store.post(T0 + 9, "bot:stars", f"user:{OLENA}", 250 * NANO, "stxD")   # a second writer posted it again
+        b.t.script("getStarTransactions", {"transactions": [tx("stxD", 250, T0, **user_in()),
+                                                            tx("stxE", 250, T0, **user_in(PETRO))]})
+        a = b.pay.audit_ledger()
+        self.assertEqual((a.double_credits, a.missing_refunds), (["stxD"], []))
+        self.assertFalse(a.clean)
+
+    def test_pages_until_a_short_page_and_finds_a_refund_on_the_last_one(self):
+        b = Bot()
+        b.buy(OLENA, charge="stxP1")
+        b.buy(PETRO, charge="stxP2")
+        statement = [
+            tx("stxP1", 250, T0, **user_in()),
+            tx("stxP2", 250, T0 + 1, **user_in(PETRO)),
+            tx("wd1", 1000, T0 + 2, receiver={"type": "fragment", "withdrawal_state": {"type": "pending"}}),
+            tx("gift1", 15, T0 + 3, receiver={"type": "user", "transaction_type": "gift_purchase",
+                                              "user": {"id": PETRO, "is_bot": False, "first_name": "P"}}),
+            tx("stxP2", 250, T0 + 4, **user_out(PETRO)),            # refunded in Telegram, not posted here
+        ]
+        b.t.script("getStarTransactions", *[{"transactions": statement[i:i + 2]} for i in range(0, 5, 2)])
+        a = b.pay.audit_ledger(page_size=2)
+        pages = b.t.params_of("getStarTransactions")
+        self.assertEqual([(p["offset"], p["limit"]) for p in pages], [(0, 2), (2, 2), (4, 2)])
+        self.assertEqual((a.pages, a.next_offset), (3, 5))
+        self.assertEqual(a.missing_refunds, ["stxP2"])             # withdrawals and gifts are not refunds
+        b.t.script("getStarTransactions", {"transactions": []})
+        again = b.pay.audit_ledger(offset=a.next_offset)           # the next run starts where this one stopped
+        self.assertEqual(b.t.params_of("getStarTransactions")[-1], {"offset": 5, "limit": 100})
+        self.assertEqual((again.pages, again.next_offset, again.missing_refunds), (1, 5, []))
+
+    def test_page_size_is_the_api_range(self):
+        with self.assertRaises(ValueError):
+            Bot().pay.audit_ledger(page_size=101)
 
 
 class ReviewRegressions(unittest.TestCase):
