@@ -44,6 +44,13 @@ jobs:
           python -m pip install --disable-pip-version-check -r skills/telegram-bot-ui/examples/python/sdk_aiogram/requirements.txt
           npm ci --prefix skills/telegram-bot-ui/examples/ts/sdk-grammy --ignore-scripts
 
+      # The Studio's own Node tests and the single-file client that `export-snapshot` and the MCP
+      # `map_snapshot` tool embed; without them those tests skip.
+      - name: Studio client for its tests and the snapshot export
+        run: |
+          npm ci --prefix studio/web --ignore-scripts
+          npm run build:artifact --prefix studio/web
+
       # Validators, unittest suite (tests/test_*.py) and every Node test under the skill examples/.
       - name: All offline checks
         run: python scripts/run_checks.py

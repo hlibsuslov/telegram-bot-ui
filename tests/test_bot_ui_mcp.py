@@ -111,7 +111,14 @@ class ReadOnlyAndConfined(unittest.TestCase):
         self.tmp = tempfile.mkdtemp(prefix="bot-ui-mcp-")
         self.proj = os.path.join(self.tmp, "bot-ui")
         shutil.copytree(RICH, self.proj)
-        self.outside = os.path.join(_paths.REPO, "tests", "fixtures", "mcp-confinement-probe.html")
+        # A place map_snapshot must refuse: not the temp folder and not next to the project. The
+        # repository's fixtures qualify unless the checkout itself lies in the temp folder (a CI-style
+        # clone under %TEMP%), where the parent of the temp folder is used instead.
+        temp = os.path.realpath(tempfile.gettempdir())
+        probe_dir = os.path.join(_paths.REPO, "tests", "fixtures")
+        if os.path.realpath(probe_dir).lower().startswith(temp.lower() + os.sep):
+            probe_dir = os.path.dirname(temp)
+        self.outside = os.path.join(probe_dir, "mcp-confinement-probe.html")
         # A stand-in Studio build, so these rules are tested on a clean checkout too (CI does not build
         # studio/web); the real single-file client is exercised where it is built (Tools.test_snapshot_...).
         studio = os.path.join(tempfile.mkdtemp(prefix="bot-ui-studio-"), "studio")
