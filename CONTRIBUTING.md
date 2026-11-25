@@ -23,4 +23,8 @@ failure invariant justifies a new recipe; a new industry name or button color do
    python scripts/run_checks.py
    ```
 
+   `run_checks.py` includes `scripts/api_coverage.py --check`: coverage of Bot API methods, types and
+   `Telegram.WebApp` members may only grow. When your change covers something new, the check asks you to
+   run `python scripts/api_coverage.py --update-floor` and commit the floor; `--report` lists what is missing.
+
 For R80–R87 transcripts: `python skills/telegram-bot-ui/examples/python/recipes/r80_87_product_journeys.py --write-payload`.
