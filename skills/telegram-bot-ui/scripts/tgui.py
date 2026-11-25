@@ -13,7 +13,7 @@ Project state (read and written in the user's bot repository, --root, default ".
   hook     post-edit|install|uninstall  quiet check after an edit; opt-in Claude Code hook
 
 Tools (pass-through to the skill's scripts; every group takes --help):
-  lookup   show|search|accepts|skeleton|since|version   Bot API catalog
+  lookup   card|show|search|accepts|skeleton|since|version  Bot API catalog
   webapp   show|search|since|gates|theme|meta|check|sync  Telegram.WebApp catalog
   check    payload|keyboard|rich|widget|copy|icons|miniapp|refs FILE ...
   examples --query "<intent>" [--context ...] [--json]

@@ -1,0 +1,55 @@
+{
+ "$comment": "Agent notes for Rich messages. Shape and rules: scripts/api_notes.py. Every pitfall carries its source label; API means the catalog text quoted in cite.",
+ "domain": "rich",
+ "notes": {
+  "sendRichMessage": {
+   "purpose": "Send one complete structured message (headings, lists, tables, media blocks) as a Rich message.",
+   "use_when": [
+    "reports, AI answers, docs and tables longer than a short reply",
+    "the final message after streaming drafts with sendRichMessageDraft"
+   ],
+   "avoid_when": [
+    "short notifications, prompts and replies: sendMessage is enough",
+    "the message is fundamentally one photo, an album or a file: use sendPhoto, sendMediaGroup or sendDocument"
+   ],
+   "pitfalls": [
+    {"text": "rich_message takes exactly one of html, markdown or blocks.", "source": "API", "cite": "InputRichMessage: Exactly one of the fields html, markdown, or blocks must be used."},
+    {"text": "A media block needs the bot's right to send that media in the chat.", "source": "API", "cite": "sendRichMessage: the bot must have the right to send the media to the chat"},
+    {"text": "chat_id may be omitted only for an ephemeral reply to a callback query.", "source": "API", "cite": "chat_id: required unless the message is sent as an ephemeral reply to a callback query"}
+   ],
+   "related": ["sendRichMessageDraft", "editMessageText", "InputRichMessage", "InputRichMessageMedia", "RichMessage"],
+   "rights": "send messages; media blocks also need the matching media right",
+   "chat_types": ["private", "group", "supergroup", "channel", "business"],
+   "since": "10.1",
+   "refs": [
+    "references/telegram-capabilities.md#two-mechanisms-kept-separate",
+    "references/rich-media.md#embed-vs-separate-methods"
+   ],
+   "example": "examples/payloads/r31-long-read-rich-post.json"
+  },
+  "sendRichMessageDraft": {
+   "purpose": "Stream a partial Rich message into a private chat while the answer is still being generated.",
+   "use_when": ["AI or long-running answers that should appear progressively"],
+   "avoid_when": ["groups and channels: drafts target private chats only"],
+   "pitfalls": [
+    {"text": "A draft is a temporary preview; send the final text with sendRichMessage or it is lost.", "source": "API", "cite": "the streamed draft is ephemeral and acts as a temporary 30-second preview - once the output is finalized, you must call sendRichMessage"},
+    {"text": "draft_id must be non-zero; reuse it to animate updates, a new id replaces the draft.", "source": "API", "cite": "draft_id: must be non-zero. Changes to drafts with the same identifier are animated."},
+    {"text": "No direct upload or upload by URL inside a draft.", "source": "API", "cite": "rich_message: Direct upload of new files and explicit upload of files by a URL isn't supported."}
+   ],
+   "related": ["sendRichMessage", "sendMessageDraft", "InputRichMessage"],
+   "chat_types": ["private"],
+   "since": "10.1",
+   "refs": ["references/streaming-and-editing.md#finalization", "references/streaming-and-editing.md#addressing-drafts"],
+   "example": "examples/payloads/r01-ai-complete.json"
+  },
+  "InputRichMessage": {
+   "purpose": "The Rich message a bot sends: content as html, markdown or blocks, plus media those reference.",
+   "pitfalls": [
+    {"text": "Exactly one of html, markdown or blocks; media is only for tg:// links in html or markdown.", "source": "API", "cite": "InputRichMessage: Exactly one of the fields html, markdown, or blocks must be used."}
+   ],
+   "related": ["sendRichMessage", "sendRichMessageDraft", "editMessageText", "InputRichMessageMedia", "InputRichBlock"],
+   "since": "10.1",
+   "refs": ["references/telegram-capabilities.md#object-model-high-level"]
+  }
+ }
+}

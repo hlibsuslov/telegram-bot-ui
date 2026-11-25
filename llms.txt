@@ -219,6 +219,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 
 ## Tools
 
+- [api_notes.py](skills/telegram-bot-ui/scripts/api_notes.py): Agent notes: the curated layer over the Bot API catalog, and the short card built from both.
 - [audit_copy.py](skills/telegram-bot-ui/scripts/audit_copy.py): Audit a localized message catalog for interface consistency. Offline.
 - [audit_icons.py](skills/telegram-bot-ui/scripts/audit_icons.py): Audit a bot's icon system: one consistent custom-emoji family per bot.
 - [bot_commands.py](skills/telegram-bot-ui/scripts/bot_commands.py): Audit and plan a bot's command menu (Bot API setMyCommands lifecycle). Offline, standard library only.

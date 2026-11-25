@@ -76,7 +76,10 @@ def api_lookup(args: dict) -> dict:
         hits += [n for n in difflib.get_close_matches(name, names, n=5, cutoff=0.75) if n not in hits]
         return {"found": False, "symbol": name, "did_you_mean": hits,
                 "note": "not in the Bot API snapshot: never use a name the catalog does not confirm"}
-    return {"found": True, "symbol": sym, "catalog": api.cat.get("meta", {})}
+    import api_notes
+    note = api_notes.load_notes().get(sym["name"])
+    return {"found": True, "symbol": sym, "catalog": api.cat.get("meta", {}), "note": note,
+            "card": api_notes.card(sym, note, api.cat.get("meta", {}))}
 
 
 def api_search(args: dict) -> dict:
@@ -355,7 +358,7 @@ S, O, A = {"type": "string"}, {"type": "object"}, {"type": "array", "items": {"t
 RO = {"readOnlyHint": True, "openWorldHint": False}
 NET = {"readOnlyHint": True, "openWorldHint": True}
 TOOLS: list[dict] = [
-    {"name": "telegram_api_lookup", "description": "One Bot API method or type from the offline catalog: fields, types, limits, since-version. Use before writing any Bot API call.",
+    {"name": "telegram_api_lookup", "description": "One Bot API method or type from the offline catalog: fields, types, limits, since-version, plus the skill's agent card (purpose, when to use, pitfalls, example) when it has one. Use before writing any Bot API call.",
      "inputSchema": _obj({"symbol": S}, ["symbol"]), "annotations": RO},
     {"name": "telegram_api_search", "description": "Search Bot API methods, types and fields by a word.",
      "inputSchema": _obj({"word": S, "limit": {"type": "integer"}}, ["word"]), "annotations": RO},

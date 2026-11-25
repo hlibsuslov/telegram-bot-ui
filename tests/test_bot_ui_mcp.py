@@ -52,6 +52,15 @@ class Tools(unittest.TestCase):
         self.assertIn("sendRichMessage", r[1]["result"]["structuredContent"]["did_you_mean"])
         self.assertTrue(r[2]["result"]["structuredContent"]["found"])
 
+    def test_lookup_returns_the_agent_card(self):
+        r, _ = session(("telegram_api_lookup", {"symbol": "sendRichMessage"}),
+                       ("telegram_api_lookup", {"symbol": "sendMessage"}))
+        noted, bare = r[1]["result"]["structuredContent"], r[2]["result"]["structuredContent"]
+        self.assertEqual(noted["note"]["since"], "10.1")
+        self.assertIn("Purpose: " + noted["note"]["purpose"], noted["card"])
+        self.assertIsNone(bare["note"])
+        self.assertIn("Note: none yet", bare["card"])
+
     def test_validate_request_applies_keyboard_reaction_and_rich_rules(self):
         r, _ = session(
             ("validate_request", {"method": "sendMessage", "params": {"chat_id": 1, "text": "x", "reply_markup": {
