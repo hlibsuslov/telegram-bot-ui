@@ -116,7 +116,7 @@ var W = window.TelegramWidget = {
   __push: function(field, text){ if(cfg.place==="forward" && field==="chatData") return; W[field] = text; fire(field+"Changed"); },
   __answer: function(id, m){ var f = W.__pending[id]; delete W.__pending[id]; if(f) f(m); }
 };
-addEventListener("message", function(e){ var m = e.data||{}; if(m.k==="ans") W.__answer(m.id, m); if(m.k==="push") W.__push(m.field, m.text); if(m.k==="theme") fire("themeChanged"); });
+addEventListener("message", function(e){ if(e.source !== P) return; var m = e.data||{}; if(m.k==="ans") W.__answer(m.id, m); if(m.k==="push") W.__push(m.field, m.text); if(m.k==="theme") fire("themeChanged"); });
 setInterval(function(){ P.postMessage({k:"size", f:cfg.f, h:document.documentElement.scrollHeight, n:document.getElementsByTagName("*").length},"*"); }, 500);
 })();
 """
@@ -226,7 +226,8 @@ function answer(fr, m){
   var pre = (cur.answers[$("state").value]||{})[m.data];
   setTimeout(function(){ done(pre || {result: JSON.stringify({ok:false, err:"bad_request", msg:"(mock) no precomputed answer: run with --serve"})}); }, 250);
 }
-addEventListener("message", function(e){ var m = e.data||{}, fr = frames[m.f]; if(!fr) return;
+// Any window may postMessage here: act only on the iframe registered under m.f.
+addEventListener("message", function(e){ var m = e.data||{}, fr = frames[m.f]; if(!fr || e.source !== fr.ifr.contentWindow) return;
   if(m.k==="req") answer(fr, m);
   else if(m.k==="size"){ fr.nodes = m.n; setH(fr, m.h); }
   else if(m.k==="ready"){ setH(fr, m.h); }

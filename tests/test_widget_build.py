@@ -246,6 +246,54 @@ class Preview(unittest.TestCase):
         self.assertNotIn("</script><script>", html.split("var G =")[1][:50])
 
 
+class PreviewMessages(unittest.TestCase):
+    """The preview page acts only on messages from the iframe it registered, and the mock runtime
+    inside the iframe only on messages from its parent page: any other window can postMessage."""
+
+    PARENT = 'addEventListener("message", function(e){ var m = e.data||{}, fr = frames[m.f];'
+    CHILD = 'addEventListener("message", function(e){'
+
+    @staticmethod
+    def listener(html, start):
+        at = html.index(start)
+        return html[at:html.index("});", html.index("log(m.t", at) if "frames" in start else at) + 3]
+
+    def run_node(self, script):
+        node = shutil.which("node")
+        if not node:
+            self.skipTest("node is not on PATH")
+        r = subprocess.run([node, "-e", script], capture_output=True, text=True, encoding="utf-8", timeout=60)
+        self.assertEqual(r.returncode, 0, r.stderr[-2000:])
+        return json.loads(r.stdout)
+
+    def test_page_ignores_messages_from_other_windows(self):
+        html = preview_widget.page([], serve=True)
+        listener = self.listener(html, self.PARENT)
+        script = (
+            "var got = [], handler; function addEventListener(t, f){ handler = f; }"
+            "function answer(fr, m){ got.push('req'); } function setH(){ got.push('size'); } function log(){ got.push('log'); }"
+            "var own = {}, frames = {f1: {ifr: {contentWindow: own}, w: 320}};"
+            + listener +
+            "handler({source: {}, data: {k: 'req', f: 'f1', data: 'x'}});"
+            "handler({source: null, data: {k: 'log', f: 'f1', t: 'info', m: 'x'}});"
+            "var foreign = got.length;"
+            "handler({source: own, data: {k: 'req', f: 'f1', data: 'x'}});"
+            "console.log(JSON.stringify([foreign, got]));")
+        self.assertEqual(self.run_node(script), [0, ["req"]])
+
+    def test_mock_runtime_ignores_messages_from_other_windows(self):
+        listener = self.listener(preview_widget.MOCK_JS, self.CHILD)
+        script = (
+            "var got = [], handler, P = {}; function addEventListener(t, f){ handler = f; }"
+            "var W = {__answer: function(){ got.push('ans'); }, __push: function(){ got.push('push'); }};"
+            "function fire(){ got.push('theme'); }"
+            + listener +
+            "handler({source: {}, data: {k: 'ans', id: 1}}); handler({source: {}, data: {k: 'push'}});"
+            "var foreign = got.length; handler({source: P, data: {k: 'ans', id: 1}});"
+            "console.log(JSON.stringify([foreign, got]));")
+        self.assertEqual(self.run_node(script), [0, ["ans"]])
+
+
 class PreviewServe(unittest.TestCase):
     """L4: `--serve` answers only its own page: loopback Host, same-origin JSON POST, bounded body."""
 
