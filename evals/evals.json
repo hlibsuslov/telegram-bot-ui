@@ -1088,6 +1088,7 @@
       "expect": "activate",
       "names_method": true,
       "routes_to": [
+        "commands/lookup.md",
         "data/bot-api/",
         "scripts/tg_api_lookup.py"
       ],
@@ -1101,6 +1102,7 @@
       "expect": "activate",
       "names_method": false,
       "routes_to": [
+        "commands/lookup.md",
         "data/bot-api/",
         "scripts/tg_api_lookup.py",
         "references/streaming-and-editing.md"
@@ -1115,6 +1117,7 @@
       "expect": "activate",
       "names_method": false,
       "routes_to": [
+        "commands/lookup.md",
         "data/bot-api/",
         "scripts/tg_api_lookup.py"
       ],
@@ -1128,6 +1131,7 @@
       "expect": "activate",
       "names_method": true,
       "routes_to": [
+        "commands/lookup.md",
         "data/bot-api/",
         "scripts/tg_api_lookup.py"
       ],
@@ -1141,6 +1145,7 @@
       "expect": "activate",
       "names_method": false,
       "routes_to": [
+        "commands/lookup.md",
         "data/bot-api/",
         "scripts/tg_api_lookup.py"
       ],
@@ -1742,6 +1747,7 @@
       "expect": "activate",
       "names_method": false,
       "routes_to": [
+        "commands/lookup.md",
         "references/buttons-and-styles.md",
         "scripts/tg_api_lookup.py",
         "data/bot-api/"

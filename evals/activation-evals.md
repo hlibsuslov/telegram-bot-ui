@@ -162,11 +162,11 @@ description is updated.
 
 | # | Lang | Request | Names a method? | Routes to |
 |---|---|---|---|---|
-| L1 | en | "Does editMessageReplyMarkup keep the style field on buttons?" | yes | `data/bot-api/`, `scripts/tg_api_lookup.py` |
-| L2 | en | "Which update tells my bot that the user stopped the answer?" | no | `data/bot-api/`, `scripts/tg_api_lookup.py`, `references/streaming-and-editing.md` |
-| L3 | en | "Is there a way for a bot to delete a message for just one user?" | no | `data/bot-api/`, `scripts/tg_api_lookup.py` |
-| L4 | ru | "Какие параметры есть у sendPoll в последней версии Bot API?" | yes | `data/bot-api/`, `scripts/tg_api_lookup.py` |
-| L5 | ru | "Может ли бот узнать, кто переслал сообщение из канала?" | no | `data/bot-api/`, `scripts/tg_api_lookup.py` |
+| L1 | en | "Does editMessageReplyMarkup keep the style field on buttons?" | yes | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py` |
+| L2 | en | "Which update tells my bot that the user stopped the answer?" | no | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py`, `references/streaming-and-editing.md` |
+| L3 | en | "Is there a way for a bot to delete a message for just one user?" | no | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py` |
+| L4 | ru | "Какие параметры есть у sendPoll в последней версии Bot API?" | yes | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py` |
+| L5 | ru | "Может ли бот узнать, кто переслал сообщение из канала?" | no | `commands/lookup.md`, `data/bot-api/`, `scripts/tg_api_lookup.py` |
 
 ## Negative — new capability boundaries (should NOT activate)
 
@@ -241,7 +241,7 @@ description is updated.
 | ST4 | en | "Import my bot into bot-ui." | no | `references/bot-ui-projects.md` |
 | CX1 | ru | "Продолжи с того места, где остановились по боту." | no | `SKILL.md` (saved project context) |
 | UK1 | uk | "Опублікуй анонс у канал, але спочатку покажи прев'ю." | no | `references/channel-post-design.md`, `references/publishing-pipeline.md` |
-| UK2 | uk | "Чи є в Bot API кнопки іншого кольору?" | no | `references/buttons-and-styles.md`, `scripts/tg_api_lookup.py`, `data/bot-api/` |
+| UK2 | uk | "Чи є в Bot API кнопки іншого кольору?" | no | `commands/lookup.md`, `references/buttons-and-styles.md`, `scripts/tg_api_lookup.py`, `data/bot-api/` |
 | UK3 | uk | "Зроби інтерактивну картку замовлення." | no | `references/widgets.md` |
 | UK4 | uk | "Хочу, щоб агент писав мені в Telegram, коли збірка готова." | no | `references/agent-operated-bots.md` |
 | DR1 | en | "Is the telegram-bot-ui skill up to date?" | no | `SKILL.md` (doctor, catalog age) |
