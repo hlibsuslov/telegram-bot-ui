@@ -1,0 +1,92 @@
+{
+  "name": "telegram-bot-ui",
+  "version": "3.2.0",
+  "botApi": "10.5",
+  "verified": "2026-11-22",
+  "repository": "https://github.com/hlibsuslov/telegram-bot-ui",
+  "site": "https://telegram-bot-ui.hlixli.com",
+  "hosts": [
+    {
+      "host": "Claude Code",
+      "commands": [
+        "claude plugin marketplace add hlibsuslov/telegram-bot-ui",
+        "claude plugin install telegram-bot-ui@telegram-bot-ui"
+      ]
+    },
+    {
+      "host": "Any host with the GitHub CLI",
+      "commands": [
+        "gh skill install hlibsuslov/telegram-bot-ui telegram-bot-ui --agent <claude-code|codex|cursor|gemini|copilot> --scope user"
+      ]
+    },
+    {
+      "host": "Codex, Cursor, Gemini, Copilot (from a clone)",
+      "commands": [
+        "git clone https://github.com/hlibsuslov/telegram-bot-ui",
+        "python telegram-bot-ui/scripts/install.py --host <codex|cursor|gemini|copilot> --scope user"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "verb": "start",
+      "short": "suggests the 2-3 best next steps for this project; runs nothing",
+      "example": "what can you do here"
+    },
+    {
+      "verb": "audit",
+      "short": "maps the screens, ranks real defects, saves them as findings; read-only for code",
+      "example": "review this bot"
+    },
+    {
+      "verb": "improve",
+      "short": "changes existing screens: wording, keyboards, flows, feedback, polish, redesign",
+      "example": "make it nicer / premium / cleaner"
+    },
+    {
+      "verb": "fix",
+      "short": "reproduces and fixes one Telegram-facing defect",
+      "example": "can't parse entities"
+    },
+    {
+      "verb": "build",
+      "short": "a product or feature from the example library, payments included",
+      "example": "build me a bot for"
+    },
+    {
+      "verb": "post",
+      "short": "channel posts and mailings: preview, approve, publish once",
+      "example": "post this to our channel"
+    },
+    {
+      "verb": "widget",
+      "short": "an HTML widget in a message, with its server handler",
+      "example": "an interactive card in the message"
+    },
+    {
+      "verb": "mini-app",
+      "short": "a Mini App: decide, build or restyle, version gates, initData security",
+      "example": "build a Mini App"
+    },
+    {
+      "verb": "emoji",
+      "short": "one premium emoji pack, applied wherever the bot is eligible",
+      "example": "use premium emoji"
+    },
+    {
+      "verb": "agent-bot",
+      "short": "the agent's own bot: notify, ask, approve, secured",
+      "example": "message me when the build is done"
+    },
+    {
+      "verb": "map",
+      "short": "the bot-ui/ map and Studio requests, with revision checks",
+      "example": "bot-ui"
+    },
+    {
+      "verb": "lookup",
+      "short": "Bot API and Telegram.WebApp answers from the offline catalogs; skill health",
+      "example": "does the Bot API have"
+    }
+  ]
+}

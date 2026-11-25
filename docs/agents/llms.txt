@@ -1,0 +1,16 @@
+# telegram-bot-ui
+
+> Designs, audits, builds and operates everything a Telegram bot shows, sends and reacts to, with offline catalogs of the whole Bot API and Telegram.WebApp. Use when a request concerns a Telegram bot's or channel's messages, wording, buttons, keyboards, menus, navigation, forms, streaming AI replies, HTML widgets, Mini Apps, Rich Messages, premium emoji, formatting errors, Stars payments, channel posts or mailings, a bot an agent uses to notify or ask for approval, a whole bot product, the bot-ui/ screen map or a Studio task, or whether the Bot API supports something, including the server side of these. Use it even for vague asks like 'make my bot nicer' or a pasted handler or payload. Do not use for other messengers, userbots, Telegram Ads, or hosting, CI, databases and auth that no Telegram feature depends on, or Microsoft .rtf files.
+
+An Agent Skill for Telegram bot interfaces, version 3.2.0, Bot API 10.5 (verified 2026-11-22). Start with the agent page; install it into your host, then use it in plain words.
+
+## Docs
+
+- [For agents](https://telegram-bot-ui.hlixli.com/agents.md): install per host, verify, commands, project memory, safety
+- [SKILL.md](https://github.com/hlibsuslov/telegram-bot-ui/blob/main/skills/telegram-bot-ui/SKILL.md): the skill's entry point
+- [Everything in one file](https://telegram-bot-ui.hlixli.com/llms-full.txt): router, floor and every command playbook
+
+## Optional
+
+- [Hosts](https://github.com/hlibsuslov/telegram-bot-ui/blob/main/docs/hosts.md): where each host looks for skills
+- [Changelog](https://github.com/hlibsuslov/telegram-bot-ui/blob/main/CHANGELOG.md)
