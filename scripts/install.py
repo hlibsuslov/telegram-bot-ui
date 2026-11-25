@@ -92,6 +92,7 @@ class Installer:
         return os.path.join(base, *rel.split("/"))
 
     def backup(self, path: str) -> None:
+        self.check_target(path, link_ok=True)
         target = f"{path}.bak-{self.stamp}"
         parent = os.path.dirname(path)
         if os.path.isdir(path) and os.path.basename(parent) == "skills":
@@ -104,6 +105,7 @@ class Installer:
         while os.path.lexists(target):
             n += 1
             target = f"{first}-{n}"
+        self.check_target(target)
         self.say("backup", f"{path} -> {target}")
         if not self.dry_run:
             if os.path.isdir(path) and not os.path.islink(path):
@@ -117,6 +119,7 @@ class Installer:
             self._remove(path)
 
     def _remove(self, path: str) -> None:
+        self.check_target(path, link_ok=True)
         if os.path.islink(path) or os.path.isfile(path):
             os.remove(path)
         elif os.path.isdir(path):
@@ -132,18 +135,26 @@ class Installer:
             os.rmdir(folder)
             folder = os.path.dirname(folder)
 
-    def check_target(self, path: str) -> None:
+    def check_target(self, path: str, link_ok: bool = False) -> None:
         """Refuse to write through links: a cloned project could ship
-        `AGENTS.md -> ~/.bashrc` or a linked `.claude/` folder to make the installer
-        overwrite files outside it. Project paths must resolve inside the project;
-        no target file may itself be a link."""
-        if os.path.islink(path):
+        `AGENTS.md -> ~/.bashrc` or a linked `.claude/skills` folder (symlink or
+        junction) to make the installer copy, back up or delete files outside it.
+        Every write, backup and removal calls this first. Project paths, parent folders
+        included, must resolve inside the project; a target may itself be a link only
+        when the caller removes or backs up the link without following it (link_ok)."""
+        is_link = os.path.islink(path)
+        if is_link and not link_ok:
             raise SystemExit(f"refusing to write through a link: {path}")
+        if not os.path.abspath(path).startswith(os.path.abspath(self.project) + os.sep):
+            return
         project = os.path.realpath(self.project)
-        if os.path.abspath(path).startswith(os.path.abspath(self.project) + os.sep):
-            real = os.path.realpath(path)
-            if os.path.commonpath([real, project]) != project:
-                raise SystemExit(f"refusing to write outside the project: {path} -> {real}")
+        real = os.path.realpath(os.path.dirname(path) if is_link else path)
+        try:
+            inside = os.path.commonpath([real, project]) == project
+        except ValueError:  # another drive on Windows
+            inside = False
+        if not inside:
+            raise SystemExit(f"refusing to write outside the project: {path} -> {real}")
 
     def write_text(self, path: str, content: str) -> None:
         self.check_target(path)
@@ -167,6 +178,7 @@ class Installer:
         if os.path.realpath(dest) == os.path.realpath(SKILL_SRC) and not os.path.islink(dest):
             self.say("skip", f"{dest} is this repository's skill folder itself")
             return
+        self.check_target(dest, link_ok=True)
         if os.path.lexists(dest):
             if self.owns_skill_dir(dest):
                 self.say("update", dest)
@@ -262,7 +274,7 @@ class Installer:
         elif self.owns_file(dest):
             self.say("remove", dest)
             if not self.dry_run:
-                os.remove(dest)
+                self._remove(dest)
                 self.prune(os.path.dirname(dest))
         else:
             self.say("keep", f"{dest} (not installed by this tool)")
@@ -316,7 +328,7 @@ class Installer:
         else:
             self.say("remove", f"{path} (held only the block)")
             if not self.dry_run:
-                os.remove(path)
+                self._remove(path)
                 self.prune(os.path.dirname(path))
 
     @staticmethod
