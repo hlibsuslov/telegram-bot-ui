@@ -412,6 +412,16 @@ def render_codex_plugin(routing: dict) -> str:
     return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
 
 
+def render_gemini_extension(routing: dict) -> str:
+    """Root gemini-extension.json: lets the Gemini CLI extension gallery list the repo; skills come from skills/."""
+    manifest = {
+        "name": routing["skill"],
+        "version": routing["plugin"]["version"],
+        "description": routing["plugin"]["description"],
+    }
+    return json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
+
+
 def render_marketplace(routing: dict) -> str:
     p = routing["plugin"]
     market = {
@@ -445,6 +455,7 @@ def build() -> dict[str, str]:
         ".claude-plugin/marketplace.json": render_marketplace(routing),
         "plugin.json": render_agent_plugin(routing),
         ".codex-plugin/plugin.json": render_codex_plugin(routing),
+        "gemini-extension.json": render_gemini_extension(routing),
         # Installers copy only the skill folder, so it carries its own LICENSE.
         f"{SKILL_REL}/LICENSE": read("LICENSE"),
     }
