@@ -43,7 +43,7 @@ description is updated.
 | P5 | "Can I make a red Delete button?" | `danger` semantics | `buttons-and-styles.md` |
 | P6 | "Put our custom emoji on the buttons." | `icon_custom_emoji_id` | `custom-emoji.md` |
 | P7 | "Rewrite these bot messages, they're confusing." | microcopy | `microcopy-and-labels.md` |
-| P8 | "The buttons say different things for the same action." | consistency | `consistency-and-review.md` |
+| P8 | "The buttons say different things for the same action." | consistency (runs in the `bot-project` fixture) | `consistency-and-review.md` |
 | P9 | "Users get stuck with no way back." | navigation | `navigation-and-flows.md` |
 | P10 | "Turn this reply keyboard into inline buttons." | keyboard choice | `reply-keyboards.md` |
 | P11 | "Add pagination to this list of 60 items." | list UX | `inline-keyboards.md` |
@@ -62,7 +62,7 @@ description is updated.
 | P19 | "Send this price list as a Telegram table." | data → table | `tables.md` |
 | P20 | "Migrate the bot's messages from MarkdownV2 to HTML." | format migration | `format-selection.md` |
 | P21 | "Add Rich Messages for AI answers." | Rich Messages | `telegram-capabilities.md` |
-| P22 | "Fix long-message splitting." | limits | `limits-and-splitting.md` |
+| P22 | "Fix long-message splitting." | limits (runs in the `bot-project` fixture) | `limits-and-splitting.md` |
 | P23 | "Our localized templates break MarkdownV2." | i18n + escaping | `localization-and-rtl.md` |
 | P24 | "Update the bot to the latest Bot API UI features." | capability migration | `ui-changelog.md` |
 
@@ -76,9 +76,9 @@ description is updated.
 | P28 | "Send an interactive widget to the user." | `sendWidget` | `widgets.md` |
 | P29 | "Widget taps time out on our webhook." | `widget_query` routing | `widgets.md`, `sdk-compatibility.md` |
 | P30 | "Let users pay with the Telegram wallet from the card." | widget wallet | `wallet-and-ton.md` |
-| P31 | "Grey out the Submit button until the form is complete." | `DisabledButton` | `buttons-and-styles.md` |
+| P31 | "Grey out the Submit button until the form is complete." | `DisabledButton` (runs in the `bot-project` fixture) | `buttons-and-styles.md` |
 | P32 | "Delete regular gifts from our business account." | `deleteBusinessAccountGift` | `specialized-updates.md` |
-| P33 | "Read the theme of the user's share screen." | share themes | `specialized-updates.md` |
+| P33 | "Read the theme of the user's share screen." | share themes (runs in the `bot-project` fixture) | `specialized-updates.md` |
 | P35 | "Pick matching premium icons for all our buttons." | custom emoji family | `visual-language.md` |
 | P36 | "What should a price-alert bot look like on the new API?" | archetype | `bot-archetypes.md` |
 | P34 | "Link to the other topic of the chat with the bot." | topic links | `topics-and-contexts.md` |
@@ -305,7 +305,7 @@ folder only):
 ```bash
 python scripts/run_evals.py --execute --host claude --limit 10
 python scripts/run_evals.py --execute --host codex --ids PUB4,AG2,W1,L3,UN1
-python scripts/run_evals.py --execute --host claude --split validation --runs 3
+python scripts/run_evals.py --execute --host claude --split validation --runs 3 --retry-timeouts
 python scripts/run_evals.py --execute --host claude --ids P1 --dry-run   # print the command only
 ```
 
@@ -327,18 +327,30 @@ procedure.
   outside the home folder; Codex: an empty `HOME`/`USERPROFILE` with `CODEX_HOME` kept so the
   login works). The path of the `SKILL.md` that really loaded is read from the transcript and
   classified `project`, `other` or `none` (`unknown`: the skill was called but no path shows). Any
-  `other` or `unknown`, or a run that errored or timed out, sets `"valid": false` in the summary and exit code 3: do not compare such results. Codex still
+  `other` or `unknown`, or a run that errored, sets `"valid": false` in the summary and exit code 3: do not compare such results. Codex still
   reads `$CODEX_HOME/skills` (and, on Windows, `~/.agents/skills` from the OS profile), so a copy of
   the skill found there is switched off for the run with a `-c skills.config` override; the file
   itself is never touched. Without user settings the Claude child may pick a different default model
   than your interactive sessions: pass `--model` to pin it, and compare only runs with the same
   reported model.
+- **Timeouts are not misses.** A run that hits `--timeout` is not scored (`ok: null`) and is
+  counted under `timeouts` in the summary, never as a false positive or negative; a case whose runs
+  all timed out is `unscored`. Unresolved timeouts still make the results invalid. With
+  `--retry-timeouts [N]` (bare: once) a timed-out run is started again up to N times and the last
+  attempt counts (`attempts`, `timeouts` per run), so the results are valid once a retry finishes.
+- **Project context.** A case with `"fixture": "<name>"` runs in a project that holds a copy of
+  `evals/fixtures/<name>`. P8, P22, P31 and P33 name no platform and only make sense inside a bot
+  repository, so they run in `bot-project` (an aiogram coffee-order bot with mismatched Back labels, an
+  always-active Submit, naive 4096-character splitting of HTML and a profile screen); every other
+  case runs in an empty project.
 - **Route accuracy and tokens.** For activated positives the file records the first skill file read
-  after `SKILL.md` and whether it is one of the case's `routes_to` (or a `commands/<verb>.md` playbook
-  whose `refs` in `skills/telegram-bot-ui/commands/index.json` name one; without that file only
-  `routes_to` counts). A case routed to `SKILL.md` itself is routed correctly by loading it. Input
-  tokens include cache reads and writes. The summary gives route accuracy over activated positives
-  and mean tokens.
+  after `SKILL.md`, the first `commands/<verb>.md` playbook read, and whether the case is routed: the
+  first read is one of the case's `routes_to`, or the first playbook is one or its `refs` in
+  `skills/telegram-bot-ui/commands/index.json` name one (closes audit finding M5). The router's choice
+  is the first playbook, so a wrong playbook is a miss even when the right reference is read later;
+  reading `commands/index.json` or `references/floor.md` first does not count against the route. A
+  case routed to `SKILL.md` itself is routed correctly by loading it. Input tokens include cache reads
+  and writes. The summary gives route accuracy over scored activated positives and mean tokens.
 
 Manual:
 

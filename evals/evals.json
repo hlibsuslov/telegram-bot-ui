@@ -108,6 +108,7 @@
       "routes_to": [
         "references/consistency-and-review.md"
       ],
+      "fixture": "bot-project",
       "why": "consistency"
     },
     {
@@ -276,6 +277,7 @@
       "routes_to": [
         "references/limits-and-splitting.md"
       ],
+      "fixture": "bot-project",
       "why": "limits"
     },
     {
@@ -385,6 +387,7 @@
       "routes_to": [
         "references/buttons-and-styles.md"
       ],
+      "fixture": "bot-project",
       "why": "`DisabledButton`"
     },
     {
@@ -409,6 +412,7 @@
       "routes_to": [
         "references/specialized-updates.md"
       ],
+      "fixture": "bot-project",
       "why": "share themes"
     },
     {
