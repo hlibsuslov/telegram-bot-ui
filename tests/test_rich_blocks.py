@@ -162,5 +162,128 @@ class BuildersMirrorTheCatalog(unittest.TestCase):
                           "credit": "Ann"})
 
 
+def errors(blocks, **kw):
+    return vr.validate({"blocks": blocks}, **kw)[0]
+
+
+def warnings(blocks, **kw):
+    return vr.validate({"blocks": blocks}, **kw)[1]
+
+
+def nested(depth, leaf="x"):
+    """A RichText `depth` formatting levels deep."""
+    rt = leaf
+    for _ in range(depth):
+        rt = rich.bold(rt)
+    return rt
+
+
+PHOTO = "AgACAgIAAxkBAAEBphoto"
+
+
+class ValidateRichBlocks(unittest.TestCase):
+    """validate_rich checks a blocks message as deeply as an HTML one; each rule quotes the catalog."""
+
+    def assertFlags(self, found, *needles):
+        for needle in needles:
+            self.assertTrue(any(needle in e for e in found), (needle, found))
+
+    def test_the_quoted_rules_are_still_the_catalog_text(self):
+        for key, (type_name, field, quote) in vr.QUOTES.items():
+            with self.subTest(key):
+                sym = TYPES[type_name]
+                text = sym["description"] if field is None else \
+                    next(f["description"] for f in sym["fields"] if f["name"] == field)
+                self.assertIn(quote, text.replace("“", '"').replace("”", '"'))
+
+    def test_block_types_come_from_the_catalog(self):
+        self.assertFlags(errors([{"type": "image", "src": "https://example.com/a.png"}]),
+                         "'image' is not an InputRichBlock type")
+        self.assertEqual(errors([rich.paragraph_block("ok")]), [])
+
+    def test_block_fields_follow_the_catalog(self):
+        old_quote = {"type": "expandable_blockquote", "text": "Before 10.5 a quote held text"}
+        self.assertFlags(errors([old_quote]), "has no field 'text'", "missing required field 'blocks'")
+        self.assertFlags(errors([{"type": "heading", "text": "Title"}]), "missing required field 'size'")
+
+    def test_rich_text_types_and_fields_come_from_the_catalog(self):
+        self.assertFlags(errors([rich.paragraph_block({"type": "link", "text": "x"})]),
+                         "'link' is not a RichText type")
+        self.assertFlags(errors([rich.paragraph_block({"type": "url", "text": "x"})]), "missing required field 'url'")
+        self.assertEqual(errors([rich.paragraph_block(["a ", rich.url("link", "https://t.me")])]), [])
+
+    def test_nesting_depth_counts_formatting_and_blocks(self):
+        self.assertEqual(errors([rich.paragraph_block(nested(15))]), [])     # block 1 + 15 levels
+        self.assertFlags(errors([rich.paragraph_block(nested(16))]), "depth: 17 > 16")
+        quote = rich.blockquote_block([rich.paragraph_block(nested(15))])   # one more block level
+        self.assertFlags(errors([quote]), "depth: 17 > 16")
+
+    def test_heading_size(self):
+        self.assertFlags(errors([rich.heading_block("Title", 7)]), "size 7: 1-6")
+        self.assertEqual(errors([rich.heading_block("Title", 6)]), [])
+
+    def test_list_item_label_type(self):
+        item = rich.list_item([rich.paragraph_block("x")], type="x")
+        self.assertFlags(errors([rich.list_block([item])]), "type 'x'")
+        ok = rich.list_item([rich.paragraph_block("x")], value=3, type="i")
+        self.assertEqual(errors([rich.list_block([ok])]), [])
+
+    def test_table_cells_and_columns(self):
+        bad_align = [[{"text": "x", "align": "middle", "valign": "middle"}]]
+        self.assertFlags(errors([rich.table_block(bad_align)]), "align 'middle'")
+        self.assertFlags(errors([rich.table_block([[{"text": "x", "align": "left"}]])]),
+                         "missing required field 'valign'")
+        tall = rich.table_cell("tall", align="left", valign="top", rowspan=2)
+        rows = [[tall], [rich.table_cell(str(i), align="left", valign="top") for i in range(20)]]
+        self.assertFlags(errors([rich.table_block(rows)]), "21 columns > 20")
+        rows[1].pop()
+        self.assertEqual(errors([rich.table_block(rows)]), [])
+
+    def test_map_limits(self):
+        here = {"latitude": 59.91, "longitude": 10.75}
+        self.assertFlags(errors([rich.map_block(here, zoom=25)]), "zoom 25: 0-24")
+        self.assertFlags(errors([rich.map_block(here, width=10001, height=1000)]), "width 10001: 0-10000")
+        self.assertFlags(errors([rich.map_block(here, width=9000, height=2000)]), "10000 in total")
+        self.assertFlags(errors([rich.map_block(here, width=2100, height=100)]), "ratio")
+        self.assertEqual(errors([rich.map_block(here, zoom=14, width=600, height=300)]), [])
+
+    def test_media_object_matches_its_block(self):
+        wrong = {"type": "photo", "photo": {"type": "video", "media": PHOTO}}
+        self.assertFlags(errors([wrong]), "a photo block takes InputMediaPhoto")
+        ignored = rich.photo_block({"type": "photo", "media": PHOTO, "caption": "lost"})
+        self.assertFlags(warnings([ignored]), "Caption is ignored")
+
+    def test_collage_and_slideshow_hold_photos_and_videos(self):
+        self.assertFlags(warnings([rich.collage_block([rich.paragraph_block("x")])]), "photos and videos")
+        self.assertEqual(warnings([rich.slideshow_block([rich.photo_block(PHOTO), rich.video_block("BAAC")])]), [])
+
+    def test_media_field_is_for_html_and_markdown(self):
+        found = vr.validate({"blocks": [rich.photo_block(PHOTO)],
+                             "media": [{"id": "p1", "media": {"type": "photo", "media": PHOTO}}]})[1]
+        self.assertFlags(found, "markdown or html")
+
+    def test_text_length_counts_every_text_once(self):
+        long = "x" * 32769
+        self.assertFlags(errors([rich.details_block(long, [rich.paragraph_block("x")])]), "chars: 32770 > 32768")
+        self.assertFlags(errors([rich.paragraph_block(rich.custom_emoji("5368324170671202286", long))]), "chars")
+        self.assertFlags(errors([rich.mathematical_expression_block(long)]), "chars")
+        self.assertFlags(errors([rich.buttons_block([rich.message_button(long, callback_data="go")])]), "chars")
+        caption = "x" * 20000   # counted once, not twice
+        self.assertEqual(errors([rich.table(["a"], [], caption=caption)]), [])
+
+    def test_button_rules_match_the_html_checks(self):
+        many = rich.buttons_block([rich.message_button(str(i), callback_data=str(i)) for i in range(9)])
+        self.assertFlags(errors([many]), "1-8 buttons")
+        self.assertFlags(errors([rich.buttons_block([{"text": "Go", "url": "https://t.me", "style": "link"}])]),
+                         "'link' is allowed only for callback buttons")
+        self.assertFlags(errors([rich.buttons_block([{"text": "Go", "callback_data": "x" * 65}])]), "65 bytes")
+        self.assertFlags(errors([rich.buttons_block([{"text": rich.bold("Go"), "callback_data": "go"}])]),
+                         "plain text, custom emoji and date-time")
+        two = {"text": "Go", "callback_data": "go", "url": "https://t.me"}
+        self.assertFlags(errors([rich.paragraph_block(["Pay ", rich.button(two)])]), "EXACTLY one action")
+        self.assertFlags(errors([rich.buttons_block([rich.message_button("Go", url="https://t.me")], "middle")]),
+                         "align must be left, center or right")
+
+
 if __name__ == "__main__":
     unittest.main()
