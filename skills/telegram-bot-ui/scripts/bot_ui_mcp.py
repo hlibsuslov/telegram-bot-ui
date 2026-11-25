@@ -7,8 +7,10 @@ Tools are thin wrappers over the same code the CLI runs, so an agent gets the sa
 a tool call that `tgui.py` prints: Bot API and Telegram.WebApp lookups, request and Rich HTML
 checks, a search over the skill's references, the bot-ui map (validate, render, simulate) and a
 single-file Studio snapshot to open in a browser and screenshot. Two tools use the network:
-`emoji_library_search` and `emoji_pick_family` ask the telegram-bot-ui emoji library (only the
-search words and pack names are sent; BOT_UI_EMOJI_RESOLVER=off switches them off). Nothing
+`emoji_library_search`, `emoji_pick_family` and `emoji_rank_by_tags` ask the telegram-bot-ui emoji
+library (only the search words and pack names are sent; BOT_UI_EMOJI_RESOLVER=off switches them
+off; `emoji_rank_by_tags` reads the offline export instead when given `library_file`). Every
+answer is checked against the library's contract (data/emoji/library-contract.json). Nothing
 sends messages to Telegram and no tool reads a bot token.
 
 Protocol: newline-delimited JSON-RPC 2.0, the stateful MCP handshake (2025-11-25, 2025-06-18,
@@ -297,29 +299,57 @@ def emoji_library_search(args: dict) -> dict:
     return {"query": q, "packs": (ans.get("packs") or [])[:10], "emoji": rows}
 
 
+FACETS = ("style", "color", "mood", "topic", "use", "palette")
+
+
+def _profile(args: dict) -> dict:
+    path = args.get("profile")
+    if not path:
+        return {}
+    try:
+        with open(path, encoding="utf-8") as fh:
+            doc = json.load(fh)
+    except (OSError, ValueError) as err:
+        raise ToolError(f"profile: not a readable style profile JSON ({err})") from None
+    if not isinstance(doc, dict):
+        raise ToolError("profile: a style profile is a JSON object")
+    return doc
+
+
 def emoji_pick_family(args: dict) -> dict:
-    from emoji_packs import LibraryClient, pick_family
+    """ONE pack that covers the slots, its icon map, and per ranked pack its description and `why`."""
+    from emoji_packs import LibraryClient, brief_from_profile, pick_family, profile_lang
     needs = args.get("needs")
     if isinstance(needs, str):
         needs = [x.strip() for x in needs.split(",") if x.strip()]
     if not isinstance(needs, list) or not needs:
         raise ToolError("needs: the slots the bot uses, e.g. ['home','back','settings']")
-    brief = {k: args[k] for k in ("style", "color", "mood", "topic", "use", "palette") if args.get(k)}
+    profile = _profile(args)
+    brief = {**(brief_from_profile(profile) if profile else {}), **{k: args[k] for k in FACETS if args.get(k)}}
     return pick_family(needs, _emoji_vocab(), LibraryClient(), motion=args.get("motion", "static"),
-                       theme=args.get("theme", "both"), brief=brief or None, require=args.get("require"))
+                       theme=args.get("theme", "both"), brief=brief or None, require=args.get("require"),
+                       lang=args.get("lang") or profile_lang(profile))
 
 
 def emoji_rank_by_tags(args: dict) -> dict:
-    """Packs ranked by the library's faceted tags alone (style, colour, mood, topic, bot category)."""
-    from emoji_packs import LibraryClient, rank_by_facets
-    brief = {k: args[k] for k in ("style", "color", "mood", "topic", "use", "palette") if args.get(k)}
-    if not brief and not args.get("require"):
-        raise ToolError("give at least one of style, color, mood, topic, use, palette or require")
-    doc = LibraryClient().facets()
+    """Packs ranked by the library's faceted tags alone (style, colour, mood, topic, bot category); with a style
+    profile, its brand accent is compared with each pack's colours. Each pack: description and `why`."""
+    from emoji_packs import LibraryClient, pick_by_profile, profile_lang, profile_request, rank_by_facets
+    profile = _profile(args)
+    brief = {k: args[k] for k in FACETS if args.get(k)}
+    if not brief and not args.get("require") and not profile:
+        raise ToolError("give at least one of style, color, mood, topic, use, palette, require or profile")
+    client = LibraryClient(export=args["library_file"]) if args.get("library_file") else LibraryClient()
+    doc = client.facets()
     if doc is None:
         raise ToolError("the emoji library publishes no tags yet (GET /api/emoji-facets)")
+    lang, top = args.get("lang") or profile_lang(profile), int(args.get("top", 8))
+    if profile:
+        brief, accents = profile_request(profile, brief)
+        return pick_by_profile(doc, brief, accents, require=args.get("require"), motion=args.get("motion", "static"),
+                               theme=args.get("theme", "both"), top=top, lang=lang)
     return rank_by_facets(doc, brief, require=args.get("require"), motion=args.get("motion"),
-                          theme=args.get("theme", "both"), top=int(args.get("top", 8)))
+                          theme=args.get("theme", "both"), top=top, lang=lang)
 
 
 # ------------------------------------------------------------------ bot commands
@@ -385,12 +415,14 @@ TOOLS: list[dict] = [
      "inputSchema": _obj({"root": S}, ["root"]), "annotations": RO},
     {"name": "emoji_library_search", "description": "Search the telegram-bot-ui emoji library (custom emoji with real ids). Network: sends only the query.",
      "inputSchema": _obj({"query": S, "pack": S}, ["query"]), "annotations": NET},
-    {"name": "emoji_pick_family", "description": "Pick ONE custom emoji pack that covers the bot's icon slots (coverage first, then the brief's tags: style, colour, mood, topic, bot category; theme-adaptive; static) and return its icon map. require: hard filters like 'motion:static'. Network.",
+    {"name": "emoji_pick_family", "description": "Pick ONE custom emoji pack that covers the bot's icon slots (coverage first, then the brief's tags: style, colour, mood, topic, bot category; theme-adaptive; static) and return its icon map; every ranked pack carries its description (what, for, not_for) and why, one line on coverage, style, topic and colour. profile: a style profile JSON path whose icon style, accent, traits and archetype become the brief. require: hard filters like 'motion:static'. Network.",
      "inputSchema": _obj({"needs": A, "motion": {"type": "string", "enum": ["static", "any"]},
-                          "theme": {"type": "string", "enum": ["both", "light", "dark"]}, "style": A, "color": A, "mood": A, "topic": A, "use": A, "palette": A, "require": A}, ["needs"]), "annotations": NET},
-    {"name": "emoji_rank_by_tags", "description": "Rank the library's packs by faceted tags only (e.g. use=['support'], style=['outline'], mood=['playful']), with each pack's compatible companions. Values are taxonomy ids or labels. Network.",
+                          "theme": {"type": "string", "enum": ["both", "light", "dark"]}, "style": A, "color": A, "mood": A, "topic": A, "use": A, "palette": A, "require": A,
+                          "profile": S, "lang": {"type": "string", "enum": ["en", "ru", "uk"]}}, ["needs"]), "annotations": NET},
+    {"name": "emoji_rank_by_tags", "description": "Rank the library's packs by faceted tags only (e.g. use=['support'], style=['outline'], mood=['playful']), with each pack's compatible companions, description (what, for, not_for) and why, one line on coverage, style, topic and colour. Values are taxonomy ids or labels. profile: a style profile JSON path; its brand accent is compared with each pack's measured colours and palette. library_file: the offline export emoji-library.ndjson.gz instead of the network (same result). Network unless library_file.",
      "inputSchema": _obj({"style": A, "color": A, "mood": A, "topic": A, "use": A, "palette": A, "require": A, "motion": {"type": "string", "enum": ["static", "any"]},
-                          "theme": {"type": "string", "enum": ["both", "light", "dark"]}, "top": {"type": "integer"}}, []), "annotations": NET},
+                          "theme": {"type": "string", "enum": ["both", "light", "dark"]}, "top": {"type": "integer"},
+                          "profile": S, "library_file": S, "lang": {"type": "string", "enum": ["en", "ru", "uk"]}}, []), "annotations": NET},
 ]
 HANDLERS: dict[str, Callable[[dict], dict]] = {
     "telegram_api_lookup": api_lookup, "telegram_api_search": api_search, "webapp_lookup": webapp_lookup,
