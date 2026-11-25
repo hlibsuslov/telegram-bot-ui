@@ -237,6 +237,13 @@
   transition: filter 120ms;
 }
 .tg-inline-btn:hover { filter: brightness(1.08); }
+/* Inside a rich document the button sits on the bubble, not on the wallpaper: the keyboard's
+   translucent colour turns pale there, so an unstyled button takes the link tint. */
+.tg-bubble .tg-inline-btn:not([data-style]) {
+  background: color-mix(in srgb, var(--tg-theme-link-color) 12%, transparent);
+  color: var(--tg-theme-link-color);
+  backdrop-filter: none;
+}
 .tg-inline-btn[data-style="primary"] { background: #3390ec; }
 .tg-inline-btn[data-style="success"] { background: #31a24c; }
 .tg-inline-btn[data-style="danger"] { background: #e0473d; }
