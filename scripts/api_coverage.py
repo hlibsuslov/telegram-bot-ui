@@ -15,7 +15,8 @@ Levels. A symbol has a level when its exact name is a whole identifier in that t
                    a method also counts in snake_case (bot.send_message)
     V  validator   scripts/validate_*.py (a special case or a `_rules_<method>` rule); report only, coarse
     N  note        has its own agent note in data/bot-api/agent-notes/*.json (scripts/api_notes.py)
-    C  card        has its own note or is listed in a note's "related" (the agent meets it in a card)
+    C  card        has its own note or is listed in a note's "related" (the agent meets it in a card), or is a
+                   member of a union type that is (that union's card lists its members: "One of: ...")
   Telegram.WebApp members (data/mini-apps/webapp-catalog.json), matched by the member name
     A  api list    references/mini-apps/webapp-api.md
     G  guidance    any other references/mini-apps/*.md (top level) or references/mini-apps-bridge.md
@@ -136,6 +137,15 @@ def measure(skill: str = SKILL) -> dict:
         related.update(r for note in notes.values() if isinstance(note, dict)
                        for r in note.get("related", []) if isinstance(r, str))
 
+    carded = noted | related
+    todo = list(carded)
+    while todo:  # union members of a carded union are named in that union's card
+        sym = catalog["types"].get(todo.pop())
+        for sub in (sym or {}).get("subtypes") or []:
+            if sub not in carded:
+                carded.add(sub)
+                todo.append(sub)
+
     rows = []
     for kind in ("methods", "types"):
         for name, sym in sorted(catalog[kind].items()):
@@ -145,7 +155,7 @@ def measure(skill: str = SKILL) -> dict:
                 "K": name in know, "R": name in recipe,
                 "P": name in practice or (is_method and snake(name) in practice),
                 "V": name in validators or (is_method and f"_rules_{name}" in validators),
-                "N": name in noted, "C": name in noted or name in related,
+                "N": name in noted, "C": name in carded,
             })
 
     mini = os.path.join(refs, "mini-apps")

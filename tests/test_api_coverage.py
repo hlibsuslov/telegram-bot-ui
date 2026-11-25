@@ -190,6 +190,24 @@ class Floor(FakeSkill):
         self.assertTrue(os.path.isfile(os.path.join(self.skill, "floor.json")))
 
 
+class UnionMembers(FakeSkill):
+    def test_members_of_a_carded_union_are_in_a_card(self):
+        catalog = json.loads(json.dumps(CATALOG))
+        catalog["types"].update({
+            "Shape": {"section": "Available types", "subtypes": ["ShapeRound"]},
+            "ShapeRound": {"section": "Available types", "subtypes": ["ShapeRoundSmall"]},
+            "ShapeRoundSmall": {"section": "Available types"},
+            "Loner": {"section": "Available types", "subtypes": ["Orphan"]},
+            "Orphan": {"section": "Available types"},
+        })
+        _write(self.skill, "data/bot-api/catalog.json", catalog)
+        _write(self.skill, "data/bot-api/agent-notes/things.json", {"domain": "things", "notes": {
+            "sendThingDraft": {"purpose": "x", "related": ["Shape"]}}})
+        rows = self.rows()
+        self.assertEqual([n for n in ("Shape", "ShapeRound", "ShapeRoundSmall", "Loner", "Orphan") if rows[n]["C"]],
+                         ["Shape", "ShapeRound", "ShapeRoundSmall"])
+
+
 class Scope(FakeSkill):
     def test_nested_recipe_and_payload_folders_do_not_count(self):
         _write(self.skill, "recipes/archive/old.md", "makeSet WidgetPart")
