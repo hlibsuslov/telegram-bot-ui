@@ -106,8 +106,9 @@ def git_status(root: str, snap: Snapshot) -> dict:
 
 
 class Studio:
-    def __init__(self, root: str, port: int) -> None:
+    def __init__(self, root: str, port: int, emoji_library_file: str | None = None) -> None:
         self.root = root
+        self.library_file = emoji_library_file  # the emoji library's offline export, instead of the network
         self.port = port
         self.token = secrets.token_urlsafe(24)
         self.lock = threading.Lock()
@@ -246,25 +247,32 @@ class Studio:
         return 404, {"ok": False, "error": {"code": "NOT_FOUND", "message": path}}
 
     def emoji_api(self, path: str, body: dict, snap: Snapshot) -> tuple[int, dict]:
+        from . import emoji_catalog
         try:
             if path == "/api/emoji":
-                return 200, emoji.client_document(self.root, snap)
+                return 200, emoji.client_document(self.root, snap, self.library_file)
             if snap.read_only and path in ("/api/emoji/import", "/api/emoji/import-used", "/api/emoji/icon",
                                                      "/api/emoji/remove-pack"):
                 return 409, {"ok": False, "error": {"code": "READ_ONLY", "message": "this project opens read-only"}}
             if path == "/api/emoji/import":
                 res = emoji.import_pack(self.root, link=body.get("link"), sticker_set=body.get("stickerSet"))
-                return 200, {**res, **emoji.client_document(self.root, open_snapshot(self.root))}
+                return 200, {**res, **emoji.client_document(self.root, open_snapshot(self.root), self.library_file)}
             if path == "/api/emoji/import-used":
                 res = emoji.import_used(self.root, snap)
-                return 200, {**res, **emoji.client_document(self.root, open_snapshot(self.root))}
+                return 200, {**res, **emoji.client_document(self.root, open_snapshot(self.root), self.library_file)}
             if path == "/api/emoji/icon":
                 emoji.set_icon(self.root, str(body.get("slot", "")), body.get("id"), note=body.get("note"),
                                fallback=body.get("fallback"))
-                return 200, {"ok": True, **emoji.client_document(self.root, snap)}
+                return 200, {"ok": True, **emoji.client_document(self.root, snap, self.library_file)}
             if path == "/api/emoji/remove-pack":
                 res = emoji.remove_pack(self.root, str(body.get("pack", "")))
-                return 200, {**res, **emoji.client_document(self.root, snap)}
+                return 200, {**res, **emoji.client_document(self.root, snap, self.library_file)}
+            if path == "/api/emoji/library":  # the user's action: network (or the export), cache only
+                emoji_catalog.fetch_catalog(self.root, library_file=self.library_file)
+                return 200, {"ok": True, **emoji.client_document(self.root, snap, self.library_file)}
+            if path == "/api/emoji/pick":
+                emoji_catalog.pick(self.root, snap, library_file=self.library_file)
+                return 200, {"ok": True, **emoji.client_document(self.root, snap, self.library_file)}
             if path == "/api/emoji/brief":
                 b = emoji.brief(_overlay(snap, body.get("screens")))
                 return 200, {**b, "markdown": emoji.brief_markdown(b)}
@@ -329,7 +337,9 @@ class Studio:
                     return self._json(400, {"ok": False, "error": {"code": "JSON_INVALID", "message": "body is not JSON"}})
                 api_path = self.path.split("?", 1)[0]
                 try:
-                    if api_path in ("/api/emoji/import", "/api/emoji/import-used"):  # wait on Telegram; take the write lock themselves
+                    if api_path in ("/api/emoji/import", "/api/emoji/import-used", "/api/emoji/library", "/api/emoji/pick"):
+                        # they wait on Telegram or the library; imports take the write lock themselves, the others
+                        # write the local cache only
                         status, doc = studio.api(api_path, body if isinstance(body, dict) else {})
                     else:
                         with studio.lock:
@@ -418,11 +428,11 @@ npm run build</pre>
 
 def serve(root: str, *, host: str = "127.0.0.1", port: int = 0, open_screen: str | None = None,
           open_browser: bool = False, ready: threading.Event | None = None, holder: dict | None = None,
-          quiet: bool = False) -> int:
+          quiet: bool = False, emoji_library_file: str | None = None) -> int:
     if host not in ("127.0.0.1", "localhost"):
         raise ValueError("the Studio binds to loopback only")
     srv = ThreadingHTTPServer((host, port), BaseHTTPRequestHandler)
-    studio = Studio(root, srv.server_address[1])
+    studio = Studio(root, srv.server_address[1], emoji_library_file)
     srv.RequestHandlerClass = studio.handler()
     url = f"http://127.0.0.1:{studio.port}/" + (f"#/screen/{open_screen}" if open_screen else "")
     banner = f"bot-ui Studio {TOOL_VERSION} for {root}\n  {url}\n  Ctrl+C stops it (local only; nothing is sent to Telegram)\n"

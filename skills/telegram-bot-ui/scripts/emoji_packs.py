@@ -509,6 +509,23 @@ def brief_from_profile(profile: dict) -> dict[str, list[str]]:
     return brief
 
 
+# The slot vocabulary's groups (data/emoji/slots.json) as the library's interface roles.
+GROUP_ROLE = {"navigation": "navigation", "actions": "action", "status": "status", "warnings": "status",
+              "time": "status", "commerce": "commerce", "finance": "commerce", "communication": "communication",
+              "people": "communication", "ai": "communication", "settings": "settings", "files": "settings",
+              "analytics": "settings", "media": "content", "post": "content"}
+
+
+def slots_brief(slots: list[str], vocab: dict) -> dict[str, list[str]]:
+    """The facets a set of icon slots asks of a pack when only the catalog is at hand (it has no fallback emoji to
+    match): interface icons, in the roles of the slots' groups, the most frequent role first."""
+    roles = Counter(GROUP_ROLE[g] for s in slots if (g := (vocab.get(s) or {}).get("group")) in GROUP_ROLE)
+    brief: dict[str, list[str]] = {"topic": ["interface"]}
+    if roles:
+        brief["role"] = [r for r, _ in sorted(roles.items(), key=lambda kv: (-kv[1], kv[0]))]
+    return brief
+
+
 def normalize_brief(brief: dict, doc: dict | None) -> tuple[dict[str, list[str]], list[str]]:
     """Brief values as taxonomy ids (an id, or its English or Russian label); (brief, problems). Without a
     taxonomy the values are kept as given."""

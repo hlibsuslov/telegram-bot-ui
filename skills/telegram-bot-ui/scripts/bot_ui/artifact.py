@@ -23,7 +23,7 @@ PROJECT_KEYS = ("schemaVersion", "projectId", "title", "defaultLocale", "locales
 
 
 def snapshot_document(snap: Snapshot, screens: list[str] | None = None, emoji_previews: str = "used",
-                      emoji_budget: int = 1_500_000) -> dict:
+                      emoji_budget: int = 1_500_000, emoji_library_file: str | None = None) -> dict:
     p = snap.project or {}
     chosen = {sid: doc for sid, doc in snap.screens.items() if not screens or sid in screens}
     return {
@@ -37,11 +37,12 @@ def snapshot_document(snap: Snapshot, screens: list[str] | None = None, emoji_pr
         "features": {"map": True, "simulate": True, "editText": True, "editRule": True, "exportPatch": True,
                      "save": False, "widgets": False, "createScreen": False},
         "apply": "py -3 studio/bot-ui.py apply-patch --project <bot-ui folder> --patch-file <exported .json>",
-        **({"emoji": block} if (block := emoji.snapshot_block(snap, emoji_budget, emoji_previews)) else {}),
+        **({"emoji": block} if (block := emoji.snapshot_block(snap, emoji_budget, emoji_previews, emoji_library_file)) else {}),
     }
 
 
-def build_artifact(snap: Snapshot, output: str, screens: list[str] | None = None, *, replace: bool = True) -> str:
+def build_artifact(snap: Snapshot, output: str, screens: list[str] | None = None, *, replace: bool = True,
+                   emoji_library_file: str | None = None) -> str:
     """Write the single-file page. replace=False creates the file exclusively (FileExistsError if it is there)."""
     template = trusted_web_dir(snap.root, "dist-artifact", "index.html")
     if template is None:
@@ -53,7 +54,7 @@ def build_artifact(snap: Snapshot, output: str, screens: list[str] | None = None
         page = fh.read()
     if MARK not in page:
         raise RuntimeError(f"{template} has no {MARK} placeholder")
-    doc = json.dumps(snapshot_document(snap, screens), ensure_ascii=False)
+    doc = json.dumps(snapshot_document(snap, screens, emoji_library_file=emoji_library_file), ensure_ascii=False)
     doc = doc.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     page = page.replace(MARK, doc, 1)
     os.makedirs(os.path.dirname(os.path.abspath(output)) or ".", exist_ok=True)

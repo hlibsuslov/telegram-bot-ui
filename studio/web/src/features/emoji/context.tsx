@@ -5,6 +5,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { api, errorText } from "@/lib/api";
 import type { Loaded } from "@/lib/model";
+import type { Catalog, Pick } from "./library.ts";
 
 export type EmojiFormat = "static" | "animated" | "video";
 export interface PackEmoji { id: string; fallback: string; format: EmojiFormat; adaptive: boolean }
@@ -19,6 +20,14 @@ export interface EmojiDoc {
   suggestions: Suggestion[]; tokenEnv: string | null; resolver?: string | null; error?: { code: string; message: string } | null;
   /** Custom emoji ids the bot's screens (and, after `bot-ui import`, its code) use whose pack is not imported yet. */
   missing?: string[];
+  /** The emoji library's catalog (cached by the Studio, embedded in the snapshot), or null before it is loaded. */
+  catalog?: Catalog | null;
+  /** The last pack pick for the screens' slots. */
+  pick?: Pick | null;
+  /** Vocabulary slots the screens use (their ordinary emoji and placed icons). */
+  screenSlots?: string[];
+  /** Studio: started with --emoji-library-file, so the library comes from the offline export. */
+  libraryFile?: boolean;
 }
 export interface Entry extends PackEmoji { pack: string }
 
