@@ -28,6 +28,7 @@ import argparse
 import json
 import os
 import shutil
+import stat
 import sys
 import time
 
@@ -71,6 +72,35 @@ INSTRUCTIONS = {
 }
 
 
+def is_reparse_dir(path: str) -> bool:
+    """A directory junction, mount point or other non-symlink reparse point. CPython's
+    copytree descends into these even with symlinks=True, because islink() is False."""
+    isjunction = getattr(os.path, "isjunction", None)  # Python 3.12+
+    if isjunction and isjunction(path):
+        return True
+    try:
+        attrs = getattr(os.lstat(path), "st_file_attributes", 0)
+    except OSError:
+        return False
+    return bool(attrs & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)) and not os.path.islink(path)
+
+
+def refuse_reparse_points(root: str) -> None:
+    """Check a whole folder before copying it: a junction anywhere inside a foreign
+    folder would make the copy pull files from outside it. Symlinks are copied as links
+    (symlinks=True) and never descended, so only reparse directories are refused."""
+    stack = [root]
+    while stack:
+        folder = stack.pop()
+        if is_reparse_dir(folder):
+            raise SystemExit(f"refusing to copy a folder that holds a junction or reparse point: {folder}")
+        with os.scandir(folder) as entries:
+            for entry in entries:
+                if entry.is_dir(follow_symlinks=False) or is_reparse_dir(entry.path):
+                    if not entry.is_symlink():
+                        stack.append(entry.path)
+
+
 class Installer:
     def __init__(self, home: str, project: str, dry_run: bool, link: bool):
         self.home, self.project = os.path.abspath(home), os.path.abspath(project)
@@ -106,6 +136,8 @@ class Installer:
             n += 1
             target = f"{first}-{n}"
         self.check_target(target)
+        if os.path.isdir(path) and not os.path.islink(path):
+            refuse_reparse_points(path)
         self.say("backup", f"{path} -> {target}")
         if not self.dry_run:
             if os.path.isdir(path) and not os.path.islink(path):

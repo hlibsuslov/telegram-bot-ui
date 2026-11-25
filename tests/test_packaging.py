@@ -321,6 +321,39 @@ class InstallerTest(unittest.TestCase):
         self.assertEqual(os.listdir(skills), [])
         self.assertEqual(len(os.listdir(self.p(".claude", "skill-backups"))), 2)
 
+    def make_junction(self, link, target):
+        if os.name != "nt":
+            self.skipTest("directory junctions exist only on Windows")
+        try:
+            import _winapi
+            _winapi.CreateJunction(target, link)
+        except (ImportError, AttributeError, OSError) as exc:
+            self.skipTest(f"cannot create a directory junction here: {exc}")
+
+    def test_backup_refuses_a_junction_inside_a_foreign_skill_folder(self):
+        outside = os.path.join(self.tmp.name, "outside")
+        os.makedirs(outside)
+        with open(os.path.join(outside, "secret.txt"), "w") as fh:
+            fh.write("outside the project")
+        for scope, foreign in (("project", self.p(".claude", "skills", "telegram-bot-ui")),
+                               ("user", self.h(".claude", "skills", "telegram-bot-ui"))):
+            with self.subTest(scope=scope):
+                os.makedirs(foreign)
+                with open(os.path.join(foreign, "SKILL.md"), "w") as fh:
+                    fh.write("mine")
+                self.make_junction(os.path.join(foreign, "data"), outside)
+                with self.assertRaises(SystemExit) as ctx:
+                    quiet(install.main, ["--home", self.home, "--project", self.project,
+                                         "--host", "claude", "--scope", scope, "--no-agents"])
+                self.assertIn("junction", str(ctx.exception.code))
+                self.assertTrue(os.path.isfile(os.path.join(foreign, "SKILL.md")), "foreign folder kept")
+                copied = []
+                for base in (self.home, self.project):
+                    for d, dirs, names in os.walk(base):
+                        dirs[:] = [n for n in dirs if not install.is_reparse_dir(os.path.join(d, n))]
+                        copied += [os.path.join(d, n) for n in names if n == "secret.txt"]
+                self.assertEqual(copied, [], "a junction target must never be copied into a backup")
+
     def test_foreign_agent_file_backed_up_and_kept_on_uninstall(self):
         agents = self.p(".claude", "agents")
         os.makedirs(agents)
