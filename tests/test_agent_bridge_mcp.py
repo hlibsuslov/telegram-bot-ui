@@ -93,6 +93,21 @@ class StdioServer(unittest.TestCase):
         with self.assertRaises(ValueError):
             tools.check_arguments("telegram_progress", {"key": None})
 
+    def test_null_optional_arguments_reach_the_tool_as_defaults(self):
+        """An explicit null passes the schema check as absent, so the tool must get the default,
+        never float(None) or int(None) and an internal error."""
+        calls = [("telegram_ask", {"question": "Branch?", "default": "main", "timeout_seconds": None}),
+                 ("telegram_request_approval", {"summary": "Deploy", "ttl_seconds": None, "destructive": None}),
+                 ("telegram_inbox", {"max_events": None}),
+                 ("telegram_progress", {"key": "job", "state": None, "stage": None})]
+        out, raw = session(*[req(i, "tools/call", {"name": n, "arguments": a}) for i, (n, a) in enumerate(calls, 1)])
+        by_id = {m["id"]: m for m in out}
+        for i, (name, _) in enumerate(calls, 1):
+            self.assertIn("result", by_id[i], (name, by_id[i], raw[-1500:]))
+            self.assertFalse(by_id[i]["result"]["isError"], (name, by_id[i]["result"]))
+        ask = by_id[1]["result"]["structuredContent"]
+        self.assertEqual((ask["status"], ask["answer"]), ("timeout", "main"))
+
     def test_unknown_protocol_version_gets_ours(self):
         out, _ = session(req(1, "initialize", {"protocolVersion": "1999-01-01", "capabilities": {}}))
         self.assertEqual(out[0]["result"]["protocolVersion"], "2025-11-25")

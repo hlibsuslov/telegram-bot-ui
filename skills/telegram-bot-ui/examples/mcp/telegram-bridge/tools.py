@@ -129,7 +129,9 @@ class ToolHost:
         """Arguments are checked against the tool's inputSchema first; every tool result is
         redacted before it reaches the MCP host."""
         check_arguments(name, args)
-        return self.b.redactor.obj(self._call(name, args))
+        # A null optional argument passed the check as absent: drop it so every default applies.
+        present = {k: v for k, v in args.items() if v is not None}
+        return self.b.redactor.obj(self._call(name, present))
 
     def _call(self, name: str, args: dict[str, Any]) -> dict[str, Any]:
         a = args or {}
