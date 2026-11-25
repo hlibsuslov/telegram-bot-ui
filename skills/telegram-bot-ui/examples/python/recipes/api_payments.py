@@ -46,6 +46,8 @@ PROVIDER_TOKEN = "PROVIDER_TOKEN_FROM_ENV"      # the real token from @BotFather
 BOOK_PAYLOAD = "ord:5b2e91c4d0aa.3f6c0e9a81d2b7c4"
 PRO_PAYLOAD = "ord:8d1f0a7e6c3b.a90e2d4c7b15f638"
 PRO_CHARGE = "stxPro7Q2wLm"
+PRO_PRICES = [{"label": "Pro, 30 days", "amount": 300}]
+PRO_ORDER = {"payload": PRO_PAYLOAD, "user_id": BUYER["id"], "currency": "XTR", "prices": PRO_PRICES}
 BOOK_PRICES = [{"label": "Photo book A5, 40 pages", "amount": 2490}, {"label": "Gift wrap", "amount": 300}]
 SHIPPING = {"UA": [{"id": "nova", "title": "Nova Poshta branch, 1-2 days", "prices": [{"label": "Delivery", "amount": 350}]},
                    {"id": "courier", "title": "Courier to the door, 1 day", "prices": [{"label": "Courier", "amount": 900}]}]}
@@ -90,14 +92,44 @@ def book_pre_checkout(options: list[dict]) -> dict:
         "order_info": {"name": "Olena Koval", "shipping_address": ADDRESS}}}
 
 
-def answer_pre_checkout_query(t: FakeTransport, update: dict, expected_total: int) -> bool:
-    """Local checks only, then the answer: the 10-second deadline leaves no room for slow work."""
+def book_order(options: list[dict]) -> dict:
+    """The order the server stored when it sent the invoice, plus the ShippingOptions it offered."""
+    return {"payload": BOOK_PAYLOAD, "user_id": BUYER["id"], "currency": "EUR", "prices": BOOK_PRICES,
+            "shipping_options": options}
+
+
+def pre_checkout_mismatch(q: dict, order: dict) -> str | None:
+    """The first field of the query that disagrees with the server-side order, or None. The amount
+    is checked last: a matching total proves nothing when the payload, payer, currency or shipping
+    option belongs to another order."""
+    if q.get("invoice_payload") != order["payload"]:
+        return "invoice_payload"
+    if (q.get("from") or {}).get("id") != order["user_id"]:
+        return "from"
+    if q.get("currency") != order["currency"]:
+        return "currency"
+    offered = {o["id"]: o for o in order.get("shipping_options") or []}
+    chosen = q.get("shipping_option_id")
+    if offered and chosen not in offered or not offered and chosen is not None:
+        return "shipping_option_id"
+    shipping = _total(offered[chosen]["prices"]) if offered else 0
+    if q.get("total_amount") != _total(order["prices"]) + shipping:
+        return "total_amount"
+    return None
+
+
+def answer_pre_checkout_query(t: FakeTransport, update: dict, order: dict) -> bool:
+    """Local checks against the stored order only, then the answer: the 10-second deadline leaves no
+    room for slow work."""
     q = update["pre_checkout_query"]
-    ok = q["total_amount"] == expected_total
-    t.call("answerPreCheckoutQuery", {"pre_checkout_query_id": q["id"], "ok": True} if ok else
-           {"pre_checkout_query_id": q["id"], "ok": False,
-            "error_message": "The price has changed. A new invoice is below; nothing was charged."})
-    return ok
+    mismatch = pre_checkout_mismatch(q, order)
+    if mismatch is None:
+        t.call("answerPreCheckoutQuery", {"pre_checkout_query_id": q["id"], "ok": True})
+        return True
+    message = ("The price has changed. A new invoice is below; nothing was charged." if mismatch == "total_amount"
+               else "This checkout doesn't match your order, so nothing was charged. Please open the invoice again.")
+    t.call("answerPreCheckoutQuery", {"pre_checkout_query_id": q["id"], "ok": False, "error_message": message})
+    return False
 
 
 # --- the Stars subscription --------------------------------------------------------------------
@@ -106,8 +138,7 @@ def create_invoice_link(t: FakeTransport) -> str:
     t.script("createInvoiceLink", "https://t.me/$pro_plan_link")
     return t.call("createInvoiceLink", {
         "title": "Pro plan", "description": "Unlimited layouts and a priority print queue. Renews every 30 days.",
-        "payload": PRO_PAYLOAD, "currency": "XTR", "prices": [{"label": "Pro, 30 days", "amount": 300}],
-        "subscription_period": 2592000})
+        "payload": PRO_PAYLOAD, "currency": "XTR", "prices": PRO_PRICES, "subscription_period": 2592000})
 
 
 PRO_PRE_CHECKOUT = {"update_id": 700003, "pre_checkout_query": {
@@ -169,12 +200,12 @@ def run_all() -> FakeTransport:
     send_invoice(t)
     options = answer_shipping_query(t, SHIPPING_QUERY)
     c.check([o["id"] for o in options] == ["nova", "courier"], "answerShippingQuery offers the options for the address")
-    nova = next(o for o in options if o["id"] == "nova")
-    c.check(answer_pre_checkout_query(t, book_pre_checkout(options), _total(BOOK_PRICES) + _total(nova["prices"])),
-            "pre-checkout total = invoice prices + the chosen ShippingOption")
+    c.check(answer_pre_checkout_query(t, book_pre_checkout(options), book_order(options)),
+            "pre-checkout matches the stored order: payload, payer, currency, offered ShippingOption, "
+            "then total = invoice prices + that option")
     link = create_invoice_link(t)
     c.check(link.startswith("https://t.me/"), "createInvoiceLink returns the subscription link to send in a button")
-    c.check(answer_pre_checkout_query(t, PRO_PRE_CHECKOUT, 300), "the Stars pre-checkout is answered the same way")
+    c.check(answer_pre_checkout_query(t, PRO_PRE_CHECKOUT, PRO_ORDER), "the Stars pre-checkout is answered the same way")
     paid = PRO_PAID["message"]["successful_payment"]
     c.check(paid["is_first_recurring"] and paid["telegram_payment_charge_id"] == PRO_CHARGE,
             "successful_payment carries the charge id that refunds and the statement use")

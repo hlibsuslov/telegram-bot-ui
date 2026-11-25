@@ -723,5 +723,57 @@ class ReviewRegressions(unittest.TestCase):
         self.assertFalse(webhook_secret_ok({"X-Telegram-Bot-Api-Secret-Token": ""}, ""))
 
 
+class RecipePreCheckout(unittest.TestCase):
+    """examples/python/recipes/api_payments.py: the pre-checkout answer checks the server-side order,
+    not only the total, so a matching amount with a foreign payload, payer, currency or shipping option is declined."""
+
+    def setUp(self):
+        import api_payments
+        self.r = api_payments
+        self.options = self.r.SHIPPING["UA"]
+        self.order = self.r.book_order(self.options)
+
+    def answer(self, query):
+        t = FakeTransport()
+        ok = self.r.answer_pre_checkout_query(t, {"update_id": 1, "pre_checkout_query": query}, self.order)
+        return ok, t.params_of("answerPreCheckoutQuery")[0]
+
+    def test_matching_order_is_approved(self):
+        ok, sent = self.answer(self.r.book_pre_checkout(self.options)["pre_checkout_query"])
+        self.assertTrue(ok)
+        self.assertTrue(sent["ok"])
+
+    def test_same_total_with_a_mismatched_field_is_declined(self):
+        good = self.r.book_pre_checkout(self.options)["pre_checkout_query"]
+        cases = {
+            "invoice_payload": {**good, "invoice_payload": "ord:000000000000.0000000000000000"},
+            "payer": {**good, "from": {**good["from"], "id": PETRO}},
+            "currency": {**good, "currency": "USD"},
+            "unknown shipping option": {**good, "shipping_option_id": "free"},
+            "missing shipping option": {k: v for k, v in good.items() if k != "shipping_option_id"},
+        }
+        for name, query in cases.items():
+            with self.subTest(name):
+                self.assertEqual(query["total_amount"], good["total_amount"])
+                ok, sent = self.answer(query)
+                self.assertFalse(ok)
+                self.assertFalse(sent["ok"])
+                self.assertTrue(sent["error_message"])
+
+    def test_total_follows_the_chosen_shipping_option(self):
+        good = self.r.book_pre_checkout(self.options)["pre_checkout_query"]
+        courier = {**good, "shipping_option_id": "courier"}                   # nova's total, courier's option
+        self.assertFalse(self.answer(courier)[0])
+        courier["total_amount"] = self.r._total(self.r.BOOK_PRICES) + 900
+        self.assertTrue(self.answer(courier)[0])
+
+    def test_stars_order_without_shipping(self):
+        t = FakeTransport()
+        self.assertTrue(self.r.answer_pre_checkout_query(t, self.r.PRO_PRE_CHECKOUT, self.r.PRO_ORDER))
+        shipped = {"update_id": 2, "pre_checkout_query": {**self.r.PRO_PRE_CHECKOUT["pre_checkout_query"],
+                                                          "shipping_option_id": "nova"}}
+        self.assertFalse(self.r.answer_pre_checkout_query(t, shipped, self.r.PRO_ORDER))
+
+
 if __name__ == "__main__":
     unittest.main()
