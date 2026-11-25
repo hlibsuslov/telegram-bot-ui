@@ -378,6 +378,11 @@
      "text": "creates_join_request and member_limit cannot be combined.",
      "source": "API",
      "cite": "creates_join_request: If True, member_limit can't be specified."
+    },
+    {
+     "text": "name 0-32 characters; member_limit 1-99999.",
+     "source": "API",
+     "cite": "name: 0-32 characters; member_limit: 1-99999"
     }
    ],
    "related": [
@@ -607,8 +612,13 @@
      "cite": "ChatJoinRequest.query_id: for bots assigned to process join requests only... must call sendChatJoinRequestWebApp or directly call answerChatJoinRequestQuery within 10 seconds."
     },
     {
-     "text": "Resolve afterwards with answerChatJoinRequestQuery; the catalog states no deadline for that final answer.",
+     "text": "Resolve afterwards with answerChatJoinRequestQuery; Telegram's docs state no deadline for that final answer.",
      "source": "Unverified"
+    },
+    {
+     "text": "web_app_url must be an HTTPS URL.",
+     "source": "API",
+     "cite": "web_app_url: An HTTPS URL of a Web App"
     }
    ],
    "related": [
