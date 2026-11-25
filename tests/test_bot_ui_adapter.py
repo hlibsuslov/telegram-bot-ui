@@ -127,6 +127,31 @@ class Placement(ProjectCase):
         self.assertEqual([c["method"] for c in json.loads(r.stdout)], EXPECTED_METHODS)
 
 
+class AdapterImports(unittest.TestCase):
+    """The adapters import both as the studio.adapters package (from the repository root) and as
+    standalone modules from studio/adapters (demo_bot.py and replays), after runtime.py moved there."""
+
+    def imports(self, cwd, code):
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+        return subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, encoding="utf-8",
+                              env=env, cwd=cwd, timeout=120)
+
+    def modules(self):
+        return ["raw_adapter"] + (["aiogram_adapter"] if HAVE_AIOGRAM else [])
+
+    def test_package_mode(self):
+        for name in self.modules():
+            with self.subTest(name):
+                r = self.imports(os.path.dirname(STUDIO), f"import studio.adapters.{name} as m; print(m.Runtime.__name__)")
+                self.assertEqual((r.returncode, r.stdout.strip()), (0, "Runtime"), r.stderr[-1500:])
+
+    def test_standalone_mode(self):
+        for name in self.modules():
+            with self.subTest(name):
+                r = self.imports(os.path.join(STUDIO, "adapters"), f"import {name} as m; print(m.Runtime.__name__)")
+                self.assertEqual((r.returncode, r.stdout.strip()), (0, "Runtime"), r.stderr[-1500:])
+
+
 @unittest.skipUnless(HAVE_AIOGRAM, "aiogram==3.31.0 not installed (pip install -r skills/telegram-bot-ui/examples/python/sdk_aiogram/requirements.txt)")
 class Aiogram(ProjectCase):
     def test_aiogram_serialises_the_same_payloads_as_the_raw_adapter(self):
