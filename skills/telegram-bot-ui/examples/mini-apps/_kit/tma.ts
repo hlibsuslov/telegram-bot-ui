@@ -784,7 +784,7 @@ export function createTma(env: Env = {}) {
     const native = wrap(cloud, '6.9');
     if (cloud && native) return { ...native, ...batch(cloud, native) };
     const local: Single = {
-      get: async (k: string) => mem.get(k) ?? null,
+      get: async (k: string) => mem.get(k) || null, // '' reads as missing, as CloudStorage returns it
       set: async (k: string, v: string) => { mem.set(k, v); },
       remove: async (k: string) => { mem.delete(k); },
     };

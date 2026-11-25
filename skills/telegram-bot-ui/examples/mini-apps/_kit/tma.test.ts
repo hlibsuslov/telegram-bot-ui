@@ -576,6 +576,20 @@ test('store(): without the batch methods one call per key, keys() null; outside 
   assert.deepEqual(await outside.store().keys(), []);
 });
 
+test('store(): get and getMany agree on a stored empty string, inside and outside Telegram', async () => {
+  const kits = {
+    batch: createTma(env(fakeWebApp('6.9', { CloudStorage: fakeCloud([]) } as Partial<WebAppLike>).tg)),
+    plain: createTma(env(fakeWebApp('6.9').tg)),
+    outside: createTma(env(null)),
+  };
+  for (const [name, tma] of Object.entries(kits)) {
+    await tma.store().set('empty', '');
+    const one = await tma.store().get('empty');
+    assert.equal(one, null, `${name}: '' reads as missing, as CloudStorage returns it`);
+    assert.deepEqual(await tma.store().getMany(['empty']), { empty: one }, name);
+  }
+});
+
 test('secureStore(): lookup says when a missing key can be restored; restore() asks restoreItem', async () => {
   const log: Call[] = [];
   let decline = false;
