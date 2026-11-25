@@ -1,10 +1,12 @@
 """Widget tooling: the build tool (kit inlining, languages, pruning, safe minify, size accounting,
 forbidden APIs, payload shape), the strict lint, the validator CLI and the preview page."""
+import http.client
 import json
 import os
 import shutil
 import subprocess
 import sys
+import threading
 import unittest
 import zlib
 
@@ -242,6 +244,87 @@ class Preview(unittest.TestCase):
         self.assertEqual(sorted(entry["html"]), ["en", "ru", "uk"])
         self.assertIn("sync", entry["answers"]["default"])       # precomputed by the real handler
         self.assertNotIn("</script><script>", html.split("var G =")[1][:50])
+
+
+class PreviewServe(unittest.TestCase):
+    """L4: `--serve` answers only its own page: loopback Host, same-origin JSON POST, bounded body."""
+
+    @classmethod
+    def setUpClass(cls):
+        entry = preview_widget.gallery_entry(os.path.join(bw.OUT_DIR, "metrics-dashboard.html"), None)
+        cls.srv = preview_widget.make_server([entry], 0)
+        cls.port = cls.srv.server_address[1]
+        cls.thread = threading.Thread(target=cls.srv.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.srv.shutdown()
+        cls.srv.server_close()
+
+    def request(self, method, body=b"", host=None, **headers):
+        conn = http.client.HTTPConnection("127.0.0.1", self.port, timeout=10)
+        conn.putrequest(method, "/q" if method == "POST" else "/", skip_host=True)
+        conn.putheader("Host", host or f"127.0.0.1:{self.port}")
+        for name, value in headers.items():
+            conn.putheader(name.replace("_", "-"), value)
+        if "Content_Length" not in headers:
+            conn.putheader("Content-Length", str(len(body)))
+        conn.endheaders(body or None)
+        res = conn.getresponse()
+        data = res.read()
+        conn.close()
+        return res.status, data
+
+    def post(self, doc, **headers):
+        headers.setdefault("Origin", f"http://127.0.0.1:{self.port}")
+        headers.setdefault("Content_Type", "application/json")
+        return self.request("POST", json.dumps(doc).encode(), **headers)
+
+    def ask(self):
+        return {"widget": "metrics-dashboard", "data": "sync", "frame": "f0", "state": "default"}
+
+    def test_own_page_and_query_are_answered(self):
+        self.assertEqual(self.request("GET")[0], 200)
+        self.assertEqual(self.request("GET", host=f"localhost:{self.port}")[0], 200)
+        status, data = self.post(self.ask())
+        self.assertEqual(status, 200)
+        self.assertIn("result", json.loads(data))
+
+    def test_foreign_host_is_refused(self):
+        """DNS rebinding: a page on evil.example resolved to 127.0.0.1 sends its own Host."""
+        self.assertEqual(self.request("GET", host=f"evil.example:{self.port}")[0], 421)
+        self.assertEqual(self.post(self.ask(), host=f"evil.example:{self.port}")[0], 421)
+
+    def test_cross_origin_post_is_refused(self):
+        self.assertEqual(self.post(self.ask(), Origin="http://evil.example")[0], 403)
+        self.assertEqual(self.post(self.ask(), Origin="null")[0], 403)
+        no_origin = {"Content_Type": "application/json"}
+        self.assertEqual(self.request("POST", json.dumps(self.ask()).encode(), **no_origin)[0], 403)
+
+    def test_simple_text_plain_post_is_refused(self):
+        """A form or `fetch(no-cors)` from another page can only send text/plain without a preflight."""
+        self.assertEqual(self.post(self.ask(), Content_Type="text/plain;charset=UTF-8")[0], 415)
+
+    def test_oversized_or_malformed_body_is_refused(self):
+        too_big = preview_widget.MAX_BODY + 1
+        self.assertEqual(self.request("POST", Origin=f"http://127.0.0.1:{self.port}",
+                                      Content_Type="application/json", Content_Length=str(too_big))[0], 413)
+        self.assertEqual(self.request("POST", b"{not json", Origin=f"http://127.0.0.1:{self.port}",
+                                      Content_Type="application/json")[0], 400)
+        self.assertEqual(self.post(["sync"])[0], 400)
+        self.assertEqual(self.post({"widget": "metrics-dashboard"})[0], 400)
+
+    def test_live_bots_are_capped(self):
+        entry = preview_widget.gallery_entry(os.path.join(bw.OUT_DIR, "metrics-dashboard.html"), None)
+        live = preview_widget._Live([entry])
+        for n in range(preview_widget.MAX_LIVE_BOTS + 20):
+            live.ask(dict(self.ask(), frame=f"f{n}"))
+        self.assertLessEqual(len(live.bots), preview_widget.MAX_LIVE_BOTS)
+
+    def test_page_posts_json(self):
+        html = preview_widget.page([], serve=True)
+        self.assertIn('headers:{"Content-Type":"application/json"}', html)
 
 
 if __name__ == "__main__":
