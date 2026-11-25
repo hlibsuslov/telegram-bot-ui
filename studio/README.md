@@ -112,6 +112,7 @@ keyboard whose action was removed is answered as stale.
 | Rich Messages as JSON blocks (`InputRichMessage.blocks`) | not supported: no screen format; send blocks from code (`tgkit.rich`) | not supported | not supported | - |
 | Streaming answer with Stop | not in v1 | not in v1 | not in v1 | not in v1 |
 | Premium emoji packs and icon map | emoji | Emoji page: import by link, pickers in text and buttons, real pictures in previews and the simulator | read-only, pictures inlined | - |
+| Find an emoji pack by tags, pick one for the screens | `emoji_packs.py library pick` | Emoji page: filters (style, colour, theme fit, motion), pick for the screens' slots with reasons; online or `--emoji-library-file` | filters and the embedded pick, no network | - |
 | Import an existing bot | inventory (aiogram, read-only) | - | - | - |
 
 Levels: `static` (structure and limits checked offline), `simulated` (engine and test
