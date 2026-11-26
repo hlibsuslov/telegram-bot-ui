@@ -101,7 +101,9 @@ method set by the server), `state` (set by an action's `set`), `input` (typed by
   answered like a stale keyboard press. A button with official attributes and no `action`
   (`copy_text`, `switch_inline_query`, …) is sent as written. Checks: `RICH_BUTTON_ACTION_MISSING`,
   `RICH_BUTTON_ON_KEYBOARD` (one action in two places), `RICH_BUTTON_ROW_SIZE`, `RICH_BUTTON_TYPE`,
-  `RICH_BUTTON_STYLE`, `RICH_BUTTON_DATA`, `RICH_BUTTON_TEXT`, `RICH_TAG_UNSUPPORTED`.
+  `RICH_BUTTON_STYLE`, `RICH_BUTTON_DATA`, `RICH_BUTTON_TEXT`, `RICH_TAG_UNSUPPORTED`; info `RICH_BUTTONS_UNUSED`
+  (a rich document whose content actions, `handler` / `url` / `answer`, all sit on the keyboard: put them
+  next to their section, keep navigation on the keyboard).
 - `keyboard.type`: `inline` (callback buttons), `reply` (a press arrives as text equal to the
   label), `force_reply` (asks for text; `placeholder`), `remove`, `none`.
 - Action types: `navigate` (`to` or `rule`), `back` (`fallback` after a restart), `url`
@@ -147,8 +149,11 @@ or `off`; with it off, a token of the user's own (`TELEGRAM_TEST_BOT_TOKEN` /
 `getFile`, the file download on api.telegram.org); that token is never stored. A saved
 `getStickerSet` response imports offline without pictures. The library is not part of the
 revision. With a library, `validate` adds `CUSTOM_EMOJI_UNKNOWN` (id not in it, info) and
-`CUSTOM_EMOJI_FALLBACK_MISMATCH` (fallback differs from the pack's emoji, info); always,
-`CUSTOM_EMOJI_DOUBLE_ICON` (button icon plus an emoji at the start of the label, warning).
+`CUSTOM_EMOJI_FALLBACK_MISMATCH` (fallback differs from the pack's emoji, info),
+`BUTTON_EMOJI_ANIMATED` (a button icon, or an emoji inside a rich `<tg-button>`, that is animated or video:
+buttons take static emoji only, error) and `CUSTOM_EMOJI_ANIMATED` (the same in text, where static is the
+default, warning); always, `CUSTOM_EMOJI_DOUBLE_ICON` (button icon plus an emoji at the start of the label,
+warning).
 `bot-ui emoji brief [--json]` is what an agent reads before placing custom emoji.
 
 Finding a pack by tags (Emoji page, "Find a pack by tags"): the telegram-bot-ui emoji library's

@@ -23,7 +23,7 @@ def read(*parts):
 
 class RulesData(unittest.TestCase):
     def test_rules_are_numbered_and_complete(self):
-        self.assertEqual(sorted(DATA["rules"]), [f"L{i:02d}" for i in range(1, 26)])
+        self.assertEqual(sorted(DATA["rules"]), [f"L{i:02d}" for i in range(1, 27)])  # L26: the paywall
         for rid, r in DATA["rules"].items():
             self.assertIn(r["severity"], {"error", "warn"}, rid)
             self.assertTrue(r["title"] and r["fix"], rid)

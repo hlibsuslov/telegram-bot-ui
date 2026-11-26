@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 import unittest
 
 import _paths
@@ -65,6 +66,91 @@ class Semantics(unittest.TestCase):
                 if markup:
                     with self.subTest(payload=name, method=step.get("method")):
                         self.assertEqual(vk.validate(markup).errors, [])
+
+
+LIBRARY = {"format": "bot-ui-emoji/v1", "bot": "", "icons": {}, "packs": {"demo": {"emoji": [
+    {"id": "1111111111", "fallback": "🏠", "format": "static"},
+    {"id": "2222222222", "fallback": "🔥", "format": "animated"},
+    {"id": "3333333333", "fallback": "🎬", "format": "video"}]}}}
+MOVING = {"2222222222": "animated", "3333333333": "video"}
+
+
+def custom_emoji(eid):
+    return {"type": "custom_emoji", "custom_emoji_id": eid, "alternative_text": "x"}
+
+
+class MovingEmojiOnButtons(unittest.TestCase):
+    """--emoji-library: a button never carries an animated or video custom emoji (BUTTON_EMOJI_ANIMATED)."""
+
+    def test_an_inline_or_reply_icon_that_moves_is_an_error(self):
+        icons = [{"text": t, "callback_data": t, "icon_custom_emoji_id": i} for t, i in
+                 (("Home", "1111111111"), ("Fire", "2222222222"), ("Film", "3333333333"), ("Own", "4444444444"))]
+        rep = vk.validate([icons], moving_emoji=MOVING)
+        self.assertEqual(len(rep.errors), 2, rep.errors)
+        self.assertTrue(all("BUTTON_EMOJI_ANIMATED" in e for e in rep.errors))
+        self.assertIn("animated", rep.errors[0])
+        self.assertIn("video", rep.errors[1])
+        reply = vk.validate({"keyboard": [[{"text": "Fire", "icon_custom_emoji_id": "2222222222"}]]}, moving_emoji=MOVING)
+        self.assertEqual(len(reply.errors), 1, reply.errors)
+
+    def test_without_the_library_nothing_changes(self):
+        kb = [[{"text": "Fire", "callback_data": "f", "icon_custom_emoji_id": "2222222222"}]]
+        self.assertEqual(vk.validate(kb).errors, [])
+        self.assertEqual(vk.validate(kb, moving_emoji={}).errors, [])
+
+    def test_a_rich_button_with_a_moving_custom_emoji_in_its_text_is_an_error(self):
+        def blocks(*texts):
+            return {"blocks": [{"type": "buttons", "buttons": [{"text": t, "callback_data": "g"} for t in texts]}]}
+
+        doc = blocks([custom_emoji("2222222222"), " Go"], [custom_emoji("1111111111"), " Home"], "Plain",
+                     [custom_emoji("3333333333"), " Film"])
+        rep = vk.validate(doc, moving_emoji=MOVING)
+        self.assertEqual(len(rep.errors), 2, rep.errors)
+        self.assertTrue(all("BUTTON_EMOJI_ANIMATED" in e for e in rep.errors))
+        self.assertEqual(vk.validate(doc).errors, [])
+        inline = {"blocks": [{"type": "paragraph", "text": [
+            {"type": "button", "button": {"text": [custom_emoji("2222222222"), " Go"], "callback_data": "g"}, "text": "Go"}]}]}
+        self.assertTrue(any("BUTTON_EMOJI_ANIMATED" in e for e in vk.validate(inline, moving_emoji=MOVING).errors))
+
+    def test_html_button_text_is_read_for_custom_emoji(self):
+        html = ('<p><tg-emoji emoji-id="2222222222">🔥</tg-emoji> Fire</p>'
+                '<tg-button type="callback_data" data="g"><tg-emoji emoji-id="3333333333">🎬</tg-emoji> Film</tg-button>'
+                '<tg-button type="callback_data" data="h"><tg-emoji emoji-id="1111111111">🏠</tg-emoji> Home</tg-button>')
+        found = vk.moving_in_html(html, MOVING)
+        self.assertEqual(len(found), 1, "the emoji in the paragraph is text, not a button")
+        self.assertIn("3333333333", found[0])
+
+    def test_the_cli_reads_the_project_library(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lib, kb = os.path.join(tmp, "library.json"), os.path.join(tmp, "kb.json")
+            with open(lib, "w", encoding="utf-8") as fh:
+                json.dump(LIBRARY, fh)
+            with open(kb, "w", encoding="utf-8") as fh:
+                json.dump([[{"text": "Fire", "callback_data": "f", "icon_custom_emoji_id": "2222222222"}]], fh)
+            script = os.path.join(_paths.ROOT, "scripts", "validate_keyboard.py")
+
+            def run(*args):
+                return subprocess.run([sys.executable, script, kb, *args], capture_output=True, text=True, encoding="utf-8")
+
+            self.assertEqual(run().returncode, 0)
+            bad = run("--emoji-library", lib)
+            self.assertEqual(bad.returncode, 1, bad.stdout)
+            self.assertIn("BUTTON_EMOJI_ANIMATED", bad.stdout)
+            missing = run("--emoji-library", os.path.join(tmp, "nope.json"))
+            self.assertEqual(missing.returncode, 1)
+            self.assertIn("FAIL", missing.stdout)
+
+    def test_tgui_check_passes_the_flag_through(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lib, kb = os.path.join(tmp, "library.json"), os.path.join(tmp, "kb.json")
+            with open(lib, "w", encoding="utf-8") as fh:
+                json.dump(LIBRARY, fh)
+            with open(kb, "w", encoding="utf-8") as fh:
+                json.dump([[{"text": "Film", "callback_data": "f", "icon_custom_emoji_id": "3333333333"}]], fh)
+            p = subprocess.run([sys.executable, os.path.join(_paths.ROOT, "scripts", "tgui.py"), "check", "keyboard", kb,
+                                "--emoji-library", lib], capture_output=True, text=True, encoding="utf-8")
+            self.assertEqual(p.returncode, 1, p.stdout)
+            self.assertIn("BUTTON_EMOJI_ANIMATED", p.stdout)
 
 
 if __name__ == "__main__":

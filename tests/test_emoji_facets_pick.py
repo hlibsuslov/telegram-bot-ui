@@ -154,6 +154,46 @@ class Brief(unittest.TestCase):
         self.assertNotIn("brief_match", out["ranking"][0])
 
 
+class StaticOnButtons(unittest.TestCase):
+    """A button never takes an animated or video emoji: the pick gives every slot the static emoji of its meaning."""
+    MIXED = {"title": "Mixed", "emoji": [
+        {"id": "10", "fallback": "🏠", "format": "animated", "adaptive": False},
+        {"id": "11", "fallback": "🏠", "format": "static", "adaptive": False},
+        {"id": "20", "fallback": "⬅️", "format": "video", "adaptive": False},
+        {"id": "21", "fallback": "◀️", "format": "static", "adaptive": False},
+        {"id": "30", "fallback": "⚙️", "format": "animated", "adaptive": False}]}
+    SAVED = {"search": {"🏠": {"emoji": [hit("mixed", "10", "🏠")]}, "⬅️": {"emoji": [hit("mixed", "20", "⬅️")]},
+                        "⚙️": {"emoji": [hit("mixed", "30", "⚙️")]}},
+             "packs": {"mixed": MIXED}}
+
+    def pick(self, **kw):
+        return emoji_packs.pick_family(["home", "back", "settings"], emoji_packs.load_vocabulary(None),
+                                       emoji_packs.LibraryClient(self.SAVED), **kw)
+
+    def test_static_is_the_default_and_wins_over_an_animated_one_of_the_same_meaning(self):
+        icons = self.pick()["map"]["icons"]
+        self.assertEqual(icons["home"]["id"], "11")  # the same fallback, the static entry
+        self.assertEqual(icons["back"]["id"], "21")  # the slot's other emoji, static: not the video ⬅️
+        self.assertEqual((icons["settings"]["id"], icons["settings"]["animated"]), ("30", True))  # no static one: still covered
+        self.assertEqual(self.pick()["ranking"][0]["static_share"], 0.67)
+
+    def test_an_explicit_motion_wins(self):
+        icons = self.pick(motion="any")["map"]["icons"]
+        self.assertEqual((icons["home"]["id"], icons["back"]["id"]), ("10", "20"))
+        self.assertEqual(self.pick(motion="any")["ranking"][0]["static_share"], 0.0)
+
+    def test_the_cli_picks_static_without_a_flag(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            saved, out = os.path.join(tmp, "saved.json"), os.path.join(tmp, "out.json")
+            with open(saved, "w", encoding="utf-8") as fh:
+                json.dump(self.SAVED, fh, ensure_ascii=False)
+            for flags, home in ((), "11"), (("--motion", "any"), "10"):
+                r = run("library", "pick", "--needs", "home,back", *flags, "--library-json", saved, "--out", out)
+                self.assertEqual(r.returncode, 0, r.stderr)
+                with open(out, encoding="utf-8") as fh:
+                    self.assertEqual(json.load(fh)["map"]["icons"]["home"]["id"], home, flags)
+
+
 class Profile(unittest.TestCase):
     def test_the_style_profile_becomes_a_brief(self):
         brief = emoji_packs.brief_from_profile({

@@ -84,6 +84,18 @@ class Audit(unittest.TestCase):
         self.assertIn("animated and", text)
         self.assertIn("adaptive", text)
 
+    def test_a_button_slot_with_an_animated_emoji_is_flagged(self):
+        def icon(n, fallback, animated):
+            return {"id": f"52580000000000000{n}", "set": "one", "fallback": fallback, "animated": animated}
+
+        doc = {"icons": {"home": icon(1, "🏠", True),       # a slot for buttons
+                         "rocket": icon(2, "🚀", True),     # a post accent: text only
+                         "mine": icon(3, "⭐", True),       # the bot's own slot: may sit on a button
+                         "cart": icon(4, "🛒", False)}}
+        _, warnings = audit_icons.audit(doc)
+        flagged = [w for w in warnings if "BUTTON_EMOJI_ANIMATED" in w]
+        self.assertEqual(sorted(w.split(":")[0] for w in flagged), ["home", "mine"], warnings)
+
     def test_payload_audit(self):
         doc = {"steps": [{"method": "sendMessage", "params": {"reply_markup": {"inline_keyboard": [[
             {"text": "⚙️ Settings", "icon_custom_emoji_id": "5258096772776991776", "callback_data": "s"},

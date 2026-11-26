@@ -4,6 +4,7 @@ from __future__ import annotations
 import copy
 import json
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -98,6 +99,16 @@ class Check(unittest.TestCase):
         self.assertEqual(rich.action_ids(text), ["a"])
 
 
+class CustomEmoji(unittest.TestCase):
+    def test_emoji_inside_a_button_are_the_buttons_own(self):
+        html = ('<p><tg-emoji emoji-id="111">a</tg-emoji> text</p>'
+                '<tg-button-row><tg-button action="pay"><tg-emoji emoji-id="222" >b</tg-emoji> Pay</tg-button>'
+                '<tg-button type="url" url="https://t.me"><tg-emoji emoji-id="333">c</tg-emoji></tg-button></tg-button-row>'
+                '<tg-emoji emoji-id="abc">x</tg-emoji><tg-emoji>y</tg-emoji>')
+        self.assertEqual(rich.custom_emoji(html), [("111", "a", False), ("222", "b", True), ("333", "c", True)])
+        self.assertEqual(rich.custom_emoji("plain <b>text</b>"), [])
+
+
 class Contract(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.mkdtemp(prefix="bot-ui-rich-")
@@ -127,6 +138,15 @@ class Contract(unittest.TestCase):
         found = self.edit(broken)
         for code in ("RICH_BUTTON_ACTION_MISSING", "RICH_MEDIA_FIELD", "RICH_BUTTON_ON_KEYBOARD"):
             self.assertIn(code, found)
+
+    def test_content_actions_only_on_the_keyboard_suggest_rich_buttons(self):
+        def keyboard_only(s):
+            for loc, text in s["message"]["text"].items():
+                s["message"]["text"][loc] = re.sub(r"<tg-button-row>.*?</tg-button-row>|<tg-button\b.*?</tg-button>", "", text, flags=re.S)
+            s["keyboard"]["rows"].append(["track"])  # a url action: content, not navigation
+        found = self.edit(keyboard_only)
+        self.assertIn("RICH_BUTTONS_UNUSED", found)
+        self.assertNotIn("RICH_BUTTON_ON_KEYBOARD", found)
 
     def test_action_only_in_the_document_is_placed(self):
         self.assertNotIn("ACTION_NOT_PLACED", self.edit(lambda s: None))

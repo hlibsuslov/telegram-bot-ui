@@ -658,5 +658,50 @@ class ValidateRichBlocks(unittest.TestCase):
                                 self.assertFlags(found, f"blocks[0].{field['name']}")
 
 
+class ValidateRichMovingEmoji(unittest.TestCase):
+    """--emoji-library: a button's animated or video custom emoji is an error, in blocks, HTML and the keyboard."""
+    MOVING = {"2222222222": "animated", "3333333333": "video"}
+
+    def check(self, payload, **kw):
+        return [e for e in vr.validate(payload, moving_emoji=self.MOVING, **kw)[0] if "BUTTON_EMOJI_ANIMATED" in e]
+
+    def test_blocks_html_and_markdown(self):
+        film = rich.message_button([rich.custom_emoji("3333333333", "🎬"), " Film"], callback_data="m")
+        home = rich.message_button([rich.custom_emoji("1111111111", "🏠"), " Home"], callback_data="h")
+        self.assertEqual(len(self.check({"blocks": [rich.buttons_block([film, home])]})), 1)
+        self.assertEqual(self.check({"blocks": [rich.buttons_block([home])]}), [])
+        html = ('<p><tg-emoji emoji-id="2222222222">🔥</tg-emoji></p>'
+                '<tg-button type="callback_data" data="g"><tg-emoji emoji-id="2222222222">🔥</tg-emoji> Go</tg-button>')
+        self.assertEqual(len(self.check({"html": html})), 1, "only the emoji inside the button counts")
+        self.assertEqual(len(self.check({"rich_message": {"markdown": html}})), 1)
+        self.assertEqual([e for e in vr.validate({"html": html})[0] if "BUTTON_EMOJI_ANIMATED" in e], [], "no library")
+
+    def test_a_reply_markup_icon_is_checked_too(self):
+        payload = {"html": "<p>x</p>", "reply_markup": {"inline_keyboard": [[
+            {"text": "Fire", "callback_data": "f", "icon_custom_emoji_id": "2222222222"}]]}}
+        self.assertEqual(len(self.check(payload)), 1)
+
+    def test_the_cli_takes_the_project_library(self):
+        import json
+        import os
+        import subprocess
+        import sys
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            lib, doc = os.path.join(tmp, "library.json"), os.path.join(tmp, "message.json")
+            with open(lib, "w", encoding="utf-8") as fh:
+                json.dump({"format": "bot-ui-emoji/v1", "packs": {"demo": {"emoji": [
+                    {"id": "2222222222", "fallback": "🔥", "format": "animated"}]}}, "icons": {}}, fh)
+            with open(doc, "w", encoding="utf-8") as fh:
+                json.dump({"html": '<tg-button type="callback_data" data="g"><tg-emoji emoji-id="2222222222">🔥</tg-emoji> Go</tg-button>'}, fh)
+            script = os.path.join(_paths.ROOT, "scripts", "validate_rich.py")
+            run = lambda *a: subprocess.run([sys.executable, script, doc, *a], capture_output=True, text=True, encoding="utf-8")  # noqa: E731
+            self.assertEqual(run().returncode, 0)
+            bad = run("--emoji-library", lib)
+            self.assertEqual(bad.returncode, 1, bad.stdout)
+            self.assertIn("BUTTON_EMOJI_ANIMATED", bad.stdout)
+            self.assertEqual(run("--emoji-library", os.path.join(tmp, "nope.json")).returncode, 1)
+
+
 if __name__ == "__main__":
     unittest.main()

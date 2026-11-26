@@ -80,6 +80,35 @@ class Tools(unittest.TestCase):
             self.assertFalse(r[i]["result"]["structuredContent"]["ok"], i)
         self.assertTrue(r[4]["result"]["structuredContent"]["ok"])
 
+    def test_validate_request_reads_the_emoji_library_for_button_emoji(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            lib = os.path.join(tmp, "library.json")
+            with open(lib, "w", encoding="utf-8") as fh:
+                json.dump({"format": "bot-ui-emoji/v1", "packs": {"demo": {"emoji": [
+                    {"id": "2222222222", "fallback": "🔥", "format": "animated"}]}}, "icons": {}}, fh)
+            markup = {"inline_keyboard": [[{"text": "Fire", "callback_data": "f", "icon_custom_emoji_id": "2222222222"}]]}
+            html = '<tg-button type="callback_data" data="g"><tg-emoji emoji-id="2222222222">🔥</tg-emoji> Go</tg-button>'
+            r, _ = session(
+                ("validate_request", {"method": "sendMessage", "params": {"chat_id": 1, "text": "x", "reply_markup": markup}}),
+                ("validate_request", {"method": "sendMessage", "params": {"chat_id": 1, "text": "x", "reply_markup": markup},
+                                      "emoji_library": lib}),
+                ("validate_request", {"method": "sendRichMessage", "params": {"chat_id": 1, "rich_message": {"html": html}},
+                                      "emoji_library": lib}),
+                ("check_rich_html", {"html": html, "emoji_library": lib}),
+                ("check_rich_html", {"html": html}),
+                ("check_rich_html", {"html": html, "emoji_library": os.path.join(tmp, "nope.json")}),
+            )
+        self.assertTrue(r[1]["result"]["structuredContent"]["ok"], "no library, nothing changes")
+        flagged = r[2]["result"]["structuredContent"]
+        self.assertFalse(flagged["ok"])
+        self.assertTrue(any("BUTTON_EMOJI_ANIMATED" in e for e in flagged["errors"]), flagged)
+        self.assertTrue(any("BUTTON_EMOJI_ANIMATED" in e for e in r[3]["result"]["structuredContent"]["errors"]))
+        found = r[4]["result"]["structuredContent"]
+        self.assertFalse(found["ok"])
+        self.assertIn("BUTTON_EMOJI_ANIMATED", [f["code"] for f in found["findings"]])
+        self.assertTrue(r[5]["result"]["structuredContent"]["ok"])
+        self.assertTrue(r[6]["result"]["isError"])
+
     def test_knowledge_search_points_at_sections(self):
         r, _ = session(("knowledge_search", {"query": "buttons inside a rich message"}))
         files = [x["file"] for x in r[1]["result"]["structuredContent"]["results"]]

@@ -8,3 +8,6 @@ body { background: #ffffff; color: #111; height: 100vh; }
 @font-face { font-family: Brand; src: url(brand.woff2); }
 .meta { font-size: 9px; }
 .card:hover .tip { display: block; }
+
+/* MA48: a 26 px card with 8 px of padding (the cramped settings card) */
+.settings-card { background: var(--tma-surface); border-radius: 26px; padding: 8px; }

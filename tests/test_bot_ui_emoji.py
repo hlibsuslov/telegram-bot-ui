@@ -262,6 +262,186 @@ class Library(ProjectCase):
         self.assertEqual(len(small["previews"]), 3, "the budget stops inlining, nothing breaks")
 
 
+HOME, BACK, CART, BOX, CART_STATIC = "0100000000000001", "0100000000000002", "0100000000000024", "0100000000000025", "0100000000000098"
+
+
+def pack_with(animated=(), video=(), twins=()):
+    """The fixture pack with some emoji animated or video, and static emoji with the same fallback as `twins`' keys."""
+    st = fixture()["result"]
+    for sticker in st["stickers"]:
+        sticker["is_animated"] = sticker["custom_emoji_id"] in animated
+        sticker["is_video"] = sticker["custom_emoji_id"] in video
+    for source, new in dict(twins).items():
+        base = next(x for x in st["stickers"] if x["custom_emoji_id"] == source)
+        st["stickers"].append({**base, "custom_emoji_id": new, "is_animated": False, "is_video": False})
+    return st
+
+
+class ButtonsTakeStaticEmoji(ProjectCase):
+    """A button never carries an animated or video custom emoji; in text static is the default."""
+
+    def edit_start(self, change):
+        doc = self.read("screens/entry.start.json")
+        change(doc)
+        self.write_raw("screens/entry.start.json", json.dumps(doc, ensure_ascii=False).encode())
+
+    def found(self):
+        return [(d.code, d.severity, d.pointer, d.message) for d in validate(open_snapshot(self.root))]
+
+    def test_validate_errors_on_a_moving_button_icon_and_warns_in_text(self):
+        def change(doc):
+            doc["message"]["text"]["en"] = (f'<tg-emoji emoji-id="{BACK}">⬅️</tg-emoji> <tg-emoji emoji-id="{HOME}">🏠</tg-emoji> '
+                                            "<b>Demo shop</b>")
+            doc["actions"]["order"]["icon"] = {"customEmojiId": CART}
+            doc["actions"]["status"]["icon"] = {"customEmojiId": BOX}
+
+        self.edit_start(change)
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(BACK, CART), video=(BOX,), twins={CART: CART_STATIC}))
+        found = self.found()
+        errors = {(p, m) for c, sev, p, m in found if c == "BUTTON_EMOJI_ANIMATED" and sev == "error"}
+        self.assertEqual({p for p, _ in errors}, {"/actions/order/icon", "/actions/status/icon"})
+        by_pointer = dict(errors)
+        self.assertIn(CART_STATIC, by_pointer["/actions/order/icon"], "names the static emoji with the same meaning")
+        self.assertIn("video", by_pointer["/actions/status/icon"])
+        self.assertEqual([(c, sev, p) for c, sev, p, _ in found if c == "CUSTOM_EMOJI_ANIMATED"],
+                         [("CUSTOM_EMOJI_ANIMATED", "warning", "/message/text/en")], "the static 🏠 is fine")
+
+    def test_a_static_icon_and_a_project_without_a_library_are_clean(self):
+        flags = lambda: [c for c, *_ in self.found() if c in ("BUTTON_EMOJI_ANIMATED", "CUSTOM_EMOJI_ANIMATED")]  # noqa: E731
+        self.edit_start(lambda d: d["actions"]["order"].update(icon={"customEmojiId": HOME}))
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(CART,)))
+        self.assertFalse(flags())
+        self.edit_start(lambda d: d["actions"]["order"].update(icon={"customEmojiId": CART}))
+        self.assertTrue(flags())
+        os.remove(os.path.join(self.root, *emoji.LIBRARY.split("/")))
+        self.assertFalse(flags(), "no library, no format to check")
+
+    def test_a_custom_emoji_inside_a_rich_button_is_a_button_use(self):
+        def change(doc):
+            doc["message"]["format"] = "rich.html"
+            doc["message"]["text"]["en"] = (f'<p><tg-emoji emoji-id="{BACK}">⬅️</tg-emoji> Demo shop</p>'
+                                            f'<tg-button action="status"><tg-emoji emoji-id="{BOX}">📦</tg-emoji> Status</tg-button>'
+                                            f'<tg-button action="order"><tg-emoji emoji-id="{HOME}">🏠</tg-emoji> Order</tg-button>')
+            doc["keyboard"] = {"type": "none"}
+
+        self.edit_start(change)
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(BACK, BOX)))
+        found = self.found()
+        self.assertEqual([(c, sev, p) for c, sev, p, _ in found if c == "BUTTON_EMOJI_ANIMATED"],
+                         [("BUTTON_EMOJI_ANIMATED", "error", "/message/text/en")], "only the 📦 inside the status button")
+        self.assertEqual([c for c, _, p, _ in found if c == "CUSTOM_EMOJI_ANIMATED"], ["CUSTOM_EMOJI_ANIMATED"], "the paragraph's ⬅️")
+        placed = {(u["id"], u["where"]) for u in emoji.usage(open_snapshot(self.root))}
+        self.assertEqual(placed, {(BACK, "text"), (BOX, "button"), (HOME, "button")})
+
+    def test_suggestions_prefer_the_static_emoji_of_a_meaning(self):
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(CART,), twins={CART: CART_STATIC}))
+        sugg = {s["slot"]: s for s in emoji.suggest_icons(open_snapshot(self.root), emoji.load_library(self.root))}
+        self.assertEqual((sugg["cart"]["id"], sugg["cart"]["animated"]), (CART_STATIC, False))
+        emoji.remove_pack(self.root, "demo_line_icons")
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(CART,)))
+        sugg = {s["slot"]: s for s in emoji.suggest_icons(open_snapshot(self.root), emoji.load_library(self.root))}
+        self.assertEqual((sugg["cart"]["id"], sugg["cart"]["animated"]), (CART, True), "only an animated one exists: flagged, not hidden")
+
+    def test_candidates_never_put_a_moving_emoji_on_a_button(self):
+        def change(doc):
+            doc["message"]["text"]["en"] += " 🛒"
+            doc["actions"]["order"]["label"]["en"] = "🛒 Place an order"
+
+        self.edit_start(change)
+        where = lambda: {c["pointer"]: c["id"] for c in emoji.candidates(open_snapshot(self.root), emoji.load_library(self.root))  # noqa: E731
+                         if c["slot"] == "cart" and c["screenId"] == "entry.start" and c["pointer"].endswith("/en")}
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(CART,), twins={CART: CART_STATIC}))
+        emoji.set_icon(self.root, "cart", CART)
+        self.assertEqual(where(), {"/message/text/en": CART_STATIC, "/actions/order/label/en": CART_STATIC})
+        emoji.remove_pack(self.root, "demo_line_icons")
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(CART,)))
+        emoji.set_icon(self.root, "cart", CART)
+        self.assertEqual(where(), {"/message/text/en": CART}, "text keeps it (a flagged exception), the button gets nothing")
+
+    def test_adopting_a_button_icon_takes_its_static_twin_or_nothing(self):
+        self.edit_start(lambda d: d["actions"]["order"].update(icon={"customEmojiId": CART}))
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(CART,)))
+        self.assertEqual(emoji.adopt_icons(self.root, open_snapshot(self.root)), [], "no static 🛒: not an icon of the map")
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(CART,), twins={CART: CART_STATIC}))
+        adopted = emoji.adopt_icons(self.root, open_snapshot(self.root))
+        self.assertEqual([(a["slot"], a["id"]) for a in adopted], [("cart", CART_STATIC)])
+
+    def test_the_brief_states_the_hard_rule(self):
+        emoji.import_pack(self.root, sticker_set=fixture())
+        rules = " ".join(emoji.brief(open_snapshot(self.root))["rules"])
+        self.assertIn("STATIC custom emoji only", rules)
+        self.assertIn("BUTTON_EMOJI_ANIMATED", rules)
+        self.assertIn("CUSTOM_EMOJI_ANIMATED", rules)
+
+
+class IconMeaning(ProjectCase):
+    """A button's icon says what its label says (ICON_MEANING_MISMATCH, the review sheet)."""
+
+    def set_icons(self, **icons):
+        doc = self.read("screens/entry.start.json")
+        for aid, eid in icons.items():
+            doc["actions"][aid]["icon"] = {"customEmojiId": eid}
+            for loc, text in doc["actions"][aid]["label"].items():
+                doc["actions"][aid]["label"][loc] = text.lstrip("🛒📦 ")  # the icon replaces the label emoji
+        self.write_raw("screens/entry.start.json", json.dumps(doc, ensure_ascii=False).encode())
+
+    def mismatches(self):
+        return [(d.pointer, d.message) for d in validate(open_snapshot(self.root)) if d.code == "ICON_MEANING_MISMATCH"]
+
+    def test_label_words_in_three_languages(self):
+        vocab = {v["slot"]: v for v in emoji.vocabulary()}
+        self.assertIn("order", emoji.label_slots("Мої замовлення", vocab))
+        self.assertIn("order", emoji.label_slots("Оформить заказ", vocab))
+        self.assertIn("settings", emoji.label_slots("Настройки", vocab))
+        self.assertIn("catalog", emoji.label_slots("Категорії", vocab))
+        self.assertEqual(emoji.label_slots("4821", vocab), set())
+        self.assertIsNone(emoji.meaning_mismatch(["Order status"], ["product", "order"], vocab), "📦 may mean an order")
+        self.assertEqual(emoji.meaning_mismatch(["Settings"], ["home"], vocab), ["settings"])
+        self.assertIsNone(emoji.meaning_mismatch(["Whatever"], ["home"], vocab), "a label with no known meaning")
+
+    def test_validate_warns_on_an_icon_that_means_something_else(self):
+        emoji.import_pack(self.root, sticker_set=fixture())
+        self.set_icons(order=HOME, status=BOX)  # 🏠 on "Place an order", 📦 on "Order status"
+        found = self.mismatches()
+        self.assertEqual([p for p, _ in found], ["/actions/order/icon"])
+        self.assertIn("order", found[0][1])
+        self.set_icons(order=CART)  # 🛒 means cart, the label says order
+        self.assertEqual([p for p, _ in self.mismatches()], ["/actions/order/icon"])
+        self.set_icons(order="0100000000000026")  # 🧾 receipt / order
+        self.assertEqual(self.mismatches(), [])
+
+    def test_an_icon_mapped_to_a_slot_is_judged_by_that_slot(self):
+        emoji.import_pack(self.root, sticker_set=fixture())
+        emoji.set_icon(self.root, "settings", "0100000000000013")
+        self.set_icons(status="0100000000000013")  # the settings icon on "Order status"
+        self.assertEqual([p for p, _ in self.mismatches()], ["/actions/status/icon"])
+        brief = emoji.brief(open_snapshot(self.root))
+        self.assertEqual([m["pointer"] for m in brief["meaningMismatch"]], ["/actions/status/icon"])
+        self.assertIn("Icons that mean something else", emoji.brief_markdown(brief))
+
+    def test_a_rich_button_is_judged_by_its_own_words(self):
+        doc = self.read("screens/entry.start.json")
+        doc["message"]["format"] = "rich.html"
+        doc["message"]["text"]["en"] = (f'<p>Shop</p><tg-button action="status"><tg-emoji emoji-id="{HOME}">🏠</tg-emoji> '
+                                        'Settings</tg-button><tg-button action="order">Order</tg-button>')
+        doc["keyboard"] = {"type": "none"}
+        self.write_raw("screens/entry.start.json", json.dumps(doc, ensure_ascii=False).encode())
+        emoji.import_pack(self.root, sticker_set=fixture())
+        self.assertEqual([p for p, _ in self.mismatches()], ["/message/text/en"])
+
+    def test_review_sheet_shows_every_button_icon_with_its_verdict(self):
+        emoji.import_pack(self.root, sticker_set=pack_with(animated=(BOX,)))
+        self.set_icons(order=HOME, status=BOX)
+        html = emoji.review_sheet(open_snapshot(self.root))
+        self.assertEqual(html.count('<tr class="bad">'), 2)
+        self.assertIn("a button takes a static custom emoji only", html)
+        self.assertIn("the label says order", html)
+        out = os.path.join(self._tmp, "review.html")
+        from bot_ui.cli import main
+        self.assertEqual(main(["emoji", "review", "--project", self.root, "--out", out, "--json"]), 1)
+        with open(out, encoding="utf-8") as fh:
+            self.assertIn("Button icon review", fh.read())
+
 class Server(ProjectCase):
     def setUp(self):
         super().setUp()
