@@ -21,3 +21,6 @@ node_modules/
 .env.*
 .tg_post_ledger.json
 .agent_bridge*.json
+
+# Local eval runs (scripts/run_evals.py, scripts/run_behavioral.py); never merged into evals.json
+evals/results/

@@ -4620,9 +4620,9 @@
       "context": "aiogram 3 bot, English and Ukrainian; QR codes on cups open t.me/<bot>?start=item_<key>; returning customers exist; no welcome yet",
       "must": [
         "writes a welcome brief first: who arrives and from where, the first useful result and how many taps away, the returning variant",
-        "one message per entry: a photo by file_id with a caption of title, value line, 2-3 how-it-works lines naming the visible buttons, an optional trust line; caption within 1024",
+        "one message per entry: a photo by file_id with a caption, or text only when no picture shows the product and that choice is explained; title, value line, 2-3 how-it-works lines naming the visible buttons, an optional trust line; caption within 1024",
         "one primary (the first useful result) and 1-3 neutral secondary buttons, no actions that are empty for a new user",
-        "variants: the QR item is the first message itself; returning users get home with the open order, no intro; an unsupported language_code gets a picker that the welcome replaces (editMessageMedia)",
+        "variants: the QR item is the first message itself; returning users get home with the open order, no intro; an unsupported language_code gets a picker that the welcome replaces (editMessageMedia for a photo welcome, editMessageText for a text one), and the next taps follow one edit model",
         "writes the scenarios as a welcome spec and runs tgui.py check welcome, naming the evidence as static"
       ],
       "critical_failures": [
@@ -4679,7 +4679,7 @@
       "role": "designer",
       "lang": "ru",
       "request": "Переделай все уведомления нашего бота: отчёты продаж, новые заказы для менеджеров, напоминания клиентам.",
-      "context": "aiogram 3 shop bot, Russian; notifications are long paragraphs with '❗️ВНИМАНИЕ❗️', '━━━━' separators and 'С уважением, команда'; scheduled jobs in jobs.py",
+      "context": "not the bot in this folder: pasted from another repository, an aiogram 3 shop bot in Russian whose scheduled jobs in jobs.py send three texts with {placeholders} and callback_data kept as is: (1) daily sales report: '❗️ВНИМАНИЕ❗️ Отчёт о продажах за {date} ━━━━ Уважаемые менеджеры! Сообщаем, что выручка за день составила {revenue} руб., количество заказов {orders}, средний чек {avg} руб., возвратов {refunds}. ━━━━ С уважением, команда'; (2) new order to managers, buttons 'Взять' (order:take:{id}) and 'Открыть' (order:open:{id}): '❗️ВНИМАНИЕ❗️ Поступил новый заказ №{id} от клиента {name} на сумму {total} руб. ━━━━ Состав заказа: {items}. Комментарий: {comment}. Телефон: {phone}. Просьба срочно взять в работу! ━━━━ С уважением, команда'; (3) reminder to customers: '❗️ВНИМАНИЕ❗️ Уважаемый {name}! Напоминаем, что ваш заказ №{id} ожидает вас в пункте выдачи по адресу {address} до {deadline}. ━━━━ С уважением, команда'",
       "must": [
         "inventories every message the bot sends on its own (jobs, webhooks) and gives each a pattern id: report-kpi, new-lead, reminder",
         "rewrites each with a header of one icon and 2-5 bold words carrying the news, a subject line, a blank line, one or two body blocks, an italic footer",
@@ -4699,7 +4699,7 @@
       "role": "builder",
       "lang": "en",
       "request": "Our price-alert bot needs notifications for crossings, a morning digest and failed payments for the premium plan.",
-      "context": "python-telegram-bot, English, owner has Telegram Premium and a resolved icon pack",
+      "context": "not the bot in this folder: a new price-alert bot on python-telegram-bot 22, English, nothing written yet; deliver the notification code as a standalone module and its rendered payloads; users set price thresholds per asset, prices tick every few seconds; the premium plan is a Stars subscription; the owner has Telegram Premium and a resolved icon pack",
       "transfer": {
         "of": "NB1",
         "variation": "new notifications instead of a rework; premium icons available"

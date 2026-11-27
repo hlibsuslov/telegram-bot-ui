@@ -50,6 +50,21 @@ Each release is tagged `v<version>`.
   `fullscreenChanged` instead of a reload; `expand()` opens a compact sheet; the loading placeholder stays
   until `ready()` or the page load; CloudStorage, DeviceStorage and SecureStorage survive a relaunch in the
   tab. The URL holds every setting (Copy link); `&zoom=100&panels=0` gives 1:1 screenshots.
+- **Buttons inside a Rich Message are the exception:** `references/rich-message-buttons.md`. The keyboard is
+  the default; a button inside the document (`RichTextButton`, `<tg-button-row>`) is only for a press that
+  changes one element of the same message. Decision order, the six patterns that earn one, a never-list,
+  the look, what happens after the press, and a rework table. `validate_rich` and `bot-ui validate` report
+  `RICH_BUTTON_NAVIGATION` (Back, Menu, a move to another screen), `RICH_BUTTON_MAIN_ACTION` (a filled
+  style), `RICH_BUTTON_OUTSIDE` (url, web_app, login, inline switch) and `RICH_BUTTON_DENSITY` (more than 4
+  in a row, about 8 buttons or 20 per-line links); the old `RICH_BUTTONS_UNUSED` hint that pushed content
+  actions into the document is gone. Recipes 02, 26, 31 and 63, `api-rich` and `pick_categories.py` move
+  their main actions, links and pickers' bulk buttons to the keyboard.
+- **The icon plan:** `scripts/emoji_plan.py` and `bot-ui emoji plan|verdict|apply-plan` choose custom emoji
+  packs and the best static emoji for every button and title in stages (gate, inventory, brief, packs,
+  scored slots, assembly, review sheet, record, validate). Without a style profile the brief is the Mini App
+  kit's line icons. Each slot gets a score breakdown and alternatives, a slot nothing says well stays
+  label-only, and only slots with a recorded verdict are written. The plan is kept as
+  `emoji/icon-plan.json`; the playbook is "The icon plan" in `references/emoji-packs.md`.
 
 ## 3.3.0 - 2026-11-25
 
