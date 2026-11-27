@@ -35,8 +35,11 @@ Each release is tagged `v<version>`.
   `tgkit/notify.py` renders the slots as escaped HTML and payloads. `tgui.py patterns list|find|show|
   render|check` finds the pattern for a message, shows it, renders a spec and checks a payload's anatomy
   (header, blank line, emoji per line, decorative rules, shouting, greetings and sign-offs, separator mix,
-  raw ISO times, length; with `--pattern`: header words, sound and buttons). `improve`, `audit` and
-  `build` route to it. Evals NA1-NA3 and NB1-NB3.
+  raw ISO times, length, a time or source footer that is not italic; with `--pattern`: header words,
+  sound and buttons). `improve`, `audit` and `build` route to it and follow its "Do this, in order"
+  steps: a pattern id and its reason per message, before/after for two types first, the skill's
+  renderer instead of a new one, sound and lifecycle implemented, every payload checked. Evals
+  NA1-NA3 and NB1-NB3.
 - **The Mini App stand is a workspace:** `scripts/preview_miniapp.py` now serves `scripts/preview_stand/`
   (HTML, CSS, JS; no build, no network; layout after the shadcnblocks block application-shell28,
   re-implemented, tokens of the Studio). A toolbar with relaunch, the app's address and its `ready()`

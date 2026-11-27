@@ -61,10 +61,11 @@ MUST_VERDICTS = ("met", "not_met", "not_applicable")
 CRITICAL_VERDICTS = ("present", "absent")
 DIFF_LIMIT = 40_000
 ANSWER_LIMIT = 20_000
-# Bash the agent may run without a prompt (everything else is denied in print mode).
+# Shell commands the agent may run without a prompt (everything else is denied in print mode). On Windows
+# Claude Code runs them through its PowerShell tool, which has its own rules.
+_SHELL_ALLOW = ("python:*", "python3:*", "py:*", "node:*", "git diff:*", "git status:*", "git log:*", "ls:*")
 AGENT_PERMISSIONS = {"defaultMode": "acceptEdits",
-                     "allow": ["Bash(python:*)", "Bash(python3:*)", "Bash(py:*)", "Bash(node:*)",
-                               "Bash(git diff:*)", "Bash(git status:*)", "Bash(git log:*)", "Bash(ls:*)"],
+                     "allow": [f"{tool}({rule})" for tool in ("Bash", "PowerShell") for rule in _SHELL_ALLOW],
                      "deny": ["WebFetch", "WebSearch"]}
 TELEGRAM_SECRET = re.compile(r"^TG_|TELEGRAM|BOT_TOKEN", re.I)
 # A host error that every later call would repeat: stop instead of spending the remaining calls.

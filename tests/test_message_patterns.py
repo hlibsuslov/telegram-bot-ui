@@ -127,6 +127,23 @@ class Check(unittest.TestCase):
         table = "<b>📊 Orders</b>\n\n<pre>A  B\n────\nx  1</pre>"
         self.assertNotIn("DECOR_RULE", codes(table))  # a rule inside <pre> belongs to the table
 
+    def test_footer_is_italic(self):
+        body = "<b>📊 Продажи за 26 ноября</b>\n\nВыручка: <b>84 200 ₽</b>\nЗаказы: <b>63</b>\n\n"
+        self.assertIn("FOOTER_NOT_ITALIC", codes(body + "данные на 17:05"))
+        self.assertIn("FOOTER_NOT_ITALIC", codes(body + '<tg-time unix="1795784000" format="t">17:05</tg-time>'))
+        self.assertNotIn("FOOTER_NOT_ITALIC", codes(body + "<i>данные на 17:05</i>"))
+        # a fact or a sentence that only mentions a time is body, not a footer
+        self.assertNotIn("FOOTER_NOT_ITALIC", codes(body + "Срок: до 18:00"))
+        self.assertNotIn("FOOTER_NOT_ITALIC", codes("<b>📦 Заказ готов</b>\n\nЗаберите до 18:00"))
+        plain = "📊 Sales today\n\nRevenue: 84 200\n\nas of 17:05"
+        u16 = lambda t: len(t.encode("utf-16-le")) // 2  # noqa: E731 (entity offsets are UTF-16 units)
+        start = u16(plain) - u16("as of 17:05")
+        italic = [{"type": "bold", "offset": 0, "length": 15}, {"type": "italic", "offset": start, "length": 11}]
+        found = {f["code"] for f in mp.check_text(plain, parse_mode=None, entities=italic, where="t")}
+        self.assertNotIn("FOOTER_NOT_ITALIC", found)
+        found = {f["code"] for f in mp.check_text(plain, parse_mode=None, entities=italic[:1], where="t")}
+        self.assertIn("FOOTER_NOT_ITALIC", found)
+
     def test_custom_emoji_header_counts_one_icon(self):
         text = '<tg-emoji emoji-id="5368324170671202286">📦</tg-emoji> <b>Order #1042 shipped</b>\nDHL\n\nArrives: tomorrow'
         self.assertEqual(codes(text), set())
