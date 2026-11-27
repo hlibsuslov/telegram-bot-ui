@@ -367,7 +367,7 @@ python skills/telegram-bot-ui/examples/python/recipes/r01_ai_assistant.py
 | `py -3 skills/telegram-bot-ui/scripts/tgui.py <group>` | одна точка входу для всіх інструментів нижче, плюс `context`, `next`, `doctor` і `check changed` (`python3` поза Windows) |
 | `py -3 skills/telegram-bot-ui/scripts/tgui.py commands audit --root .` | меню команд: обробники в коді проти `setMyCommands`, області, що ховають команди, відсутні мови |
 | `py -3 skills/telegram-bot-ui/scripts/tgui.py emoji library pick --needs home,back,settings` | один пак преміум-емодзі під ваші іконки за реальним покриттям і тегами (звертається до публічної бібліотеки) |
-| `py -3 skills/telegram-bot-ui/scripts/tgui.py mcp` | ті самі інструменти як локальний MCP-сервер (15 інструментів) |
+| `py -3 skills/telegram-bot-ui/scripts/tgui.py mcp` | ті самі інструменти як локальний MCP-сервер (16 інструментів) |
 | `python skills/telegram-bot-ui/scripts/validate_keyboard.py keyboard.json` | правила для кнопок і payload клавіатур |
 | `python skills/telegram-bot-ui/scripts/validate_rich.py message.json` | ліміти й правила Rich Messages |
 | `python skills/telegram-bot-ui/scripts/validate_widget.py widget.html` | розмір віджета (за алгоритмом сервера) і прогалини пісочниці |

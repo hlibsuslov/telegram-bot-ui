@@ -26,10 +26,18 @@ def codes(diags) -> list[str]:
 
 
 class Render(unittest.TestCase):
+    # Rendering mechanics only (bound buttons, styles, url escaping, copy_text): this text puts Pay and Track inside
+    # the document on purpose. The fixture's own receipt keeps them on the keyboard (rich-message-buttons.md).
+    TEXT = ('<h3>Order #{order.no}</h3><p>Total <b>{order.total}</b>. <tg-button action="why"></tg-button></p>'
+            '<tg-button-row align="center"><tg-button action="pay"></tg-button><tg-button action="track">Track &amp; trace'
+            '</tg-button></tg-button-row><tg-button-row><tg-button type="copy_text" text="{order.no}">Copy number</tg-button></tg-button-row>')
+
     def setUp(self):
         self.snap = open_snapshot(FIXTURE)
         self.project = self.snap.project
-        self.screen = self.snap.screens["receipt.view"]
+        self.screen = copy.deepcopy(self.snap.screens["receipt.view"])
+        self.screen["message"]["text"] = {"en": self.TEXT}
+        self.screen["keyboard"] = {"type": "inline", "rows": [["back"]]}
         self.values = {"order.no": "4821", "order.total": "$12.90"}
 
     def test_bound_buttons_become_official_buttons_with_the_action_route_and_style(self):
@@ -134,19 +142,29 @@ class Contract(unittest.TestCase):
         def broken(s):
             s["message"]["text"]["en"] += '<tg-button-row><tg-button action="nope"></tg-button></tg-button-row>'
             s["message"]["media"] = {"type": "photo", "file": {"url": "https://example.com/a.jpg"}}
-            s["keyboard"]["rows"].append(["pay"])
+            s["keyboard"]["rows"].append(["why"])
         found = self.edit(broken)
         for code in ("RICH_BUTTON_ACTION_MISSING", "RICH_MEDIA_FIELD", "RICH_BUTTON_ON_KEYBOARD"):
             self.assertIn(code, found)
 
-    def test_content_actions_only_on_the_keyboard_suggest_rich_buttons(self):
-        def keyboard_only(s):
-            for loc, text in s["message"]["text"].items():
-                s["message"]["text"][loc] = re.sub(r"<tg-button-row>.*?</tg-button-row>|<tg-button\b.*?</tg-button>", "", text, flags=re.S)
-            s["keyboard"]["rows"].append(["track"])  # a url action: content, not navigation
-        found = self.edit(keyboard_only)
-        self.assertIn("RICH_BUTTONS_UNUSED", found)
-        self.assertNotIn("RICH_BUTTON_ON_KEYBOARD", found)
+    def test_main_action_navigation_and_links_out_do_not_belong_in_the_document(self):
+        # references/rich-message-buttons.md: the keyboard is the default; this is the old receipt, all inside
+        def all_inside(s):
+            for loc in s["message"]["text"]:
+                s["message"]["text"][loc] += ('<tg-button-row><tg-button action="pay"></tg-button>'
+                                              '<tg-button action="track"></tg-button><tg-button action="back"></tg-button></tg-button-row>')
+            s["keyboard"]["rows"] = []
+        found = self.edit(all_inside)
+        for code in ("RICH_BUTTON_MAIN_ACTION", "RICH_BUTTON_NAVIGATION", "RICH_BUTTON_OUTSIDE"):
+            self.assertIn(code, found)
+
+    def test_a_crowded_row_is_flagged_and_the_fixture_is_not(self):
+        def crowded(s):
+            for loc in s["message"]["text"]:
+                s["message"]["text"][loc] += "<tg-button-row>" + "".join(
+                    f'<tg-button type="callback_data" data="v:{i}">V{i}</tg-button>' for i in range(5)) + "</tg-button-row>"
+        self.assertIn("RICH_BUTTON_DENSITY", self.edit(crowded))
+        self.assertEqual([c for c in codes(validate(open_snapshot(FIXTURE))) if c.startswith("RICH_BUTTON")], [])
 
     def test_action_only_in_the_document_is_placed(self):
         self.assertNotIn("ACTION_NOT_PLACED", self.edit(lambda s: None))
@@ -215,6 +233,8 @@ class EngineEdges(unittest.TestCase):
         s["message"]["text"] = text
         if keyboard is None:
             s.pop("keyboard", None)
+        else:
+            s["keyboard"] = keyboard
         snap.screens["receipt.view"] = s
         return snap
 

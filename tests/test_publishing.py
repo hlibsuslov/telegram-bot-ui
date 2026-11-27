@@ -48,12 +48,14 @@ class PayloadShapes(unittest.TestCase):
 
     def test_rich(self):
         post = Post(blocks=[{"type": "heading", "text": "A"}, {"type": "table", "header": ["k", "v"], "rows": [["1", "2"]]}],
-                    buttons=[[{"text": "Go", "callback_data": "go", "style": "link"}]])
+                    buttons=[[{"text": "Go", "callback_data": "go"}]])
         self.assertEqual(resolve_kind(post), "rich")
         (m, p), = plan(post, CH)
         self.assertEqual(m, "sendRichMessage")
         blocks = p["rich_message"]["blocks"]
-        self.assertEqual([b["type"] for b in blocks], ["heading", "table", "buttons"])
+        # the post's buttons are a keyboard under the message, not a row in the document (rich-message-buttons.md)
+        self.assertEqual([b["type"] for b in blocks], ["heading", "table"])
+        self.assertEqual(p["reply_markup"]["inline_keyboard"], [[{"text": "Go", "callback_data": "go"}]])
         self.assertTrue(blocks[1]["is_compact"])
         self.assertNotIn("link_preview_options", p)
 

@@ -164,8 +164,8 @@ One offline entry point, standard library only, no bot token:
 `py -3 <skill>/scripts/tgui.py <group> ...`; `--help` on every group. Exit codes: 0 ok,
 1 findings, 2 usage, 3 revision conflict, 4 refused. Groups: `context`, `next`, `doctor`,
 `findings`, `requests`, `check`, `lookup`, `webapp`, `examples`, `profile`, `map`, `post`,
-`emoji`, `widget`, `miniapp`, `data`, `commands`, `agent`, `hook`, `mcp`, `sync`. Online only:
-`sync`, `emoji library`, pack import. Run them; don't read their source. Libraries: `examples/`
+`emoji`, `widget`, `miniapp`, `data`, `patterns`, `commands`, `agent`, `hook`, `mcp`, `sync`.
+Online only: `sync`, `emoji library`, pack import. Run them; don't read their source. Libraries: `examples/`
 (`tgkit` for Python and TS, SDK adapters). No Python: each playbook has a *Without scripts* path.
 
 ## Where knowledge lives
@@ -231,7 +231,7 @@ and by `tgui.py check changed`; the judgement part is yours.
   destructive action; omit it elsewhere. Back, Cancel and Close stay unstyled and last.
 - `force_reply` on keyboards (10.3) = buttons plus a reply field; on inline keyboards it can't
   change in an edit. `validate_keyboard` warnings are design defects to fix.
-- Rich Messages: content actions in the document, navigation on the keyboard.
+- Rich: actions on the keyboard (rich-message-buttons.md).
 
 ## Feedback
 
@@ -314,6 +314,11 @@ mandate A0, see `references/redesign-orchestration.md` §0).
   `references/testing-playbook.md` for the tests the change needs.
 - A worked example of a real audit: `references/case-study-btc-tracker.md`.
 - The command menu: `references/bot-commands.md` "The lifecycle" (`tgui.py commands audit`).
+- The first message after `/start`, per entry (new, deep link, returning, unknown language,
+  group): `references/welcome-message.md` §2 and §9 (`tgui.py check welcome`).
+- Messages the bot sends on its own (alerts, statuses, reports, reminders): classify each by
+  pattern and check its anatomy, `references/message-patterns.md` §7-8 (`tgui.py patterns
+  find|check`). One type in several shapes is a finding.
 
 ## Steps
 
@@ -367,9 +372,12 @@ wording; brand fit; rethink the menus; move to the newest Bot API.
 
 ## Read (only what the change touches; all in `references/`)
 
-Wording `microcopy-and-labels.md` · buttons and color `buttons-and-styles.md` · inline keyboards,
+Wording `microcopy-and-labels.md` · buttons and color `buttons-and-styles.md` · buttons inside a Rich
+Message (the exception; audit every one) `rich-message-buttons.md` · inline keyboards,
 pagination `inline-keyboards.md` · reply keyboards, `ForceReply` `reply-keyboards.md` · screens,
 back, commands, deep links `navigation-and-flows.md` · first run `onboarding-and-first-run.md` ·
+the first message after `/start` `welcome-message.md` · notifications and other messages the bot
+sends on its own `message-patterns.md` (§8 rework procedure, `tgui.py patterns find|show|check`) ·
 body format `format-selection.md`, `tables.md`, `data-views.md`, `telegram-capabilities.md`,
 `regular-formatting.md` · media `media-and-files.md`, `rich-media.md` · limits
 `limits-and-splitting.md` · feedback and Stop `dynamic-feedback-and-streaming.md`,
@@ -467,6 +475,9 @@ booking, support, onboarding, learning, community, inline mode, a business accou
   `specialized-updates.md`.
 - Users and data: `user-data.md`, `user-trust.md`, `user-profile.md`; first run
   `onboarding-and-first-run.md`; unknown project `project-adaptation.md`.
+- Every new bot: the first message after `/start`, `welcome-message.md` (the brief, one message
+  per entry, `tgui.py check welcome`); every notification it sends, one pattern per type from
+  `message-patterns.md` (`tgui.py patterns find|show|render`, `tgkit/notify.py`).
 
 ## Steps
 
@@ -633,7 +644,13 @@ The bot side (`improve` the launch button and messages) or `build` for payments 
 
 1. Check eligibility (Fragment usernames, or owner Premium outside channels). If ineligible, say
    so and keep Unicode fallbacks: Telegram strips the emoji silently and returns no error.
-2. `tgui.py emoji library pick --needs <slots>` (the ~490-pack library: one family ranked by real
+2. **Choosing icons yourself: run the icon plan** (`references/emoji-packs.md`, "The icon plan"):
+   `bot-ui emoji plan [--profile style-profile.json]` (no project: `emoji_packs.py library plan
+   --needs … --route …`, MCP `emoji_plan_icons`). Stop at stage 0 when the route is `none`. Open
+   `icon-plan.html`, look at every chosen slot at 20 px on light and dark, and record
+   `bot-ui emoji verdict --slot <slot> --ok | --alt N | --reject "<why>"`; then
+   `bot-ui emoji apply-plan` (only accepted slots; a person's own icons are never touched).
+   Quick whole-pack ranking instead: `tgui.py emoji library pick --needs <slots>` (the ~490-pack library: one family ranked by real
    coverage, theme-adaptive, static; only slot emoji leave the machine) → `emoji apply`; offline:
    `emoji suggest` → `emoji resolve`. Ids come from a real pack, never invented; `emoji verify`
    against a sent message read back. One icon by meaning: `emoji library search <words>`. By look:
@@ -652,7 +669,7 @@ Use only ids from `data/emoji/packs.json`; if the pack isn't there, ask for a st
 ## Done
 
 One family, every id resolved, Unicode fallback kept, eligibility stated, the review sheet
-looked at and clean.
+looked at and clean, every chosen slot of `emoji/icon-plan.json` with a verdict.
 
 ## Next
 

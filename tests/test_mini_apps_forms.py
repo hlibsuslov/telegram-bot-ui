@@ -75,9 +75,14 @@ class Kit(unittest.TestCase):
 
     def test_stand_network_modes(self):
         src = read(_paths.ROOT, "scripts", "preview_miniapp.py")
-        for mode in ("slow", "flaky", "offline", 'value="error"', 'value="session"'):
-            self.assertIn(mode, src)
+        page = read(_paths.ROOT, "scripts", "preview_stand", "stand.html")
+        for mode in ("slow", "flaky", "offline"):
+            self.assertIn(f"net === '{mode}'", src)
+            self.assertIn(f'value="{mode}"', page)
+        for mode in ('value="error"', 'value="session"'):
+            self.assertIn(mode, page)
         self.assertIn("url.pathname.indexOf('/app/') !== 0", src, "the app's own files are never broken")
+        self.assertIn("if ('network' in m.data) cfg.network = m.data.network;", src, "the setting reaches a running app")
 
 
 class Lint(unittest.TestCase):

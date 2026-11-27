@@ -122,7 +122,7 @@ class Examples(unittest.TestCase):
 
 
 class BotSide(unittest.TestCase):
-    def test_order_card_is_a_rich_message_with_its_buttons_in_the_document(self):
+    def test_order_card_is_a_rich_receipt_with_its_actions_on_the_keyboard(self):
         import sys
         sys.path.insert(0, os.path.join(EX, "bot"))
         sys.path.insert(0, os.path.join(_paths.ROOT, "scripts"))
@@ -135,11 +135,14 @@ class BotSide(unittest.TestCase):
         bot.send_order_card(7, "4821", [("Flat white <M>", "€4.20")], "€4.20", "/orders/4821")
         method, params = sent[0]
         self.assertEqual(method, "sendRichMessage")
-        self.assertNotIn("reply_markup", params)  # nothing navigates: the actions live in the document
         html = params["rich_message"]["html"]
         self.assertEqual([c for c, sev, _ in rich.check(html) if sev == "error"], [])
         self.assertIn("&lt;M&gt;", html)
-        self.assertRegex(html, r"<tg-button-row><tg-button type=\"web_app\"[^>]*>Open order</tg-button>")
+        # Open order and Repeat act on the whole message: the keyboard, not buttons in the document
+        self.assertNotIn("<tg-button", html)
+        row = params["reply_markup"]["inline_keyboard"][0]
+        self.assertEqual([b["text"] for b in row], ["Open order", "Repeat"])
+        self.assertEqual(row[0]["web_app"]["url"], "https://app.example.com/orders/4821")
         with self.assertRaises(ValueError):
             bot.send_order_card(7, "48<21", [], "€0")
         with self.assertRaises(ValueError):  # a path must not be able to change the host

@@ -13,7 +13,7 @@ import sys
 
 from playwright.sync_api import sync_playwright
 
-Q = "width=390&height=800"
+Q = "width=390&height=800&zoom=100&panels=0"  # 1:1, no panels: .device is the screenshot
 
 
 def shot(page, path):

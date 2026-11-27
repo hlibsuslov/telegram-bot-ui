@@ -1,0 +1,76 @@
+{
+ "$comment": "Saved emoji library answers for the icon plan tests (emoji_plan.py). Synthetic packs and ids: lines is the main outline pack, linesplus a sibling drawn alike, gloss a glossy pack, toons animated characters.",
+ "facets": {
+  "ok": true, "generated": "2026-11-27", "thresholds": {"emoji": 0.5, "pack": 0.3, "show": 0.55},
+  "taxonomy": {"version": 2, "facets": {
+   "style": {"label": {"en": "Style", "ru": "Стиль"}, "scope": ["pack", "emoji"], "values": {"outline": {"en": "outline", "ru": "контурный"}, "glossy": {"en": "glossy", "ru": "глянцевый"}, "3d": {"en": "3d", "ru": "объёмный"}}},
+   "fit": {"label": {"en": "Theme fit", "ru": "Тема"}, "scope": ["pack", "emoji"], "values": {"adaptive": {"en": "adaptive", "ru": "адаптивный"}, "both": {"en": "both", "ru": "обе"}, "light": {"en": "light", "ru": "светлая"}, "dark": {"en": "dark", "ru": "тёмная"}}},
+   "palette": {"label": {"en": "Palette", "ru": "Палитра"}, "scope": ["pack", "emoji"], "values": {"monochrome": {"en": "monochrome", "ru": "монохром"}, "multicolor": {"en": "multicolor", "ru": "многоцветный"}}},
+   "topic": {"label": {"en": "Topic", "ru": "Тема"}, "scope": ["pack", "emoji"], "values": {"interface": {"en": "interface", "ru": "интерфейс"}, "characters": {"en": "characters", "ru": "персонажи"}}},
+   "role": {"label": {"en": "Role", "ru": "Роль"}, "scope": ["pack", "emoji"], "values": {"navigation": {"en": "navigation", "ru": "навигация"}, "commerce": {"en": "commerce", "ru": "покупки"}, "settings": {"en": "settings", "ru": "настройки"}, "decoration": {"en": "decoration", "ru": "украшение"}}},
+   "motion": {"label": {"en": "Motion", "ru": "Движение"}, "scope": ["pack", "emoji"], "values": {"static": {"en": "static", "ru": "статичный"}, "animated": {"en": "animated", "ru": "анимированный"}}}
+  }},
+  "packs": [
+   {"name": "lines", "category": "Interface & icons", "count": 5, "meanings": 5, "compatible": [["linesplus", 0.88], ["gloss", 0.76]],
+    "facets": {"style": [["outline", 0.9]], "fit": [["adaptive", 1.0]], "palette": [["monochrome", 0.9]], "topic": [["interface", 0.9]], "motion": [["static", 1.0]]}},
+   {"name": "linesplus", "category": "Interface & icons", "count": 3, "meanings": 3, "compatible": [["lines", 0.88]],
+    "facets": {"style": [["outline", 0.85]], "fit": [["adaptive", 1.0]], "palette": [["monochrome", 0.8]], "topic": [["interface", 0.9]], "motion": [["static", 1.0]]}},
+   {"name": "gloss", "category": "Interface & icons", "count": 4, "meanings": 4, "compatible": [["lines", 0.76]],
+    "facets": {"style": [["glossy", 0.9]], "fit": [["light", 0.8]], "palette": [["multicolor", 0.9]], "topic": [["interface", 0.8]], "motion": [["static", 1.0]]}},
+   {"name": "toons", "category": "Memes & characters", "count": 3, "meanings": 3, "compatible": [],
+    "facets": {"style": [["3d", 0.9]], "fit": [["light", 0.6]], "topic": [["characters", 0.9]], "motion": [["animated", 1.0]]}}
+  ]
+ },
+ "search": {
+  "🏠": {"emoji": [
+   {"pack": "lines", "id": "101", "fallback": "🏠", "format": "static", "adaptive": true},
+   {"pack": "gloss", "id": "301", "fallback": "🏠", "format": "static", "adaptive": false},
+   {"pack": "toons", "id": "401", "fallback": "🏠", "format": "animated", "adaptive": false}]},
+  "🛒": {"emoji": [
+   {"pack": "lines", "id": "102", "fallback": "🛒", "format": "static", "adaptive": true},
+   {"pack": "gloss", "id": "302", "fallback": "🛒", "format": "static", "adaptive": false}]},
+  "⚙️": {"emoji": [
+   {"pack": "lines", "id": "103", "fallback": "⚙️", "format": "static", "adaptive": true},
+   {"pack": "gloss", "id": "303", "fallback": "⚙️", "format": "static", "adaptive": false}]},
+  "🧾": {"emoji": [
+   {"pack": "linesplus", "id": "201", "fallback": "🧾", "format": "static", "adaptive": true},
+   {"pack": "gloss", "id": "304", "fallback": "🧾", "format": "static", "adaptive": false}]},
+  "⬅️": {"emoji": [{"pack": "lines", "id": "104", "fallback": "⬅️", "format": "static", "adaptive": true}]},
+  "💬": {"emoji": [{"pack": "toons", "id": "402", "fallback": "💬", "format": "animated", "adaptive": false}]}
+ },
+ "packs": {
+  "lines": {"title": "Lines", "facets": {"style": [["outline", 0.9]], "fit": [["adaptive", 1.0]]},
+   "look": {"line_weight": "medium", "fill": "none", "perspective": "front", "shadows": "none", "characters": "none", "drawn": "medium outline glyphs"},
+   "compatible": [["linesplus", 0.88], ["gloss", 0.76]],
+   "emoji": [
+    {"id": "101", "fallback": "🏠", "format": "static", "adaptive": true, "preview": "/p/101.webp", "facets": {"role": [["navigation", 0.8]], "style": [["outline", 0.9]]}},
+    {"id": "102", "fallback": "🛒", "format": "static", "adaptive": true, "preview": "/p/102.webp", "facets": {"role": [["commerce", 0.8]], "style": [["outline", 0.9]]}},
+    {"id": "103", "fallback": "⚙️", "format": "static", "adaptive": true, "preview": "/p/103.webp", "facets": {"role": [["settings", 0.8]], "style": [["outline", 0.9]]}},
+    {"id": "104", "fallback": "⬅️", "format": "static", "adaptive": true, "preview": "/p/104.webp", "facets": {}},
+    {"id": "105", "fallback": "📦", "format": "static", "adaptive": true, "preview": "/p/105.webp", "facets": {"role": [["commerce", 0.7]]}},
+    {"id": "106", "fallback": "🏠", "format": "animated", "adaptive": true, "preview": "/p/106.webp", "facets": {}}
+   ]},
+  "linesplus": {"title": "Lines Plus", "facets": {"style": [["outline", 0.85]], "fit": [["adaptive", 1.0]]},
+   "look": {"line_weight": "medium", "fill": "none", "perspective": "front", "shadows": "none", "characters": "none", "drawn": "medium outline glyphs"},
+   "compatible": [["lines", 0.88]],
+   "emoji": [
+    {"id": "201", "fallback": "🧾", "format": "static", "adaptive": true, "preview": "/p/201.webp", "facets": {"role": [["commerce", 0.8]]}},
+    {"id": "202", "fallback": "🏠", "format": "static", "adaptive": true, "preview": "/p/202.webp", "facets": {}}
+   ]},
+  "gloss": {"title": "Gloss", "facets": {"style": [["glossy", 0.9]], "fit": [["light", 0.8]]},
+   "look": {"line_weight": "none", "fill": "gradient", "perspective": "front", "shadows": "soft", "characters": "none", "drawn": "glossy coloured badges"},
+   "compatible": [["lines", 0.76]],
+   "emoji": [
+    {"id": "301", "fallback": "🏠", "format": "static", "adaptive": false, "preview": "/p/301.webp", "facets": {"style": [["glossy", 0.9]], "palette": [["multicolor", 0.9]], "fit": [["light", 0.8]]}},
+    {"id": "302", "fallback": "🛒", "format": "static", "adaptive": false, "preview": "/p/302.webp", "facets": {"style": [["glossy", 0.9]], "palette": [["multicolor", 0.9]]}},
+    {"id": "303", "fallback": "⚙️", "format": "static", "adaptive": false, "preview": "/p/303.webp", "facets": {"style": [["glossy", 0.9]]}},
+    {"id": "304", "fallback": "🧾", "format": "static", "adaptive": false, "preview": "/p/304.webp", "facets": {"style": [["glossy", 0.9]]}}
+   ]},
+  "toons": {"title": "Toons", "facets": {"style": [["3d", 0.9]]}, "look": {"line_weight": "none", "fill": "gradient", "perspective": "three-quarter", "shadows": "hard", "characters": "all", "drawn": "3d characters"},
+   "compatible": [],
+   "emoji": [
+    {"id": "401", "fallback": "🏠", "format": "animated", "adaptive": false, "preview": "/p/401.webm", "facets": {"topic": [["characters", 0.9]]}},
+    {"id": "402", "fallback": "💬", "format": "animated", "adaptive": false, "preview": "/p/402.webm", "facets": {"topic": [["characters", 0.9]]}}
+   ]}
+ }
+}

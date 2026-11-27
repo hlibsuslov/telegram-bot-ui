@@ -74,10 +74,10 @@ class Kit(unittest.TestCase):
                 self.assertGreaterEqual(text.count("tma-sr-only"), glyphs if path.endswith(".html") else 1, path)
 
     def test_stand_has_rtl_languages(self):
-        src = read(_paths.ROOT, "scripts", "preview_miniapp.py")
+        page = read(_paths.ROOT, "scripts", "preview_stand", "stand.html")
         for lang in ("ar", "he", "fa"):
-            self.assertIn(f"<option>{lang}</option>", src)
-        self.assertIn("language_code: lang", src)
+            self.assertRegex(page, rf'<option value="{lang}">{lang} · \w+, right to left</option>')
+        self.assertIn("language_code: lang", read(_paths.ROOT, "scripts", "preview_stand", "stand.js"))
 
 
 class Lint(unittest.TestCase):

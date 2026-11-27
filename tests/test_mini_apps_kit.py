@@ -149,6 +149,33 @@ class PreviewStand(unittest.TestCase):
         self.assertIn("WebAppMethodUnsupported", js)
         self.assertIn("cfg.invoice", js)  # the stand can return paid / cancelled / failed / pending
 
+    def test_stand_page_and_its_assets(self):
+        _, _, html = self.get("/")
+        for ref in ('href="/__tma__/stand.css"', 'src="/__tma__/stand.js"', 'id="stand-config"'):
+            self.assertIn(ref, html)
+        config = json.loads(re.search(r'<script id="stand-config" type="application/json">(.*?)</script>', html, re.S)[1])
+        self.assertEqual(config["title"], "Coffee")
+        self.assertEqual(config["versions"][-1], "10.1")
+        status, ctype, css = self.get("/__tma__/stand.css")
+        self.assertEqual(status, 200)
+        self.assertTrue(ctype.startswith("text/css"))
+        self.assertIn(".workspace", css)
+        _, ctype, js = self.get("/__tma__/stand.js")
+        self.assertTrue(ctype.startswith("text/javascript"))
+        for piece in ("themeChanged sent", "deactivated sent", "backButtonClicked", "closing confirmation asks first",
+                      "ready() not called", "history.replaceState"):
+            self.assertIn(piece, js)
+        with self.assertRaises(urllib.error.HTTPError) as ctx:
+            self.get("/__tma__/stand.py")
+        self.assertEqual(ctx.exception.code, 404)
+
+    def test_mock_reports_what_the_panels_show(self):
+        _, _, js = self.get("/__tma__/mock.js")
+        for piece in ("post('net', { id: id, phase: 'start'", "phase: 'end'", "post('flags', { closingConfirmation: true })",
+                      "post('storage'", "post('audit'", "post('ready', { ms: ms })", "log('error', 'unhandled rejection'",
+                      "cfg.storage && cfg.storage[name]", "if ('invoice' in m.data) cfg.invoice = m.data.invoice;"):
+            self.assertIn(piece, js)
+
     def test_app_html_gets_the_mock_instead_of_telegram_script(self):
         _, _, html = self.get("/app/vanilla/index.html")
         self.assertIn(preview.MOCK_TAG, html)

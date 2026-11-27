@@ -115,6 +115,12 @@ description is updated.
 | UI4 | en | "Make our Telegram bot feel like the rest of our product, then let me tune how chatty it is." | no | `references/redesign-orchestration.md`, `references/bot-style-profile.md` |
 | UI5 | ru | "Сделай меню бота премиальнее." | no | `references/visual-language.md` (§7 premium pass) |
 | UI6 | en | "Our bot looks cheap. Make the menus feel polished and premium." | no | `references/visual-language.md`, `references/buttons-and-styles.md` |
+| WA1 | en | "What should my Telegram bot send when someone taps Start? Right now it just says hi." | no | `references/welcome-message.md` |
+| WA2 | ru | "Продумай приветственное сообщение бота после старта: с картинкой, коротким описанием и парой кнопок." | no | `references/welcome-message.md` |
+| WA3 | uk | "Яким має бути перше повідомлення бота після натискання «Старт», якщо люди приходять з реклами й за QR-кодом?" | no | `references/welcome-message.md` |
+| NA1 | en | "Our bot's alerts and daily reports look messy. Give every notification a proper structure." | no | `references/message-patterns.md` |
+| NA2 | ru | "Переделай уведомления бота: заголовок с эмодзи и парой жирных слов, отступ и аккуратный текст — для статистики, заказов и товаров." | no | `references/message-patterns.md` |
+| NA3 | uk | "Які шаблони сповіщень потрібні нашому боту доставки і як їх оформити?" | no | `references/message-patterns.md` |
 
 ## Positive — Channel publishing (should activate)
 

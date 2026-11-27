@@ -5,6 +5,52 @@ Versions follow [Semantic Versioning](https://semver.org/). The version lives in
 `metadata.version` of `skills/telegram-bot-ui/SKILL.md`; `scripts/validate_skill.py` fails if they differ.
 Each release is tagged `v<version>`.
 
+## Unreleased
+
+- **The first message after /start:** `references/welcome-message.md`. A welcome brief comes before the
+  copy (who arrives and from where, the first useful result, what the bot knows, the trust line, the
+  picture, the second `/start`). It covers every entry (plain start, product and QR links, referrals,
+  campaigns, login tokens, owner invites, Mini App first, groups, business chats, returning users,
+  unknown languages, double taps); when to ask for the language and how the welcome replaces the picker;
+  the anatomy in one message (picture rules, title, value line, how-it-works lines that name the visible
+  buttons, buttons); a row per bot type; edits after a photo welcome; failure paths; worked examples in
+  uk, ru and en. `build`, `improve` and `audit` route to it.
+- **`tgui.py check welcome`** (`validate_welcome.py`) checks a welcome spec, one scenario per entry. It
+  runs the payload and keyboard checks, then the welcome rules: one message before the first tap, no
+  album, caption and text limits, no phone or location on the first message, a next action, one primary
+  and at most 6 buttons, line budgets, filler phrases, stray link previews, setup calls inside `/start`,
+  text edits of a media welcome. It checks coverage too: a returning scenario, an unsupported-language
+  scenario, and a returning message that differs from the new one. `check changed` routes spec files to
+  it. Example: `examples/welcome/coffee-shop.json`. Evals WA1-WA3 and WB1-WB3.
+- **Notification and message patterns:** `references/message-patterns.md`. One grammar for everything the
+  bot sends on its own: a header of one icon and 2-5 bold words carrying the news (status or category
+  mark, upgraded to the premium pack where eligible), a subject line, a blank line, one or two body blocks
+  (sentence, facts, bullets, timeline, kpi, progress, grid, quote, details, code, media), and an italic
+  footer. It covers how blocks combine, sound, lifecycle and grouping, and 18 patterns by type (status
+  change, action required, threshold alert, incident, report, product card, receipt, payment problem,
+  reminder, message relay, new lead, progress card, security, digest, milestone, service notice, request
+  failed, reward) with ru mock-ups. Also five questions that pick a pattern, a rework procedure for a
+  bot's existing notifications with a before/after, and one notification grammar per bot.
+  `data/message-patterns.json` holds names and search words in en/ru/uk and examples in en/ru.
+  `tgkit/notify.py` renders the slots as escaped HTML and payloads. `tgui.py patterns list|find|show|
+  render|check` finds the pattern for a message, shows it, renders a spec and checks a payload's anatomy
+  (header, blank line, emoji per line, decorative rules, shouting, greetings and sign-offs, separator mix,
+  raw ISO times, length; with `--pattern`: header words, sound and buttons). `improve`, `audit` and
+  `build` route to it. Evals NA1-NA3 and NB1-NB3.
+- **The Mini App stand is a workspace:** `scripts/preview_miniapp.py` now serves `scripts/preview_stand/`
+  (HTML, CSS, JS; no build, no network; layout after the shadcnblocks block application-shell28,
+  re-implemented, tokens of the Studio). A toolbar with relaunch, the app's address and its `ready()`
+  status, platform, width, day and night, zoom; a left panel that splits launch parameters (relaunch) from
+  live settings (viewport, network, invoice outcome, style) and the user's moves (system back, minimize,
+  close with the app's closing confirmation, relaunch); a bottom panel with Events by kind (now with the
+  app's own errors and `console.error`), Network (each request, status, time) and Layout (the audit of the
+  current screen with outlines); an inspector of lifecycle, viewport and safe areas, chrome colours, the
+  bottom buttons as drawn, behaviour flags, theme parameters, initData and storage. Day and night,
+  compact, full and fullscreen reach the running app as `themeChanged`, `viewportChanged` and
+  `fullscreenChanged` instead of a reload; `expand()` opens a compact sheet; the loading placeholder stays
+  until `ready()` or the page load; CloudStorage, DeviceStorage and SecureStorage survive a relaunch in the
+  tab. The URL holds every setting (Copy link); `&zoom=100&panels=0` gives 1:1 screenshots.
+
 ## 3.3.0 - 2026-11-25
 
 **Every Bot API symbol has an agent card, the emoji library is chosen by tags, and evals have a judge.**

@@ -132,7 +132,7 @@ and by `tgui.py check changed`; the judgement part is yours.
   destructive action; omit it elsewhere. Back, Cancel and Close stay unstyled and last.
 - `force_reply` on keyboards (10.3) = buttons plus a reply field; on inline keyboards it can't
   change in an edit. `validate_keyboard` warnings are design defects to fix.
-- Rich Messages: content actions in the document, navigation on the keyboard.
+- Rich: actions on the keyboard (rich-message-buttons.md).
 
 ### Feedback
 
@@ -169,7 +169,7 @@ verified" date stated (`references/consistency-and-review.md`).
 - `SKILL.md` section "Tools" (routing to files that are not available here).
 - `SKILL.md` section "Where knowledge lives" (routing to files that are not available here).
 - Commands: 13 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
-- References: 94 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
+- References: 97 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
 - Recipes: 82 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
-- Tools: 30 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
+- Tools: 33 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
 - Optional: 4 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.

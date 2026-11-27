@@ -101,9 +101,10 @@ method set by the server), `state` (set by an action's `set`), `input` (typed by
   answered like a stale keyboard press. A button with official attributes and no `action`
   (`copy_text`, `switch_inline_query`, …) is sent as written. Checks: `RICH_BUTTON_ACTION_MISSING`,
   `RICH_BUTTON_ON_KEYBOARD` (one action in two places), `RICH_BUTTON_ROW_SIZE`, `RICH_BUTTON_TYPE`,
-  `RICH_BUTTON_STYLE`, `RICH_BUTTON_DATA`, `RICH_BUTTON_TEXT`, `RICH_TAG_UNSUPPORTED`; info `RICH_BUTTONS_UNUSED`
-  (a rich document whose content actions, `handler` / `url` / `answer`, all sit on the keyboard: put them
-  next to their section, keep navigation on the keyboard).
+  `RICH_BUTTON_STYLE`, `RICH_BUTTON_DATA`, `RICH_BUTTON_TEXT`, `RICH_TAG_UNSUPPORTED`; warnings `RICH_BUTTON_NAVIGATION` (back or
+  another screen from inside the document), `RICH_BUTTON_MAIN_ACTION` (a filled style in the document),
+  `RICH_BUTTON_OUTSIDE` (url and other links out), `RICH_BUTTON_DENSITY` (crowded rows): actions belong on the
+  keyboard; a document button only changes its own element (skills/telegram-bot-ui/references/rich-message-buttons.md).
 - `keyboard.type`: `inline` (callback buttons), `reply` (a press arrives as text equal to the
   label), `force_reply` (asks for text; `placeholder`), `remove`, `none`.
 - Action types: `navigate` (`to` or `rule`), `back` (`fallback` after a restart), `url`

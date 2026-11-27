@@ -3012,6 +3012,78 @@
       "routes_to": [],
       "domain": "mini-app-events",
       "why": "native app"
+    },
+    {
+      "id": "WA1",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "What should my Telegram bot send when someone taps Start? Right now it just says hi.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/welcome-message.md"
+      ],
+      "why": "the first message after /start"
+    },
+    {
+      "id": "WA2",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Продумай приветственное сообщение бота после старта: с картинкой, коротким описанием и парой кнопок.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/welcome-message.md"
+      ],
+      "why": "welcome anatomy: media, copy, buttons"
+    },
+    {
+      "id": "WA3",
+      "area": "ui",
+      "lang": "uk",
+      "prompt": "Яким має бути перше повідомлення бота після натискання «Старт», якщо люди приходять з реклами й за QR-кодом?",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/welcome-message.md"
+      ],
+      "why": "entry scenarios for /start"
+    },
+    {
+      "id": "NA1",
+      "area": "ui",
+      "lang": "en",
+      "prompt": "Our bot's alerts and daily reports look messy. Give every notification a proper structure.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/message-patterns.md"
+      ],
+      "why": "notification patterns"
+    },
+    {
+      "id": "NA2",
+      "area": "ui",
+      "lang": "ru",
+      "prompt": "Переделай уведомления бота: заголовок с эмодзи и парой жирных слов, отступ и аккуратный текст — для статистики, заказов и товаров.",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/message-patterns.md"
+      ],
+      "why": "header formula and patterns per type"
+    },
+    {
+      "id": "NA3",
+      "area": "ui",
+      "lang": "uk",
+      "prompt": "Які шаблони сповіщень потрібні нашому боту доставки і як їх оформити?",
+      "expect": "activate",
+      "names_method": false,
+      "routes_to": [
+        "references/message-patterns.md"
+      ],
+      "why": "choosing patterns"
     }
   ],
   "behavioral": [
@@ -4537,6 +4609,128 @@
       "critical_failures": [
         "declares the screens fine without looking",
         "claims real-client evidence from the Studio preview"
+      ]
+    },
+    {
+      "id": "WB1",
+      "area": "ui",
+      "role": "designer",
+      "lang": "en",
+      "request": "Design what our coffee shop bot sends when someone presses Start.",
+      "context": "aiogram 3 bot, English and Ukrainian; QR codes on cups open t.me/<bot>?start=item_<key>; returning customers exist; no welcome yet",
+      "must": [
+        "writes a welcome brief first: who arrives and from where, the first useful result and how many taps away, the returning variant",
+        "one message per entry: a photo by file_id with a caption of title, value line, 2-3 how-it-works lines naming the visible buttons, an optional trust line; caption within 1024",
+        "one primary (the first useful result) and 1-3 neutral secondary buttons, no actions that are empty for a new user",
+        "variants: the QR item is the first message itself; returning users get home with the open order, no intro; an unsupported language_code gets a picker that the welcome replaces (editMessageMedia)",
+        "writes the scenarios as a welcome spec and runs tgui.py check welcome, naming the evidence as static"
+      ],
+      "critical_failures": [
+        "three separate messages (photo, text, then a keyboard)",
+        "asks for the phone number on /start",
+        "the same welcome again for returning users",
+        "a feature list of ten items"
+      ]
+    },
+    {
+      "id": "WB2",
+      "area": "ui",
+      "role": "designer",
+      "lang": "ru",
+      "request": "Продумай, что увидит человек после /start в нашем боте-ассистенте.",
+      "context": "AI assistant bot, Russian only, free tier of 10 questions a day, answers stream with Stop",
+      "transfer": {
+        "of": "WB1",
+        "variation": "AI assistant instead of a shop, one language, typing is the main action"
+      },
+      "must": [
+        "no language picker (one language) and no decorative picture, or one real example output",
+        "says in one line what it is good at and the free limit",
+        "the main action is typing; 2-3 buttons are example requests that run on tap",
+        "a returning variant that skips the intro"
+      ],
+      "critical_failures": [
+        "'Я бот, который умеет…' with a list of features",
+        "a logo picture as the welcome",
+        "a language picker for a one-language bot"
+      ]
+    },
+    {
+      "id": "WB3",
+      "area": "ui",
+      "role": "reviewer",
+      "lang": "uk",
+      "request": "Перевір наше привітання після /start, люди одразу виходять.",
+      "context": "pasted handler: sendPhoto with the logo, then sendMessage 'Оберіть дію нижче 👇' with 9 inline buttons, then a reply keyboard with request_contact; the Catalog button later calls editMessageText on the photo message",
+      "must": [
+        "names each defect with its line: three messages instead of one, filler, a menu of 9 buttons, the phone asked before any value, a logo picture that shows nothing",
+        "says editMessageText on the photo message fails and offers editMessageCaption/editMessageMedia or a new message",
+        "ranks the findings and proposes one rewritten welcome without changing callback_data"
+      ],
+      "critical_failures": [
+        "approves the welcome",
+        "keeps request_contact on the first message",
+        "renames callback_data without updating the handlers"
+      ]
+    },
+    {
+      "id": "NB1",
+      "area": "ui",
+      "role": "designer",
+      "lang": "ru",
+      "request": "Переделай все уведомления нашего бота: отчёты продаж, новые заказы для менеджеров, напоминания клиентам.",
+      "context": "aiogram 3 shop bot, Russian; notifications are long paragraphs with '❗️ВНИМАНИЕ❗️', '━━━━' separators and 'С уважением, команда'; scheduled jobs in jobs.py",
+      "must": [
+        "inventories every message the bot sends on its own (jobs, webhooks) and gives each a pattern id: report-kpi, new-lead, reminder",
+        "rewrites each with a header of one icon and 2-5 bold words carrying the news, a subject line, a blank line, one or two body blocks, an italic footer",
+        "sets sound per type: the report silent, new orders and reminders with sound; asks become edits when handled",
+        "shows a before/after for two types before rewriting the rest, keeps placeholders, locale keys and callback_data",
+        "checks the payloads with tgui.py patterns check --pattern and names the evidence as static"
+      ],
+      "critical_failures": [
+        "keeps the decorative separators or the sign-off",
+        "a different shape for the same type in two places",
+        "every notification with sound"
+      ]
+    },
+    {
+      "id": "NB2",
+      "area": "ui",
+      "role": "builder",
+      "lang": "en",
+      "request": "Our price-alert bot needs notifications for crossings, a morning digest and failed payments for the premium plan.",
+      "context": "python-telegram-bot, English, owner has Telegram Premium and a resolved icon pack",
+      "transfer": {
+        "of": "NB1",
+        "variation": "new notifications instead of a rework; premium icons available"
+      },
+      "must": [
+        "picks alert-threshold, digest and payment-problem, says why for each",
+        "header icons as Unicode in the code, upgraded through the icon system to the pack's static custom emoji, with Unicode fallbacks",
+        "a cool-down and a digest for repeated crossings; the digest silent; the failed payment with sound and a primary Pay again",
+        "renders with tgkit.notify or tgui.py patterns render and checks the result"
+      ],
+      "critical_failures": [
+        "invents a custom_emoji_id",
+        "one message per price tick",
+        "an animated emoji on a button"
+      ]
+    },
+    {
+      "id": "NB3",
+      "area": "ui",
+      "role": "reviewer",
+      "lang": "uk",
+      "request": "Перевір, як виглядають наші сповіщення про доставку.",
+      "context": "pasted texts: 'Вітаємо! Ваше замовлення №1042 було успішно відправлено сьогодні о 2026-11-27T09:12:00Z службою Нова Пошта!!! 🚚📦🎉' and a status update sent as a new message every hour",
+      "must": [
+        "names each defect: greeting, a header that isn't 2-5 bold words, '!!!', three emoji on one line, a raw ISO time",
+        "proposes status-change with a tracker edited in place and a ping only on the steps that matter",
+        "gives the rewritten message in Ukrainian with the tracking number in code"
+      ],
+      "critical_failures": [
+        "approves the messages",
+        "keeps an hourly new message for every status"
       ]
     }
   ]
