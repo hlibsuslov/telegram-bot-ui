@@ -30,7 +30,7 @@ project and suggests the next two or three steps.
 - `post`: channel posts and mailings: preview, approve, publish once ("post this to our channel")
 - `widget`: an HTML widget in a message, with its server handler ("an interactive card in the message")
 - `mini-app`: a Mini App: decide, build or restyle, version gates, initData security ("build a Mini App")
-- `emoji`: one premium emoji pack, applied wherever the bot is eligible ("use premium emoji")
+- `emoji`: one premium emoji pack where eligible; a mosaic pack from a video ("use premium emoji")
 - `agent-bot`: the agent's own bot: notify, ask, approve, secured ("message me when the build is done")
 - `map`: the bot-ui/ map and Studio requests, with revision checks ("bot-ui")
 - `lookup`: Bot API and Telegram.WebApp answers from the offline catalogs; skill health ("does the Bot API have")
@@ -97,13 +97,13 @@ the transitions between states. Only HTML widgets and Mini Apps have a layout of
 | `post` | "post this to our channel"; "a weekly digest"; "опубликуй в канал"; "опублікуй анонс у канал" | channel posts and mailings: preview, approve, publish once |
 | `widget` | "an interactive card in the message"; "make a widget"; "интерактивная карточка в сообщении"; "зроби інтерактивну картку замовлення" | an HTML widget in a message, with its server handler |
 | `mini-app` | "build a Mini App"; "restyle our Mini App"; "сделай мини-апп"; "зроби міні-застосунок" | a Mini App: decide, build or restyle, version gates, initData security |
-| `emoji` | "use premium emoji"; "custom emoji on the buttons"; "премиум-эмодзи"; "преміум-емодзі на кнопках" | one premium emoji pack, applied wherever the bot is eligible |
+| `emoji` | "use premium emoji"; "custom emoji on the buttons"; "премиум-эмодзи"; "преміум-емодзі на кнопках" | one premium emoji pack where eligible; a mosaic pack from a video |
 | `agent-bot` | "message me when the build is done"; "ask me to approve in Telegram"; "напиши мне в Telegram, когда сборка закончится"; "хочу, щоб агент писав мені в Telegram, коли збірка готова" | the agent's own bot: notify, ask, approve, secured |
 | `map` | "bot-ui"; "open the Studio"; "карта экранов"; "карта екранів бота" | the bot-ui/ map and Studio requests, with revision checks |
 | `lookup` | "does the Bot API have"; "what are sendPoll's parameters"; "есть ли в Bot API"; "чи є в Bot API кнопки іншого кольору" | Bot API and Telegram.WebApp answers from the offline catalogs; skill health |
 <!-- commands:end -->
 
-Say in plain language what you are doing ("I'll review the menu first, without changing code").
+Say in plain language what you are doing.
 
 ## Scope
 
@@ -164,7 +164,7 @@ One offline entry point, standard library only, no bot token:
 `py -3 <skill>/scripts/tgui.py <group> ...`; `--help` on every group. Exit codes: 0 ok,
 1 findings, 2 usage, 3 revision conflict, 4 refused. Groups: `context`, `next`, `doctor`,
 `findings`, `requests`, `check`, `lookup`, `webapp`, `examples`, `profile`, `map`, `post`,
-`emoji`, `widget`, `miniapp`, `data`, `patterns`, `commands`, `agent`, `hook`, `mcp`, `sync`.
+`emoji`, `mosaic`, `widget`, `miniapp`, `data`, `patterns`, `commands`, `agent`, `hook`, `mcp`, `sync`.
 Online only: `sync`, `emoji library`, pack import. Run them; don't read their source. Libraries: `examples/`
 (`tgkit` for Python and TS, SDK adapters). No Python: each playbook has a *Without scripts* path.
 
@@ -376,7 +376,8 @@ Wording `microcopy-and-labels.md` · buttons and color `buttons-and-styles.md` �
 Message (the exception; audit every one) `rich-message-buttons.md` · inline keyboards,
 pagination `inline-keyboards.md` · reply keyboards, `ForceReply` `reply-keyboards.md` · screens,
 back, commands, deep links `navigation-and-flows.md` · first run `onboarding-and-first-run.md` ·
-the first message after `/start` `welcome-message.md` · notifications and other messages the bot
+the first message after `/start` `welcome-message.md` (a logo, clip or GIF for it: offer an emoji mosaic once,
+`emoji-mosaic.md`) · notifications and other messages the bot
 sends on its own `message-patterns.md` (its "Do this, in order" steps: pattern id and reason per
 message, before/after for two types first, `tgkit/notify.py` or `tgui.py patterns render`, `patterns
 check --pattern`) ·
@@ -477,6 +478,8 @@ booking, support, onboarding, learning, community, inline mode, a business accou
   `specialized-updates.md`.
 - Users and data: `user-data.md`, `user-trust.md`, `user-profile.md`; first run
   `onboarding-and-first-run.md`; unknown project `project-adaptation.md`.
+- A logo, clip or GIF for the welcome, about or launch screen: offer an emoji mosaic once
+  (`emoji-mosaic.md`, `emoji` playbook "Mosaic").
 - Every new bot: the first message after `/start`, `welcome-message.md` (the brief, one message
   per entry, `tgui.py check welcome`); every notification it sends, one pattern per type from
   `message-patterns.md`, following its "Do this, in order" steps (pattern id and reason per type,
@@ -529,7 +532,8 @@ a published post.
 
 ## Steps
 
-1. Write the post as content (Markdown or Post JSON), never as raw HTML.
+1. Write the post as content (Markdown or Post JSON), never as raw HTML. A logo, clip or GIF for it: offer an
+   emoji mosaic once, after the eligibility check (`emoji` playbook, "Mosaic").
 2. `tgui.py post validate <file> --context channel`, then `tgui.py post preview <file>`.
 3. Show the exact post to the approver; publish only after an approval bound to that post.
 4. `tgui.py post publish <file> --chat-env TG_CHANNEL_ID --token-env TG_BOT_TOKEN --key <id>`
@@ -634,7 +638,8 @@ The bot side (`improve` the launch button and messages) or `build` for payments 
 
 # emoji: one premium emoji pack, applied everywhere eligible
 
-**When:** premium or custom emoji in buttons, texts or posts; move to another pack.
+**When:** premium or custom emoji in buttons, texts or posts; move to another pack; a video, GIF or
+picture made into an emoji mosaic pack (the "Mosaic" section below).
 
 ## Read
 
@@ -643,6 +648,7 @@ The bot side (`improve` the launch button and messages) or `build` for payments 
   `references/emoji-packs.md` ("The agent's decision path" first).
 - Posts and long texts: `references/emoji-in-posts.md`.
 - One icon system per bot: `references/visual-language.md` §1-3.
+- A mosaic pack from a video or picture: `references/emoji-mosaic.md` only.
 
 ## Steps
 
@@ -666,9 +672,18 @@ The bot side (`improve` the launch button and messages) or `build` for payments 
    (`ICON_MEANING_MISMATCH`), it is static (`BUTTON_EMOJI_ANIMATED`), it matches its neighbours
    in fill, weight and colour. Fix or drop every red row; a slot no pack says well stays label-only.
 
+## Mosaic: a video, GIF or picture as an emoji pack
+
+Offer it once, after step 1's eligibility check, when the user has a logo, clip, GIF or banner for a post,
+launch, welcome screen or community pack. Follow `references/emoji-mosaic.md`, "Steps": `tgui.py mosaic
+plan` → `make` → look at `preview.html` → `publish --dry-run` → `publish` live with the user's go (token in an
+environment variable, `--owner` from `mosaic owner`; say the default title or pass `--title`). Exit code 5:
+run it again. Done when `delivered` is true and the user saw it on a phone; the person posts it.
+
 ## Without scripts
 
 Use only ids from `data/emoji/packs.json`; if the pack isn't there, ask for a sticker-set link.
+Mosaic without ffmpeg: telegram-bot-ui.hlixli.com/emoji/mosaic cuts the tiles in the browser.
 
 ## Done
 
@@ -677,7 +692,8 @@ looked at and clean, every chosen slot of `emoji/icon-plan.json` with a verdict.
 
 ## Next
 
-`improve` the screens whose icons changed, or `post` for channel use (needs Fragment).
+`improve` the screens whose icons changed, or `post` for channel use (needs Fragment). After a mosaic:
+`post` to plan the announcement it goes into.
 
 
 ---

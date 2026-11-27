@@ -30,7 +30,7 @@ project and suggests the next two or three steps.
 - `post`: channel posts and mailings: preview, approve, publish once ("post this to our channel")
 - `widget`: an HTML widget in a message, with its server handler ("an interactive card in the message")
 - `mini-app`: a Mini App: decide, build or restyle, version gates, initData security ("build a Mini App")
-- `emoji`: one premium emoji pack, applied wherever the bot is eligible ("use premium emoji")
+- `emoji`: one premium emoji pack where eligible; a mosaic pack from a video ("use premium emoji")
 - `agent-bot`: the agent's own bot: notify, ask, approve, secured ("message me when the build is done")
 - `map`: the bot-ui/ map and Studio requests, with revision checks ("bot-ui")
 - `lookup`: Bot API and Telegram.WebApp answers from the offline catalogs; skill health ("does the Bot API have")
