@@ -10,10 +10,10 @@ Each release is tagged `v<version>`.
 - **Emoji mosaics from a video, GIF or picture:** `references/emoji-mosaic.md` and `tgui.py mosaic`
   (`scripts/emoji_mosaic.py`). `plan` lists grids for the source's shape (how much a cover fit crops, whether a
   row fits a phone bubble); `make` cuts the source into 100x100 tiles, VP9 WebM up to 3 s and 30 FPS without
-  audio and re-encodes any tile over 256 KB, or static PNG, with an automatic or chosen crop (`--crop`,
+  audio and re-encodes any tile that is too large, or static PNG, with an automatic or chosen crop (`--crop`,
   `--corners`), cover, contain or fill, rounded outer corners with real transparency (`--round`), a time
-  window and a ping-pong loop; it writes `mosaic.json` (`tg-emoji-mosaic/v1`), `canvas.png` and a preview with
-  Telegram's gaps. `check` holds a folder or the website generator's ZIP to Telegram's rules; `message`
+  window and a ping-pong loop; it writes `mosaic.json` (`tg-emoji-mosaic/v1`), `canvas.png` and a preview.
+  `check` holds a folder or the website generator's ZIP to Telegram's rules; `message`
   builds the text with UTF-16 entity offsets or `<tg-emoji>` HTML; `publish` (live, the user's own bot token
   from an environment variable) creates or finishes the set idempotently, reads it back, sends the mosaic
   and reports whether every custom emoji survived. No Telegram login is needed. The `emoji` and `post`
@@ -23,9 +23,25 @@ Each release is tagged `v<version>`.
   `publish` runs the full check first, sets the centre tile as the set's icon (`--thumbnail`), sends the mosaic once
   per `--save` file (`--resend`, `--no-send`), and has `--dry-run`; `mosaic owner` lists the ids of people who wrote
   to the bot, `mosaic delete` removes a set the bot made, and exit code 5 means "outcome unknown, run it again".
-  The default grid keeps 8 columns and at most 40 tiles; rounded corners keep the edges opaque; a GIF or PNG
-  gets alpha only when it really has see-through pixels; ping-pong loops don't repeat the turn frames.
+  Rounded corners keep the edges opaque; a GIF or PNG gets alpha only when it really has see-through pixels;
+  ping-pong loops don't repeat the turn frames.
   Tests: `tests/test_emoji_mosaic.py`. Based on tg-emoji-mosaic (MIT, KISA).
+- **Emoji mosaics stay in step and whole on phones**, matching the website's generator (its PR #36). Each
+  client starts every emoji when it loads and never realigns the loops, so `make` gives every video tile one
+  whole frame rate, one frame count and the same timestamps: tiles over 56 KB are encoded again at lower
+  bitrates only (160 down to 25 kbps, VP9 constrained quality, never a lower frame rate for one tile), the whole
+  mosaic drops to half the frame rate when a tile can't fit 63 KB, and a tile with another frame count stops the
+  run. Video emoji are held to 64 KB, not the documented 256 KB (**Observed**: `STICKER_VIDEO_BIG` for a set whose
+  largest tile was 74.6 KB). `check` reports `VIDEO_TOO_BIG` over 64 KB, and
+  tiles whose frame count, frame rate, duration or timestamps differ from the others, and a frame rate that isn't
+  a whole number (Android and iOS truncate it). The "8 columns fit every phone" rule is gone: `plan`, the default
+  grid and `check` use the big-emoji layout read from the clients' code (iOS sizes tiles by max(columns, rows),
+  Android by the emoji count; 375 pt iPhones and 360 dp Android phones in chats, groups and forwards). `plan`
+  says where rows wrap and names the closest grids that stay whole everywhere and in chats; the default prefers
+  those (1280x720 → 7x4, 720x1280 → 4x7, 1000x1000 → 4x4); `check` warns `ROWS_WRAP_OUTSIDE_CHATS` or
+  `ROWS_WRAP`. The preview shows big emoji at an iPhone's size, wrapped where Telegram wraps them, and the gaps of
+  Web K and text mode. `references/emoji-mosaic.md` gains the sync facts, the layout model, text mode (any text in
+  the message; Android overlaps the rows) and notifications (fallback emoji only).
 - **The first message after /start:** `references/welcome-message.md`. A welcome brief comes before the
   copy (who arrives and from where, the first useful result, what the bot knows, the trust line, the
   picture, the second `/start`). It covers every entry (plain start, product and QR links, referrals,
