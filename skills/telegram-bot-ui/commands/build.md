@@ -19,7 +19,9 @@ booking, support, onboarding, learning, community, inline mode, a business accou
   `onboarding-and-first-run.md`; unknown project `project-adaptation.md`.
 - Every new bot: the first message after `/start`, `welcome-message.md` (the brief, one message
   per entry, `tgui.py check welcome`); every notification it sends, one pattern per type from
-  `message-patterns.md` (`tgui.py patterns find|show|render`, `tgkit/notify.py`).
+  `message-patterns.md`, following its "Do this, in order" steps (pattern id and reason per type,
+  rendered with `tgkit/notify.py` or `tgui.py patterns render`, sound and lifecycle implemented,
+  `tgui.py patterns check --pattern`).
 
 ## Steps
 
