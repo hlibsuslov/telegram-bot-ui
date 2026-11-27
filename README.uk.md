@@ -167,6 +167,24 @@ python skills/telegram-bot-ui/scripts/miniapp_lint.py path/to/app --strict   # 4
 python skills/telegram-bot-ui/scripts/preview_miniapp.py path/to/app --serve 8790   # iOS/Android, світла/темна, 320-430 px
 ```
 
+### 🧪 Стенд попереднього перегляду
+
+`preview_miniapp.py` відкриває ваш міні-застосунок у локальній імітації клієнта Telegram, без бота, токена й
+тунелю. Ліворуч — як Telegram запускає застосунок (версія клієнта, мова, `start_param`) і що змінюється, поки
+він відкритий: розмір вікна, тема, збої мережі, результат оплати, системна кнопка «Назад», згортання,
+закриття. Унизу — кожен виклик `Telegram.WebApp`, кожен запит застосунку й перевірка верстки екрана.
+Праворуч — те, що намалював би Telegram: кольори шапки й нижньої панелі, MainButton і SecondaryButton,
+безпечні зони, initData і сховища. Тема й повноекранний режим доходять до запущеного застосунку подіями, без
+перезавантаження; усі налаштування зберігаються в посиланні.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mini-apps/stand-dark.png">
+  <img alt="Стенд попереднього перегляду міні-застосунку: ліворуч налаштування запуску, у центрі iOS-пристрій із прикладом paywall, унизу панель подій із викликами оформлення й запитами до імітації API, праворуч інспектор із життєвим циклом, розміром вікна, безпечними зонами й MainButton" src="docs/assets/mini-apps/stand-light.png" width="100%">
+</picture>
+
+<sub>Справжній стенд на прикладі <code>paywall</code>, знятий скриптом <code>docs/assets/mini-apps/capture_stand.py</code>. Це імітація:
+перевірка верстки, оформлення й сценаріїв до запуску в справжньому клієнті, а не заміна йому.</sub>
+
 Почніть із [`references/mini-apps/README.md`](skills/telegram-bot-ui/references/mini-apps/README.md); повна переробка йде за
 [`rework.md`](skills/telegram-bot-ui/references/mini-apps/rework.md).
 
