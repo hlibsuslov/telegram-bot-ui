@@ -15,7 +15,7 @@ Commands this role carries out, with their playbooks (relative to `<skill-dir>`;
 - `commands/fix.md`: `fix`: reproduces and fixes one Telegram-facing defect
 - `commands/build.md`: `build`: a product or feature from the example library, payments included
 - `commands/mini-app.md`: `mini-app`: a Mini App: decide, build or restyle, version gates, initData security
-- `commands/emoji.md`: `emoji`: one premium emoji pack, applied wherever the bot is eligible
+- `commands/emoji.md`: `emoji`: one premium emoji pack where eligible; a mosaic pack from a video
 - `commands/agent-bot.md`: `agent-bot`: the agent's own bot: notify, ask, approve, secured
 - `commands/map.md`: `map`: the bot-ui/ map and Studio requests, with revision checks
 

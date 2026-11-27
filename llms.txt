@@ -12,7 +12,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - `post`: channel posts and mailings: preview, approve, publish once.
 - `widget`: an HTML widget in a message, with its server handler.
 - `mini-app`: a Mini App: decide, build or restyle, version gates, initData security.
-- `emoji`: one premium emoji pack, applied wherever the bot is eligible.
+- `emoji`: one premium emoji pack where eligible; a mosaic pack from a video.
 - `agent-bot`: the agent's own bot: notify, ask, approve, secured.
 - `map`: the bot-ui/ map and Studio requests, with revision checks.
 - `lookup`: Bot API and Telegram.WebApp answers from the offline catalogs; skill health.
@@ -26,7 +26,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [agent-bot: the agent's own bot](skills/telegram-bot-ui/commands/agent-bot.md): status card, send a report or a file, coding-agent hooks, an MCP server for Telegram.
 - [audit: find what is wrong, rank it, save it](skills/telegram-bot-ui/commands/audit.md): Read-only for the user's code; it writes only `bot-ui/context/` (and not even that under mandate A0, see...
 - [build: a product or a product feature](skills/telegram-bot-ui/commands/build.md): booking, support, onboarding, learning, community, inline mode, a business account.
-- [emoji: one premium emoji pack, applied everywhere eligible](skills/telegram-bot-ui/commands/emoji.md): `references/emoji-packs.md` ("The agent's decision path" first). - Posts and long texts: `references/emoji-in-posts.md`. - One icon...
+- [emoji: one premium emoji pack, applied everywhere eligible](skills/telegram-bot-ui/commands/emoji.md): picture made into an emoji mosaic pack (the "Mosaic" section below).
 - [fix: one Telegram-facing defect](skills/telegram-bot-ui/commands/fix.md): feels frozen, updates or button presses don't arrive, a callback has no `message`.
 - [improve: change existing screens](skills/telegram-bot-ui/commands/improve.md): wording; brand fit; rethink the menus; move to the newest Bot API.
 - [lookup: does the Bot API or Telegram.WebApp have it](skills/telegram-bot-ui/commands/lookup.md): question, is the skill up to date.
@@ -62,7 +62,8 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [Data views: tables, leaderboards, progress, KPIs and reports in a bot](skills/telegram-bot-ui/references/data-views.md): How a bot shows numbers and records so a person gets the answer in one glance: which surface, which layout, which symbols, and what to...
 - [Dynamic feedback: streaming, progress, and loaders](skills/telegram-bot-ui/references/dynamic-feedback-and-streaming.md): A bot cannot animate arbitrary UI frame by frame. What "animation" actually means in a Telegram chat is one of these:
 - [Premium emoji in posts, long texts and rich messages](skills/telegram-bot-ui/references/emoji-in-posts.md): by bots that purchased additional usernames on Fragment or in the messages directly sent by the bot to private, group and supergroup...
-- [Emoji packs: choosing, resolving and applying a premium icon family](skills/telegram-bot-ui/references/emoji-packs.md): Use it whenever you build or restyle a bot, or compose a post, and icons/emoji are involved.
+- [Emoji mosaics: a video or picture as a premium emoji pack](skills/telegram-bot-ui/references/emoji-mosaic.md): The source is cut into a grid of 100x100 tiles. Each tile becomes one custom emoji of a new set, and one message holds them all, a line...
+- [Emoji packs: choosing, resolving and applying a premium icon family](skills/telegram-bot-ui/references/emoji-packs.md): Use it whenever you build or restyle a bot, or compose a post, and icons/emoji are involved. A logo, clip, GIF or banner to show in a...
 - [Personal answers on a shared timeline (ephemeral, Bot API 10.2–10.4)](skills/telegram-bot-ui/references/ephemeral-and-personal.md): One member must never see another member's state: build the content from the **presser's** data on the server, check...
 - [Errors, fallbacks, and old clients](skills/telegram-bot-ui/references/errors-and-fallbacks.md): Content:
 - [Reuse, compose and extend the example library](skills/telegram-bot-ui/references/example-library.md): Use this when building a new bot feature, choosing examples, or adding a scenario the library does not cover. Small wording fixes do not...
@@ -232,6 +233,7 @@ An Agent Skill in `skills/telegram-bot-ui/`. Start with its `SKILL.md`; open oth
 - [build_widget.py](skills/telegram-bot-ui/scripts/build_widget.py): Build a Telegram HTML widget (Bot API 10.4) from a source file and the widget kit.
 - [data_view.py](skills/telegram-bot-ui/scripts/data_view.py): Render a data view as ready Telegram messages, split by the limits (references/data-views.md).
 - [emoji_contract.py](skills/telegram-bot-ui/scripts/emoji_contract.py): The telegram-bot-ui emoji library contract, skill side: the vendored schemas and a validator.
+- [emoji_mosaic.py](skills/telegram-bot-ui/scripts/emoji_mosaic.py): A video, GIF or picture -> a Telegram custom emoji pack laid out as a mosaic -> one message of it.
 - [emoji_packs.py](skills/telegram-bot-ui/scripts/emoji_packs.py): Premium (custom) emoji packs for a bot: resolve, suggest, verify, capture, apply, strip.
 - [emoji_plan.py](skills/telegram-bot-ui/scripts/emoji_plan.py): The icon plan: choose custom emoji packs and the best STATIC emoji for every button and title, in stages,
 - [example_library.py](skills/telegram-bot-ui/scripts/example_library.py): Find examples by user intent and validate the use-case catalog offline.

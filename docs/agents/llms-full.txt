@@ -30,7 +30,7 @@ project and suggests the next two or three steps.
 - `post`: channel posts and mailings: preview, approve, publish once ("post this to our channel")
 - `widget`: an HTML widget in a message, with its server handler ("an interactive card in the message")
 - `mini-app`: a Mini App: decide, build or restyle, version gates, initData security ("build a Mini App")
-- `emoji`: one premium emoji pack, applied wherever the bot is eligible ("use premium emoji")
+- `emoji`: one premium emoji pack where eligible; a mosaic pack from a video ("use premium emoji")
 - `agent-bot`: the agent's own bot: notify, ask, approve, secured ("message me when the build is done")
 - `map`: the bot-ui/ map and Studio requests, with revision checks ("bot-ui")
 - `lookup`: Bot API and Telegram.WebApp answers from the offline catalogs; skill health ("does the Bot API have")
@@ -97,7 +97,7 @@ the transitions between states. Only HTML widgets and Mini Apps have a layout of
 | `post` | "post this to our channel"; "a weekly digest"; "опубликуй в канал"; "опублікуй анонс у канал" | channel posts and mailings: preview, approve, publish once |
 | `widget` | "an interactive card in the message"; "make a widget"; "интерактивная карточка в сообщении"; "зроби інтерактивну картку замовлення" | an HTML widget in a message, with its server handler |
 | `mini-app` | "build a Mini App"; "restyle our Mini App"; "сделай мини-апп"; "зроби міні-застосунок" | a Mini App: decide, build or restyle, version gates, initData security |
-| `emoji` | "use premium emoji"; "custom emoji on the buttons"; "премиум-эмодзи"; "преміум-емодзі на кнопках" | one premium emoji pack, applied wherever the bot is eligible |
+| `emoji` | "use premium emoji"; "custom emoji on the buttons"; "премиум-эмодзи"; "преміум-емодзі на кнопках" | one premium emoji pack where eligible; a mosaic pack from a video |
 | `agent-bot` | "message me when the build is done"; "ask me to approve in Telegram"; "напиши мне в Telegram, когда сборка закончится"; "хочу, щоб агент писав мені в Telegram, коли збірка готова" | the agent's own bot: notify, ask, approve, secured |
 | `map` | "bot-ui"; "open the Studio"; "карта экранов"; "карта екранів бота" | the bot-ui/ map and Studio requests, with revision checks |
 | `lookup` | "does the Bot API have"; "what are sendPoll's parameters"; "есть ли в Bot API"; "чи є в Bot API кнопки іншого кольору" | Bot API and Telegram.WebApp answers from the offline catalogs; skill health |
@@ -164,7 +164,7 @@ One offline entry point, standard library only, no bot token:
 `py -3 <skill>/scripts/tgui.py <group> ...`; `--help` on every group. Exit codes: 0 ok,
 1 findings, 2 usage, 3 revision conflict, 4 refused. Groups: `context`, `next`, `doctor`,
 `findings`, `requests`, `check`, `lookup`, `webapp`, `examples`, `profile`, `map`, `post`,
-`emoji`, `widget`, `miniapp`, `data`, `patterns`, `commands`, `agent`, `hook`, `mcp`, `sync`.
+`emoji`, `mosaic`, `widget`, `miniapp`, `data`, `patterns`, `commands`, `agent`, `hook`, `mcp`, `sync`.
 Online only: `sync`, `emoji library`, pack import. Run them; don't read their source. Libraries: `examples/`
 (`tgkit` for Python and TS, SDK adapters). No Python: each playbook has a *Without scripts* path.
 
@@ -526,6 +526,7 @@ a published post.
 - Many recipients, rate limits, per-recipient failures: `references/channels-and-broadcasting.md`.
 - Emoji density and accessibility in long texts: `references/emoji-in-posts.md`; reports and
   tables in posts: `references/data-views.md`.
+- The user has a logo, clip or GIF for the post: offer an emoji mosaic once (`emoji` playbook, "Mosaic").
 
 ## Steps
 
@@ -634,7 +635,8 @@ The bot side (`improve` the launch button and messages) or `build` for payments 
 
 # emoji: one premium emoji pack, applied everywhere eligible
 
-**When:** premium or custom emoji in buttons, texts or posts; move to another pack.
+**When:** premium or custom emoji in buttons, texts or posts; move to another pack; a video, GIF or
+picture made into an emoji mosaic pack (the "Mosaic" section below).
 
 ## Read
 
@@ -643,6 +645,7 @@ The bot side (`improve` the launch button and messages) or `build` for payments 
   `references/emoji-packs.md` ("The agent's decision path" first).
 - Posts and long texts: `references/emoji-in-posts.md`.
 - One icon system per bot: `references/visual-language.md` §1-3.
+- A mosaic pack from a video or picture: `references/emoji-mosaic.md` only.
 
 ## Steps
 
@@ -666,6 +669,21 @@ The bot side (`improve` the launch button and messages) or `build` for payments 
    (`ICON_MEANING_MISMATCH`), it is static (`BUTTON_EMOJI_ANIMATED`), it matches its neighbours
    in fill, weight and colour. Fix or drop every red row; a slot no pack says well stays label-only.
 
+## Mosaic: a video, GIF or picture as an emoji pack
+
+Offer it once when the user has a logo, clip, GIF or banner and works on a post, a launch, a welcome
+screen or a community pack (`references/emoji-mosaic.md`, "What it is and when to offer it"). Then:
+
+1. `tgui.py mosaic plan <file>` and propose one grid (8 columns or fewer is safe on phones).
+2. `tgui.py mosaic make <file> --grid CxR [--corners X1,Y1,X2,Y2 | --crop X,Y,W,H] [--round R]
+   [--start S --duration D] --out mosaic/`; open `mosaic/preview.html` and look at the seams. A ZIP from
+   the website's generator (`/emoji/mosaic`) is the same format: `tgui.py mosaic check mosaic.zip`.
+3. Tiles, preview and checks need no token. Creating the set needs the user's own bot token in an
+   environment variable and their numeric user id, after they wrote `/start` to that bot; no Telegram login.
+   With their go: `TELEGRAM_LIVE=1 TELEGRAM_TEST_BOT_TOKEN=… tgui.py mosaic publish mosaic/ --owner <id>`.
+4. Done when `delivered` is true and the user saw the message on a phone. The person pastes it into a
+   channel post; the agent doesn't publish it.
+
 ## Without scripts
 
 Use only ids from `data/emoji/packs.json`; if the pack isn't there, ask for a sticker-set link.
@@ -677,7 +695,8 @@ looked at and clean, every chosen slot of `emoji/icon-plan.json` with a verdict.
 
 ## Next
 
-`improve` the screens whose icons changed, or `post` for channel use (needs Fragment).
+`improve` the screens whose icons changed, or `post` for channel use (needs Fragment). After a mosaic:
+`post` to plan the announcement it goes into.
 
 
 ---

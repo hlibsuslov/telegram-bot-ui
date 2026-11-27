@@ -7,6 +7,20 @@ Each release is tagged `v<version>`.
 
 ## Unreleased
 
+- **Emoji mosaics from a video, GIF or picture:** `references/emoji-mosaic.md` and `tgui.py mosaic`
+  (`scripts/emoji_mosaic.py`). `plan` lists grids for the source's shape (how much a cover fit crops, whether a
+  row fits a phone bubble); `make` cuts the source into 100x100 tiles, VP9 WebM up to 3 s and 30 FPS without
+  audio and re-encodes any tile over 256 KB, or static PNG, with an automatic or chosen crop (`--crop`,
+  `--corners`), cover, contain or fill, rounded outer corners with real transparency (`--round`), a time
+  window and a ping-pong loop; it writes `mosaic.json` (`tg-emoji-mosaic/v1`), `canvas.png` and a preview with
+  Telegram's gaps. `check` holds a folder or the website generator's ZIP to Telegram's rules; `message`
+  builds the text with UTF-16 entity offsets or `<tg-emoji>` HTML; `publish` (live, the user's own bot token
+  from an environment variable) creates or finishes the set idempotently, reads it back, sends the mosaic
+  and reports whether every custom emoji survived. No Telegram login is needed. The `emoji` and `post`
+  playbooks offer a mosaic once when the user has a logo, clip or GIF for a post or welcome screen.
+  A manifest may list the emoji behind each tile (`emoji`, as the website's generator writes it); `publish` puts
+  each one in the sticker's `emoji_list` and the message's alt text.
+  Tests: `tests/test_emoji_mosaic.py`. Based on tg-emoji-mosaic (MIT, KISA).
 - **The first message after /start:** `references/welcome-message.md`. A welcome brief comes before the
   copy (who arrives and from where, the first useful result, what the bot knows, the trust line, the
   picture, the second `/start`). It covers every entry (plain start, product and QR links, referrals,

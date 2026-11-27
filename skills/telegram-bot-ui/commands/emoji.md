@@ -1,6 +1,7 @@
 # emoji: one premium emoji pack, applied everywhere eligible
 
-**When:** premium or custom emoji in buttons, texts or posts; move to another pack.
+**When:** premium or custom emoji in buttons, texts or posts; move to another pack; a video, GIF or
+picture made into an emoji mosaic pack (the "Mosaic" section below).
 
 ## Read
 
@@ -9,6 +10,7 @@
   `references/emoji-packs.md` ("The agent's decision path" first).
 - Posts and long texts: `references/emoji-in-posts.md`.
 - One icon system per bot: `references/visual-language.md` §1-3.
+- A mosaic pack from a video or picture: `references/emoji-mosaic.md` only.
 
 ## Steps
 
@@ -32,6 +34,21 @@
    (`ICON_MEANING_MISMATCH`), it is static (`BUTTON_EMOJI_ANIMATED`), it matches its neighbours
    in fill, weight and colour. Fix or drop every red row; a slot no pack says well stays label-only.
 
+## Mosaic: a video, GIF or picture as an emoji pack
+
+Offer it once when the user has a logo, clip, GIF or banner and works on a post, a launch, a welcome
+screen or a community pack (`references/emoji-mosaic.md`, "What it is and when to offer it"). Then:
+
+1. `tgui.py mosaic plan <file>` and propose one grid (8 columns or fewer is safe on phones).
+2. `tgui.py mosaic make <file> --grid CxR [--corners X1,Y1,X2,Y2 | --crop X,Y,W,H] [--round R]
+   [--start S --duration D] --out mosaic/`; open `mosaic/preview.html` and look at the seams. A ZIP from
+   the website's generator (`/emoji/mosaic`) is the same format: `tgui.py mosaic check mosaic.zip`.
+3. Tiles, preview and checks need no token. Creating the set needs the user's own bot token in an
+   environment variable and their numeric user id, after they wrote `/start` to that bot; no Telegram login.
+   With their go: `TELEGRAM_LIVE=1 TELEGRAM_TEST_BOT_TOKEN=… tgui.py mosaic publish mosaic/ --owner <id>`.
+4. Done when `delivered` is true and the user saw the message on a phone. The person pastes it into a
+   channel post; the agent doesn't publish it.
+
 ## Without scripts
 
 Use only ids from `data/emoji/packs.json`; if the pack isn't there, ask for a sticker-set link.
@@ -43,4 +60,5 @@ looked at and clean, every chosen slot of `emoji/icon-plan.json` with a verdict.
 
 ## Next
 
-`improve` the screens whose icons changed, or `post` for channel use (needs Fragment).
+`improve` the screens whose icons changed, or `post` for channel use (needs Fragment). After a mosaic:
+`post` to plan the announcement it goes into.

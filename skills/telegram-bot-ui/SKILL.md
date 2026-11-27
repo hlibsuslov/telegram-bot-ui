@@ -46,7 +46,7 @@ the transitions between states. Only HTML widgets and Mini Apps have a layout of
 | `post` | "post this to our channel"; "a weekly digest"; "опубликуй в канал"; "опублікуй анонс у канал" | channel posts and mailings: preview, approve, publish once |
 | `widget` | "an interactive card in the message"; "make a widget"; "интерактивная карточка в сообщении"; "зроби інтерактивну картку замовлення" | an HTML widget in a message, with its server handler |
 | `mini-app` | "build a Mini App"; "restyle our Mini App"; "сделай мини-апп"; "зроби міні-застосунок" | a Mini App: decide, build or restyle, version gates, initData security |
-| `emoji` | "use premium emoji"; "custom emoji on the buttons"; "премиум-эмодзи"; "преміум-емодзі на кнопках" | one premium emoji pack, applied wherever the bot is eligible |
+| `emoji` | "use premium emoji"; "custom emoji on the buttons"; "премиум-эмодзи"; "преміум-емодзі на кнопках" | one premium emoji pack where eligible; a mosaic pack from a video |
 | `agent-bot` | "message me when the build is done"; "ask me to approve in Telegram"; "напиши мне в Telegram, когда сборка закончится"; "хочу, щоб агент писав мені в Telegram, коли збірка готова" | the agent's own bot: notify, ask, approve, secured |
 | `map` | "bot-ui"; "open the Studio"; "карта экранов"; "карта екранів бота" | the bot-ui/ map and Studio requests, with revision checks |
 | `lookup` | "does the Bot API have"; "what are sendPoll's parameters"; "есть ли в Bot API"; "чи є в Bot API кнопки іншого кольору" | Bot API and Telegram.WebApp answers from the offline catalogs; skill health |
@@ -113,7 +113,7 @@ One offline entry point, standard library only, no bot token:
 `py -3 <skill>/scripts/tgui.py <group> ...`; `--help` on every group. Exit codes: 0 ok,
 1 findings, 2 usage, 3 revision conflict, 4 refused. Groups: `context`, `next`, `doctor`,
 `findings`, `requests`, `check`, `lookup`, `webapp`, `examples`, `profile`, `map`, `post`,
-`emoji`, `widget`, `miniapp`, `data`, `patterns`, `commands`, `agent`, `hook`, `mcp`, `sync`.
+`emoji`, `mosaic`, `widget`, `miniapp`, `data`, `patterns`, `commands`, `agent`, `hook`, `mcp`, `sync`.
 Online only: `sync`, `emoji library`, pack import. Run them; don't read their source. Libraries: `examples/`
 (`tgkit` for Python and TS, SDK adapters). No Python: each playbook has a *Without scripts* path.
 

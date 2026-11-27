@@ -12,6 +12,7 @@ a published post.
 - Many recipients, rate limits, per-recipient failures: `references/channels-and-broadcasting.md`.
 - Emoji density and accessibility in long texts: `references/emoji-in-posts.md`; reports and
   tables in posts: `references/data-views.md`.
+- The user has a logo, clip or GIF for the post: offer an emoji mosaic once (`emoji` playbook, "Mosaic").
 
 ## Steps
 

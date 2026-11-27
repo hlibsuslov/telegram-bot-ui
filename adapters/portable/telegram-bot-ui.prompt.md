@@ -18,7 +18,7 @@ This is a single-file version of the telegram-bot-ui Agent Skill for agents that
 | `post` | "post this to our channel"; "a weekly digest"; "опубликуй в канал"; "опублікуй анонс у канал" | channel posts and mailings: preview, approve, publish once |
 | `widget` | "an interactive card in the message"; "make a widget"; "интерактивная карточка в сообщении"; "зроби інтерактивну картку замовлення" | an HTML widget in a message, with its server handler |
 | `mini-app` | "build a Mini App"; "restyle our Mini App"; "сделай мини-апп"; "зроби міні-застосунок" | a Mini App: decide, build or restyle, version gates, initData security |
-| `emoji` | "use premium emoji"; "custom emoji on the buttons"; "премиум-эмодзи"; "преміум-емодзі на кнопках" | one premium emoji pack, applied wherever the bot is eligible |
+| `emoji` | "use premium emoji"; "custom emoji on the buttons"; "премиум-эмодзи"; "преміум-емодзі на кнопках" | one premium emoji pack where eligible; a mosaic pack from a video |
 | `agent-bot` | "message me when the build is done"; "ask me to approve in Telegram"; "напиши мне в Telegram, когда сборка закончится"; "хочу, щоб агент писав мені в Telegram, коли збірка готова" | the agent's own bot: notify, ask, approve, secured |
 | `map` | "bot-ui"; "open the Studio"; "карта экранов"; "карта екранів бота" | the bot-ui/ map and Studio requests, with revision checks |
 | `lookup` | "does the Bot API have"; "what are sendPoll's parameters"; "есть ли в Bot API"; "чи є в Bot API кнопки іншого кольору" | Bot API and Telegram.WebApp answers from the offline catalogs; skill health |
@@ -169,7 +169,7 @@ verified" date stated (`references/consistency-and-review.md`).
 - `SKILL.md` section "Tools" (routing to files that are not available here).
 - `SKILL.md` section "Where knowledge lives" (routing to files that are not available here).
 - Commands: 13 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
-- References: 97 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
+- References: 98 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
 - Recipes: 82 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
-- Tools: 33 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
+- Tools: 34 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
 - Optional: 4 file(s), listed in `llms.txt` at https://github.com/hlibsuslov/telegram-bot-ui.
