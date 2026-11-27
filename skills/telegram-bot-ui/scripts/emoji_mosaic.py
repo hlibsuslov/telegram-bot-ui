@@ -24,11 +24,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import html
+import http.client
 import json
 import math
 import os
 import re
 import shutil
+import ssl
 import struct
 import subprocess
 import sys
@@ -53,7 +55,9 @@ DEFAULT_SECONDS = 2.9
 DEFAULT_FPS = 30
 DEFAULT_FALLBACK = "⬜"         # shown where a custom emoji can't be displayed
 DEFAULT_TITLE = "Mosaic image via @hlixli"
-STILL_EXT = {".png", ".jpg", ".jpeg", ".webp", ".bmp"}
+STILL_EXT = {".png", ".jpg", ".jpeg", ".webp", ".bmp", ".tif", ".tiff", ".avif", ".heic", ".heif"}
+TARGET_EMOJI = 40                # Heuristic: the default grid stays at or under 40 tiles, larger emoji read better
+EXIT_UNKNOWN = 5                 # the request may have reached Telegram: run publish again, it resumes
 BITRATES = ("400k", "250k", "160k", "100k")
 
 
@@ -93,10 +97,12 @@ def column_fit(cols: int) -> str:
 
 
 def auto_grid(width: int, height: int, max_emoji: int = DEFAULT_MAX_EMOJI) -> tuple[int, int]:
-    """The default grid: a safe column count, the shape within 5% if possible, then the most emoji."""
-    options = grid_options(width, height, max_emoji=max_emoji, max_cols=SAFE_COLUMNS, limit=10_000)
+    """The default grid: a safe column count, the shape within 5% if possible, then the most emoji up to
+    TARGET_EMOJI (fewer, larger tiles read better in a chat)."""
+    options = grid_options(width, height, max_emoji=min(max_emoji, MAX_SET), max_cols=SAFE_COLUMNS, limit=10_000)
     close = [g for g in options if g["crop"] <= 0.05] or options
-    best = max(close, key=lambda g: (g["emoji"], -g["crop"]))
+    modest = [g for g in close if g["emoji"] <= TARGET_EMOJI] or close
+    best = max(modest, key=lambda g: (g["emoji"], -g["crop"]))
     return best["cols"], best["rows"]
 
 
@@ -129,10 +135,11 @@ def parse_box(crop: str | None, corners: str | None, width: int, height: int) ->
         raise MosaicError("a crop needs four numbers")
     if corners:
         x1, y1, x2, y2 = nums
-        x, y, w, h = min(x1, x2), min(y1, y2), abs(x2 - x1), abs(y2 - y1)
+        left, top, right, bottom = min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)
     else:
-        x, y, w, h = nums
-    x, y, w, h = (int(round(v)) for v in (x, y, w, h))
+        left, top, right, bottom = nums[0], nums[1], nums[0] + nums[2], nums[1] + nums[3]
+    x, y = int(round(left)), int(round(top))
+    w, h = int(round(right)) - x, int(round(bottom)) - y
     if w < 8 or h < 8:
         raise MosaicError("the crop is too small")
     if x < 0 or y < 0 or x + w > width or y + h > height:
@@ -144,7 +151,7 @@ def fit_filter(box: tuple[int, int, int, int], cols: int, rows: int, fit: str, b
     """ffmpeg filters: source -> the chosen box -> a canvas of cols*100 x rows*100."""
     x, y, w, h = box
     cw, ch = cols * TILE, rows * TILE
-    parts = [f"crop={w}:{h}:{x}:{y}"]
+    parts = ["format=rgba", f"crop={w}:{h}:{x}:{y}:exact=1"]
     if fit == "cover":      # fill the canvas, cut the overflow evenly from both sides
         parts += [f"scale={cw}:{ch}:force_original_aspect_ratio=increase:flags=lanczos", f"crop={cw}:{ch}"]
     elif fit == "contain":  # the whole box, padded to the canvas
@@ -161,8 +168,8 @@ def fit_filter(box: tuple[int, int, int, int], cols: int, rows: int, fit: str, b
 def round_filter(radius: int, cols: int, rows: int) -> str:
     """Round the mosaic's four outer corners with an antialiased edge; keeps the source's own alpha."""
     cw, ch, r = cols * TILE, rows * TILE, radius
-    dx = f"max(max({r}-X\\,X-({cw - 1 - r}))\\,0)"
-    dy = f"max(max({r}-Y\\,Y-({ch - 1 - r}))\\,0)"
+    dx = f"max(max({r}-(X+0.5)\\,(X+0.5)-{cw - r})\\,0)"
+    dy = f"max(max({r}-(Y+0.5)\\,(Y+0.5)-{ch - r})\\,0)"
     cover = f"clip({r}+0.5-hypot({dx}\\,{dy})\\,0\\,1)"
     return f"format=rgba,geq=r='r(X\\,Y)':g='g(X\\,Y)':b='b(X\\,Y)':a='alpha(X\\,Y)*{cover}'"
 
@@ -208,11 +215,23 @@ def source_info(path: str) -> dict:
     frames = int(video.get("nb_frames") or 0)
     still = ext in STILL_EXT and (frames <= 1)
     pix = video.get("pix_fmt") or ""
+    codec = video.get("codec_name") or ""
+    vpx_alpha = tags.get("alpha_mode") == "1"
+    decoder = (["-c:v", "libvpx-vp9" if codec == "vp9" else "libvpx"] if vpx_alpha and codec in ("vp8", "vp9") else [])
+    maybe = vpx_alpha or bool(re.search(r"rgba|bgra|argb|abgr|yuva|gbrap|^ya|pal8", pix))
     return {"width": int(video["width"]), "height": int(video["height"]), "duration": 0.0 if still else duration,
             "fps": _rate(video.get("avg_frame_rate")) or _rate(video.get("r_frame_rate")), "still": still,
-            "codec": video.get("codec_name"),
-            "alpha": tags.get("alpha_mode") == "1" or bool(re.search(r"rgba|bgra|argb|abgr|yuva|gbrap|^ya|pal8", pix)),
-            "vpx_alpha": tags.get("alpha_mode") == "1"}
+            "codec": codec, "alpha": maybe and _real_alpha(path, decoder), "decoder": decoder}
+
+
+def _real_alpha(path: str, decoder: list[str]) -> bool:
+    """True when the first frames really have see-through pixels (a GIF palette or an RGBA PNG often doesn't)."""
+    proc = subprocess.run([_need("ffmpeg"), "-hide_banner", "-loglevel", "error", *decoder, "-i", path,
+                           "-frames:v", "12", "-vf", "format=rgba,alphaextract,signalstats,"
+                           "metadata=print:key=lavfi.signalstats.YMIN:file=-", "-f", "null", "-"],
+                          capture_output=True, text=True, encoding="utf-8", errors="replace")
+    lows = [int(v) for v in re.findall(r"lavfi\.signalstats\.YMIN=(\d+)", proc.stdout)]
+    return proc.returncode != 0 or not lows or min(lows) < 250
 
 
 # ---------------------------------------------------------------- make
@@ -222,6 +241,9 @@ def _run_ffmpeg(args: list[str]) -> None:
                           capture_output=True, text=True, encoding="utf-8", errors="replace")
     if proc.returncode != 0:
         raise MosaicError("ffmpeg failed: " + (proc.stderr.strip()[-600:] or "no message"))
+
+
+TILE_FILE = re.compile(r"r\d{2}c\d{2}\.(webm|png)")
 
 
 def tile_names(cols: int, rows: int, ext: str) -> list[str]:
@@ -251,6 +273,8 @@ def make(src: str, out: str, *, grid: str | None = None, crop: str | None = None
     fps = int(fps)
     if not 1 <= fps <= MAX_FPS:
         raise MosaicError(f"--fps must be 1..{MAX_FPS}")
+    if info["fps"] >= 1:     # a 10 FPS GIF stays at 10: more frames would only spend the 256 KB budget
+        fps = min(fps, max(1, round(info["fps"])))
     length = 0.0
     if not is_still:
         left = max(info["duration"] - start, 0.0) if info["duration"] else MAX_SECONDS
@@ -264,31 +288,36 @@ def make(src: str, out: str, *, grid: str | None = None, crop: str | None = None
     alpha = radius > 0 or info["alpha"] or (fit == "contain" and background == "transparent")
 
     os.makedirs(os.path.join(out, "tiles"), exist_ok=True)
-    for name in os.listdir(os.path.join(out, "tiles")):
-        os.remove(os.path.join(out, "tiles", name))
+    for name in os.listdir(os.path.join(out, "tiles")):   # only this tool's own tiles from an earlier run
+        if TILE_FILE.fullmatch(name):
+            os.remove(os.path.join(out, "tiles", name))
     chain = [fit_filter(box, cols, rows, fit, background)]
     if radius:
         chain.append(round_filter(radius, cols, rows))
     chain.append("format=rgba")
-    decoder = ["-c:v", "libvpx-vp9"] if info["vpx_alpha"] else []
+    decoder = info["decoder"]
 
+    total = 0
     with tempfile.TemporaryDirectory(prefix="mosaic_") as tmp:
         canvas = os.path.join(tmp, "canvas.mkv")
         if is_still:
-            _run_ffmpeg([*decoder, "-i", src, "-vf", ",".join(chain), "-frames:v", "1", os.path.join(out, "canvas.png")])
+            seek = ["-ss", f"{start:.3f}"] if start and not info["still"] else []
+            _run_ffmpeg([*seek, *decoder, "-i", src, "-vf", ",".join(chain), "-frames:v", "1",
+                         os.path.join(out, "canvas.png")])
             names = tile_names(cols, rows, "png")
             _split_tiles(os.path.join(out, "canvas.png"), out, names, cols, lambda: ["-frames:v", "1"])
         else:
-            frames = max(1, round(length * fps))
+            frames = max(2 if pingpong else 1, round(length * fps))
             vf = ",".join(chain + [f"fps={fps}"])
-            if pingpong:
-                vf += ",split[a][b];[b]reverse[r];[a][r]concat=n=2:v=1:a=0"
+            if pingpong:     # forward, then back without repeating the turn frame or the loop frame
+                vf += (f",split[a][b];[b]reverse,trim=start_frame=1:end_frame={frames - 1},setpts=PTS-STARTPTS[r];"
+                       "[a][r]concat=n=2:v=1:a=0")
             seek = ["-ss", f"{start:.3f}"] if start else []
             _run_ffmpeg([*seek, "-t", f"{length:.3f}", *decoder, "-i", src, "-an", "-filter_complex", vf,
                          "-c:v", "png", "-pix_fmt", "rgba", canvas])
             _run_ffmpeg(["-i", canvas, "-frames:v", "1", os.path.join(out, "canvas.png")])
             names = tile_names(cols, rows, "webm")
-            total = frames * (2 if pingpong else 1)
+            total = frames + (max(frames - 2, 0) if pingpong else 0)
             _split_tiles(canvas, out, names, cols, lambda: ["-frames:v", str(total), *_vp9_args(BITRATES[0], alpha, fps)])
             for name in names:   # a tile over the size budget is encoded again, lower, on its own
                 path = os.path.join(out, *name.split("/"))
@@ -304,7 +333,7 @@ def make(src: str, out: str, *, grid: str | None = None, crop: str | None = None
         "grid": {"cols": cols, "rows": rows}, "tile": TILE, "fallback": fallback, "tiles": names,
         "source": {"name": os.path.basename(src), "width": info["width"], "height": info["height"],
                    "box": dict(zip("xywh", box)), "fit": fit, "background": background,
-                   "start": round(start, 3), "duration": round(length * (2 if pingpong else 1), 3),
+                   "start": round(start, 3), "duration": 0 if is_still else round(total / fps, 3),
                    "fps": 0 if is_still else fps, "pingpong": pingpong},
         "round": radius, "alpha": alpha, "made_by": "telegram-bot-ui emoji_mosaic.py",
     }
@@ -339,8 +368,8 @@ def _split_tiles(canvas: str, out: str, names: list[str], cols: int, codec_args)
 # ---------------------------------------------------------------- preview
 
 def write_preview(out: str, manifest: dict) -> str:
-    """preview.html: the tiles with Telegram's gaps (about 1 px between emoji and 5 px between rows at
-    22 px), drawn at 2x on a light and a dark bubble. Whatever sits on a row seam will look split."""
+    """preview.html at 2x: edge to edge (newer clients) on a light and a dark bubble, and with the gaps older
+    clients leave (about 1 px between emoji and 5 px between rows at 22 px)."""
     cols = manifest["grid"]["cols"]
     tag = ("<video src='{0}' autoplay loop muted playsinline></video>" if manifest["format"] == "video"
            else "<img src='{0}' alt=''>")
@@ -348,14 +377,15 @@ def write_preview(out: str, manifest: dict) -> str:
     page = f"""<!doctype html><meta charset="utf-8"><title>Emoji mosaic preview</title>
 <style>body{{font:14px system-ui,sans-serif;margin:24px;color:#0f172a}}.row{{display:flex;gap:24px;flex-wrap:wrap}}
 .b{{padding:16px;border-radius:16px}}.l{{background:#fff;box-shadow:0 0 0 1px #cad5e2}}.d{{background:#212d3b}}
-.g{{display:grid;grid-template-columns:repeat({cols},44px);column-gap:2px;row-gap:10px}}
-.g>*{{width:44px;height:44px;display:block}}.s .g{{column-gap:0;row-gap:0}}p{{color:#62748e;max-width:60ch}}</style>
+.g{{display:grid;grid-template-columns:repeat({cols},44px);gap:0}}.o .g{{column-gap:2px;row-gap:10px}}
+.g>*{{width:44px;height:44px;display:block}}p{{color:#62748e;max-width:60ch}}h2{{font-size:13px;color:#62748e}}</style>
 <h1>{cols}&times;{manifest['grid']['rows']} mosaic, {len(manifest['tiles'])} emoji</h1>
-<p>Left two: as Telegram spaces custom emoji in a message (about 1 px between emoji, 5 px between rows, shown
-at 2x). Right: the tiles without gaps. Text or thin lines on a row seam will look broken in the chat; move them
-or pick another grid. This is a preview, not proof: open the sent message on a phone.</p>
-<div class="row"><div class="b l"><div class="g">{cells}</div></div><div class="b d"><div class="g">{cells}</div></div>
-<div class="b l s"><div class="g">{cells}</div></div></div>
+<p>Shown at 2x. Newer Telegram clients draw a row of custom emoji edge to edge; older ones leave about 1 px between
+emoji and 5 px between rows, which splits text or thin lines on a seam. A preview, not proof: open the sent message on
+the phones you target.</p>
+<div class="row"><div><h2>Edge to edge, light</h2><div class="b l"><div class="g">{cells}</div></div></div>
+<div><h2>Edge to edge, dark</h2><div class="b d"><div class="g">{cells}</div></div></div>
+<div class="o"><h2>Older clients</h2><div class="b l"><div class="g">{cells}</div></div></div></div>
 """
     path = os.path.join(out, "preview.html")
     with open(path, "w", encoding="utf-8", newline="\n") as fh:
@@ -392,6 +422,7 @@ class Mosaic:
 
 
 SAFE_NAME = re.compile(r"tiles/[A-Za-z0-9_.-]+\.(webm|png|webp)")
+MANIFEST_MAX = 256 * 1024
 
 
 def load_mosaic(path: str) -> Mosaic:
@@ -405,7 +436,9 @@ def load_mosaic(path: str) -> Mosaic:
                     root = next(iter(tops)) + "/"
             if root + "mosaic.json" not in names:
                 raise MosaicError("the ZIP has no mosaic.json")
-            manifest = json.loads(zf.read(root + "mosaic.json").decode("utf-8"))
+            if zf.getinfo(root + "mosaic.json").file_size > MANIFEST_MAX:
+                raise MosaicError("mosaic.json is too large")
+            manifest = json.loads(zf.read(root + "mosaic.json").decode("utf-8-sig"))
             _check_manifest(manifest)
             blobs = {}
             for name in manifest["tiles"]:
@@ -416,7 +449,11 @@ def load_mosaic(path: str) -> Mosaic:
                     raise MosaicError(f"{name} is far too large for an emoji")
                 blobs[name] = zf.read(root + name)
             return Mosaic(manifest, blobs)
-    with open(os.path.join(path, "mosaic.json"), encoding="utf-8") as fh:
+    if not os.path.isdir(path):
+        raise MosaicError(f"{path} is neither a mosaic folder nor a ZIP")
+    if os.path.getsize(os.path.join(path, "mosaic.json")) > MANIFEST_MAX:
+        raise MosaicError("mosaic.json is too large")
+    with open(os.path.join(path, "mosaic.json"), encoding="utf-8-sig") as fh:
         manifest = json.load(fh)
     _check_manifest(manifest)
     blobs = {}
@@ -426,10 +463,33 @@ def load_mosaic(path: str) -> Mosaic:
     return Mosaic(manifest, blobs)
 
 
+def looks_like_emoji(text) -> bool:
+    """One short emoji: no letters, digits outside keycaps, spaces or markup."""
+    if not isinstance(text, str) or not 0 < len(text) <= 16:
+        return False
+    if "\u20e3" in text:
+        return bool(re.fullmatch(r"[#*0-9]\ufe0f?\u20e3", text))
+    if re.search(r"[A-Za-z0-9\s<>&]", text):
+        return False
+    # one picture: every part of a ZWJ sequence has one base character; a flag is two regional indicators
+    for part in text.split("\u200d"):
+        bases = [ch for ch in part if not (ch == "\ufe0f" or "\U0001f3fb" <= ch <= "\U0001f3ff"
+                                           or "\U000e0020" <= ch <= "\U000e007f")]
+        flags = [ch for ch in bases if "\U0001f1e6" <= ch <= "\U0001f1ff"]
+        if not (len(bases) == 1 or (len(bases) == 2 and len(flags) == 2)):
+            return False
+    return True
+
+
 def _check_manifest(manifest: dict) -> None:
-    if manifest.get("schema") != SCHEMA:
+    if not isinstance(manifest, dict) or manifest.get("schema") != SCHEMA:
         raise MosaicError(f"not a {SCHEMA} manifest")
-    cols, rows = int(manifest["grid"]["cols"]), int(manifest["grid"]["rows"])
+    grid = manifest.get("grid")
+    if not isinstance(grid, dict) or not all(isinstance(grid.get(k), int) and grid[k] >= 1 for k in ("cols", "rows")):
+        raise MosaicError("grid must be {\"cols\": N, \"rows\": N} with whole numbers from 1")
+    cols, rows = grid["cols"], grid["rows"]
+    if cols * rows > MAX_SET:
+        raise MosaicError(f"{cols}x{rows} is more than the {MAX_SET} emoji a set holds")
     tiles = manifest.get("tiles") or []
     if len(tiles) != cols * rows:
         raise MosaicError(f"{cols}x{rows} needs {cols * rows} tiles, the manifest lists {len(tiles)}")
@@ -437,16 +497,20 @@ def _check_manifest(manifest: dict) -> None:
         raise MosaicError("tile names must be unique files under tiles/")
     if manifest.get("format") not in ("video", "static"):
         raise MosaicError("format is 'video' or 'static'")
+    if "fallback" in manifest and not looks_like_emoji(manifest["fallback"]):
+        raise MosaicError("fallback must be one emoji")
     emoji = manifest.get("emoji")
     if emoji is not None and (not isinstance(emoji, list) or len(emoji) != len(tiles)
-                              or not all(isinstance(e, str) and 0 < len(e) <= 16 for e in emoji)):
-        raise MosaicError("emoji must list one short emoji per tile")
+                              or not all(looks_like_emoji(e) for e in emoji)):
+        raise MosaicError("emoji must list one emoji per tile")
 
 
 # ---------------------------------------------------------------- check
 
 def image_size(data: bytes) -> tuple[str, int, int] | None:
     """(kind, width, height) of a PNG or WEBP from its header, standard library only."""
+    if len(data) < 30:
+        return None
     if data[:8] == b"\x89PNG\r\n\x1a\n" and data[12:16] == b"IHDR":
         w, h = struct.unpack(">II", data[16:24])
         return "png", w, h
@@ -583,11 +647,14 @@ class Bot:
                 with urllib.request.urlopen(req, timeout=self._timeout) as resp:
                     payload = json.loads(resp.read().decode("utf-8"))
             except urllib.error.HTTPError as err:
+                if err.code >= 500:          # the server may have done the work before failing
+                    raise OutcomeUnknown(f"{method}: HTTP {err.code}") from None
                 try:
                     payload = json.loads(err.read().decode("utf-8"))
-                except ValueError:
-                    payload = {"ok": False, "error_code": err.code, "description": str(err.reason)}
-            except (TimeoutError, ConnectionError, urllib.error.URLError) as err:
+                except (ValueError, http.client.HTTPException):
+                    raise OutcomeUnknown(f"{method}: unreadable HTTP {err.code} answer") from None
+            except (TimeoutError, ConnectionError, urllib.error.URLError, http.client.HTTPException, ssl.SSLError,
+                    ValueError) as err:
                 raise OutcomeUnknown(f"{method}: {type(err).__name__}") from None
             if payload.get("ok"):
                 return payload.get("result")
@@ -631,14 +698,40 @@ def _read_set(bot, name: str):
         raise
 
 
-def publish(bot, mosaic: Mosaic, *, owner: int, title: str = DEFAULT_TITLE, send_to: int | None = None,
-            log=lambda line: print(line, file=sys.stderr, flush=True)) -> dict:
-    """Upload the tiles, create or finish the set, read it back, send the mosaic, check what came back.
+def preflight(mosaic: Mosaic, max_emoji: int = DEFAULT_MAX_EMOJI) -> list[dict]:
+    """Every blocking problem: the full check when ffprobe is installed, else the header checks."""
+    problems = check(mosaic, max_emoji=max_emoji) if shutil.which("ffprobe") else check_light(mosaic)
+    if not shutil.which("ffprobe") and mosaic.cols * mosaic.rows > max_emoji:
+        problems.append({"code": "TOO_MANY_EMOJI", "detail": f"{mosaic.cols * mosaic.rows} > {max_emoji} per message"})
+    return [p for p in problems if p.get("severity") != "warning"]
 
-    Idempotent: the set name comes from the tiles' bytes, so a second run finishes the same set."""
-    problems = [p for p in check_light(mosaic) if p.get("severity") != "warning"]
+
+def thumbnail_index(mosaic: Mosaic, choice: str) -> int | None:
+    """Which tile becomes the set's icon: the centre by default (a corner tile can be transparent)."""
+    if choice == "none":
+        return None
+    if choice == "first":
+        return 0
+    if choice == "center":
+        return (mosaic.rows // 2) * mosaic.cols + mosaic.cols // 2
+    index = int(choice)
+    if not 0 <= index < len(mosaic.tiles):
+        raise MosaicError(f"--thumbnail must be center, first, none or 0..{len(mosaic.tiles) - 1}")
+    return index
+
+
+def publish(bot, mosaic: Mosaic, *, owner: int, title: str = DEFAULT_TITLE, send_to: int | None = None,
+            send: bool = True, thumbnail: str = "center", max_emoji: int = DEFAULT_MAX_EMOJI,
+            log=lambda line: print(line, file=sys.stderr, flush=True)) -> dict:
+    """Upload the tiles, create or finish the set, read it back, set its icon, send the mosaic, check what
+    came back.
+
+    Idempotent for the set: its name comes from the tiles' bytes, so a second run finishes the same set. Each
+    run with send=True sends the message again; the CLI skips it when --save already holds a message_id."""
+    problems = preflight(mosaic, max_emoji)
     if problems:
         raise MosaicError("fix the tiles first: " + json.dumps(problems[:3], ensure_ascii=False))
+    thumb = thumbnail_index(mosaic, thumbnail)
     if not 1 <= len(title) <= 64:
         raise MosaicError("the set title is 1-64 characters")
     me = bot.call("getMe", {})
@@ -694,13 +787,43 @@ def publish(bot, mosaic: Mosaic, *, owner: int, title: str = DEFAULT_TITLE, send
     if final.get("sticker_type") != "custom_emoji" or len(ids) != len(tiles) or len(set(ids)) != len(ids) \
             or not all(ids):
         raise MosaicError(f"the set {name} holds {len(ids)} emoji, expected {len(tiles)}; run publish again")
-    body = mosaic_message(ids, mosaic.cols, alts)
-    sent = bot.call("sendMessage", {"chat_id": send_to or owner, **body})
-    got = sum(1 for e in sent.get("entities", []) if e.get("type") == "custom_emoji")
+    if thumb is not None:
+        try:
+            bot.call("setCustomEmojiStickerSetThumbnail", {"name": name, "custom_emoji_id": ids[thumb]})
+        except (TelegramError, OutcomeUnknown) as err:
+            log(f"the set works, but its icon wasn't set: {err}")
     result = {"set": name, "link": f"https://t.me/addemoji/{name}", "grid": f"{mosaic.cols}x{mosaic.rows}",
-              "ids": ids, "message_id": sent.get("message_id"), "custom_emoji_sent": got, "expected": len(ids),
-              "delivered": got == len(ids)}
+              "ids": ids, "message_id": None, "custom_emoji_sent": None, "expected": len(ids), "delivered": None}
+    if send:
+        body = mosaic_message(ids, mosaic.cols, alts)
+        sent = bot.call("sendMessage", {"chat_id": send_to or owner, **body})
+        got = sum(1 for e in sent.get("entities", []) if e.get("type") == "custom_emoji")
+        result.update(message_id=sent.get("message_id"), custom_emoji_sent=got, delivered=got == len(ids))
     return result
+
+
+def plan_publish(mosaic: Mosaic, *, bot_username: str, existing: int = 0, thumbnail: str = "center",
+                 send_to: int | None = None, owner: int | None = None) -> dict:
+    """What publish would do, without doing it."""
+    name = set_name(mosaic.fingerprint(), bot_username)
+    tiles = len(mosaic.tiles)
+    create = 0 if existing else min(MAX_INITIAL, tiles)
+    thumb = thumbnail_index(mosaic, thumbnail)
+    return {"set": name, "link": f"https://t.me/addemoji/{name}", "tiles": tiles, "already_in_set": existing,
+            "uploads": tiles - existing, "create_with": create, "add_one_by_one": tiles - existing - create,
+            "thumbnail_tile": None if thumb is None else mosaic.tiles[thumb], "send_to": send_to or owner}
+
+
+def owners_from_updates(updates: list[dict]) -> list[dict]:
+    """People who wrote to the bot, from a getUpdates answer: the numeric id publish needs for --owner."""
+    seen: dict[int, dict] = {}
+    for update in updates:
+        for key in ("message", "edited_message", "callback_query", "my_chat_member"):
+            who = (update.get(key) or {}).get("from")
+            if who and not who.get("is_bot"):
+                seen[who["id"]] = {"id": who["id"], "username": who.get("username"),
+                                   "first_name": who.get("first_name"), "is_premium": bool(who.get("is_premium"))}
+    return list(seen.values())
 
 
 def check_light(mosaic: Mosaic) -> list[dict]:
@@ -728,8 +851,18 @@ def _emit(obj, as_json: bool, text: str) -> None:
     print(json.dumps(obj, ensure_ascii=False, indent=2) if as_json else text)
 
 
+def _live_token(env_name: str) -> str | None:
+    token = os.environ.get(env_name)
+    return token if os.environ.get("TELEGRAM_LIVE") == "1" and token else None
+
+
 def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(prog="emoji_mosaic.py", description=__doc__.split("\n\n")[0])
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(encoding="utf-8", errors="replace")
+    ap = argparse.ArgumentParser(prog="emoji_mosaic.py", description=__doc__.split("\n\n")[0],
+                                 epilog="Exit codes: 0 ok, 1 a rule or Telegram refused, 2 usage, 4 live mode not "
+                                        f"enabled, {EXIT_UNKNOWN} outcome unknown (run publish again: it resumes).")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     p = sub.add_parser("plan", help="grid options for a source's shape")
@@ -773,7 +906,21 @@ def main(argv: list[str] | None = None) -> int:
     u.add_argument("--title", default=DEFAULT_TITLE)
     u.add_argument("--send-to", type=int, help="chat id for the mosaic message; default: the owner")
     u.add_argument("--token-env", default="TELEGRAM_TEST_BOT_TOKEN", help="name of the variable holding the token")
-    u.add_argument("--save", help="write the result (set, link, ids) to this JSON file")
+    u.add_argument("--save", help="write the result (set, link, ids, message_id) to this JSON file")
+    u.add_argument("--thumbnail", default="center", help="the set's icon: center, first, none or a tile index")
+    u.add_argument("--no-send", action="store_true", help="create the set only; don't send the mosaic")
+    u.add_argument("--resend", action="store_true", help="send the mosaic again although --save holds a message_id")
+    u.add_argument("--dry-run", action="store_true", help="check and show the plan; no writes to Telegram")
+    u.add_argument("--bot-username", help="for --dry-run without live mode: the bot that will own the set name")
+    u.add_argument("--max-emoji", type=int, default=DEFAULT_MAX_EMOJI)
+
+    o = sub.add_parser("owner", help="live, read-only: numeric ids of people who wrote /start to the bot")
+    o.add_argument("--token-env", default="TELEGRAM_TEST_BOT_TOKEN")
+
+    d = sub.add_parser("delete", help="live: delete a set this bot created (an orphan or a mistake)")
+    d.add_argument("name")
+    d.add_argument("--yes", action="store_true", help="required: the set and its emoji are gone for everyone")
+    d.add_argument("--token-env", default="TELEGRAM_TEST_BOT_TOKEN")
 
     a = ap.parse_args(argv)
     try:
@@ -824,23 +971,92 @@ def main(argv: list[str] | None = None) -> int:
             print(out if a.html else json.dumps(out, ensure_ascii=False, indent=2))
             return 0
         if a.cmd == "publish":
-            token = os.environ.get(a.token_env)
-            if os.environ.get("TELEGRAM_LIVE") != "1" or not token:
+            mosaic = load_mosaic(a.path)
+            token = _live_token(a.token_env)
+            if a.dry_run:
+                problems = preflight(mosaic, a.max_emoji)
+                existing, username = 0, a.bot_username
+                if token:
+                    bot = Bot(token)
+                    username = bot.call("getMe", {})["username"]
+                    current = _read_set(bot, set_name(mosaic.fingerprint(), username))
+                    existing = len(current["stickers"]) if current else 0
+                if not username:
+                    raise MosaicError("--dry-run needs live mode or --bot-username to name the set")
+                plan = plan_publish(mosaic, bot_username=username, existing=existing, thumbnail=a.thumbnail,
+                                    send_to=None if a.no_send else a.send_to, owner=None if a.no_send else a.owner)
+                print(json.dumps({"plan": plan, "problems": problems}, ensure_ascii=False, indent=2))
+                return 1 if problems else 0
+            if not token:
                 print(f"publish is live: set TELEGRAM_LIVE=1 and the bot token in {a.token_env}", file=sys.stderr)
                 return 4
-            result = publish(Bot(token), load_mosaic(a.path), owner=a.owner, title=a.title, send_to=a.send_to)
+            previous = None
+            if a.save and os.path.isfile(a.save):
+                with open(a.save, encoding="utf-8-sig") as fh:
+                    previous = json.load(fh)
+            name_now = None
+            send = not a.no_send
+            if send and previous and previous.get("message_id") and not a.resend:
+                bot = Bot(token)
+                name_now = set_name(mosaic.fingerprint(), bot.call("getMe", {})["username"])
+                if previous.get("set") == name_now:
+                    send = False
+                    print(f"the mosaic was already sent (message {previous['message_id']}); --resend sends it again",
+                          file=sys.stderr)
+            result = publish(Bot(token), mosaic, owner=a.owner, title=a.title, send_to=a.send_to, send=send,
+                             thumbnail=a.thumbnail, max_emoji=a.max_emoji)
+            if not send and previous and previous.get("set") == result["set"]:
+                for key in ("message_id", "custom_emoji_sent", "delivered"):
+                    result[key] = previous.get(key)
             if a.save:
                 with open(a.save, "w", encoding="utf-8", newline="\n") as fh:
                     json.dump(result, fh, ensure_ascii=False, indent=2)
             print(json.dumps({k: v for k, v in result.items() if k != "ids"}, ensure_ascii=False, indent=2))
-            if not result["delivered"]:
-                print("NOT DONE: the message came back without every custom emoji. The bot can't use custom "
-                      "emoji here (owner without Premium, or a channel without Fragment usernames).", file=sys.stderr)
+            if result["delivered"] is False:
+                print("NOT DONE: the message came back without every custom emoji. The bot can't use custom emoji "
+                      "in that chat: its owner (the bot's, not the pack's) has no Telegram Premium, or it is a "
+                      "channel and the bot has no Fragment usernames.", file=sys.stderr)
                 return 1
             return 0
-    except (MosaicError, TelegramError, OutcomeUnknown, OSError, ValueError, KeyError) as err:
+        if a.cmd == "owner":
+            token = _live_token(a.token_env)
+            if not token:
+                print(f"owner is live: set TELEGRAM_LIVE=1 and the bot token in {a.token_env}", file=sys.stderr)
+                return 4
+            try:
+                updates = Bot(token).call("getUpdates", {"limit": 100, "timeout": 0})
+            except TelegramError as err:
+                if err.code == 409:
+                    raise MosaicError("the bot has a webhook, so getUpdates is off; ask the person for their id "
+                                      "(@userinfobot shows it)") from None
+                raise
+            people = owners_from_updates(updates or [])
+            print(json.dumps(people, ensure_ascii=False, indent=2) if people else
+                  "nobody has written to the bot yet: send it /start from the account that will own the pack")
+            return 0 if people else 1
+        if a.cmd == "delete":
+            token = _live_token(a.token_env)
+            if not token:
+                print(f"delete is live: set TELEGRAM_LIVE=1 and the bot token in {a.token_env}", file=sys.stderr)
+                return 4
+            bot = Bot(token)
+            username = bot.call("getMe", {})["username"].lower()
+            if not a.name.lower().endswith(f"_by_{username}"):
+                raise MosaicError(f"{a.name} wasn't created by @{username}; a bot can delete only its own sets")
+            if not a.yes:
+                print(f"this deletes {a.name} for everyone, with every emoji in it; add --yes", file=sys.stderr)
+                return 2
+            bot.call("deleteStickerSet", {"name": a.name})
+            print(f"deleted {a.name}")
+            return 0
+    except OutcomeUnknown as err:
+        print(f"outcome unknown: {err}. Run the same command again: publish reads the set back and resumes.",
+              file=sys.stderr)
+        return EXIT_UNKNOWN
+    except (MosaicError, TelegramError, OSError, ValueError, KeyError, TypeError, zipfile.BadZipFile,
+            struct.error) as err:
         print(f"error: {err}", file=sys.stderr)
-        return 2
+        return 1
     return 2
 
 

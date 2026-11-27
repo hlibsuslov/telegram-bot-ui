@@ -103,7 +103,7 @@ the transitions between states. Only HTML widgets and Mini Apps have a layout of
 | `lookup` | "does the Bot API have"; "what are sendPoll's parameters"; "есть ли в Bot API"; "чи є в Bot API кнопки іншого кольору" | Bot API and Telegram.WebApp answers from the offline catalogs; skill health |
 <!-- commands:end -->
 
-Say in plain language what you are doing ("I'll review the menu first, without changing code").
+Say in plain language what you are doing.
 
 ## Scope
 
@@ -376,7 +376,8 @@ Wording `microcopy-and-labels.md` · buttons and color `buttons-and-styles.md` �
 Message (the exception; audit every one) `rich-message-buttons.md` · inline keyboards,
 pagination `inline-keyboards.md` · reply keyboards, `ForceReply` `reply-keyboards.md` · screens,
 back, commands, deep links `navigation-and-flows.md` · first run `onboarding-and-first-run.md` ·
-the first message after `/start` `welcome-message.md` · notifications and other messages the bot
+the first message after `/start` `welcome-message.md` (a logo, clip or GIF for it: offer an emoji mosaic once,
+`emoji-mosaic.md`) · notifications and other messages the bot
 sends on its own `message-patterns.md` (its "Do this, in order" steps: pattern id and reason per
 message, before/after for two types first, `tgkit/notify.py` or `tgui.py patterns render`, `patterns
 check --pattern`) ·
@@ -477,6 +478,8 @@ booking, support, onboarding, learning, community, inline mode, a business accou
   `specialized-updates.md`.
 - Users and data: `user-data.md`, `user-trust.md`, `user-profile.md`; first run
   `onboarding-and-first-run.md`; unknown project `project-adaptation.md`.
+- A logo, clip or GIF for the welcome, about or launch screen: offer an emoji mosaic once
+  (`emoji-mosaic.md`, `emoji` playbook "Mosaic").
 - Every new bot: the first message after `/start`, `welcome-message.md` (the brief, one message
   per entry, `tgui.py check welcome`); every notification it sends, one pattern per type from
   `message-patterns.md`, following its "Do this, in order" steps (pattern id and reason per type,
@@ -526,11 +529,11 @@ a published post.
 - Many recipients, rate limits, per-recipient failures: `references/channels-and-broadcasting.md`.
 - Emoji density and accessibility in long texts: `references/emoji-in-posts.md`; reports and
   tables in posts: `references/data-views.md`.
-- The user has a logo, clip or GIF for the post: offer an emoji mosaic once (`emoji` playbook, "Mosaic").
 
 ## Steps
 
-1. Write the post as content (Markdown or Post JSON), never as raw HTML.
+1. Write the post as content (Markdown or Post JSON), never as raw HTML. A logo, clip or GIF for it: offer an
+   emoji mosaic once, after the eligibility check (`emoji` playbook, "Mosaic").
 2. `tgui.py post validate <file> --context channel`, then `tgui.py post preview <file>`.
 3. Show the exact post to the approver; publish only after an approval bound to that post.
 4. `tgui.py post publish <file> --chat-env TG_CHANNEL_ID --token-env TG_BOT_TOKEN --key <id>`
@@ -671,22 +674,16 @@ picture made into an emoji mosaic pack (the "Mosaic" section below).
 
 ## Mosaic: a video, GIF or picture as an emoji pack
 
-Offer it once when the user has a logo, clip, GIF or banner and works on a post, a launch, a welcome
-screen or a community pack (`references/emoji-mosaic.md`, "What it is and when to offer it"). Then:
-
-1. `tgui.py mosaic plan <file>` and propose one grid (8 columns or fewer is safe on phones).
-2. `tgui.py mosaic make <file> --grid CxR [--corners X1,Y1,X2,Y2 | --crop X,Y,W,H] [--round R]
-   [--start S --duration D] --out mosaic/`; open `mosaic/preview.html` and look at the seams. A ZIP from
-   the website's generator (`/emoji/mosaic`) is the same format: `tgui.py mosaic check mosaic.zip`.
-3. Tiles, preview and checks need no token. Creating the set needs the user's own bot token in an
-   environment variable and their numeric user id, after they wrote `/start` to that bot; no Telegram login.
-   With their go: `TELEGRAM_LIVE=1 TELEGRAM_TEST_BOT_TOKEN=… tgui.py mosaic publish mosaic/ --owner <id>`.
-4. Done when `delivered` is true and the user saw the message on a phone. The person pastes it into a
-   channel post; the agent doesn't publish it.
+Offer it once, after step 1's eligibility check, when the user has a logo, clip, GIF or banner for a post,
+launch, welcome screen or community pack. Follow `references/emoji-mosaic.md`, "Steps": `tgui.py mosaic
+plan` → `make` → look at `preview.html` → `publish --dry-run` → `publish` live with the user's go (token in an
+environment variable, `--owner` from `mosaic owner`; say the default title or pass `--title`). Exit code 5:
+run it again. Done when `delivered` is true and the user saw it on a phone; the person posts it.
 
 ## Without scripts
 
 Use only ids from `data/emoji/packs.json`; if the pack isn't there, ask for a sticker-set link.
+Mosaic without ffmpeg: telegram-bot-ui.hlixli.com/emoji/mosaic cuts the tiles in the browser.
 
 ## Done
 

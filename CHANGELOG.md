@@ -20,6 +20,11 @@ Each release is tagged `v<version>`.
   playbooks offer a mosaic once when the user has a logo, clip or GIF for a post or welcome screen.
   A manifest may list the emoji behind each tile (`emoji`, as the website's generator writes it); `publish` puts
   each one in the sticker's `emoji_list` and the message's alt text.
+  `publish` runs the full check first, sets the centre tile as the set's icon (`--thumbnail`), sends the mosaic once
+  per `--save` file (`--resend`, `--no-send`), and has `--dry-run`; `mosaic owner` lists the ids of people who wrote
+  to the bot, `mosaic delete` removes a set the bot made, and exit code 5 means "outcome unknown, run it again".
+  The default grid keeps 8 columns and at most 40 tiles; rounded corners keep the edges opaque; a GIF or PNG
+  gets alpha only when it really has see-through pixels; ping-pong loops don't repeat the turn frames.
   Tests: `tests/test_emoji_mosaic.py`. Based on tg-emoji-mosaic (MIT, KISA).
 - **The first message after /start:** `references/welcome-message.md`. A welcome brief comes before the
   copy (who arrives and from where, the first useful result, what the bot knows, the trust line, the

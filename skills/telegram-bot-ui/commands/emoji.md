@@ -36,22 +36,16 @@ picture made into an emoji mosaic pack (the "Mosaic" section below).
 
 ## Mosaic: a video, GIF or picture as an emoji pack
 
-Offer it once when the user has a logo, clip, GIF or banner and works on a post, a launch, a welcome
-screen or a community pack (`references/emoji-mosaic.md`, "What it is and when to offer it"). Then:
-
-1. `tgui.py mosaic plan <file>` and propose one grid (8 columns or fewer is safe on phones).
-2. `tgui.py mosaic make <file> --grid CxR [--corners X1,Y1,X2,Y2 | --crop X,Y,W,H] [--round R]
-   [--start S --duration D] --out mosaic/`; open `mosaic/preview.html` and look at the seams. A ZIP from
-   the website's generator (`/emoji/mosaic`) is the same format: `tgui.py mosaic check mosaic.zip`.
-3. Tiles, preview and checks need no token. Creating the set needs the user's own bot token in an
-   environment variable and their numeric user id, after they wrote `/start` to that bot; no Telegram login.
-   With their go: `TELEGRAM_LIVE=1 TELEGRAM_TEST_BOT_TOKEN=… tgui.py mosaic publish mosaic/ --owner <id>`.
-4. Done when `delivered` is true and the user saw the message on a phone. The person pastes it into a
-   channel post; the agent doesn't publish it.
+Offer it once, after step 1's eligibility check, when the user has a logo, clip, GIF or banner for a post,
+launch, welcome screen or community pack. Follow `references/emoji-mosaic.md`, "Steps": `tgui.py mosaic
+plan` → `make` → look at `preview.html` → `publish --dry-run` → `publish` live with the user's go (token in an
+environment variable, `--owner` from `mosaic owner`; say the default title or pass `--title`). Exit code 5:
+run it again. Done when `delivered` is true and the user saw it on a phone; the person posts it.
 
 ## Without scripts
 
 Use only ids from `data/emoji/packs.json`; if the pack isn't there, ask for a sticker-set link.
+Mosaic without ffmpeg: telegram-bot-ui.hlixli.com/emoji/mosaic cuts the tiles in the browser.
 
 ## Done
 
