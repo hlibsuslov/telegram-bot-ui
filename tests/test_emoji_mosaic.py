@@ -111,22 +111,69 @@ class FakeBot:
 
 
 class Grid(unittest.TestCase):
-    def test_auto_grid_keeps_shape_and_safe_columns(self):
+    def test_auto_grid_keeps_shape_and_rows_whole(self):
+        # The website's autoGrid gives the same (telegram-bot-ui-site tests/emoji-mosaic.test.ts).
         self.assertEqual(em.auto_grid(1280, 720), (7, 4))
-        cols, rows = em.auto_grid(1000, 1000)
-        self.assertEqual(cols, rows)
-        self.assertLessEqual(cols, em.SAFE_COLUMNS)
+        self.assertEqual(em.auto_grid(720, 1280), (4, 7))
+        self.assertEqual(em.auto_grid(1000, 1000), (4, 4))
+        for w, h in ((1280, 720), (720, 1280), (1000, 1000), (1440, 1080), (1080, 1350)):
+            c, r = em.auto_grid(w, h)
+            self.assertNotEqual(em.layout_fit(c, r), "wraps", f"{w}x{h}")
         for w, h in ((1920, 1080), (1080, 1920), (3000, 1000), (500, 500)):
             c, r = em.auto_grid(w, h)
+            self.assertLessEqual(c, em.AUTO_COLUMNS)
             self.assertLessEqual(c * r, em.DEFAULT_MAX_EMOJI)
 
     def test_options_are_sorted_and_labelled(self):
         options = em.grid_options(1280, 720)
         crops = [round(o["crop"], 2) for o in options]
         self.assertEqual(crops, sorted(crops))
-        self.assertEqual(em.column_fit(8), "safe")
-        self.assertEqual(em.column_fit(12), "check-narrow-phone")
-        self.assertEqual(em.column_fit(13), "likely-wraps")
+        for o in options:
+            self.assertEqual(o["fit"], em.layout_fit(o["cols"], o["rows"]))
+            self.assertEqual(o["wraps"], em.wraps_where(o["cols"], o["rows"]))
+
+    def test_big_emoji_rows(self):
+        # iOS sizes tiles by max(columns, rows): rows of 5-9 columns are 303.5 / 296.5 / 296.5 / 282.4 / 279.5 pt.
+        self.assertEqual([round(em.big_emoji_row(c, 3)["ios"], 1) for c in (5, 6, 7, 8, 9)],
+                         [303.5, 296.5, 296.5, 282.4, 279.5])
+        self.assertEqual(round(em.big_emoji_row(7, 4)["android"]), 225)    # (120 x 0.19 + 4) x 1.2 dp a tile
+        self.assertEqual(round(em.big_emoji_row(1, 1)["ios"] / 1, 1), round(94 * 24 / 17, 1))
+        # 7x4 stays whole in chats; on a 375 pt iPhone it wraps in groups and forwards. 8 columns wrap in Android
+        # groups. Taller grids shrink every iOS tile, so 7x8 stays whole everywhere; 9 columns overflow Android chats.
+        self.assertEqual(em.layout_fit(7, 4), "chats")
+        self.assertEqual(em.wraps_where(7, 4), ["iPhone groups", "iPhone forwards"])
+        self.assertIn("Android groups", em.wraps_where(8, 4))
+        self.assertEqual(em.layout_fit(7, 8), "everywhere")
+        self.assertEqual(em.layout_fit(4, 4), "everywhere")
+        self.assertEqual(em.layout_fit(9, 5), "wraps")
+        self.assertEqual(em.wrap_places(["iPhone groups", "iPhone forwards", "Android groups"]),
+                         "iPhone groups and forwards; Android groups")
+        self.assertTrue(em.fit_text(4, 4).startswith("rows stay whole on every phone"))
+        self.assertIn("iPhone groups and forwards", em.fit_text(7, 4))
+
+    def test_narrow_widths(self):
+        self.assertEqual({k: em.NARROW["iPhone"][k] for k in ("chats", "groups", "forwards")},
+                         {"chats": 327, "groups": 289, "forwards": 282})
+        self.assertEqual({k: em.NARROW["Android"][k] for k in ("chats", "groups", "forwards")},
+                         {"chats": 266, "groups": 228, "forwards": 234})
+
+    def test_check_warns_where_rows_wrap(self):
+        self.assertEqual(em.layout_problems(4, 4), [])
+        self.assertEqual([p["code"] for p in em.layout_problems(7, 4)], ["ROWS_WRAP_OUTSIDE_CHATS"])
+        self.assertEqual([(p["code"], p["severity"]) for p in em.layout_problems(9, 5)], [("ROWS_WRAP", "warning")])
+
+    def test_whole_grids(self):
+        everywhere = em.whole_grids(1280, 720, "everywhere")
+        self.assertTrue(everywhere and all(em.layout_fit(g["cols"], g["rows"]) == "everywhere" for g in everywhere))
+        self.assertEqual(em.whole_grids(1280, 720, "chats")[0]["grid"], "7x4")
+
+    def test_preview_layout_wraps_like_an_iphone(self):
+        chat = em.big_emoji_layout(7, 4, em.NARROW["iPhone"]["chats"])
+        forward = em.big_emoji_layout(7, 4, em.NARROW["iPhone"]["forwards"])
+        self.assertFalse(chat["wraps"])
+        self.assertTrue(forward["wraps"])                       # 6 tiles a line, the 7th drops below
+        self.assertEqual(forward["cells"][6][0], 0)
+        self.assertGreater(forward["h"], chat["h"])
 
     def test_parse_grid_limits(self):
         self.assertEqual(em.parse_grid("8x4"), (8, 4))
@@ -136,10 +183,34 @@ class Grid(unittest.TestCase):
                 em.parse_grid(bad)
 
 
+class Sync(unittest.TestCase):
+    def timing(self, frames=87, fps=30.0, seconds=2.9, pts=None):
+        return {"frames": frames, "fps": fps, "seconds": seconds,
+                "pts": pts if pts is not None else tuple(f"{i / fps:.3f}" for i in range(frames))}
+
+    def test_a_tile_out_of_step_is_flagged(self):
+        timing = {f"tiles/r01c0{i}.webm": self.timing() for i in range(1, 5)}
+        self.assertEqual(em.timing_problems(timing), [])
+        timing["tiles/r01c04.webm"] = self.timing(frames=44, fps=15.0)   # re-encoded at half the frame rate
+        problems = em.timing_problems(timing)
+        self.assertEqual([(p["tile"], p["code"]) for p in problems], [("tiles/r01c04.webm", "FRAME_COUNT_DIFFERS")])
+        self.assertIn("44 frames, the others 87 frames", problems[0]["detail"])
+
+    def test_same_frames_other_rate_or_times(self):
+        timing = {f"tiles/r01c0{i}.webm": self.timing() for i in range(1, 4)}
+        timing["tiles/r01c02.webm"] = {**self.timing(), "fps": 29.97}
+        timing["tiles/r01c03.webm"] = {**self.timing(), "pts": ("0.000",) + self.timing()["pts"][1:-1] + ("9.000",)}
+        timing["tiles/r01c04.webm"] = {**self.timing(), "seconds": 3.0}
+        timing["tiles/r01c05.webm"] = self.timing()
+        codes = {p["tile"]: p["code"] for p in em.timing_problems(timing)}
+        self.assertEqual(codes, {"tiles/r01c02.webm": "FPS_DIFFERS", "tiles/r01c03.webm": "TIMESTAMPS_DIFFER",
+                                 "tiles/r01c04.webm": "DURATION_DIFFERS"})
+
+
 class Defaults(unittest.TestCase):
     def test_auto_grid_prefers_fewer_larger_tiles(self):
         self.assertEqual(em.auto_grid(720, 1280), (4, 7))
-        self.assertEqual(em.auto_grid(1000, 1000), (6, 6))
+        self.assertEqual(em.auto_grid(1000, 1000), (4, 4))
         for w, h in ((1920, 1080), (1080, 1920), (500, 500), (3000, 1000)):
             c, r = em.auto_grid(w, h)
             self.assertLessEqual(c * r, em.TARGET_EMOJI)
@@ -232,6 +303,18 @@ class Files(unittest.TestCase):
         manifest, blobs = static_mosaic(size=120)
         self.assertEqual({p["code"] for p in em.check(em.Mosaic(manifest, blobs))}, {"NOT_100X100"})
 
+    def test_video_emoji_are_held_to_64_kb(self):
+        # Observed: STICKER_VIDEO_BIG at 74.6 KB, far below the documented 256 KB.
+        tiles = em.tile_names(2, 1, "webm")
+        manifest = {"schema": em.SCHEMA, "format": "video", "grid": {"cols": 2, "rows": 1}, "tile": 100,
+                    "fallback": "⬜", "tiles": tiles}
+        webm = b"\x1a\x45\xdf\xa3"
+        blobs = {tiles[0]: webm + b"\0" * (em.MAX_EMOJI_VIDEO_BYTES - 4), tiles[1]: webm + b"\0" * 65 * 1024}
+        problems = em.check_light(em.Mosaic(manifest, blobs))
+        self.assertEqual([(p["tile"], p["code"]) for p in problems], [(tiles[1], "VIDEO_TOO_BIG")])
+        self.assertLess(em.HARD_BYTES, em.MAX_EMOJI_VIDEO_BYTES)
+        self.assertLess(em.TARGET_BYTES, em.HARD_BYTES)
+
     def test_image_size(self):
         self.assertEqual(em.image_size(png(100, 100)), ("png", 100, 100))
         self.assertIsNone(em.image_size(b"nope"))
@@ -322,7 +405,10 @@ class Cli(unittest.TestCase):
         p = subprocess.run([sys.executable, TGUI, "mosaic", "plan", "--size", "1280x720", "--json"],
                            capture_output=True, text=True, encoding="utf-8")
         self.assertEqual(p.returncode, 0, p.stderr)
-        self.assertEqual(json.loads(p.stdout)["default"], "7x4")
+        plan = json.loads(p.stdout)
+        self.assertEqual(plan["default"], "7x4")
+        self.assertEqual((plan["default_fit"], plan["default_wraps"]), ("chats", ["iPhone groups", "iPhone forwards"]))
+        self.assertTrue(all(g["fit"] == "everywhere" for g in plan["whole_everywhere"]))
 
 
 @unittest.skipUnless(HAS_FFMPEG, "ffmpeg is not installed")
@@ -339,6 +425,51 @@ class RealCut(unittest.TestCase):
             self.assertEqual(em.check(mosaic), [])
             self.assertTrue(os.path.isfile(os.path.join(out, "preview.html")))
             self.assertLessEqual(manifest["source"]["duration"], em.MAX_SECONDS)
+            timing = {self.timing(os.path.join(out, *n.split("/"))) for n in manifest["tiles"]}
+            self.assertEqual(timing, {("30/1", 87, "2.900000")})             # one rate, one count, one length
+
+    @staticmethod
+    def timing(path):
+        out = subprocess.run(["ffprobe", "-v", "error", "-count_packets", "-select_streams", "v:0", "-show_entries",
+                              "stream=avg_frame_rate,nb_read_packets:format=duration", "-of", "json", path],
+                             capture_output=True, text=True).stdout
+        data = json.loads(out)
+        stream = data["streams"][0]
+        return stream["avg_frame_rate"], int(stream["nb_read_packets"]), data["format"]["duration"]
+
+    def test_check_flags_a_tile_out_of_step(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            clip = os.path.join(tmp, "clip.mp4")
+            subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=300x100:rate=30",
+                            "-t", "2", clip], check=True)
+            out = os.path.join(tmp, "m")
+            em.make(clip, out, grid="3x1", duration=1.5)
+            self.assertEqual(em.check(em.load_mosaic(out)), [])
+            # what the website did before: one tile encoded again at half the frame rate
+            tile = os.path.join(out, "tiles", "r01c02.webm")
+            subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-i", tile, "-r", "15", "-c:v", "libvpx-vp9",
+                            "-b:v", "100k", "-f", "webm", tile + ".half"], check=True)
+            os.replace(tile + ".half", tile)
+            problems = em.check(em.load_mosaic(out))
+            self.assertEqual([(p.get("tile"), p["code"]) for p in problems],
+                             [("tiles/r01c02.webm", "FRAME_COUNT_DIFFERS")])
+
+    def test_whole_mosaic_drops_to_half_the_frame_rate_together(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            clip = os.path.join(tmp, "clip.mp4")
+            subprocess.run(["ffmpeg", "-loglevel", "error", "-y", "-f", "lavfi", "-i", "testsrc2=size=200x100:rate=30",
+                            "-t", "2", clip], check=True)
+            out = os.path.join(tmp, "m")
+            saved = em.HARD_BYTES
+            em.HARD_BYTES = 1            # every tile "can't fit", so the whole mosaic goes to 15 FPS
+            try:
+                manifest = em.make(clip, out, grid="2x1", duration=1.0)
+            finally:
+                em.HARD_BYTES = saved
+            self.assertEqual(manifest["source"]["fps"], 15)
+            self.assertEqual(manifest["source"]["duration"], 1.0)
+            timing = {self.timing(os.path.join(out, *n.split("/"))) for n in manifest["tiles"]}
+            self.assertEqual(timing, {("15/1", 15, "1.000000")})
 
     def test_rounded_corners_keep_the_edges_opaque(self):
         with tempfile.TemporaryDirectory() as tmp:
